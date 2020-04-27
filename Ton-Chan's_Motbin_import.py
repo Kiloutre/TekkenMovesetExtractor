@@ -353,11 +353,7 @@ class MotbinPtr:
         self.move_names_table = {move['name']:self.writeString(move['name']) for move in moves}
         
         self.movelist_ptr = self.align()
-        prevMoveAddr = self.curr_ptr
         for move in moves:
-            test = self.curr_ptr
-            writeBytes(self.curr_ptr, bytes([0] * move_size))
-            
             name_addr = self.move_names_table.get(move['name'], 0)
             anim_dict = self.animation_table.get(move['anim_name'], None)
             anim_name, anim_ptr = anim_dict['name_ptr'], anim_dict['data_ptr']
@@ -390,8 +386,8 @@ class MotbinPtr:
             self.writeInt(move['u11'], 4)
             self.writeInt(move['u12'], 4)
             
-            self.skip(0x8)
-            self.skip(0x8)
+            self.writeInt(0, 8) #extra_properties_1
+            self.writeInt(0, 8) #extra_properties_1
             
             self.writeInt(move['u13'], 8)
             self.writeInt(move['u14'], 8)
@@ -402,10 +398,6 @@ class MotbinPtr:
             self.writeInt(move['recovery'], 4)
             
             self.writeInt(move['u16'], 8)
-            
-            if self.curr_ptr - prevMoveAddr != 0xB0:
-                raise
-            prevMoveAddr = self.curr_ptr
         
         return self.movelist_ptr, moveCount
         

@@ -296,6 +296,9 @@ class Move:
             u11 = bToInt(move_bytes, 0x70, 4)
             u12 = bToInt(move_bytes, 0x74, 4)
             
+            if u12 != 0:
+                print(readString(base + move_name_addr), "\t", u12)
+            
             extra_properties_ptr = bToInt(move_bytes, 0x78, ptr_size) #can_be_null
             particles_ptr = bToInt(move_bytes, 0x80, ptr_size) #can_be_null
             
@@ -341,7 +344,7 @@ class Move:
             
             u13 = bToInt(move_bytes, 0x54, 4)
             u14 = bToInt(move_bytes, 0x58, 4)
-            u15 = 0#bToInt(move_bytes, 0x5c, 4) #breaks hits
+            u15 = 0#bToInt(move_bytes, 0x5c, 4) #breaks hits airborne toos
             
             hitbox_location = bToInt(move_bytes, 0x60, 4, ed='little')
             attack_startup = bToInt(move_bytes, 0x64, 4)
