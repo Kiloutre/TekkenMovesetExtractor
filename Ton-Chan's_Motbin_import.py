@@ -355,6 +355,7 @@ class MotbinPtr:
         self.movelist_ptr = self.align()
         prevMoveAddr = self.curr_ptr
         for move in moves:
+            test = self.curr_ptr
             writeBytes(self.curr_ptr, bytes([0] * move_size))
             
             name_addr = self.move_names_table.get(move['name'], 0)
@@ -368,30 +369,40 @@ class MotbinPtr:
             self.writeInt(move['hitlevel'], 4)
             self.writeInt(self.getCancelFromId(move['cancel']), 8)
             
-            self.skip(0x2C)
+            self.writeInt(move['u1'], 8)
+            self.writeInt(move['u2'], 8)
+            self.writeInt(move['u3'], 8)
+            self.writeInt(move['u4'], 8)
+            self.writeInt(move['u5'], 8)
+            self.writeInt(move['u6'], 4)
             
             self.writeInt(move['transition'], 2)
             
-            self.skip(0xA)
+            self.writeInt(move['u7'], 2)
+            self.writeInt(move['u8'], 4)
+            self.writeInt(move['u9'], 4)
             
             on_hit_addr = self.getHitConditionFromId(move['hit_condition'])
             self.writeInt(on_hit_addr, 8)
             self.writeInt(move['anim_max_len'], 4)
             
+            self.writeInt(move['u10'], 4)
+            self.writeInt(move['u11'], 4)
+            self.writeInt(move['u12'], 4)
+            
+            self.skip(0x8)
             self.skip(0x8)
             
-            self.writeInt(move['unknown_1'], 2) # Check tag2 value
-            
-            self.skip(0x25)
-            
-            self.writeInt(move['unknown_2'], 1)
+            self.writeInt(move['u13'], 8)
+            self.writeInt(move['u14'], 8)
+            self.writeInt(move['u15'], 4)
             
             self.writeInt(move['hitbox_location'], 4)
             self.writeInt(move['startup'], 4)
             self.writeInt(move['recovery'], 4)
-            self.writeInt(move['unknown_3'], 4)
             
-            self.skip(0x4)
+            self.writeInt(move['u16'], 8)
+            
             if self.curr_ptr - prevMoveAddr != 0xB0:
                 raise
             prevMoveAddr = self.curr_ptr

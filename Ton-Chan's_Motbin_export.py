@@ -15,7 +15,7 @@ if len(sys.argv) > 1 and sys.argv[1].lower() == "tag2":
 
 T = GameClass("TekkenGame-Win64-Shipping.exe" if TekkenVersion == 7 else "Cemu.exe")
 ptr_size = 8 if TekkenVersion == 7 else 4
-base = 0x0 if TekkenVersion == 7 else 0x00029CBC1E0000 #Cemu base ptr
+base = 0x0 if TekkenVersion == 7 else 0x1F8D5110000 #Cemu base ptr
 endian = 'little' if TekkenVersion == 7 else 'big'
 tag2_p1_base = 0x10885C90
 cemu_motbin_base = (base + tag2_p1_base - 0x98)
@@ -275,17 +275,39 @@ class Move:
             vuln = bToInt(move_bytes, 0x18, 4)
             hit_level = bToInt(move_bytes, 0x1c, 4)
             cancel_ptr = bToInt(move_bytes, 0x20, ptr_size)
+            
+            u1 = bToInt(move_bytes, 0x28, ptr_size)
+            u2 = bToInt(move_bytes, 0x30, ptr_size)
+            u3 = bToInt(move_bytes, 0x38, ptr_size)
+            u4 = bToInt(move_bytes, 0x40, ptr_size)
+            u5 = bToInt(move_bytes, 0x48, ptr_size)
+            u6 = bToInt(move_bytes, 0x50, 4)
+            
             transition = bToInt(move_bytes, 0x54, 2)
+            
+            u7 = bToInt(move_bytes, 0x56, 2)
+            u8 = bToInt(move_bytes, 0x58, 4)
+            u9 = bToInt(move_bytes, 0x5C, 4)
+            
             on_hit_ptr = bToInt(move_bytes, 0x60, ptr_size)
             anim_max_length = bToInt(move_bytes, 0x68, 4)
+            
+            u10 = bToInt(move_bytes, 0x6c, 4)
+            u11 = bToInt(move_bytes, 0x70, 4)
+            u12 = bToInt(move_bytes, 0x74, 4)
+            
             extra_properties_ptr = bToInt(move_bytes, 0x78, ptr_size) #can_be_null
             particles_ptr = bToInt(move_bytes, 0x80, ptr_size) #can_be_null
+            
+            u13 = bToInt(move_bytes, 0x88, 8)
+            u14 = bToInt(move_bytes, 0x90, 8)
+            u15 = bToInt(move_bytes, 0x98, 4)
+            
             hitbox_location = bToInt(move_bytes, 0x9c, 4)
             attack_startup = bToInt(move_bytes, 0xa0, 4)
             attack_recovery = bToInt(move_bytes, 0xa4, 4)
-            unknown_1 = bToInt(move_bytes, 0x74, 1)
-            unknown_2 = bToInt(move_bytes, 0x9b, 1)
-            unknown_3 = bToInt(move_bytes, 0xa8, 2)
+            
+            u16 = bToInt(move_bytes, 0xa8, 8)
         else:
             move_name_addr = bToInt(move_bytes, 0x0, ptr_size)
             anim_name_addr = bToInt(move_bytes, 0x4, ptr_size)
@@ -293,17 +315,39 @@ class Move:
             vuln = bToInt(move_bytes, 0xC, 4)
             hit_level = bToInt(move_bytes, 0x10, 4)
             cancel_ptr = bToInt(move_bytes, 0x14, ptr_size)
+            
+            u1 = bToInt(move_bytes, 0x18, ptr_size)
+            u2 = bToInt(move_bytes, 0x1c, ptr_size)
+            u3 = bToInt(move_bytes, 0x20, ptr_size)
+            u4 = bToInt(move_bytes, 0x24, ptr_size)
+            u5 = bToInt(move_bytes, 0x28, ptr_size)
+            u6 = bToInt(move_bytes, 0x2c, 4)
+            
             transition = bToInt(move_bytes, 0x30, 2)
+            
+            u7 = bToInt(move_bytes, 0x32, 2)
+            u8 = bToInt(move_bytes, 0x34, 2)
+            u9 = bToInt(move_bytes, 0x36, 2)
+            
             on_hit_ptr = bToInt(move_bytes, 0x38, ptr_size)
             anim_max_length = bToInt(move_bytes, 0x3c, 4)
+            
+            u10 = bToInt(move_bytes, 0x40, 4)
+            u11 = bToInt(move_bytes, 0x44, 4)
+            u12 = 0#bToInt(move_bytes, 0x48, 4) #break hits airborne
+            
             extra_properties_ptr = bToInt(move_bytes, 0x4c, ptr_size) #can_be_null
             particles_ptr = bToInt(move_bytes, 0x50, ptr_size) #can_be_null
+            
+            u13 = bToInt(move_bytes, 0x54, 4)
+            u14 = bToInt(move_bytes, 0x58, 4)
+            u15 = 0#bToInt(move_bytes, 0x5c, 4) #breaks hits
+            
             hitbox_location = bToInt(move_bytes, 0x60, 4, ed='little')
             attack_startup = bToInt(move_bytes, 0x64, 4)
             attack_recovery = bToInt(move_bytes, 0x68, 4)
-            unknown_1 = bToInt(move_bytes, 0x48, 2) #tofix, wong offset
-            unknown_2 = 0 #bToInt(move_bytes, 0x5f, 1) = Value breaks T7, gotta alias this
-            unknown_3 = bToInt(move_bytes, 0x6C, 2)
+            
+            u16 = bToInt(move_bytes, 0x6c, 4)
         
         self.name = readString(base + move_name_addr)
         self.anim_name = readString(base + anim_name_addr)
@@ -317,9 +361,23 @@ class Move:
         self.recovery = attack_recovery
         self.hitbox_location = hitbox_location
         self.hit_condition_addr = on_hit_ptr
-        self.unknown_1 = unknown_1
-        self.unknown_2 = unknown_2
-        self.unknown_3 = unknown_3
+        
+        self.u1 = u1
+        self.u2 = u2
+        self.u3 = u3
+        self.u4 = u4
+        self.u5 = u5
+        self.u6 = u6
+        self.u7 = u7
+        self.u8 = u8
+        self.u9 = u9
+        self.u10 = u10
+        self.u11 = u11
+        self.u12 = u12
+        self.u13 = u13
+        self.u14 = u14
+        self.u15 = u15
+        self.u16 = u16
         
         self.anim = AnimData(self.anim_name, base + self.anim_addr)
         self.cancel_idx = -1
@@ -341,9 +399,23 @@ class Move:
             'hitbox_location': self.hitbox_location,
             'startup': self.startup,
             'recovery': self.recovery,
-            'unknown_1': self.unknown_1,
-            'unknown_2': self.unknown_2,
-            'unknown_3': self.unknown_3,
+            
+            'u1': self.u1,
+            'u2': self.u2,
+            'u3': self.u3,
+            'u4': self.u4,
+            'u5': self.u5,
+            'u6': self.u6,
+            'u7': self.u7,
+            'u8': self.u8,
+            'u9': self.u9,
+            'u10': self.u10,
+            'u11': self.u11,
+            'u12': self.u12,
+            'u13': self.u13,
+            'u14': self.u14,
+            'u15': self.u15,
+            'u16': self.u16
         }
         
     def setCancelIdx(self, cancel_idx):
