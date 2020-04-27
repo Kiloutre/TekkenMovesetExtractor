@@ -296,9 +296,6 @@ class Move:
             u11 = bToInt(move_bytes, 0x70, 4)
             u12 = bToInt(move_bytes, 0x74, 4)
             
-            if u12 != 0:
-                print(readString(base + move_name_addr), "\t", u12)
-            
             extra_properties_ptr = bToInt(move_bytes, 0x78, ptr_size) #can_be_null
             particles_ptr = bToInt(move_bytes, 0x80, ptr_size) #can_be_null
             
