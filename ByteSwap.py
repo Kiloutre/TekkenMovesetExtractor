@@ -1,4 +1,4 @@
-
+# Python 3.6.5
 
 def swapArrBytes(arr, index1, index2, len):
     for i in range(len):

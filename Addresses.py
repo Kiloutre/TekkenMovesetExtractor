@@ -1,3 +1,5 @@
+# Python 3.6.5
+
 from sys import exit
 import win32api, ctypes
 from ctypes import wintypes as w

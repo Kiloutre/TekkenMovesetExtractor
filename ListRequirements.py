@@ -1,4 +1,3 @@
-# --- Ton-Chan's Memory Reader --- #
 # Python 3.6.5
 
 from Addresses import GameAddresses, GameClass
