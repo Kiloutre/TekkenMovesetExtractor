@@ -375,7 +375,8 @@ class MotbinPtr:
             self.writeInt(move['transition'], 2)
             
             self.writeInt(move['u7'], 2)
-            self.writeInt(move['u8'], 4)
+            self.writeInt(move['u8'], 2)
+            self.writeInt(move['u8_2'], 2)
             self.writeInt(move['u9'], 4)
             
             on_hit_addr = self.getHitConditionFromId(move['hit_condition'])

@@ -15,7 +15,7 @@ if len(sys.argv) > 1 and sys.argv[1].lower() == "tag2":
 
 T = GameClass("TekkenGame-Win64-Shipping.exe" if TekkenVersion == 7 else "Cemu.exe")
 ptr_size = 8 if TekkenVersion == 7 else 4
-base = 0x0 if TekkenVersion == 7 else 0x1F8D5110000 #Cemu base ptr
+base = 0x0 if TekkenVersion == 7 else 0x10A757F0000 #Cemu base ptr
 endian = 'little' if TekkenVersion == 7 else 'big'
 tag2_p1_base = 0x10885C90
 cemu_motbin_base = (base + tag2_p1_base - 0x98)
@@ -286,7 +286,8 @@ class Move:
             transition = bToInt(move_bytes, 0x54, 2)
             
             u7 = bToInt(move_bytes, 0x56, 2)
-            u8 = bToInt(move_bytes, 0x58, 4)
+            u8 = bToInt(move_bytes, 0x58, 2)
+            u8_2 = bToInt(move_bytes, 0x5A, 2)
             u9 = bToInt(move_bytes, 0x5C, 4)
             
             on_hit_ptr = bToInt(move_bytes, 0x60, ptr_size)
@@ -325,9 +326,10 @@ class Move:
             
             transition = bToInt(move_bytes, 0x30, 2)
             
-            u7 = bToInt(move_bytes, 0x32, 2)
-            u8 = bToInt(move_bytes, 0x34, 2)
-            u9 = bToInt(move_bytes, 0x36, 2)
+            u7 = bToInt(move_bytes, 0x32, 2) 
+            u8 = bToInt(move_bytes, 0x36, 2)
+            u8_2 = bToInt(move_bytes, 0x34, 2) #inverted offsets for 0x36 & 0x34
+            u9 = 0 
             
             on_hit_ptr = bToInt(move_bytes, 0x38, ptr_size)
             anim_max_length = bToInt(move_bytes, 0x3c, 4)
@@ -370,6 +372,7 @@ class Move:
         self.u6 = u6
         self.u7 = u7
         self.u8 = u8
+        self.u8_2 = u8_2
         self.u9 = u9
         self.u10 = u10
         self.u11 = u11
@@ -408,6 +411,7 @@ class Move:
             'u6': self.u6,
             'u7': self.u7,
             'u8': self.u8,
+            'u8_2': self.u8_2,
             'u9': self.u9,
             'u10': self.u10,
             'u11': self.u11,
