@@ -389,8 +389,7 @@ class MotbinPtr:
             if u15 != 0 and self.m['version'] == "Tag2": #Pushback correction
                 u15 = getTag2_offset98Alias(u15)
                 if u15 == 0:
-                    u15 = move['u15']
-                    u12 = 0
+                    u12 = 0#move['u12']
                     missingAliasList.append(move['u15'])
             
             self.writeInt(move['u10'], 4)

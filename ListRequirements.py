@@ -1,7 +1,7 @@
 # Python 3.6.5
 
 from Addresses import GameAddresses, GameClass
-from Requirements import getRequirement, getTag2Requirement
+from Aliases import getRequirement, getTag2Requirement
 import sys
 import os
 
@@ -275,6 +275,8 @@ if __name__ == "__main__":
         if move in P2.movelist:
             move2 = P2.movelist[P2.movelist.index(move)]
             if move.u15 == move2.u15:
+                continue
+            if move.u12 != move2.u12:
                 continue
             dict1[move2.u15] = move.u15
             #print("{ 'id': %d, 'tag2_id': %d }," % (move2.u15, move.u15))
