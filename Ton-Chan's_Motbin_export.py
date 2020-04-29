@@ -15,7 +15,7 @@ if len(sys.argv) > 1 and sys.argv[1].lower() == "tag2":
 
 T = GameClass("TekkenGame-Win64-Shipping.exe" if TekkenVersion == 7 else "Cemu.exe")
 ptr_size = 8 if TekkenVersion == 7 else 4
-base = 0x0 if TekkenVersion == 7 else 0x10A757F0000 #Cemu base ptr
+base = 0x0 if TekkenVersion == 7 else 0x00220C42B0000 #Cemu base ptr
 endian = 'little' if TekkenVersion == 7 else 'big'
 tag2_p1_base = 0x10885C90
 cemu_motbin_base = (base + tag2_p1_base - 0x98)
@@ -297,8 +297,8 @@ class Move:
             u11 = bToInt(move_bytes, 0x70, 4)
             u12 = bToInt(move_bytes, 0x74, 4)
             
-            extra_properties_ptr = bToInt(move_bytes, 0x78, ptr_size) #can_be_null
-            particles_ptr = bToInt(move_bytes, 0x80, ptr_size) #can_be_null
+            extra_properties_ptr1 = bToInt(move_bytes, 0x78, ptr_size) #can_be_null
+            extra_properties_ptr2 = bToInt(move_bytes, 0x80, ptr_size) #can_be_null
             
             u13 = bToInt(move_bytes, 0x88, 8)
             u14 = bToInt(move_bytes, 0x90, 8)
@@ -336,14 +336,14 @@ class Move:
             
             u10 = bToInt(move_bytes, 0x40, 4)
             u11 = bToInt(move_bytes, 0x44, 4)
-            u12 = 0#bToInt(move_bytes, 0x48, 4) #break hits airborne
+            u12 = bToInt(move_bytes, 0x48, 4) #break hits airborne
             
-            extra_properties_ptr = bToInt(move_bytes, 0x4c, ptr_size) #can_be_null
-            particles_ptr = bToInt(move_bytes, 0x50, ptr_size) #can_be_null
+            extra_properties_ptr1 = bToInt(move_bytes, 0x4c, ptr_size) #can_be_null
+            extra_properties_ptr2 = bToInt(move_bytes, 0x50, ptr_size) #can_be_null
             
             u13 = bToInt(move_bytes, 0x54, 4)
             u14 = bToInt(move_bytes, 0x58, 4)
-            u15 = 0#bToInt(move_bytes, 0x5c, 4) #breaks hits airborne toos
+            u15 = bToInt(move_bytes, 0x5c, 4) #breaks hits airborne toos
             
             hitbox_location = bToInt(move_bytes, 0x60, 4, ed='little')
             attack_startup = bToInt(move_bytes, 0x64, 4)

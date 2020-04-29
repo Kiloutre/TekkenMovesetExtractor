@@ -148,6 +148,9 @@ class Move:
         self.cancel_ptr = bToInt(moveBytes, 0x20, 8)
         self.reaction_ptr = bToInt(moveBytes, 0x60, 8)
         
+        self.u12 = bToInt(moveBytes, 0x74, 4)
+        self.u15 = bToInt(moveBytes, 0x98, 4)
+        
         self.cancels = []
         self.reactionScenarios = []
         
@@ -155,6 +158,9 @@ class Move:
             self.loadCancels()
             if self.hitlevel != 0:
                 self.loadReactions()
+                
+    def __eq__(self, other):
+        return self.name == other
                 
     def loadReactions(self):
         reaction_ptr = self.reaction_ptr
@@ -263,10 +269,23 @@ if __name__ == "__main__":
     p1Show = sys.argv[1]
     p2Show = 'none' if len(sys.argv) == 2 else sys.argv[2]
     
+    dict1 = {}
+    
+    for move in P1.movelist:
+        if move in P2.movelist:
+            move2 = P2.movelist[P2.movelist.index(move)]
+            if move.u15 == move2.u15:
+                continue
+            dict1[move2.u15] = move.u15
+            #print("{ 'id': %d, 'tag2_id': %d }," % (move2.u15, move.u15))
+    for key in dict1.keys():
+        print("{ 'id': %d, 'tag2_id': %d }," % (key, dict1[key]))
+    os._exit(0)
+    
     if p1Show != None and p1Show.lower() != "none":
         P1.printBasicData()
         if p1Show.lower().startswith("cancel"):
-            P1.printCancels()
+            P1.printCancels(False)
         elif p1Show.lower().startswith("reaction"):
             P1.printAttackReactions()
         else:
