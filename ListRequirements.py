@@ -150,6 +150,9 @@ class Move:
         
         self.u12 = bToInt(moveBytes, 0x74, 4)
         self.u15 = bToInt(moveBytes, 0x98, 4)
+        self.u15_a = bToInt(moveBytes, 0x98, 2)
+        self.u15_b = bToInt(moveBytes, 0x9a, 2)
+        self.u15_list = [bToInt(moveBytes, 0x98 + x, 1) for x in range(4)]
         
         self.cancels = []
         self.reactionScenarios = []
@@ -270,6 +273,9 @@ if __name__ == "__main__":
     p2Show = 'none' if len(sys.argv) == 2 else sys.argv[2]
     
     dict1 = {}
+    u15list = {}
+    moveeelist = []
+    test = []
     
     for move in P1.movelist:
         if move in P2.movelist:
@@ -278,10 +284,33 @@ if __name__ == "__main__":
                 continue
             if move.u12 != move2.u12:
                 continue
-            dict1[move2.u15] = move.u15
-            #print("{ 'id': %d, 'tag2_id': %d }," % (move2.u15, move.u15))
-    for key in dict1.keys():
-        print("{ 'id': %d, 'tag2_id': %d }," % (key, dict1[key]))
+            if move.u15 in test:
+                continue
+            moveeelist.append((move, move2))
+            test.append(move.u15)
+            
+            if move2.u15 not in u15list:
+                u15list[move2.u15] = {move.u15: 1}
+            elif move.u15 not in u15list[move2.u15]:
+                u15list[move2.u15][move.u15] = 1
+            else:
+                u15list[move2.u15][move.u15] += 1
+
+    for move, move2 in moveeelist:
+        u15list_2 = [(move.u15 >> (8 * i)) & 0xFF for i in range(4)]
+        print("Default (Tag2,T7): %x, %x" % (move.u15, move2.u15))
+        print("SHR7    (Tag2,T7): %x, %x" % (move.u15 >> 7, move2.u15))
+        print("Tag2      = ", end='')
+        for b in move.u15_list:
+            print(format(b, "08b"), end=' ')
+        print('\nTag2 SHR7 = ', end='')
+        for b in u15list_2:
+            print(format(b, "08b"), end=' ')
+        print('\nT7        = ', end='')
+        for b in move2.u15_list:
+            print(format(b, "08b"), end=' ')
+        print('\n')
+        pass
     os._exit(0)
     
     if p1Show != None and p1Show.lower() != "none":

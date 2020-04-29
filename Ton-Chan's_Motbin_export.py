@@ -15,7 +15,7 @@ if len(sys.argv) > 1 and sys.argv[1].lower() == "tag2":
 
 T = GameClass("TekkenGame-Win64-Shipping.exe" if TekkenVersion == 7 else "Cemu.exe")
 ptr_size = 8 if TekkenVersion == 7 else 4
-base = 0x0 if TekkenVersion == 7 else 0x00000218204C0000 #Cemu base ptr
+base = 0x0 if TekkenVersion == 7 else 0x29627B70000 #Cemu base ptr
 endian = 'little' if TekkenVersion == 7 else 'big'
 tag2_p1_base = 0x10885C90
 cemu_motbin_base = (base + tag2_p1_base - 0x98)
@@ -276,11 +276,11 @@ class Move:
             hit_level = bToInt(move_bytes, 0x1c, 4)
             cancel_ptr = bToInt(move_bytes, 0x20, ptr_size)
             
-            u1 = bToInt(move_bytes, 0x28, ptr_size)
+            u1 = 0#bToInt(move_bytes, 0x28, ptr_size) #pointer!!!
             u2 = bToInt(move_bytes, 0x30, ptr_size)
             u3 = bToInt(move_bytes, 0x38, ptr_size)
             u4 = bToInt(move_bytes, 0x40, ptr_size)
-            u5 = bToInt(move_bytes, 0x48, ptr_size)
+            u5 = 0#bToInt(move_bytes, 0x48, ptr_size)  #pointer!!!
             u6 = bToInt(move_bytes, 0x50, 4)
             
             transition = bToInt(move_bytes, 0x54, 2)
@@ -300,8 +300,8 @@ class Move:
             extra_properties_ptr1 = bToInt(move_bytes, 0x78, ptr_size) #can_be_null
             extra_properties_ptr2 = bToInt(move_bytes, 0x80, ptr_size) #can_be_null
             
-            u13 = bToInt(move_bytes, 0x88, 8)
-            u14 = bToInt(move_bytes, 0x90, 8)
+            u13 = 0#bToInt(move_bytes, 0x88, 8) #pointer!!!
+            u14 = 0#bToInt(move_bytes, 0x90, 8) #pointer!!!
             u15 = bToInt(move_bytes, 0x98, 4)
             
             hitbox_location = bToInt(move_bytes, 0x9c, 4)
@@ -317,11 +317,11 @@ class Move:
             hit_level = bToInt(move_bytes, 0x10, 4)
             cancel_ptr = bToInt(move_bytes, 0x14, ptr_size)
             
-            u1 = bToInt(move_bytes, 0x18, ptr_size)
+            u1 = 0#bToInt(move_bytes, 0x18, ptr_size) #pointer!!!
             u2 = bToInt(move_bytes, 0x1c, ptr_size)
             u3 = bToInt(move_bytes, 0x20, ptr_size)
             u4 = bToInt(move_bytes, 0x24, ptr_size)
-            u5 = bToInt(move_bytes, 0x28, ptr_size)
+            u5 = 0#bToInt(move_bytes, 0x28, ptr_size) #pointer!!!
             u6 = bToInt(move_bytes, 0x2c, 4)
             
             transition = bToInt(move_bytes, 0x30, 2)
@@ -341,8 +341,8 @@ class Move:
             extra_properties_ptr1 = bToInt(move_bytes, 0x4c, ptr_size) #can_be_null
             extra_properties_ptr2 = bToInt(move_bytes, 0x50, ptr_size) #can_be_null
             
-            u13 = bToInt(move_bytes, 0x54, 4)
-            u14 = bToInt(move_bytes, 0x58, 4)
+            u13 = 0#bToInt(move_bytes, 0x54, 4) #pointer!!!
+            u14 = 0#bToInt(move_bytes, 0x58, 4) #pointer!!!
             u15 = bToInt(move_bytes, 0x5c, 4) #breaks hits airborne toos
             
             hitbox_location = bToInt(move_bytes, 0x60, 4, ed='little')

@@ -366,6 +366,11 @@ class MotbinPtr:
             self.writeInt(move['vuln'], 4)
             self.writeInt(move['hitlevel'], 4)
             self.writeInt(self.getCancelFromId(move['cancel']), 8)
+                
+            move['u1'] = 0 #pointer
+            move['u5'] = 0 #pointer
+            move['u13'] = 0 #pointer
+            move['u14'] = 0 #pointer
             
             self.writeInt(move['u1'], 8)
             self.writeInt(move['u2'], 8)
