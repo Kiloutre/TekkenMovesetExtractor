@@ -15,7 +15,7 @@ if len(sys.argv) > 1 and sys.argv[1].lower() == "tag2":
 
 T = GameClass("TekkenGame-Win64-Shipping.exe" if TekkenVersion == 7 else "Cemu.exe")
 ptr_size = 8 if TekkenVersion == 7 else 4
-base = 0x0 if TekkenVersion == 7 else 0x29627B70000 #Cemu base ptr
+base = 0x0 if TekkenVersion == 7 else 0x1E4D6230000 #Cemu base ptr
 endian = 'little' if TekkenVersion == 7 else 'big'
 tag2_p1_base = 0x10885C90
 cemu_motbin_base = (base + tag2_p1_base - 0x98)
@@ -277,7 +277,7 @@ class Move:
             cancel_ptr = bToInt(move_bytes, 0x20, ptr_size)
             
             u1 = 0#bToInt(move_bytes, 0x28, ptr_size) #pointer!!!
-            u2 = bToInt(move_bytes, 0x30, ptr_size)
+            u2 = bToInt(move_bytes, 0x30, ptr_size) #NOT pointer
             u3 = bToInt(move_bytes, 0x38, ptr_size)
             u4 = bToInt(move_bytes, 0x40, ptr_size)
             u5 = 0#bToInt(move_bytes, 0x48, ptr_size)  #pointer!!!
@@ -318,7 +318,7 @@ class Move:
             cancel_ptr = bToInt(move_bytes, 0x14, ptr_size)
             
             u1 = 0#bToInt(move_bytes, 0x18, ptr_size) #pointer!!!
-            u2 = bToInt(move_bytes, 0x1c, ptr_size)
+            u2 = bToInt(move_bytes, 0x1c, ptr_size) #NOT pointer
             u3 = bToInt(move_bytes, 0x20, ptr_size)
             u4 = bToInt(move_bytes, 0x24, ptr_size)
             u5 = 0#bToInt(move_bytes, 0x28, ptr_size) #pointer!!!

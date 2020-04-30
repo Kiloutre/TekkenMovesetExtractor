@@ -295,7 +295,7 @@ if __name__ == "__main__":
                 u15list[move2.u15][move.u15] = 1
             else:
                 u15list[move2.u15][move.u15] += 1
-
+    """
     for move, move2 in moveeelist:
         u15list_2 = [(move.u15 >> (8 * i)) & 0xFF for i in range(4)]
         print("Default (Tag2,T7): %x, %x" % (move.u15, move2.u15))
@@ -311,8 +311,9 @@ if __name__ == "__main__":
             print(format(b, "08b"), end=' ')
         print('\n')
         pass
-    os._exit(0)
     
+    os._exit(0)
+    """
     if p1Show != None and p1Show.lower() != "none":
         P1.printBasicData()
         if p1Show.lower().startswith("cancel"):
