@@ -1,6 +1,7 @@
 # Pre-requisites
 
 - Python 3.6.5 specifically
+- Pywin32: `python -m pip install pywin32 --user`
 
 # Exporting movesets
 
