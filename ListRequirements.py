@@ -277,6 +277,16 @@ if __name__ == "__main__":
     moveeelist = []
     test = []
     
+    sharedMoves = [move for move in P1.movelist if move in P2.movelist]
+    sharedMoves = [(move, P2.movelist[P2.movelist.index(move)]) for move in sharedMoves]
+    """
+    for tag2_move, t7_move in sharedMoves:
+        move = t7_move
+        movelist = P2.getMovelist()
+        move.loadCancels()
+        print("MOVENAME:", move.name)
+        move.printCancels(movelist, True)
+    
     for move in P1.movelist:
         if move in P2.movelist:
             move2 = P2.movelist[P2.movelist.index(move)]
@@ -295,6 +305,7 @@ if __name__ == "__main__":
                 u15list[move2.u15][move.u15] = 1
             else:
                 u15list[move2.u15][move.u15] += 1
+    """
     """
     for move, move2 in moveeelist:
         u15list_2 = [(move.u15 >> (8 * i)) & 0xFF for i in range(4)]

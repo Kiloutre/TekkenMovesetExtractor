@@ -122,9 +122,89 @@ requirements = [
         'description': 'Blocked'
     },
     {
+        'id': 48,
+        'tag2_id': 51,
+        'description': 'Blocked2'
+    },
+    {
         'id': 33990,
         'tag2_id': 33531,
         'description': 'UNKNOWN (Jin 4 -> 32769)'
+    },
+    {
+        'id': 216,
+        'tag2_id': 199,
+        'description': 'UNKNOWN (sDw_AIR00_)'
+    },
+    {
+        'id': 352,
+        'tag2_id': 313,
+        'description': 'UNKNOWN (sDw_AIR00_)'
+    },
+    {
+        'id': 32934,
+        'tag2_id': 32918,
+        'description': 'UNKNOWN (sDw_AIR00_)'
+    },
+    {
+        'id': 182,
+        'tag2_id': 165,
+        'description': 'UNKNOWN (sDw_AIR00_)'
+    },
+    {
+        'id': 148,
+        'tag2_id': 146,
+        'description': 'UNKNOWN (Co_UkemL0D)'
+    },
+    {
+        'id': 149,
+        'tag2_id': 147,
+        'description': 'UNKNOWN (Co_UkemR0D)'
+    },
+    {
+        'id': 146,
+        'tag2_id': 144,
+        'description': 'UNKNOWN (Co_UkemR0D)'
+    },
+    {
+        'id': 147,
+        'tag2_id': 145,
+        'description': 'UNKNOWN (Co_UkemL0D)'
+    },
+    {
+        'id': 84,
+        'tag2_id': 81,
+        'description': 'UNKNOWN (Co_UkerB00)'
+    },
+    {
+        'id': 87,
+        'tag2_id': 84,
+        'description': 'UNKNOWN (32787)'
+    },
+    {
+        'id': 36,
+        'tag2_id': 36,
+        'description': 'UNKNOWN (sSTEP_00B)'
+    },
+    {
+        'id': 251,
+        'tag2_id': 232,
+        'description': 'UNKNOWN (sSTEP_00B)'
+    },
+    {
+        'id': 150,
+        'tag2_id': 148,
+        'description': 'UNKNOWN (sSTEP_01L)'
+    },
+    {
+        'id': 151,
+        'tag2_id': 149,
+        'description': 'UNKNOWN (sSTEP_01R)'
+    },
+    {
+        'id': 289,
+        'tag2_id': 262,
+        'description': 'UNKNOWN (sSTEP_01R)'
     }
 ]
 
