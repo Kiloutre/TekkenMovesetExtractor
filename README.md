@@ -1,3 +1,7 @@
+# Pre-requisites
+
+- Python 3.6.5 specifically
+
 # Exporting movesets
 
 This tool exports movesets from memory, you therefore need the game running with the target moveset loaded up already.
