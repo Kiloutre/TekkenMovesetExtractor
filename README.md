@@ -6,8 +6,7 @@
 # Exporting movesets
 
 This tool exports movesets from memory, you therefore need the game running with the target moveset loaded up already.
-The extractor works with both Tekken 7 and TekkenTag2, as their is little differences between their moveset formats.
-The importer however currently only works with Tekken 7. It wouldn't be too hard to adapt it to Tag2, though.
+The extractor works with both Tekken 7 and Tag 2, as there is little differences between their moveset formats.
 
 ## Exporting from Tekken 7
 In order to work with Tekken 7, the extractor only needs the player's base address, to be indicated at the entry `p1_ptr` of the file `game_addresses.txt`.
@@ -23,3 +22,13 @@ Then, you need to run the extractor with the argument `tag2`. Example:
 `python Ton-Chan's_Motbin_export.py tag2`
 
 Every moveset extracted from Tag2 will be prefixed with `2_`
+
+# Importing moveset into Tekken 7
+
+Movesets are imported directly in memory, requiring the game to be loaded up and being only temporary.
+After having extracted a moveset, you can import it like such:
+
+`Ton-Chan's_Motbin_import.py CHARACTER` 
+
+**CHARACTER** is to be replaced with the folder name of the target character, containing the .json and animation data.
+Administrator rights may be required to import the moveset into memory.
