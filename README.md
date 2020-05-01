@@ -15,7 +15,7 @@ You have to then start a game with the targeted moveset loaded up, and simply ru
 Every moveset extracted from Tekken7 will be prefixed with `7_`
 
 ## Exporting from Tag2 (CEMU)
-In order to work with Tag2, you need to first get the base address of the game in Cemu, and feed it to the variable `base` at the top of `Ton-Chan's_Motbin_export.py`.
+In order to work with Tag2, you need to first get the base address of the game in Cemu, and feed it to the variable `cemu_base` in `game_addresses.txt`
 This address changes everytime CEMU is started.
 Then, you need to run the extractor with the argument `tag2`. Example:
 
