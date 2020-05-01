@@ -28,6 +28,8 @@ def getTag2RequirementAlias(req, param):
     requirement_detail = getTag2Requirement(req)
     if requirement_detail == None:
         return req, param
+    if 'param_alias' in requirement_detail:
+        param = requirement_detail['param_alias'].get(param, param)
             
     return requirement_detail['id'], param
 

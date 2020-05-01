@@ -134,6 +134,23 @@ requirements = [
         'id': 289,
         'tag2_id': 262,
         'description': 'UNKNOWN (sSTEP_01R)'
+    },
+    {
+        'id': 33716,
+        'tag2_id': 33375,
+        'description': 'UNKNOWN (sBL_mL00 / sBL_mR00)'
+    },
+    {
+        'id': 846,
+        'tag2_id': 665,
+        'description': 'UNKNOWN (sBL_mL00 / sBL_mR00)',
+        'param_alias': { #id, tag2_id
+            7043: 6799,
+            6887: 6661,
+            6941: 6737,
+            7019: 6773,
+            7023: 6777
+        }
     }
 ]
 
