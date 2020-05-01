@@ -38,12 +38,21 @@ def readInt(addr, bytes_length=4):
     
 def writeInt(addr, value, bytes_length=0):
     return T.writeInt(addr, value, bytes_length=bytes_length)
+
+def readBytes(addr, bytes_length):
+    return T.readBytes(addr, bytes_length)
     
 def writeBytes(addr, data):
     return T.writeBytes(addr, data)
     
 def writeString(addr, text):
     return writeBytes(addr, bytes(text + "\x00", 'ascii'))
+    
+def readString(addr):
+    offset = 0
+    while readInt(addr + offset, 1) != 0:
+        offset += 1
+    return readBytes(addr, offset).decode("ascii")
 
 def allocateMem(allocSize):
     return VirtualAllocEx(T.handle, 0, allocSize, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE)
@@ -119,9 +128,13 @@ def getTotalSize(m):
     return size
     
 class MotbinPtr:
-    def __init__(self, motbin):
+    def __init__(self, motbin, curr_motbin_addr):
         allocSize = getTotalSize(m)
         head_ptr = allocateMem(allocSize)
+        
+        data = readBytes(curr_motbin_addr, 0x2e0)
+        self.motbin_ptr = allocateMem(len(data))
+        writeBytes(self.motbin_ptr, data)
         
         self.m = motbin
         self.size = allocSize
@@ -438,7 +451,9 @@ if __name__ == "__main__":
         m = json.load(f)
         f.close()
         
-    p = MotbinPtr(m)
+    p = MotbinPtr(m, motbin_ptr)
+    
+    old_character_name = readString(readInt(motbin_ptr + 0x8, 8))
         
     character_name = p.writeString(m['character_name'])
     creator_name = p.writeString(m['creator_name'])
@@ -456,39 +471,44 @@ if __name__ == "__main__":
     p.allocateAnimations()
     moves_ptr, move_count = p.allocateMoves()
     
-    writeInt(motbin_ptr + 0x8, character_name, 8)
-    writeInt(motbin_ptr + 0x10, creator_name, 8)
-    writeInt(motbin_ptr + 0x18, date, 8)
-    writeInt(motbin_ptr + 0x20, fulldate, 8)
+    writeInt(p.motbin_ptr + 0x8, character_name, 8)
+    writeInt(p.motbin_ptr + 0x10, creator_name, 8)
+    writeInt(p.motbin_ptr + 0x18, date, 8)
+    writeInt(p.motbin_ptr + 0x20, fulldate, 8)
     
-    writeAliases(motbin_ptr, m['aliases'])
+    writeAliases(p.motbin_ptr, m['aliases'])
     
-    writeInt(motbin_ptr + 0x150, reaction_list_ptr, 8)
-    writeInt(motbin_ptr + 0x158, reaction_list_count, 8)
+    writeInt(p.motbin_ptr + 0x150, reaction_list_ptr, 8)
+    writeInt(p.motbin_ptr + 0x158, reaction_list_count, 8)
     
-    writeInt(motbin_ptr + 0x160, requirements_ptr, 8)
-    writeInt(motbin_ptr + 0x168, requirement_count, 8)
+    writeInt(p.motbin_ptr + 0x160, requirements_ptr, 8)
+    writeInt(p.motbin_ptr + 0x168, requirement_count, 8)
     
-    writeInt(motbin_ptr + 0x170, hit_conditions_ptr, 8)
-    writeInt(motbin_ptr + 0x178, hit_conditions_size, 8)
+    writeInt(p.motbin_ptr + 0x170, hit_conditions_ptr, 8)
+    writeInt(p.motbin_ptr + 0x178, hit_conditions_size, 8)
     
-    writeInt(motbin_ptr + 0x190, pushback_ptr, 8)
-    writeInt(motbin_ptr + 0x198, pushback_list_size, 8)
+    writeInt(p.motbin_ptr + 0x190, pushback_ptr, 8)
+    writeInt(p.motbin_ptr + 0x198, pushback_list_size, 8)
     
-    writeInt(motbin_ptr + 0x1A0, pushback_extras_ptr, 8)
-    writeInt(motbin_ptr + 0x1A8, pushback_extras_size, 8)
+    writeInt(p.motbin_ptr + 0x1A0, pushback_extras_ptr, 8)
+    writeInt(p.motbin_ptr + 0x1A8, pushback_extras_size, 8)
     
-    writeInt(motbin_ptr + 0x1b0, cancel_ptr, 8)
-    writeInt(motbin_ptr + 0x1b8, cancel_count, 8)
+    writeInt(p.motbin_ptr + 0x1b0, cancel_ptr, 8)
+    writeInt(p.motbin_ptr + 0x1b8, cancel_count, 8)
     
-    writeInt(motbin_ptr + 0x1c0, group_cancel_ptr, 8)
-    writeInt(motbin_ptr + 0x1c8, group_cancel_count, 8)
+    writeInt(p.motbin_ptr + 0x1c0, group_cancel_ptr, 8)
+    writeInt(p.motbin_ptr + 0x1c8, group_cancel_count, 8)
     
-    writeInt(motbin_ptr + 0x210, moves_ptr, 8)
-    writeInt(motbin_ptr + 0x218, move_count, 8)
+    writeInt(p.motbin_ptr + 0x210, moves_ptr, 8)
+    writeInt(p.motbin_ptr + 0x218, move_count, 8)
     
-    print("%s successfully imported in memory." % (jsonFilename))
-    print("%d/%d bytes left." % (p.size - (p.curr_ptr - p.head_ptr), p.size))
+    writeInt(motbin_ptr_addr, p.motbin_ptr, 8)
+    
+    print("%s successfully imported in memory.\n" % (jsonFilename))
+    print("OLD moveset pointer: 0x%x (%s)" % (motbin_ptr, old_character_name))
+    print("New moveset pointer: 0x%x (%s)" % (p.motbin_ptr, m['character_name']))
+    #print("%d/%d bytes left." % (p.size - (p.curr_ptr - p.head_ptr), p.size))
+    
     
 
     
