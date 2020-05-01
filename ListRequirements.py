@@ -279,6 +279,7 @@ if __name__ == "__main__":
     
     sharedMoves = [move for move in P1.movelist if move in P2.movelist]
     sharedMoves = [(move, P2.movelist[P2.movelist.index(move)]) for move in sharedMoves]
+
     """
     for tag2_move, t7_move in sharedMoves:
         move = t7_move
@@ -286,45 +287,58 @@ if __name__ == "__main__":
         move.loadCancels()
         print("MOVENAME:", move.name)
         move.printCancels(movelist, True)
+    """
     
-    for move in P1.movelist:
-        if move in P2.movelist:
-            move2 = P2.movelist[P2.movelist.index(move)]
-            if move.u15 == move2.u15:
-                continue
-            if move.u12 != move2.u12:
-                continue
-            if move.u15 in test:
-                continue
-            moveeelist.append((move, move2))
-            test.append(move.u15)
-            
-            if move2.u15 not in u15list:
-                u15list[move2.u15] = {move.u15: 1}
-            elif move.u15 not in u15list[move2.u15]:
-                u15list[move2.u15][move.u15] = 1
-            else:
-                u15list[move2.u15][move.u15] += 1
-    """
-    """
+    for tag2_move, t7_move in sharedMoves:
+        if tag2_move.u15 == t7_move.u15:
+            continue
+        if tag2_move.u12 != t7_move.u12:
+            continue
+        if tag2_move.u15 in test:
+            continue
+        moveeelist.append((tag2_move, t7_move))
+        test.append(tag2_move.u15)
+        
+    def printU15(u15, label="", bytecount=4):
+        print(label, end='')
+        bytelist = [(u15 >> (8 * i)) & 0xFF for i in range(bytecount)][::-1]
+        for b in bytelist:
+            print(format(b, "08b"), end=' ')
+        print('')
+        
+    def reverseBitOrder(number):
+        res = 0
+        for i in range(7): #skip last bit
+            bitVal = (number & (1 << i)) != 0
+            res |= (bitVal << (7 - i))
+        return res
+    
+    def process_number(number):
+        return (number >> 7) | ((reverseBitOrder(number & 0xFF)) << 24)
+        
+
+    print(reverseBitOrder(168))
+    os._exit(0)
+        
     for move, move2 in moveeelist:
-        u15list_2 = [(move.u15 >> (8 * i)) & 0xFF for i in range(4)]
-        print("Default (Tag2,T7): %x, %x" % (move.u15, move2.u15))
-        print("SHR7    (Tag2,T7): %x, %x" % (move.u15 >> 7, move2.u15))
-        print("Tag2      = ", end='')
-        for b in move.u15_list:
-            print(format(b, "08b"), end=' ')
-        print('\nTag2 SHR7 = ', end='')
-        for b in u15list_2:
-            print(format(b, "08b"), end=' ')
-        print('\nT7        = ', end='')
-        for b in move2.u15_list:
-            print(format(b, "08b"), end=' ')
+        if move2.u15 == (move.u15 >> 7):
+            continue
+        processed_u15 = move.u15
+        processed_u15 = processed_u15
+        processed_u15 >>= 7
+        tmp = (reverseBitOrder(move.u15 & 0xFF) << 24)
+        processed_u15 = process_number(move.u15)
+            
+        print("Tag2    : %x" % (move.u15))
+        print("Tekken7 : %x" % (move2.u15))
+        print("SHR7    : %x" % (processed_u15))
+        printU15(move.u15, "Tag2      = ")
+        printU15(move2.u15, "Tek7      = ")
+        printU15(processed_u15, "SHR7      = ")
         print('\n')
-        pass
     
     os._exit(0)
-    """
+
     if p1Show != None and p1Show.lower() != "none":
         P1.printBasicData()
         if p1Show.lower().startswith("cancel"):

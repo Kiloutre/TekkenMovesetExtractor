@@ -2,7 +2,7 @@
 # Python 3.6.5
 
 from Addresses import GameAddresses, GameClass, VirtualAllocEx, VirtualFreeEx, GetLastError, MEM_RESERVE, MEM_COMMIT, MEM_DECOMMIT, MEM_RELEASE, PAGE_EXECUTE_READWRITE
-from Aliases import getTag2Requirement, getTag2_offset98Alias
+from Aliases import getTag2Requirement
 import json
 import os
 import sys
@@ -55,6 +55,16 @@ def writeAliases(motbin_ptr, aliases):
         
 def align8Bytes(value):
     return value + (8 - (value % 8))
+    
+def reverseBitOrder(number):
+    res = 0
+    for i in range(7): #skip last bit
+        bitVal = (number & (1 << i)) != 0
+        res |= (bitVal << (7 - i))
+    return res
+
+def convertU15(number):
+    return (number >> 7) | ((reverseBitOrder(number)) << 24)
     
 def getTotalSize(m):
     size = 0
@@ -390,23 +400,19 @@ class MotbinPtr:
             self.writeInt(on_hit_addr, 8)
             self.writeInt(move['anim_max_len'], 4)
             
-            u12, u15 = move['u12'], move['u15']
-            if u15 != 0 and self.m['version'] == "Tag2": #Pushback correction
-                u15 = getTag2_offset98Alias(u15)
-                if u15 == 0:
-                    u12 = 0#move['u12']
-                    missingAliasList.append(move['u15'])
-            
+            if self.m['version'] == "Tag2": #Pushback correction
+                move['u15'] = convertU15(move['u15'])
+                
             self.writeInt(move['u10'], 4)
             self.writeInt(move['u11'], 4)
-            self.writeInt(u12, 4)
+            self.writeInt(move['u12'], 4)
             
             self.writeInt(0, 8) #extra_properties_1
             self.writeInt(0, 8) #extra_properties_1
             
             self.writeInt(move['u13'], 8)
             self.writeInt(move['u14'], 8)
-            self.writeInt(u15, 4)
+            self.writeInt(move['u15'], 4)
             
             self.writeInt(move['hitbox_location'], 4)
             self.writeInt(move['startup'], 4)
