@@ -15,7 +15,7 @@ if len(sys.argv) > 1 and sys.argv[1].lower() == "tag2":
 
 T = GameClass("TekkenGame-Win64-Shipping.exe" if TekkenVersion == 7 else "Cemu.exe")
 ptr_size = 8 if TekkenVersion == 7 else 4
-base = 0x0 if TekkenVersion == 7 else 0x1E4D6230000 #Cemu base ptr
+base = 0x0 if TekkenVersion == 7 else 0x021BFB530000 #Cemu base ptr
 endian = 'little' if TekkenVersion == 7 else 'big'
 tag2_p1_base = 0x10885C90
 cemu_motbin_base = (base + tag2_p1_base - 0x98)
