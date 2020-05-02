@@ -17,7 +17,6 @@ T = GameClass("TekkenGame-Win64-Shipping.exe" if TekkenVersion == 7 else "Cemu.e
 ptr_size = 8 if TekkenVersion == 7 else 4
 base = 0x0 if TekkenVersion == 7 else GameAddresses.a['cemu_base']
 endian = 'little' if TekkenVersion == 7 else 'big'
-cemu_motbin_base = (base + GameAddresses.a['cemu_p1_base'] - 0x98)
 
 def readInt(addr, len):
     return T.readInt(addr, len, endian=endian)
@@ -613,84 +612,95 @@ class Motbin:
             with open ("%s/%s.bin" % (anim_path, anim.name), "wb") as f:
                 f.write(anim.getData())
             
-        print("Saved at path %s/%s" % (os.getcwd(), path[2:]))
+        print("Saved at path %s/%s\n" % (os.getcwd(), path[2:]))
+        
+    def extractMoveset(self):
+        m.printBasicData()
+        
+        print("Reading requirements...")
+        for i in range(m.requirement_count):
+            condition = Requirement(m.requirements_ptr + (i * Requirement.requirement_size))
+            condition.setId(i)
+            m.requirements.append(condition.dict())
+        
+        print("Reading cancels...")
+        for i in range(m.cancel_list_size):
+            cancel = Cancel(m.cancel_head_ptr + (i * Cancel.cancel_size))
+            cancel.setRequirementId((cancel.requirement_addr - m.requirements_ptr) // Requirement.requirement_size)
+            cancel.setId(i)
+            m.cancels.append(cancel.dict())
+        
+        print("Reading grouped cancels...")
+        for i in range(m.group_cancel_list_size):
+            cancel = Cancel(m.group_cancel_head_ptr + (i * Cancel.cancel_size))
+            cancel.setRequirementId((cancel.requirement_addr - m.requirements_ptr) // Requirement.requirement_size)
+            cancel.setId(i)
+            m.group_cancels.append(cancel.dict())
+        
+        print("Reading pushbacks extradatas...")
+        for i in range(m.pushback_extradata_size):
+            pushback_extra = PushbackExtradata(m.pushback_extradata_ptr + (i * PushbackExtradata.size))
+            m.pushback_extras.append(pushback_extra.dict())
+
+        print("Reading pushbacks...")
+        for i in range(m.pushback_list_size):
+            pushback = Pushback(m.pushback_ptr + (i * Pushback.pushback_size))
+            pushback.setExtraIndex((pushback.extra_addr - m.pushback_extradata_ptr) // PushbackExtradata.size)
+            m.pushbacks.append(pushback.dict())
+        
+        print("Reading reaction lists...")
+        for i in range(m.reaction_list_size):
+            reaction_list = ReactionList(m.reaction_list_ptr + (i * ReactionList.reaction_list_size))
+            reaction_list.setIndexes(m.pushback_ptr, Pushback.pushback_size)
+            m.reaction_list.append(reaction_list.dict())
+        
+        print("Reading on-hit condition lists...")
+        for i in range(m.hit_conditions_size):
+            hit_conditions = HitCondition(m.hit_conditions_ptr + (i * HitCondition.hit_condition_size))
+            hit_conditions.setRequirementId((hit_conditions.requirement_addr - m.requirements_ptr) // Requirement.requirement_size)
+            hit_conditions.setReactionListId((hit_conditions.reaction_list_addr - m.reaction_list_ptr) // ReactionList.reaction_list_size)
+            m.hit_conditions.append(hit_conditions.dict())
+        
+        print("Reading extra move properties...")
+        for i in range(m.extra_move_properties_size):
+            extra_move_property = ExtraMoveProperties(m.extra_move_properties_ptr + (i * ExtraMoveProperties.size))
+            m.extra_move_properties.append(extra_move_property.dict())
+        
+        print("Reading voiceclips...")
+        for i in range(m.voiceclip_list_size):
+            voiceclip = Voiceclip(m.voiceclip_list_ptr + (i * Voiceclip.size))
+            m.voiceclips.append(voiceclip.dict())
+        
+        print("Reading movelist...")
+        for i in range(m.movelist_size):
+            move = Move(m.movelist_head_ptr + (i * Move.move_size))
+            move.setCancelIdx((move.cancel_addr - m.cancel_head_ptr) // Cancel.cancel_size)
+            move.setHitConditionIdx((move.hit_condition_addr - m.hit_conditions_ptr) // HitCondition.hit_condition_size)
+            if move.extra_properties_ptr != 0:
+                move.setExtraPropertiesIdx((move.extra_properties_ptr - m.extra_move_properties_ptr) // ExtraMoveProperties.size)
+            if move.voiceclip_ptr != 0:
+                move.setVoiceclipId((move.voiceclip_ptr - m.voiceclip_list_ptr) // Voiceclip.size)
+            move.setId(i)
+            m.moves.append(move.dict())
+            
+            if move.anim not in m.anims:
+                m.anims.append(move.anim)
+        
+        m.save()
         
 if __name__ == "__main__":
+    cemu_motbin_base = (base + GameAddresses.a['cemu_p1_base'] - 0x98)
     motbin_ptr_addr = (GameAddresses.a['p1_ptr'] + 0x14a0) if TekkenVersion == 7 else cemu_motbin_base
     motbin_ptr = readInt(motbin_ptr_addr, ptr_size)
     
     m = Motbin(motbin_ptr if TekkenVersion == 7 else motbin_ptr + base)
-    m.printBasicData()
+    m.extractMoveset()
     
-    print("Reading requirements...")
-    for i in range(m.requirement_count):
-        condition = Requirement(m.requirements_ptr + (i * Requirement.requirement_size))
-        condition.setId(i)
-        m.requirements.append(condition.dict())
+    cemu_motbin_base = (base + GameAddresses.a['cemu_p2_base'] - 0x98)
+    motbin_ptr_addr = (GameAddresses.a['p2_ptr'] + 0x14a0) if TekkenVersion == 7 else cemu_motbin_base
+    motbin_ptr = readInt(motbin_ptr_addr, ptr_size)
     
-    print("Reading cancels...")
-    for i in range(m.cancel_list_size):
-        cancel = Cancel(m.cancel_head_ptr + (i * Cancel.cancel_size))
-        cancel.setRequirementId((cancel.requirement_addr - m.requirements_ptr) // Requirement.requirement_size)
-        cancel.setId(i)
-        m.cancels.append(cancel.dict())
-    
-    print("Reading grouped cancels...")
-    for i in range(m.group_cancel_list_size):
-        cancel = Cancel(m.group_cancel_head_ptr + (i * Cancel.cancel_size))
-        cancel.setRequirementId((cancel.requirement_addr - m.requirements_ptr) // Requirement.requirement_size)
-        cancel.setId(i)
-        m.group_cancels.append(cancel.dict())
-    
-    print("Reading pushbacks extradatas...")
-    for i in range(m.pushback_extradata_size):
-        pushback_extra = PushbackExtradata(m.pushback_extradata_ptr + (i * PushbackExtradata.size))
-        m.pushback_extras.append(pushback_extra.dict())
-
-    print("Reading pushbacks...")
-    for i in range(m.pushback_list_size):
-        pushback = Pushback(m.pushback_ptr + (i * Pushback.pushback_size))
-        pushback.setExtraIndex((pushback.extra_addr - m.pushback_extradata_ptr) // PushbackExtradata.size)
-        m.pushbacks.append(pushback.dict())
-    
-    print("Reading reaction lists...")
-    for i in range(m.reaction_list_size):
-        reaction_list = ReactionList(m.reaction_list_ptr + (i * ReactionList.reaction_list_size))
-        reaction_list.setIndexes(m.pushback_ptr, Pushback.pushback_size)
-        m.reaction_list.append(reaction_list.dict())
-    
-    print("Reading on-hit condition lists...")
-    for i in range(m.hit_conditions_size):
-        hit_conditions = HitCondition(m.hit_conditions_ptr + (i * HitCondition.hit_condition_size))
-        hit_conditions.setRequirementId((hit_conditions.requirement_addr - m.requirements_ptr) // Requirement.requirement_size)
-        hit_conditions.setReactionListId((hit_conditions.reaction_list_addr - m.reaction_list_ptr) // ReactionList.reaction_list_size)
-        m.hit_conditions.append(hit_conditions.dict())
-    
-    print("Reading extra move properties...")
-    for i in range(m.extra_move_properties_size):
-        extra_move_property = ExtraMoveProperties(m.extra_move_properties_ptr + (i * ExtraMoveProperties.size))
-        m.extra_move_properties.append(extra_move_property.dict())
-    
-    print("Reading voiceclips...")
-    for i in range(m.voiceclip_list_size):
-        voiceclip = Voiceclip(m.voiceclip_list_ptr + (i * Voiceclip.size))
-        m.voiceclips.append(voiceclip.dict())
-    
-    print("Reading movelist...")
-    for i in range(m.movelist_size):
-        move = Move(m.movelist_head_ptr + (i * Move.move_size))
-        move.setCancelIdx((move.cancel_addr - m.cancel_head_ptr) // Cancel.cancel_size)
-        move.setHitConditionIdx((move.hit_condition_addr - m.hit_conditions_ptr) // HitCondition.hit_condition_size)
-        if move.extra_properties_ptr != 0:
-            move.setExtraPropertiesIdx((move.extra_properties_ptr - m.extra_move_properties_ptr) // ExtraMoveProperties.size)
-        if move.voiceclip_ptr != 0:
-            move.setVoiceclipId((move.voiceclip_ptr - m.voiceclip_list_ptr) // Voiceclip.size)
-        move.setId(i)
-        m.moves.append(move.dict())
-        
-        if move.anim not in m.anims:
-            m.anims.append(move.anim)
-    
-    m.save()
+    m = Motbin(motbin_ptr if TekkenVersion == 7 else motbin_ptr + base)
+    m.extractMoveset()
     
     

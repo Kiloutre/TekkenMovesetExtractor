@@ -1,7 +1,7 @@
 # Python 3.6.5
 
 from Addresses import GameAddresses, GameClass
-from Aliases import getRequirement, getTag2Requirement
+from Aliases import getRequirement, getTag2Requirement, extra_move_properties
 import sys
 import os
 
@@ -191,14 +191,15 @@ class Move:
     def loadExtraProperties(self):
         extra_property_ptr = self.extra_property_ptr
         if extra_property_ptr == 0:
-            print("extra_property_ptr = 0")
-            return
+            #print("extra_property_ptr = 0")
+            return []
         property = ExtraProperty(extra_property_ptr)
         self.property_list = [property]
         while property.type != 0:
             extra_property_ptr += 0x18
             property = ExtraProperty(extra_property_ptr)
             self.property_list.append(property)
+        return self.property_list
             
     def loadCancels(self):
         cancel_ptr = self.cancel_ptr
@@ -334,15 +335,25 @@ if __name__ == "__main__":
     p1move, p2move = P1.getCurrmoveId(), P2.getCurrmoveId()
     p1movename, p2movename = P1.getCurrmoveName(), P2.getCurrmoveName()
     
-    print("%s (%d) / %s (%d)" % (p1movename, p1move, p2movename, p2move))
+    #print("%s (%d) / %s (%d)" % (p1movename, p1move, p2movename, p2move))
     
-    p1Properties = P1.getMoveProperties(p1move)
-    p2Properties = P2.getMoveProperties(p2move)
+    aliasedList = list(set([extra['id'] for extra in extra_move_properties]))
     
+    if len(P1.movelist) == len(P2.movelist):
+        print("Identical movelist size.")
+    else:
+        biggest = max(len(P1.movelist), len(P2.movelist))
+        print("%d/%d shared moves" % (len(sharedMoves), biggest))
     
-    for prop1, prop2 in zip(p1Properties, p2Properties):
-        if prop1.type == prop2.type and prop1.id != prop2.id and prop1.value == prop2.value:
-            print("    { 'id': 0x%x, 'tag2_id': 0x%x, 'desc': '%s' }," % (prop2.id, prop1.id, p1movename))
+    for move, move2 in sharedMoves:
+        p1Properties = move.loadExtraProperties()
+        p2Properties = move2.loadExtraProperties()
+    
+        for prop1, prop2 in zip(p1Properties, p2Properties):
+            if prop1.id not in aliasedList and prop1.type == prop2.type and prop1.id != prop2.id and prop1.value == prop2.value:
+                aliasedList.append(prop1.id)
+                print("    { 'id': 0x%x, 'tag2_id': 0x%x, 'desc': '%s' }," % (prop2.id, prop1.id, move.name))
+    
     
     os._exit(0)
 
