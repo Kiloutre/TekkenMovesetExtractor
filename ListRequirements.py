@@ -350,14 +350,12 @@ if __name__ == "__main__":
     p1move, p2move = P1.getCurrmoveId(), P2.getCurrmoveId()
     p1movename, p2movename = P1.getCurrmoveName(), P2.getCurrmoveName()
     
-    """
     print("%s (%d)" % (p1movename, p1move))
     P1.printProperties()
     print('\n')
     print("%s (%d)" % (p2movename, p2move))
     P2.printProperties()
     os._exit(0)
-    """
     
     aliasedList = list(set([req['id'] for req in extra_move_properties]))
     

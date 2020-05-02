@@ -156,6 +156,7 @@ requirements = [
 ]
 
 extra_move_properties = [
+    { 'id': 0x800f, 'tag2_id': 0x8003, 'desc': 'screenshake', 'type_replace': 0 }, #disabled for visual clarity
     { 'id': 0x853d, 'tag2_id': 0x830b, 'desc': 'sDw_AIR00_' },
     { 'id': 0x824c, 'tag2_id': 0x818a, 'desc': 'sDw_AIR00_' },
     { 'id': 0x84cc, 'tag2_id': 0x8301, 'desc': 'sDw_AIR00_' },
@@ -358,7 +359,7 @@ def getTag2Requirement(id):
             return r
     return None
     
-def getTag2ExtraMoveProperty(type, id):
+def getTag2ExtraMoveProperty(id):
     for r in extra_move_properties:
         if r['tag2_id'] == id:
             return r
