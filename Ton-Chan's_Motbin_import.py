@@ -24,6 +24,7 @@ hit_condition_size = 0x18
 pushback_size = 0x10
 pushback_extra_size = 0x2
 extra_move_property_size = 0xC
+voiceclip_size = 0x4
 
 def getTag2RequirementAlias(req, param):
     requirement_detail = getTag2Requirement(req)
@@ -91,13 +92,13 @@ def getTotalSize(m):
     size = align8Bytes(size)
     extra_data_list = [cancel['extra_data'] for cancel in m['cancels']]
     extra_data_list += [cancel['extra_data'] for cancel in m['group_cancels']]
+    size += len(set(extra_data_list)) * 4
     
     size = align8Bytes(size)
     size += len(m['cancels']) * 0x28
 
     size = align8Bytes(size)
     size += len(m['group_cancels']) * 0x28
-    size += len(set(extra_data_list)) * 4
     
     size = align8Bytes(size)
     size += len(m['pushback_extras']) * 0x2
@@ -113,6 +114,9 @@ def getTotalSize(m):
     
     size = align8Bytes(size)
     size += len(m['extra_move_properties']) * 0xC
+        
+    size = align8Bytes(size)
+    size += len(m['voiceclips']) * 0x4
 
     size = align8Bytes(size)
     for animName in m['anims']: 
@@ -158,6 +162,7 @@ class MotbinPtr:
         self.pushback_ptr = 0
         self.pushback_extras_ptr = 0
         self.extra_move_properties_ptr = 0
+        self.voiceclip_ptr = 0
         
         self.move_names_table = {}
         self.animation_table = {}
@@ -228,9 +233,14 @@ class MotbinPtr:
         return self.reaction_list_ptr + (idx * reaction_list_size)
         
     def getExtraMovePropertiesFromId(self, idx):
-        if self.extra_move_properties_ptr == 0:
+        if self.extra_move_properties_ptr == 0 or idx == -1:
             return 0
         return self.extra_move_properties_ptr + (idx * extra_move_property_size)
+        
+    def getVoiceclipFromId(self, idx):
+        if self.voiceclip_ptr == 0 or idx == -1:
+            return 0
+        return self.voiceclip_ptr + (idx * voiceclip_size)
         
     def getHitConditionFromId(self, idx):
         if self.hit_conditions_ptr == 0:
@@ -274,6 +284,17 @@ class MotbinPtr:
         extra_data_list = set(extra_data_list)
         
         self.extra_data_table = {value:self.writeInt(value, 4) for value in extra_data_list}
+        
+    def allocateVoiceclipIds(self):
+        if self.voiceclip_ptr != 0:
+            return
+        print("Allocating voiceclips IDs...")
+        self.voiceclip_ptr = self.align()
+        
+        for voiceclip in self.m['voiceclips']:
+            self.writeInt(voiceclip, 4)
+        
+        return self.voiceclip_ptr, len(self.m['voiceclips'])
         
     def allocateCancels(self, cancels, grouped=False):
         self.allocateCancelExtradata()
@@ -389,8 +410,6 @@ class MotbinPtr:
                 self.animation_table[name]['data_ptr'] = self.writeBytes(f.read())
         
     def allocateMoves(self):
-        if self.cancel_ptr == 0:
-            return
         print("Allocating moves...")
         self.movelist_names_ptr =  self.align()
         moves = self.m['moves']
@@ -443,8 +462,12 @@ class MotbinPtr:
             self.writeInt(move['u11'], 4)
             self.writeInt(move['u12'], 4)
             
+            voiceclip_addr = self.getVoiceclipFromId(move['voiceclip'])
             extra_properties_addr = self.getExtraMovePropertiesFromId(move['extra_properties_id'])
-            self.writeInt(0, 8) #extra_properties_1
+            if self.m['version'] == "Tag2":
+                extra_properties_addr = 0
+            
+            self.writeInt(voiceclip_addr, 8)
             self.writeInt(extra_properties_addr, 8)
             
             self.writeInt(move['u13'], 8)
@@ -488,7 +511,8 @@ if __name__ == "__main__":
     pushback_extras_ptr, pushback_extras_size = p.allocatePushbackExtras()
     pushback_ptr, pushback_list_size = p.allocatePushbacks()
     reaction_list_ptr, reaction_list_count = p.allocateReactionList()
-    extra_move_properties_ptr, extra_move_properties_count  = p.allocateExtraMoveProperties()
+    extra_move_properties_ptr, extra_move_properties_count = p.allocateExtraMoveProperties()
+    voiceclip_list_ptr, voiceclip_list_size = p.allocateVoiceclipIds()
     hit_conditions_ptr, hit_conditions_size = p.allocateHitConditions()
     
     p.allocateAnimations()
@@ -527,6 +551,9 @@ if __name__ == "__main__":
     
     writeInt(p.motbin_ptr + 0x210, moves_ptr, 8)
     writeInt(p.motbin_ptr + 0x218, move_count, 8)
+    
+    writeInt(p.motbin_ptr + 0x220, voiceclip_list_ptr, 8)
+    writeInt(p.motbin_ptr + 0x228, voiceclip_list_size, 8)
     
     writeInt(motbin_ptr_addr, p.motbin_ptr, 8)
     

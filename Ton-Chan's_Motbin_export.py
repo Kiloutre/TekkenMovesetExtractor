@@ -314,8 +314,8 @@ class Move:
             u11 = bToInt(move_bytes, 0x70, 4)
             u12 = bToInt(move_bytes, 0x74, 4)
             
-            extra_properties_ptr1 = bToInt(move_bytes, 0x78, ptr_size) #can_be_null
-            extra_properties_ptr2 = bToInt(move_bytes, 0x80, ptr_size) #can_be_null
+            voiceclip_ptr = bToInt(move_bytes, 0x78, ptr_size) #can_be_null
+            extra_properties_ptr = bToInt(move_bytes, 0x80, ptr_size) #can_be_null
             
             u13 = 0#bToInt(move_bytes, 0x88, 8) #pointer!!!
             u14 = 0#bToInt(move_bytes, 0x90, 8) #pointer!!!
@@ -355,8 +355,8 @@ class Move:
             u11 = bToInt(move_bytes, 0x44, 4)
             u12 = bToInt(move_bytes, 0x48, 4) #break hits airborne
             
-            extra_properties_ptr1 = bToInt(move_bytes, 0x4c, ptr_size) #can_be_null
-            extra_properties_ptr2 = bToInt(move_bytes, 0x50, ptr_size) #can_be_null
+            voiceclip_ptr = bToInt(move_bytes, 0x4c, ptr_size) #can_be_null
+            extra_properties_ptr = bToInt(move_bytes, 0x50, ptr_size) #can_be_null
             
             u13 = 0#bToInt(move_bytes, 0x54, 4) #pointer!!!
             u14 = 0#bToInt(move_bytes, 0x58, 4) #pointer!!!
@@ -380,7 +380,8 @@ class Move:
         self.recovery = attack_recovery
         self.hitbox_location = hitbox_location
         self.hit_condition_addr = on_hit_ptr
-        self.extra_properties_ptr = extra_properties_ptr2
+        self.extra_properties_ptr = extra_properties_ptr
+        self.voiceclip_ptr = voiceclip_ptr
         
         self.u1 = u1
         self.u2 = u2
@@ -403,7 +404,8 @@ class Move:
         self.anim = AnimData(self.anim_name, base + self.anim_addr)
         self.cancel_idx = -1
         self.hit_condition_idx = -1
-        self.extra_properties_idx = 0
+        self.extra_properties_idx = -1
+        self.voiceclip_idx = -1
         
         self.id = -1
     
@@ -418,6 +420,7 @@ class Move:
             'transition': self.transition,
             'anim_max_len': self.anim_max_len,
             'hit_condition': self.hit_condition_idx,
+            'voiceclip': self.voiceclip_idx,
             'extra_properties_id': self.extra_properties_idx,
             'hitbox_location': self.hitbox_location,
             'startup': self.startup,
@@ -450,10 +453,24 @@ class Move:
         
     def setExtraPropertiesIdx(self, id):
         self.extra_properties_idx = id
+        
+    def setVoiceclipId(self, id):
+        self.voiceclip_idx = id
 
     def setId(self, id):
         self.id = id
     
+class Voiceclip:
+    size = 4
+    
+    def __init__(self, addr):
+        self.addr = addr
+        
+        self.id = readInt(base + addr, 4)
+
+    def dict(self):
+        return self.id
+        
 class Motbin:
     def __init__(self, addr):
         self.addr = addr
@@ -521,6 +538,16 @@ class Motbin:
         movelist_size = movelist_head_ptr + ptr_size
         self.movelist_head_ptr = readInt(addr + movelist_head_ptr, ptr_size)
         self.movelist_size = readInt(addr + movelist_size, 4)
+
+        voiceclip_list_ptr = 0x220 if TekkenVersion == 7 else 0x1a8
+        voiceclip_list_size = voiceclip_list_ptr + ptr_size
+        self.voiceclip_list_ptr = readInt(addr + voiceclip_list_ptr, ptr_size)
+        self.voiceclip_list_size = readInt(addr + voiceclip_list_size, 4)
+
+        test_ptr = 0x230 if TekkenVersion == 7 else 0x1b0
+        test_size = test_ptr + ptr_size
+        self.test_ptr = readInt(addr + test_ptr, ptr_size)
+        self.test_size = readInt(addr + test_size, 4)
         
         aliasCopySize = 0x2a
         aliasOffset = 0x98 if TekkenVersion == 7 else 0x88
@@ -537,6 +564,7 @@ class Motbin:
         self.pushbacks = []
         self.pushback_extras = []
         self.extra_move_properties = []
+        self.voiceclips = []
         
     def printBasicData(self):
         print("Character: %s" % (self.character_name))
@@ -563,7 +591,8 @@ class Motbin:
             'hit_conditions': self.hit_conditions,
             'pushbacks': self.pushbacks,
             'pushback_extras': self.pushback_extras,
-            'extra_move_properties': self.extra_move_properties
+            'extra_move_properties': self.extra_move_properties,
+            'voiceclips': self.voiceclips
         }
         
     def save(self):
@@ -585,7 +614,6 @@ class Motbin:
                 f.write(anim.getData())
             
         print("Saved at path %s/%s" % (os.getcwd(), path[2:]))
-
         
 if __name__ == "__main__":
     motbin_ptr_addr = (GameAddresses.a['p1_ptr'] + 0x14a0) if TekkenVersion == 7 else cemu_motbin_base
@@ -643,6 +671,11 @@ if __name__ == "__main__":
         extra_move_property = ExtraMoveProperties(m.extra_move_properties_ptr + (i * ExtraMoveProperties.size))
         m.extra_move_properties.append(extra_move_property.dict())
     
+    print("Reading voiceclips...")
+    for i in range(m.voiceclip_list_size):
+        voiceclip = Voiceclip(m.voiceclip_list_ptr + (i * Voiceclip.size))
+        m.voiceclips.append(voiceclip.dict())
+    
     print("Reading movelist...")
     for i in range(m.movelist_size):
         move = Move(m.movelist_head_ptr + (i * Move.move_size))
@@ -650,6 +683,8 @@ if __name__ == "__main__":
         move.setHitConditionIdx((move.hit_condition_addr - m.hit_conditions_ptr) // HitCondition.hit_condition_size)
         if move.extra_properties_ptr != 0:
             move.setExtraPropertiesIdx((move.extra_properties_ptr - m.extra_move_properties_ptr) // ExtraMoveProperties.size)
+        if move.voiceclip_ptr != 0:
+            move.setVoiceclipId((move.voiceclip_ptr - m.voiceclip_list_ptr) // Voiceclip.size)
         move.setId(i)
         m.moves.append(move.dict())
         
