@@ -700,7 +700,8 @@ if __name__ == "__main__":
     motbin_ptr_addr = (GameAddresses.a['p2_ptr'] + 0x14a0) if TekkenVersion == 7 else cemu_motbin_base
     motbin_ptr = readInt(motbin_ptr_addr, ptr_size)
     
-    m = Motbin(motbin_ptr if TekkenVersion == 7 else motbin_ptr + base)
-    m.extractMoveset()
+    m2 = Motbin(motbin_ptr if TekkenVersion == 7 else motbin_ptr + base)
+    if m.name != m2.name:
+        m2.extractMoveset()
     
     

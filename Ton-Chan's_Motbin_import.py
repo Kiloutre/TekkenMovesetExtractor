@@ -41,7 +41,6 @@ def getTag2ExtramovePropertyAlias(type, id):
         return type, id
     if 'type_replace' in new_extra_property:
         type = new_extra_property['type_replace']
-        print('o')
     return type, new_extra_property['id']
 
 def readInt(addr, bytes_length=4):
