@@ -1,7 +1,7 @@
 # Python 3.6.5
 
 from Addresses import GameAddresses, GameClass
-from Aliases import getRequirement, getTag2Requirement, extra_move_properties
+from Aliases import getRequirement, getTag2Requirement, extra_move_properties, requirements
 import sys
 import os
 
@@ -124,6 +124,9 @@ class ExtraProperty:
         
     def print(self):
         print("Type: %x | ID: %x | value: %x" % (self.type, self.id, self.value))
+        
+    def __eq__(self, other):
+        return self.type == other.type and self.value == other.value
     
 class Cancel:
     def __init__(self, addr):
@@ -135,8 +138,18 @@ class Cancel:
         self.frame_window_end = bToInt(data, 0x1C, 4)
         self.starting_frame = bToInt(data, 0x20, 4)
         self.move_id = bToInt(data, 0x24, 2)
+        self.unknown = bToInt(data, 0x26, 2)
         
         self.requirements = getRequirementList(bToInt(data, 0x8, 8))
+        
+    def __eq__(self, other):
+        if self.frame_window_start == other.frame_window_start \
+            and self.frame_window_end == other.frame_window_end \
+            and self.starting_frame == other.starting_frame \
+            and self.command == other.command \
+            and self.unknown == other.unknown:
+                return True
+        return False
 
     def print(self, movelist=None, printOnlyIfRequirements=False):
         if printOnlyIfRequirements and len(self.requirements) == 0:
@@ -194,11 +207,11 @@ class Move:
             #print("extra_property_ptr = 0")
             return []
         property = ExtraProperty(extra_property_ptr)
-        self.property_list = [property]
+        self.property_list = []
         while property.type != 0:
+            self.property_list.append(property)
             extra_property_ptr += 0x18
             property = ExtraProperty(extra_property_ptr)
-            self.property_list.append(property)
         return self.property_list
             
     def loadCancels(self):
@@ -209,6 +222,7 @@ class Move:
             cancel_ptr += 0x28
             cancel = Cancel(cancel_ptr)
             self.cancels.append(cancel)
+        return self.cancels
             
     def printAttackReactions(self):
         if self.hitlevel == 0:
@@ -337,13 +351,37 @@ if __name__ == "__main__":
     
     #print("%s (%d) / %s (%d)" % (p1movename, p1move, p2movename, p2move))
     
-    aliasedList = list(set([extra['id'] for extra in extra_move_properties]))
+    aliasedList = list(set([req['id'] for req in extra_move_properties]))
+    
+    #for a in extra_move_properties:
+    #    print("    { 'id': 0x%x, 'tag2_id': 0x%x, 'desc': '%s' }," % (a['id'], a['id'], a['desc']))
     
     if len(P1.movelist) == len(P2.movelist):
         print("Identical movelist size.")
     else:
         biggest = max(len(P1.movelist), len(P2.movelist))
         print("%d/%d shared moves" % (len(sharedMoves), biggest))
+      
+    testlist = []
+    """
+    for move, move2 in sharedMoves:
+        p1Cancels = move.loadCancels()
+        p2Cancels = move2.loadCancels()
+        
+        if len(p1Cancels) != len(p2Cancels):
+            continue
+        
+        for cancel, cancel2 in zip(p1Cancels, p2Cancels):
+            if cancel != cancel2 or len(cancel.requirements) != len(cancel2.requirements):
+                continue
+            for req, req2 in zip(cancel.requirements, cancel2.requirements):
+                if req.req == req2.req or req.param != req2.param or req2.req in aliasedList:
+                    continue
+                aliasedList.append(req2.req)
+                #print("    { 'id': %d, 'tag2_id': %d, 'desc': '%s' }," % (req2.req, req.req, move.name))
+                testlist.append("    { 'id': %d, 'tag2_id': %d, 'desc': '%s' }," % (req2.req, req.req, move.name))
+    """
+    
     
     for move, move2 in sharedMoves:
         p1Properties = move.loadExtraProperties()
@@ -353,8 +391,13 @@ if __name__ == "__main__":
             if prop1.id not in aliasedList and prop1.type == prop2.type and prop1.id != prop2.id and prop1.value == prop2.value:
                 aliasedList.append(prop1.id)
                 print("    { 'id': 0x%x, 'tag2_id': 0x%x, 'desc': '%s' }," % (prop2.id, prop1.id, move.name))
+                continue
+            elif prop1.type != prop2.type or prop1.value != prop2.value:
+                break
     
-    
+    testlist = sorted(testlist)
+    for x in testlist:
+        print(x)
     os._exit(0)
 
 
