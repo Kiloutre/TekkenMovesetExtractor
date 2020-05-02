@@ -524,8 +524,9 @@ if __name__ == "__main__":
         f.close()
         
     if 'export_version' not in m or not versionMatches(m['export_version']):
-        print("Error: trying to import incompatible moveset.")
-        print("Moveset version: %s. Importer version: %s." % (m['export_version'], importVersion))
+        print("Error: trying to import outdated moveset, please extract again.")
+        if 'export_version' in m:
+            print("Moveset version: %s. Importer version: %s." % (m['export_version'], importVersion))
         os._exit(1)
 
     p = MotbinPtr(m, motbin_ptr)
