@@ -42,3 +42,4 @@ Administrator rights may be required to import the moveset into memory.
 - Fix Jin U/F+4 too small hitbox
 - Fix doing an U/F, U, or U/B attack at the same time as the opponent causing to turn around
 - Alias more conditions
+- Fix sidestep moves
