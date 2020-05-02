@@ -118,12 +118,13 @@ class ExtraProperty:
     def __init__(self, addr):
         data = readBytes(addr, 4 * 3)
         
+        self.addr = addr
         self.type = bToInt(data, 0, 4)
         self.id = bToInt(data, 4, 4)
         self.value= bToInt(data, 8, 4)
         
     def print(self):
-        print("Type: %x | ID: %x | value: %x" % (self.type, self.id, self.value))
+        print("%x - Type: %x | ID: %x | value: %x" % (self.addr, self.type, self.id, self.value))
         
     def __eq__(self, other):
         return self.type == other.type and self.value == other.value
@@ -210,7 +211,7 @@ class Move:
         self.property_list = []
         while property.type != 0:
             self.property_list.append(property)
-            extra_property_ptr += 0x18
+            extra_property_ptr += 12
             property = ExtraProperty(extra_property_ptr)
         return self.property_list
             
@@ -349,7 +350,14 @@ if __name__ == "__main__":
     p1move, p2move = P1.getCurrmoveId(), P2.getCurrmoveId()
     p1movename, p2movename = P1.getCurrmoveName(), P2.getCurrmoveName()
     
-    #print("%s (%d) / %s (%d)" % (p1movename, p1move, p2movename, p2move))
+    """
+    print("%s (%d)" % (p1movename, p1move))
+    P1.printProperties()
+    print('\n')
+    print("%s (%d)" % (p2movename, p2move))
+    P2.printProperties()
+    os._exit(0)
+    """
     
     aliasedList = list(set([req['id'] for req in extra_move_properties]))
     
@@ -380,9 +388,9 @@ if __name__ == "__main__":
                 aliasedList.append(req2.req)
                 #print("    { 'id': %d, 'tag2_id': %d, 'desc': '%s' }," % (req2.req, req.req, move.name))
                 testlist.append("    { 'id': %d, 'tag2_id': %d, 'desc': '%s' }," % (req2.req, req.req, move.name))
+
+    
     """
-    
-    
     for move, move2 in sharedMoves:
         p1Properties = move.loadExtraProperties()
         p2Properties = move2.loadExtraProperties()
@@ -394,7 +402,6 @@ if __name__ == "__main__":
                 continue
             elif prop1.type != prop2.type or prop1.value != prop2.value:
                 break
-    
     testlist = sorted(testlist)
     for x in testlist:
         print(x)
