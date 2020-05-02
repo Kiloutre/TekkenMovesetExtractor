@@ -198,7 +198,8 @@ class ReactionList:
         list_starting_offset = 0x50 if TekkenVersion == 7 else 0x34
         self.reaction_list = [bToInt(data, list_starting_offset + (offset * 2), 2) for offset in range(0, 14)]
         
-        self.vertical_pushback = bToInt(data, list_starting_offset - 4, 4)
+        
+        self.vertical_pushback = bToInt(data, list_starting_offset - 4, 2)
         self.standing = bToInt(data, list_starting_offset + 0x0, 2)
         self.crouch = bToInt(data, list_starting_offset + 0x2, 2)
         self.ch = bToInt(data, list_starting_offset + 0x4, 2)
