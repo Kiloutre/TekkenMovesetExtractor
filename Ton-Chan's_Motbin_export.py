@@ -193,9 +193,12 @@ class ReactionList:
         self.ptr_list = [bToInt(data, i * ptr_size, ptr_size) for i in range(7)]
         self.pushback_indexes = [-1] * 7
         
+        self.u1list = [bToInt(data, (ptr_size * 7) + i * 2, 2) for i in range(4)]
+        
         list_starting_offset = 0x50 if TekkenVersion == 7 else 0x34
         self.reaction_list = [bToInt(data, list_starting_offset + (offset * 2), 2) for offset in range(0, 14)]
         
+        self.vertical_pushback = bToInt(data, list_starting_offset - 4, 4)
         self.standing = bToInt(data, list_starting_offset + 0x0, 2)
         self.crouch = bToInt(data, list_starting_offset + 0x2, 2)
         self.ch = bToInt(data, list_starting_offset + 0x4, 2)
@@ -218,6 +221,8 @@ class ReactionList:
     def dict(self):
         return {
             'pushback_indexes': self.pushback_indexes,
+            'u1list': self.u1list,
+            'vertical_pushback': self.vertical_pushback,
             'standing': self.standing,
             'ch': self.ch,
             'crouch': self.crouch,

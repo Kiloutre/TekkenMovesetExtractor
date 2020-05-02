@@ -349,14 +349,14 @@ if __name__ == "__main__":
 
     p1move, p2move = P1.getCurrmoveId(), P2.getCurrmoveId()
     p1movename, p2movename = P1.getCurrmoveName(), P2.getCurrmoveName()
-    
+    """
     print("%s (%d)" % (p1movename, p1move))
     P1.printProperties()
     print('\n')
     print("%s (%d)" % (p2movename, p2move))
     P2.printProperties()
     os._exit(0)
-    
+    """
     aliasedList = list(set([req['id'] for req in extra_move_properties]))
     
     #for a in extra_move_properties:
@@ -367,7 +367,7 @@ if __name__ == "__main__":
     else:
         biggest = max(len(P1.movelist), len(P2.movelist))
         print("%d/%d shared moves" % (len(sharedMoves), biggest))
-      
+    """
     testlist = []
     """
     for move, move2 in sharedMoves:
@@ -404,7 +404,7 @@ if __name__ == "__main__":
     for x in testlist:
         print(x)
     os._exit(0)
-
+    """
 
     if p1Show != None and p1Show.lower() != "none":
         P1.printBasicData()
@@ -422,7 +422,7 @@ if __name__ == "__main__":
         if p2Show.lower().startswith("properties"):
             P2.printProperties()
         elif p2Show.lower().startswith("cancel"):
-            P2.printCancels()
+            P2.printCancels(False)
         elif p2Show.lower().startswith("reaction"):
             P2.printAttackReactions()
         else:

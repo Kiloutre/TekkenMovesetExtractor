@@ -362,8 +362,11 @@ class MotbinPtr:
             
             for pushback in reaction_list['pushback_indexes']:
                 self.writeInt(self.getPushbackFromId(pushback), 8)
+            for unknown in reaction_list['u1list']:
+                self.writeInt(unknown, 2)
                 
-            self.skip(0x18)
+            self.skip(0xC)
+            self.writeInt(reaction_list['vertical_pushback'], 4)
             self.writeInt(reaction_list['standing'], 2)
             self.writeInt(reaction_list['crouch'], 2)
             self.writeInt(reaction_list['ch'], 2)
