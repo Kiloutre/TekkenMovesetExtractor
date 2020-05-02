@@ -36,10 +36,11 @@ Administrator rights may be required to import the moveset into memory.
 # TODO:
 
 - Fix commands that use command buffer
+- Fix wallbreak, balcony break and floorbreak on both T7 & Tag2
 - Fix throws crashing (use a placeholder throw data the throw cannot be fully imported)
-- Make bound use screw ressource?
-- Fix high and low wallsplats that have broken animations
-- Fix Jin U/F+4 too small hitbox
-- Fix doing an U/F, U, or U/B attack at the same time as the opponent causing to turn around
+- Fix high and low wallsplats that have broken animations in Tag2
+- Fix Jin U/F+4 too small hitbox in Tag2
+- Fix doing an U/F, U, or U/B attack at the same time as the opponent causing to turn 
+- Fix sidestep movesaround
 - Alias more conditions
-- Fix sidestep moves
+- Make bound use screw ressource?
