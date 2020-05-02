@@ -16,7 +16,7 @@ Every moveset extracted from Tekken7 will be prefixed with `7_`
 
 ## Exporting from Tag2 (CEMU)
 In order to work with Tag2, you need to first get the base address of the game in Cemu, and feed it to the variable `cemu_base` in `game_addresses.txt`
-This address changes everytime CEMU is started.
+This address changes everytime CEMU is started. You can find it by finding any game-related value (an easy one is 32770 for crouching and 32769 for standing, in big endian), then looking at what accesses the value and dumping the r13 register from there. The r13 register will contain the `cemu_base` address.
 Then, you need to run the extractor with the argument `tag2`. Example:
 
 `python Ton-Chan's_Motbin_export.py tag2`
