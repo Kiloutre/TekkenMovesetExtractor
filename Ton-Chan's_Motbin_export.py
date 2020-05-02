@@ -13,7 +13,7 @@ TekkenVersion = 7
 if len(sys.argv) > 1 and sys.argv[1].lower() == "tag2":
     TekkenVersion = 2
 
-exportVersion = "0.1.0"
+exportVersion = "0.2.0"
 T = GameClass("TekkenGame-Win64-Shipping.exe" if TekkenVersion == 7 else "Cemu.exe")
 ptr_size = 8 if TekkenVersion == 7 else 4
 base = 0x0 if TekkenVersion == 7 else GameAddresses.a['cemu_base']
@@ -486,6 +486,53 @@ class Voiceclip:
     def dict(self):
         return self.id
         
+class InputExtradata:
+    size = 8
+    
+    def __init__(self, addr):
+        self.addr = addr
+        data = readBytes(base + addr, InputExtradata.size)
+        
+        self.u1 = bToInt(data, 0, 4)
+        self.u2 = bToInt(data, 4, 4)
+        
+    def dict(self):
+        return {
+            'u1': self.u1,
+            'u2': self.u2
+        }
+        
+class InputSequence:
+    size = 0x10 if TekkenVersion == 7 else 0x8
+    
+    def __init__(self, addr):
+        self.addr = addr
+        data = readBytes(base + addr, InputSequence.size)
+        
+        if TekkenVersion == 7:
+            self.u1 = bToInt(data, 0, 2)
+            self.u2 = bToInt(data, 2, 2)
+            self.u3 = bToInt(data, 4, 4)
+            self.extradata_addr = bToInt(data, 8, ptr_size)
+        else:
+            self.u1 = bToInt(data, 1, 1)
+            self.u2 = bToInt(data, 2, 2)
+            self.u3 = bToInt(data, 0, 1)
+            self.extradata_addr = bToInt(data, 4, ptr_size)
+        
+        self.extradata_idx = -1
+        
+    def setExtradataId(self, idx):
+        self.extradata_idx = idx
+        
+    def dict(self):
+        return {
+            'u1': self.u1,
+            'u2': self.u2,
+            'u3': self.u3,
+            'extradata_id': self.extradata_idx
+        }
+        
 class Motbin:
     def __init__(self, addr):
         self.addr = addr
@@ -552,17 +599,28 @@ class Motbin:
         movelist_head_ptr = 0x210 if TekkenVersion == 7 else 0x1a0
         movelist_size = movelist_head_ptr + ptr_size
         self.movelist_head_ptr = readInt(addr + movelist_head_ptr, ptr_size)
-        self.movelist_size = readInt(addr + movelist_size, 4)
+        self.movelist_size = readInt(addr + movelist_size, ptr_size)
 
         voiceclip_list_ptr = 0x220 if TekkenVersion == 7 else 0x1a8
         voiceclip_list_size = voiceclip_list_ptr + ptr_size
         self.voiceclip_list_ptr = readInt(addr + voiceclip_list_ptr, ptr_size)
-        self.voiceclip_list_size = readInt(addr + voiceclip_list_size, 4)
+        self.voiceclip_list_size = readInt(addr + voiceclip_list_size, ptr_size)
 
-        test_ptr = 0x230 if TekkenVersion == 7 else 0x1b0
+        input_sequence_ptr = 0x230 if TekkenVersion == 7 else 0x1b0
+        input_sequence_size = input_sequence_ptr + ptr_size
+        self.input_sequence_ptr = readInt(addr + input_sequence_ptr, ptr_size)
+        self.input_sequence_size = readInt(addr + input_sequence_size, ptr_size)
+
+        input_extradata_ptr = 0x240 if TekkenVersion == 7 else 0x1b8
+        input_extradata_size = input_extradata_ptr + ptr_size
+        self.input_extradata_ptr = readInt(addr + input_extradata_ptr, ptr_size)
+        self.input_extradata_size = readInt(addr + input_extradata_size, ptr_size)
+
+        test_ptr = 0x250 if TekkenVersion == 7 else 0x1c0
         test_size = test_ptr + ptr_size
         self.test_ptr = readInt(addr + test_ptr, ptr_size)
-        self.test_size = readInt(addr + test_size, 4)
+        self.test_size = readInt(addr + test_size, ptr_size)
+        
         
         aliasCopySize = 0x2a
         aliasOffset = 0x98 if TekkenVersion == 7 else 0x88
@@ -580,6 +638,8 @@ class Motbin:
         self.pushback_extras = []
         self.extra_move_properties = []
         self.voiceclips = []
+        self.input_sequences = []
+        self.input_extradata = []
         
     def printBasicData(self):
         print("Character: %s" % (self.character_name))
@@ -608,7 +668,9 @@ class Motbin:
             'pushbacks': self.pushbacks,
             'pushback_extras': self.pushback_extras,
             'extra_move_properties': self.extra_move_properties,
-            'voiceclips': self.voiceclips
+            'voiceclips': self.voiceclips,
+            'input_sequences': self.input_sequences,
+            'input_extradata': self.input_extradata
         }
         
     def save(self):
@@ -634,6 +696,17 @@ class Motbin:
     def extractMoveset(self):
         self.printBasicData()
         
+        print("Reading input extradata...")
+        for i in range(self.input_extradata_size + 1):
+            input_extradata = InputExtradata(self.input_extradata_ptr + (i * InputExtradata.size))
+            self.input_extradata.append(input_extradata.dict())
+        
+        print("Reading input sequences...")
+        for i in range(self.input_sequence_size):
+            input_sequence = InputSequence(self.input_sequence_ptr + (i * InputSequence.size))
+            input_sequence.setExtradataId((input_sequence.extradata_addr - self.input_extradata_ptr) // InputExtradata.size)
+            self.input_sequences.append(input_sequence.dict())
+
         print("Reading requirements...")
         for i in range(self.requirement_count):
             condition = Requirement(self.requirements_ptr + (i * Requirement.size))
@@ -719,6 +792,6 @@ if __name__ == "__main__":
     
     m2 = Motbin(base + motbin_ptr)
     if m.name != m2.name:
-        pass#m2.extractMoveset()
+        m2.extractMoveset()
     
     

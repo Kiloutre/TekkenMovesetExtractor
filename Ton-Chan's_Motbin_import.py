@@ -12,7 +12,7 @@ if len(sys.argv) == 1:
     os._exit(1)
    
 T = GameClass("TekkenGame-Win64-Shipping.exe")
-importVersion = "0.1.1"
+importVersion = "0.2.0"
 folderName = sys.argv[1]
 charaName = folderName[2:]
 jsonFilename = "%s.json" % (charaName)
@@ -26,6 +26,8 @@ pushback_size = 0x10
 pushback_extra_size = 0x2
 extra_move_property_size = 0xC
 voiceclip_size = 0x4
+input_sequence_size = 0x10
+input_extradata_size = 0x8
 
 def getTag2RequirementAlias(req, param):
     requirement_detail = getTag2Requirement(req)
@@ -142,6 +144,12 @@ def getTotalSize(m):
     size = align8Bytes(size)
     size += len(m['moves']) * 0xB0
     
+    size = align8Bytes(size)
+    size += len(m['input_extradata']) * input_extradata_size
+    
+    size = align8Bytes(size)
+    size += len(m['input_sequences']) * input_sequence_size
+    
     return size
     
 class MotbinPtr:
@@ -172,6 +180,8 @@ class MotbinPtr:
         self.pushback_extras_ptr = 0
         self.extra_move_properties_ptr = 0
         self.voiceclip_ptr = 0
+        self.input_extradata_ptr = 0
+        self.input_sequences_ptr = 0
         
         self.move_names_table = {}
         self.animation_table = {}
@@ -266,7 +276,39 @@ class MotbinPtr:
             return 0
         return self.pushback_ptr + (idx * pushback_size)
         
+    def getInputExtradataFromId(self, idx):
+        if self.input_extradata_ptr == 0:
+            return 0
+        return self.input_extradata_ptr + (idx * input_extradata_size)
+        
+    def allocateInputExtradata(self):
+        if self.input_extradata_ptr != 0:
+            return
+        self.input_extradata_ptr = self.align()
+        
+        for extradata in self.m['input_extradata']:
+            self.writeInt(extradata['u1'], 4)
+            self.writeInt(extradata['u2'], 4)
+        
+        return self.input_extradata_ptr, len(self.m['input_extradata'])
+        
+    def allocateInputSequences(self):
+        if self.input_sequences_ptr != 0:
+            return
+        self.input_sequences_ptr = self.align()
+        
+        for input_sequence in self.m['input_sequences']:
+            self.writeInt(input_sequence['u1'], 2)
+            self.writeInt(input_sequence['u2'], 2)
+            self.writeInt(input_sequence['u3'], 4)
+            extradata_addr = self.getInputExtradataFromId(input_sequence['extradata_id'])
+            self.writeInt(extradata_addr, 8)
+        
+        return self.input_sequences_ptr, len(self.m['input_sequences'])
+        
     def allocateRequirements(self):
+        if self.requirements_ptr != 0:
+            return
         print("Allocating requirements...")
         self.requirements_ptr = self.align()
         requirements = self.m['requirements']
@@ -541,15 +583,16 @@ if __name__ == "__main__":
     requirements_ptr, requirement_count = p.allocateRequirements()
     cancel_ptr, cancel_count = p.allocateCancels(m['cancels'])
     group_cancel_ptr, group_cancel_count = p.allocateCancels(m['group_cancels'], grouped=True)
-    pushback_extras_ptr, pushback_extras_size = p.allocatePushbackExtras()
-    pushback_ptr, pushback_list_size = p.allocatePushbacks()
+    pushback_extras_ptr, pushback_extras_count = p.allocatePushbackExtras()
+    pushback_ptr, pushback_list_count = p.allocatePushbacks()
     reaction_list_ptr, reaction_list_count = p.allocateReactionList()
     extra_move_properties_ptr, extra_move_properties_count = p.allocateExtraMoveProperties()
-    voiceclip_list_ptr, voiceclip_list_size = p.allocateVoiceclipIds()
-    hit_conditions_ptr, hit_conditions_size = p.allocateHitConditions()
-    
+    voiceclip_list_ptr, voiceclip_list_count = p.allocateVoiceclipIds()
+    hit_conditions_ptr, hit_conditions_count = p.allocateHitConditions()
     p.allocateAnimations()
     moves_ptr, move_count = p.allocateMoves()
+    input_extradata_ptr, input_extradata_count = p.allocateInputExtradata()
+    input_sequences_ptr, input_sequences_count = p.allocateInputSequences()
     
     writeInt(p.motbin_ptr + 0x8, character_name, 8)
     writeInt(p.motbin_ptr + 0x10, creator_name, 8)
@@ -565,13 +608,13 @@ if __name__ == "__main__":
     writeInt(p.motbin_ptr + 0x168, requirement_count, 8)
     
     writeInt(p.motbin_ptr + 0x170, hit_conditions_ptr, 8)
-    writeInt(p.motbin_ptr + 0x178, hit_conditions_size, 8)
+    writeInt(p.motbin_ptr + 0x178, hit_conditions_count, 8)
     
     writeInt(p.motbin_ptr + 0x190, pushback_ptr, 8)
-    writeInt(p.motbin_ptr + 0x198, pushback_list_size, 8)
+    writeInt(p.motbin_ptr + 0x198, pushback_list_count, 8)
     
     writeInt(p.motbin_ptr + 0x1A0, pushback_extras_ptr, 8)
-    writeInt(p.motbin_ptr + 0x1A8, pushback_extras_size, 8)
+    writeInt(p.motbin_ptr + 0x1A8, pushback_extras_count, 8)
     
     writeInt(p.motbin_ptr + 0x1b0, cancel_ptr, 8)
     writeInt(p.motbin_ptr + 0x1b8, cancel_count, 8)
@@ -586,15 +629,18 @@ if __name__ == "__main__":
     writeInt(p.motbin_ptr + 0x218, move_count, 8)
     
     writeInt(p.motbin_ptr + 0x220, voiceclip_list_ptr, 8)
-    writeInt(p.motbin_ptr + 0x228, voiceclip_list_size, 8)
+    writeInt(p.motbin_ptr + 0x228, voiceclip_list_count, 8)
     
+    writeInt(p.motbin_ptr + 0x230, input_sequences_ptr, 8)
+    writeInt(p.motbin_ptr + 0x238, input_sequences_count, 8)
+    
+    writeInt(p.motbin_ptr + 0x240, input_extradata_ptr, 8)
+    writeInt(p.motbin_ptr + 0x248, input_extradata_count, 8)
+
     writeInt(motbin_ptr_addr, p.motbin_ptr, 8)
     
     print("%s successfully imported in memory.\n" % (jsonFilename))
     print("OLD moveset pointer: 0x%x (%s)" % (motbin_ptr, old_character_name))
     print("New moveset pointer: 0x%x (%s)" % (p.motbin_ptr, m['character_name']))
     print("%d/%d bytes left." % (p.size - (p.curr_ptr - p.head_ptr), p.size))
-    
-    
-    #jin ragedrive pushback problems!!!!
     

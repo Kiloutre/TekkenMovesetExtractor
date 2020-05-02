@@ -35,7 +35,7 @@ Administrator rights may be required to import the moveset into memory.
 
 # TODO:
 
-- Fix commands that use command buffer
+- Fix missing TAG2 commands that use command buffer. Placeholder?
 - Fix wallbreak, balcony break and floorbreak on both T7 & Tag2
 - Fix throws crashing (use a placeholder throw data the throw cannot be fully imported)
 - Fix high and low wallsplats that have broken animations in Tag2
