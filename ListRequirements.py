@@ -1,4 +1,6 @@
 # Python 3.6.5
+# This file is used only for debugging purpose and is is not used by the moveset importer/exporter
+# Dumping info about movelists and comparing them will be necessary to build reliable alias lists
 
 from Addresses import GameAddresses, GameClass
 from Aliases import getRequirement, getTag2Requirement, extra_move_properties, requirements

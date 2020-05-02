@@ -32,3 +32,8 @@ After having extracted a moveset, you can import it like such:
 
 **CHARACTER** is to be replaced with the folder name of the target character, containing the .json and animation data.
 Administrator rights may be required to import the moveset into memory.
+
+# TODO:
+
+- Fix commands that use command buffer
+- Fix throws crashing (use a placeholder throw data the throw cannot be fully imported)
