@@ -12,6 +12,7 @@ if len(sys.argv) == 1:
     os._exit(1)
    
 T = GameClass("TekkenGame-Win64-Shipping.exe")
+importVersion = "0.1.1"
 folderName = sys.argv[1]
 charaName = folderName[2:]
 jsonFilename = "%s.json" % (charaName)
@@ -479,9 +480,8 @@ class MotbinPtr:
             voiceclip_addr = self.getVoiceclipFromId(move['voiceclip'])
             extra_properties_addr = self.getExtraMovePropertiesFromId(move['extra_properties_id'])
             
-            if self.m['version'] == "Tag2":
-                if move['hitlevel'] == 2560: #disable throws
-                    extra_properties_addr = 0
+            if move['hitlevel'] == 2560: #disable throws damage until they are properly imported
+                extra_properties_addr = 0
             
             self.writeInt(voiceclip_addr, 8)
             self.writeInt(extra_properties_addr, 8)
@@ -503,6 +503,15 @@ class MotbinPtr:
         
         return self.movelist_ptr, moveCount
         
+def versionMatches(version):
+    pos = version.rfind('.')
+    exportUpperVersion = version[:pos]
+    
+    pos = importVersion.rfind('.')
+    importUpperVersion = importVersion[:pos]
+    
+    return importUpperVersion == exportUpperVersion
+
 if __name__ == "__main__":
     motbin_ptr_addr = GameAddresses.a['p1_ptr'] + 0x14a0 #
     motbin_ptr = readInt(motbin_ptr_addr, 8)
@@ -514,6 +523,11 @@ if __name__ == "__main__":
         m = json.load(f)
         f.close()
         
+    if 'export_version' not in m or not versionMatches(m['export_version']):
+        print("Error: trying to import incompatible moveset.")
+        print("Moveset version: %s. Importer version: %s." % (m['export_version'], importVersion))
+        os._exit(1)
+
     p = MotbinPtr(m, motbin_ptr)
     
     old_character_name = readString(readInt(motbin_ptr + 0x8, 8))
