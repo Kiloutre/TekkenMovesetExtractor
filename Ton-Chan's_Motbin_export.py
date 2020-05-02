@@ -13,6 +13,7 @@ TekkenVersion = 7
 if len(sys.argv) > 1 and sys.argv[1].lower() == "tag2":
     TekkenVersion = 2
 
+exportVersion = "0.1.0"
 T = GameClass("TekkenGame-Win64-Shipping.exe" if TekkenVersion == 7 else "Cemu.exe")
 ptr_size = 8 if TekkenVersion == 7 else 4
 base = 0x0 if TekkenVersion == 7 else GameAddresses.a['cemu_base']
@@ -589,6 +590,7 @@ class Motbin:
         anim_names = [anim.name for anim in self.anims]
         
         return {
+            'export_version': exportVersion,
             'version': self.version,
             'extraction_date': self.extraction_date,
             'character_name': self.character_name,
