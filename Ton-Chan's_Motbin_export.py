@@ -261,6 +261,24 @@ class HitCondition:
     def setReactionListId(self, id):
         self.reaction_list_idx = id
     
+class ExtraMoveProperties:
+    size = 0xC if TekkenVersion == 7 else 0xC
+    
+    def __init__(self, addr):
+        self.addr = addr
+        data = readBytes(base + addr, ExtraMoveProperties.size)
+        
+        self.u1 = bToInt(data, 0, 4)
+        self.u2 = bToInt(data, 4, 4)
+        self.u3 = bToInt(data, 8, 4)
+            
+    def dict(self):
+        return {
+            'u1': self.u1,
+            'u2': self.u2,
+            'u3': self.u3
+        }
+    
 class Move:
     move_size = 0xB0 if TekkenVersion == 7 else 0x70
     
@@ -362,6 +380,7 @@ class Move:
         self.recovery = attack_recovery
         self.hitbox_location = hitbox_location
         self.hit_condition_addr = on_hit_ptr
+        self.extra_properties_ptr = extra_properties_ptr2
         
         self.u1 = u1
         self.u2 = u2
@@ -384,6 +403,7 @@ class Move:
         self.anim = AnimData(self.anim_name, base + self.anim_addr)
         self.cancel_idx = -1
         self.hit_condition_idx = -1
+        self.extra_properties_idx = 0
         
         self.id = -1
     
@@ -398,6 +418,7 @@ class Move:
             'transition': self.transition,
             'anim_max_len': self.anim_max_len,
             'hit_condition': self.hit_condition_idx,
+            'extra_properties_id': self.extra_properties_idx,
             'hitbox_location': self.hitbox_location,
             'startup': self.startup,
             'recovery': self.recovery,
@@ -427,6 +448,9 @@ class Move:
     def setHitConditionIdx(self, id):
         self.hit_condition_idx = id
         
+    def setExtraPropertiesIdx(self, id):
+        self.extra_properties_idx = id
+
     def setId(self, id):
         self.id = id
     
@@ -488,6 +512,11 @@ class Motbin:
         self.cancel_extradata_head_ptr = readInt(addr + cancel_extradata_head_ptr, ptr_size)
         self.cancel_extradata_list_size = readInt(addr + cancel_extradata_list_size, 4)
 
+        extra_move_properties_ptr = 0x1e0 if TekkenVersion == 7 else 0x188
+        extra_move_properties_size = extra_move_properties_ptr + ptr_size
+        self.extra_move_properties_ptr = readInt(addr + extra_move_properties_ptr, ptr_size)
+        self.extra_move_properties_size = readInt(addr + extra_move_properties_size, 4)
+
         movelist_head_ptr = 0x210 if TekkenVersion == 7 else 0x1a0
         movelist_size = movelist_head_ptr + ptr_size
         self.movelist_head_ptr = readInt(addr + movelist_head_ptr, ptr_size)
@@ -507,6 +536,7 @@ class Motbin:
         self.hit_conditions = []
         self.pushbacks = []
         self.pushback_extras = []
+        self.extra_move_properties = []
         
     def printBasicData(self):
         print("Character: %s" % (self.character_name))
@@ -532,7 +562,8 @@ class Motbin:
             'reaction_list': self.reaction_list,    
             'hit_conditions': self.hit_conditions,
             'pushbacks': self.pushbacks,
-            'pushback_extras': self.pushback_extras
+            'pushback_extras': self.pushback_extras,
+            'extra_move_properties': self.extra_move_properties
         }
         
     def save(self):
@@ -555,6 +586,7 @@ class Motbin:
             
         print("Saved at path %s/%s" % (os.getcwd(), path[2:]))
 
+        
 if __name__ == "__main__":
     motbin_ptr_addr = (GameAddresses.a['p1_ptr'] + 0x14a0) if TekkenVersion == 7 else cemu_motbin_base
     motbin_ptr = readInt(motbin_ptr_addr, ptr_size)
@@ -606,12 +638,18 @@ if __name__ == "__main__":
         hit_conditions.setReactionListId((hit_conditions.reaction_list_addr - m.reaction_list_ptr) // ReactionList.reaction_list_size)
         m.hit_conditions.append(hit_conditions.dict())
     
+    print("Reading extra move properties...")
+    for i in range(m.extra_move_properties_size):
+        extra_move_property = ExtraMoveProperties(m.extra_move_properties_ptr + (i * ExtraMoveProperties.size))
+        m.extra_move_properties.append(extra_move_property.dict())
+    
     print("Reading movelist...")
     for i in range(m.movelist_size):
         move = Move(m.movelist_head_ptr + (i * Move.move_size))
-        cancel_id = (move.cancel_addr - m.cancel_head_ptr) // Cancel.cancel_size
-        move.setCancelIdx(cancel_id)
+        move.setCancelIdx((move.cancel_addr - m.cancel_head_ptr) // Cancel.cancel_size)
         move.setHitConditionIdx((move.hit_condition_addr - m.hit_conditions_ptr) // HitCondition.hit_condition_size)
+        if move.extra_properties_ptr != 0:
+            move.setExtraPropertiesIdx((move.extra_properties_ptr - m.extra_move_properties_ptr) // ExtraMoveProperties.size)
         move.setId(i)
         m.moves.append(move.dict())
         

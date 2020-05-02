@@ -23,6 +23,7 @@ reaction_list_size = 0x70
 hit_condition_size = 0x18
 pushback_size = 0x10
 pushback_extra_size = 0x2
+extra_move_property_size = 0xC
 
 def getTag2RequirementAlias(req, param):
     requirement_detail = getTag2Requirement(req)
@@ -109,6 +110,9 @@ def getTotalSize(m):
     
     size = align8Bytes(size)
     size += len(m['hit_conditions']) * 0x18
+    
+    size = align8Bytes(size)
+    size += len(m['extra_move_properties']) * 0xC
 
     size = align8Bytes(size)
     for animName in m['anims']: 
@@ -153,6 +157,7 @@ class MotbinPtr:
         self.hit_conditions_ptr = 0
         self.pushback_ptr = 0
         self.pushback_extras_ptr = 0
+        self.extra_move_properties_ptr = 0
         
         self.move_names_table = {}
         self.animation_table = {}
@@ -221,6 +226,11 @@ class MotbinPtr:
         if self.reaction_list_ptr == 0:
             return 0
         return self.reaction_list_ptr + (idx * reaction_list_size)
+        
+    def getExtraMovePropertiesFromId(self, idx):
+        if self.extra_move_properties_ptr == 0:
+            return 0
+        return self.extra_move_properties_ptr + (idx * extra_move_property_size)
         
     def getHitConditionFromId(self, idx):
         if self.hit_conditions_ptr == 0:
@@ -357,6 +367,17 @@ class MotbinPtr:
         
         return self.hit_conditions_ptr, len(self.m['hit_conditions'])
         
+    def allocateExtraMoveProperties(self):
+        print("Allocating extra move properties...")
+        self.extra_move_properties_ptr = self.align()
+        
+        for extra_property in self.m['extra_move_properties']:
+            self.writeInt(extra_property['u1'], 4)
+            self.writeInt(extra_property['u2'], 4)
+            self.writeInt(extra_property['u3'], 4)
+        
+        return self.extra_move_properties_ptr, len(self.m['extra_move_properties'])
+        
     def allocateAnimations(self):
         print("Allocating animations...")
         self.animation_names_ptr = self.align()
@@ -422,8 +443,9 @@ class MotbinPtr:
             self.writeInt(move['u11'], 4)
             self.writeInt(move['u12'], 4)
             
+            extra_properties_addr = self.getExtraMovePropertiesFromId(move['extra_properties_id'])
             self.writeInt(0, 8) #extra_properties_1
-            self.writeInt(0, 8) #extra_properties_1
+            self.writeInt(extra_properties_addr, 8)
             
             self.writeInt(move['u13'], 8)
             self.writeInt(move['u14'], 8)
@@ -466,6 +488,7 @@ if __name__ == "__main__":
     pushback_extras_ptr, pushback_extras_size = p.allocatePushbackExtras()
     pushback_ptr, pushback_list_size = p.allocatePushbacks()
     reaction_list_ptr, reaction_list_count = p.allocateReactionList()
+    extra_move_properties_ptr, extra_move_properties_count  = p.allocateExtraMoveProperties()
     hit_conditions_ptr, hit_conditions_size = p.allocateHitConditions()
     
     p.allocateAnimations()
@@ -499,6 +522,9 @@ if __name__ == "__main__":
     writeInt(p.motbin_ptr + 0x1c0, group_cancel_ptr, 8)
     writeInt(p.motbin_ptr + 0x1c8, group_cancel_count, 8)
     
+    writeInt(p.motbin_ptr + 0x1e0, extra_move_properties_ptr, 8)
+    writeInt(p.motbin_ptr + 0x1e8, extra_move_properties_count, 8)
+    
     writeInt(p.motbin_ptr + 0x210, moves_ptr, 8)
     writeInt(p.motbin_ptr + 0x218, move_count, 8)
     
@@ -507,8 +533,8 @@ if __name__ == "__main__":
     print("%s successfully imported in memory.\n" % (jsonFilename))
     print("OLD moveset pointer: 0x%x (%s)" % (motbin_ptr, old_character_name))
     print("New moveset pointer: 0x%x (%s)" % (p.motbin_ptr, m['character_name']))
-    #print("%d/%d bytes left." % (p.size - (p.curr_ptr - p.head_ptr), p.size))
+    print("%d/%d bytes left." % (p.size - (p.curr_ptr - p.head_ptr), p.size))
     
     
-
+    #jin ragedrive pushback problems!!!!
     
