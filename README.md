@@ -44,3 +44,4 @@ Administrator rights may be required to import the moveset into memory.
 - Fix sidestep movesaround
 - Alias more conditions
 - Make bound use screw ressource?
+- Fix Heihachi OTGF and possibly Hwoarang JFSR
