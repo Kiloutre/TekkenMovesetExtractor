@@ -37,3 +37,4 @@ Administrator rights may be required to import the moveset into memory.
 
 - Fix commands that use command buffer
 - Fix throws crashing (use a placeholder throw data the throw cannot be fully imported)
+- Make bound use screw ressource?

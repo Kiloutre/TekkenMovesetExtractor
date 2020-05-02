@@ -107,7 +107,7 @@ class Pushback:
         self.extra_index = idx
         
 class PushbackExtradata:
-    size = 0x2 if TekkenVersion == 7 else 0x2
+    size = 0x2
     
     def __init__(self, addr):
         data = readBytes(base + addr, Pushback.pushback_size)
@@ -118,7 +118,7 @@ class PushbackExtradata:
         return self.value
         
 class Requirement:
-    requirement_size = 0x8 if TekkenVersion == 7 else 0x8
+    size = 0x8
     
     def __init__(self, addr):
         self.addr = addr
@@ -139,11 +139,11 @@ class Requirement:
         self.id = id
         
 class Cancel:
-    cancel_size = 0x28 if TekkenVersion == 7 else 0x20
+    size = 0x28 if TekkenVersion == 7 else 0x20
     
     def __init__(self, addr):
         self.addr = addr
-        data = readBytes(base + addr, Cancel.cancel_size)
+        data = readBytes(base + addr, Cancel.size)
         
         
         after_ptr_offset = 0x18 if TekkenVersion == 7 else 0x10
@@ -241,10 +241,10 @@ class ReactionList:
         }
     
 class HitCondition:
-    hit_condition_size = 0x18 if TekkenVersion == 7 else 0xC
+    size = 0x18 if TekkenVersion == 7 else 0xC
     
     def __init__(self, addr):
-        data = readBytes(base + addr, HitCondition.hit_condition_size)
+        data = readBytes(base + addr, HitCondition.size)
         
         self.reaction_list_idx = -1
         self.requirement_idx = -1
@@ -621,92 +621,92 @@ class Motbin:
         print("Saved at path %s/%s\n" % (os.getcwd(), path[2:]))
         
     def extractMoveset(self):
-        m.printBasicData()
+        self.printBasicData()
         
         print("Reading requirements...")
-        for i in range(m.requirement_count):
-            condition = Requirement(m.requirements_ptr + (i * Requirement.requirement_size))
+        for i in range(self.requirement_count):
+            condition = Requirement(self.requirements_ptr + (i * Requirement.size))
             condition.setId(i)
-            m.requirements.append(condition.dict())
+            self.requirements.append(condition.dict())
         
         print("Reading cancels...")
-        for i in range(m.cancel_list_size):
-            cancel = Cancel(m.cancel_head_ptr + (i * Cancel.cancel_size))
-            cancel.setRequirementId((cancel.requirement_addr - m.requirements_ptr) // Requirement.requirement_size)
+        for i in range(self.cancel_list_size):
+            cancel = Cancel(self.cancel_head_ptr + (i * Cancel.size))
+            cancel.setRequirementId((cancel.requirement_addr - self.requirements_ptr) // Requirement.size)
             cancel.setId(i)
-            m.cancels.append(cancel.dict())
+            self.cancels.append(cancel.dict())
         
         print("Reading grouped cancels...")
-        for i in range(m.group_cancel_list_size):
-            cancel = Cancel(m.group_cancel_head_ptr + (i * Cancel.cancel_size))
-            cancel.setRequirementId((cancel.requirement_addr - m.requirements_ptr) // Requirement.requirement_size)
+        for i in range(self.group_cancel_list_size):
+            cancel = Cancel(self.group_cancel_head_ptr + (i * Cancel.size))
+            cancel.setRequirementId((cancel.requirement_addr - self.requirements_ptr) // Requirement.size)
             cancel.setId(i)
-            m.group_cancels.append(cancel.dict())
+            self.group_cancels.append(cancel.dict())
         
         print("Reading pushbacks extradatas...")
-        for i in range(m.pushback_extradata_size):
-            pushback_extra = PushbackExtradata(m.pushback_extradata_ptr + (i * PushbackExtradata.size))
-            m.pushback_extras.append(pushback_extra.dict())
+        for i in range(self.pushback_extradata_size):
+            pushback_extra = PushbackExtradata(self.pushback_extradata_ptr + (i * PushbackExtradata.size))
+            self.pushback_extras.append(pushback_extra.dict())
 
         print("Reading pushbacks...")
-        for i in range(m.pushback_list_size):
-            pushback = Pushback(m.pushback_ptr + (i * Pushback.pushback_size))
-            pushback.setExtraIndex((pushback.extra_addr - m.pushback_extradata_ptr) // PushbackExtradata.size)
-            m.pushbacks.append(pushback.dict())
+        for i in range(self.pushback_list_size):
+            pushback = Pushback(self.pushback_ptr + (i * Pushback.pushback_size))
+            pushback.setExtraIndex((pushback.extra_addr - self.pushback_extradata_ptr) // PushbackExtradata.size)
+            self.pushbacks.append(pushback.dict())
         
         print("Reading reaction lists...")
-        for i in range(m.reaction_list_size):
-            reaction_list = ReactionList(m.reaction_list_ptr + (i * ReactionList.reaction_list_size))
-            reaction_list.setIndexes(m.pushback_ptr, Pushback.pushback_size)
-            m.reaction_list.append(reaction_list.dict())
+        for i in range(self.reaction_list_size):
+            reaction_list = ReactionList(self.reaction_list_ptr + (i * ReactionList.reaction_list_size))
+            reaction_list.setIndexes(self.pushback_ptr, Pushback.pushback_size)
+            self.reaction_list.append(reaction_list.dict())
         
         print("Reading on-hit condition lists...")
-        for i in range(m.hit_conditions_size):
-            hit_conditions = HitCondition(m.hit_conditions_ptr + (i * HitCondition.hit_condition_size))
-            hit_conditions.setRequirementId((hit_conditions.requirement_addr - m.requirements_ptr) // Requirement.requirement_size)
-            hit_conditions.setReactionListId((hit_conditions.reaction_list_addr - m.reaction_list_ptr) // ReactionList.reaction_list_size)
-            m.hit_conditions.append(hit_conditions.dict())
+        for i in range(self.hit_conditions_size):
+            hit_conditions = HitCondition(self.hit_conditions_ptr + (i * HitCondition.size))
+            hit_conditions.setRequirementId((hit_conditions.requirement_addr - self.requirements_ptr) // Requirement.size)
+            hit_conditions.setReactionListId((hit_conditions.reaction_list_addr - self.reaction_list_ptr) // ReactionList.reaction_list_size)
+            self.hit_conditions.append(hit_conditions.dict())
         
         print("Reading extra move properties...")
-        for i in range(m.extra_move_properties_size):
-            extra_move_property = ExtraMoveProperties(m.extra_move_properties_ptr + (i * ExtraMoveProperties.size))
-            m.extra_move_properties.append(extra_move_property.dict())
+        for i in range(self.extra_move_properties_size):
+            extra_move_property = ExtraMoveProperties(self.extra_move_properties_ptr + (i * ExtraMoveProperties.size))
+            self.extra_move_properties.append(extra_move_property.dict())
         
         print("Reading voiceclips...")
-        for i in range(m.voiceclip_list_size):
-            voiceclip = Voiceclip(m.voiceclip_list_ptr + (i * Voiceclip.size))
-            m.voiceclips.append(voiceclip.dict())
+        for i in range(self.voiceclip_list_size):
+            voiceclip = Voiceclip(self.voiceclip_list_ptr + (i * Voiceclip.size))
+            self.voiceclips.append(voiceclip.dict())
         
         print("Reading movelist...")
-        for i in range(m.movelist_size):
-            move = Move(m.movelist_head_ptr + (i * Move.move_size))
-            move.setCancelIdx((move.cancel_addr - m.cancel_head_ptr) // Cancel.cancel_size)
-            move.setHitConditionIdx((move.hit_condition_addr - m.hit_conditions_ptr) // HitCondition.hit_condition_size)
+        for i in range(self.movelist_size):
+            move = Move(self.movelist_head_ptr + (i * Move.move_size))
+            move.setCancelIdx((move.cancel_addr - self.cancel_head_ptr) // Cancel.size)
+            move.setHitConditionIdx((move.hit_condition_addr - self.hit_conditions_ptr) // HitCondition.size)
             if move.extra_properties_ptr != 0:
-                move.setExtraPropertiesIdx((move.extra_properties_ptr - m.extra_move_properties_ptr) // ExtraMoveProperties.size)
+                move.setExtraPropertiesIdx((move.extra_properties_ptr - self.extra_move_properties_ptr) // ExtraMoveProperties.size)
             if move.voiceclip_ptr != 0:
-                move.setVoiceclipId((move.voiceclip_ptr - m.voiceclip_list_ptr) // Voiceclip.size)
+                move.setVoiceclipId((move.voiceclip_ptr - self.voiceclip_list_ptr) // Voiceclip.size)
             move.setId(i)
-            m.moves.append(move.dict())
+            self.moves.append(move.dict())
             
-            if move.anim not in m.anims:
-                m.anims.append(move.anim)
+            if move.anim not in self.anims:
+                self.anims.append(move.anim)
         
-        m.save()
+        self.save()
         
 if __name__ == "__main__":
     cemu_motbin_base = (base + GameAddresses.a['cemu_p1_base'] - 0x98)
     motbin_ptr_addr = (GameAddresses.a['p1_ptr'] + 0x14a0) if TekkenVersion == 7 else cemu_motbin_base
     motbin_ptr = readInt(motbin_ptr_addr, ptr_size)
     
-    m = Motbin(motbin_ptr if TekkenVersion == 7 else motbin_ptr + base)
+    m = Motbin(base + motbin_ptr)
     m.extractMoveset()
     
     cemu_motbin_base = (base + GameAddresses.a['cemu_p2_base'] - 0x98)
     motbin_ptr_addr = (GameAddresses.a['p2_ptr'] + 0x14a0) if TekkenVersion == 7 else cemu_motbin_base
     motbin_ptr = readInt(motbin_ptr_addr, ptr_size)
     
-    m2 = Motbin(motbin_ptr if TekkenVersion == 7 else motbin_ptr + base)
+    m2 = Motbin(base + motbin_ptr)
     if m.name != m2.name:
         m2.extractMoveset()
     

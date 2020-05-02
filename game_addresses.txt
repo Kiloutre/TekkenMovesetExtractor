@@ -1,20 +1,10 @@
-# Input accuracy: Required to sync inputs to the game's timing #
-frame_counter = 0x1434B6060
-
 # player ptrs, required for moveset extract
 p1_ptr        = 0x1434D2E10
 p2_ptr        = 0x1434D63C0
 
-# Enemy move ID & timer: Required for Reaction.py #
-p2_move_timer = 0x1434d65b4
-p2_move_id    = 0x1434d6704
-
-#other
-inputbuffer   = 0x0a820020
-
-# CEMU base address, need to be updated with every CEMU restart
-cemu_base     = 0x02728C790000
-
 # CEMU p1 & p2 base, constant
 cemu_p1_base  = 0x10885C90
 cemu_p2_base  = 0x108885F0
+
+# CEMU base address, need to be updated with every CEMU restart
+cemu_base     = 0x0223D1E90000
