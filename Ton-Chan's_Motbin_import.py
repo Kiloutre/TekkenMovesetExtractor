@@ -494,7 +494,9 @@ class MotbinPtr:
             self.writeInt(move['startup'], 4)
             self.writeInt(move['recovery'], 4)
             
-            self.writeInt(move['u16'], 8)
+            self.writeInt(move['u16'], 2)
+            self.writeInt(move['u17'], 2)
+            self.writeInt(move['u18'], 4)
             
         for u15 in list(set(missingAliasList)):
             print("Missing alias for offset 0x98: %d" % (u15))

@@ -330,7 +330,9 @@ class Move:
             attack_startup = bToInt(move_bytes, 0xa0, 4)
             attack_recovery = bToInt(move_bytes, 0xa4, 4)
             
-            u16 = bToInt(move_bytes, 0xa8, 8)
+            u16 = bToInt(move_bytes, 0xa8, 2)
+            u17 = bToInt(move_bytes, 0xaa, 2)
+            u18 = bToInt(move_bytes, 0xac, 4)
         else:
             move_name_addr = bToInt(move_bytes, 0x0, ptr_size)
             anim_name_addr = bToInt(move_bytes, 0x4, ptr_size)
@@ -358,20 +360,23 @@ class Move:
             
             u10 = bToInt(move_bytes, 0x40, 4)
             u11 = bToInt(move_bytes, 0x44, 4)
-            u12 = bToInt(move_bytes, 0x48, 4) #break hits airborne
+            u12 = bToInt(move_bytes, 0x48, 4)
             
             voiceclip_ptr = bToInt(move_bytes, 0x4c, ptr_size) #can_be_null
             extra_properties_ptr = bToInt(move_bytes, 0x50, ptr_size) #can_be_null
             
             u13 = 0#bToInt(move_bytes, 0x54, 4) #pointer!!!
             u14 = 0#bToInt(move_bytes, 0x58, 4) #pointer!!!
-            u15 = bToInt(move_bytes, 0x5c, 4) #breaks hits airborne toos
+            u15 = bToInt(move_bytes, 0x5c, 4)
             
             hitbox_location = bToInt(move_bytes, 0x60, 4, ed='little')
             attack_startup = bToInt(move_bytes, 0x64, 4)
             attack_recovery = bToInt(move_bytes, 0x68, 4)
             
-            u16 = bToInt(move_bytes, 0x6c, 4)
+            u16 = 0
+            u17 = bToInt(move_bytes, 0x6e, 2) 
+            u18 = bToInt(move_bytes, 0x6c, 2)
+            
         
         self.name = readString(base + move_name_addr)
         self.anim_name = readString(base + anim_name_addr)
@@ -405,6 +410,8 @@ class Move:
         self.u14 = u14
         self.u15 = u15
         self.u16 = u16
+        self.u17 = u17
+        self.u18 = u18
         
         self.anim = AnimData(self.anim_name, base + self.anim_addr)
         self.cancel_idx = -1
@@ -447,7 +454,9 @@ class Move:
             'u13': self.u13,
             'u14': self.u14,
             'u15': self.u15,
-            'u16': self.u16
+            'u16': self.u16,
+            'u18': self.u18,
+            'u17': self.u17
         }
         
     def setCancelIdx(self, cancel_idx):
@@ -708,6 +717,6 @@ if __name__ == "__main__":
     
     m2 = Motbin(base + motbin_ptr)
     if m.name != m2.name:
-        m2.extractMoveset()
+        pass#m2.extractMoveset()
     
     
