@@ -13,7 +13,7 @@ p2_move_id    = 0x1434d6704
 inputbuffer   = 0x0a820020
 
 # CEMU base address, need to be updated with every CEMU restart
-cemu_base     = 0x01DC92870000
+cemu_base     = 0x02728C790000
 
 # CEMU p1 & p2 base, constant
 cemu_p1_base  = 0x10885C90
