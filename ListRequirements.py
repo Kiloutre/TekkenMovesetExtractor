@@ -113,6 +113,17 @@ class ReactionScenario:
             req.print()
         print("0x%x" % (self.addr))
         print(self.moveid_list)
+        
+class ExtraProperty:
+    def __init__(self, addr):
+        data = readBytes(addr, 4 * 3)
+        
+        self.type = bToInt(data, 0, 4)
+        self.id = bToInt(data, 4, 4)
+        self.value= bToInt(data, 8, 4)
+        
+    def print(self):
+        print("Type: %x | ID: %x | value: %x" % (self.type, self.id, self.value))
     
 class Cancel:
     def __init__(self, addr):
@@ -147,6 +158,7 @@ class Move:
         self.hitlevel = bToInt(moveBytes, 0x1c, 4)
         self.cancel_ptr = bToInt(moveBytes, 0x20, 8)
         self.reaction_ptr = bToInt(moveBytes, 0x60, 8)
+        self.extra_property_ptr = bToInt(moveBytes, 0x80, 8)
         
         self.u12 = bToInt(moveBytes, 0x74, 4)
         self.u15 = bToInt(moveBytes, 0x98, 4)
@@ -156,6 +168,8 @@ class Move:
         
         self.cancels = []
         self.reactionScenarios = []
+        self.property_list = []
+        self.reaction_list = []
         
         if id == 0:
             self.loadCancels()
@@ -173,6 +187,18 @@ class Move:
             reaction_ptr += 0x18
             reaction = ReactionScenario(reaction_ptr)
             self.reaction_list.append(reaction)
+                
+    def loadExtraProperties(self):
+        extra_property_ptr = self.extra_property_ptr
+        if extra_property_ptr == 0:
+            print("extra_property_ptr = 0")
+            return
+        property = ExtraProperty(extra_property_ptr)
+        self.property_list = [property]
+        while property.type != 0:
+            extra_property_ptr += 0x18
+            property = ExtraProperty(extra_property_ptr)
+            self.property_list.append(property)
             
     def loadCancels(self):
         cancel_ptr = self.cancel_ptr
@@ -198,6 +224,11 @@ class Move:
         for cancel in self.cancels:
             cancel.print(movelist, printOnlyIfRequirements)
         print("- %d cancels. -" % (len(self.cancels)))
+        
+    def printProperties(self):
+        self.loadExtraProperties()
+        for property in self.property_list:
+            property.print()
         
 class Player:
     def __init__(self, addr, id=None):
@@ -235,13 +266,33 @@ class Player:
         self.curr_move_ptr = readInt(self.addr + 0x220, 8)
         self.curr_move_class = Move(self.curr_move_ptr, 0)
         
+    def getCurrmoveName(self):
+        self.getCurrmoveData()
+        return self.curr_move_name
+        
     def printCancels(self, printOnlyIfRequirements=True):
         self.getCurrmoveData()
         self.curr_move_class.printCancels(self.getMovelist(), printOnlyIfRequirements)
         
+    def printProperties(self):
+        self.getCurrmoveData()
+        self.curr_move_class.printProperties()
+        
     def printAttackReactions(self):
         self.getCurrmoveData()
         self.curr_move_class.printAttackReactions()
+        
+    def getCurrmoveId(self):
+        return readInt(self.addr + 0x344, 4)
+        
+    def getMoveProperties(self, id):
+        self.movelist[id].loadExtraProperties()
+        return self.movelist[id].property_list
+        
+    def getCurrmoveProperties(self):
+        self.getCurrmoveData()
+        self.curr_move_class.loadExtraProperties()
+        return self.curr_move_class.property_list
         
     def printId(self):
         if self.id != None:
@@ -280,68 +331,27 @@ if __name__ == "__main__":
     sharedMoves = [move for move in P1.movelist if move in P2.movelist]
     sharedMoves = [(move, P2.movelist[P2.movelist.index(move)]) for move in sharedMoves]
 
-    """
-    for tag2_move, t7_move in sharedMoves:
-        move = t7_move
-        movelist = P2.getMovelist()
-        move.loadCancels()
-        print("MOVENAME:", move.name)
-        move.printCancels(movelist, True)
-    """
+    p1move, p2move = P1.getCurrmoveId(), P2.getCurrmoveId()
+    p1movename, p2movename = P1.getCurrmoveName(), P2.getCurrmoveName()
     
-    for tag2_move, t7_move in sharedMoves:
-        if tag2_move.u15 == t7_move.u15:
-            continue
-        if tag2_move.u12 != t7_move.u12:
-            continue
-        if tag2_move.u15 in test:
-            continue
-        moveeelist.append((tag2_move, t7_move))
-        test.append(tag2_move.u15)
-        
-    def printU15(u15, label="", bytecount=4):
-        print(label, end='')
-        bytelist = [(u15 >> (8 * i)) & 0xFF for i in range(bytecount)][::-1]
-        for b in bytelist:
-            print(format(b, "08b"), end=' ')
-        print('')
-        
-    def reverseBitOrder(number):
-        res = 0
-        for i in range(7): #skip last bit
-            bitVal = (number & (1 << i)) != 0
-            res |= (bitVal << (7 - i))
-        return res
+    print("%s (%d) / %s (%d)" % (p1movename, p1move, p2movename, p2move))
     
-    def process_number(number):
-        return (number >> 7) | ((reverseBitOrder(number & 0xFF)) << 24)
-        
+    p1Properties = P1.getMoveProperties(p1move)
+    p2Properties = P2.getMoveProperties(p2move)
+    
+    
+    for prop1, prop2 in zip(p1Properties, p2Properties):
+        if prop1.type == prop2.type and prop1.id != prop2.id and prop1.value == prop2.value:
+            print("    { 'id': 0x%x, 'tag2_id': 0x%x, 'desc': '%s' }," % (prop2.id, prop1.id, p1movename))
+    
+    os._exit(0)
 
-    print(reverseBitOrder(168))
-    os._exit(0)
-        
-    for move, move2 in moveeelist:
-        if move2.u15 == (move.u15 >> 7):
-            continue
-        processed_u15 = move.u15
-        processed_u15 = processed_u15
-        processed_u15 >>= 7
-        tmp = (reverseBitOrder(move.u15 & 0xFF) << 24)
-        processed_u15 = process_number(move.u15)
-            
-        print("Tag2    : %x" % (move.u15))
-        print("Tekken7 : %x" % (move2.u15))
-        print("SHR7    : %x" % (processed_u15))
-        printU15(move.u15, "Tag2      = ")
-        printU15(move2.u15, "Tek7      = ")
-        printU15(processed_u15, "SHR7      = ")
-        print('\n')
-    
-    os._exit(0)
 
     if p1Show != None and p1Show.lower() != "none":
         P1.printBasicData()
-        if p1Show.lower().startswith("cancel"):
+        if p1Show.lower().startswith("properties"):
+            P1.printProperties()
+        elif p1Show.lower().startswith("cancel"):
             P1.printCancels(False)
         elif p1Show.lower().startswith("reaction"):
             P1.printAttackReactions()
@@ -350,7 +360,9 @@ if __name__ == "__main__":
     
     if p2Show != None and p2Show.lower() != "none":
         P2.printBasicData()
-        if p2Show.lower().startswith("cancel"):
+        if p2Show.lower().startswith("properties"):
+            P2.printProperties()
+        elif p2Show.lower().startswith("cancel"):
             P2.printCancels()
         elif p2Show.lower().startswith("reaction"):
             P2.printAttackReactions()

@@ -262,21 +262,21 @@ class HitCondition:
         self.reaction_list_idx = id
     
 class ExtraMoveProperties:
-    size = 0xC if TekkenVersion == 7 else 0xC
+    size = 0xC
     
     def __init__(self, addr):
         self.addr = addr
         data = readBytes(base + addr, ExtraMoveProperties.size)
         
-        self.u1 = bToInt(data, 0, 4)
-        self.u2 = bToInt(data, 4, 4)
-        self.u3 = bToInt(data, 8, 4)
+        self.type = bToInt(data, 0, 4)
+        self.id = bToInt(data, 4, 4)
+        self.value = bToInt(data, 8, 4)
             
     def dict(self):
         return {
-            'u1': self.u1,
-            'u2': self.u2,
-            'u3': self.u3
+            'type': self.type,
+            'id': self.id,
+            'value': self.value
         }
     
 class Move:

@@ -154,6 +154,27 @@ requirements = [
     }
 ]
 
+extra_move_properties = [
+    { 'id': 0x818a, 'tag2_id': 0x80f8, 'desc': 'He_shoryu_S' },
+    { 'id': 0x817d, 'tag2_id': 0x80eb, 'desc': 'He_SUPER_0' },
+    { 'id': 0x802e, 'tag2_id': 0x801d, 'desc': 'He_SUPER_0' },
+    { 'id': 0x802e, 'tag2_id': 0x801d, 'desc': 'He_SUPER_0' },
+    { 'id': 0x84c4, 'tag2_id': 0x82f9, 'desc': 'He_SUPER_0' },
+    { 'id': 0x84c4, 'tag2_id': 0x82f9, 'desc': 'He_nige00' },
+    { 'id': 0x8254, 'tag2_id': 0x8192, 'desc': 'Jz_shoryu24' },
+    { 'id': 0x83b2, 'tag2_id': 0x825d, 'desc': 'Jz_shoryu24' },
+    { 'id': 0x8188, 'tag2_id': 0x80f6, 'desc': 'ThrmvRB2_09' },
+    { 'id': 0x8428, 'tag2_id': 0x82d5, 'desc': 'ThrmvRB2_09' },
+    { 'id': 0x818c, 'tag2_id': 0x80fa, 'desc': 'Jz_hadohB00' },
+    { 'id': 0x8429, 'tag2_id': 0x82d6, 'desc': 'Jz_zansin00' },
+    { 'id': 0x818c, 'tag2_id': 0x80fa, 'desc': 'Jz_zansin00' },
+    { 'id': 0x8429, 'tag2_id': 0x82d6, 'desc': 'AteN_move_0' },
+    { 'id': 0x842c, 'tag2_id': 0x82d9, 'desc': 'AteN_move_0' },
+    { 'id': 0x826d, 'tag2_id': 0x81ac, 'desc': 'Jz_round_RK' },
+
+]
+
+
 def getRequirement(id):
     for r in requirements:
         if r['id'] == id:
@@ -162,6 +183,12 @@ def getRequirement(id):
 
 def getTag2Requirement(id):
     for r in requirements:
+        if r['tag2_id'] == id:
+            return r
+    return None
+    
+def getTag2ExtraMoveProperty(type, id):
+    for r in extra_move_properties:
         if r['tag2_id'] == id:
             return r
     return None

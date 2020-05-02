@@ -2,7 +2,7 @@
 # Python 3.6.5
 
 from Addresses import GameAddresses, GameClass, VirtualAllocEx, VirtualFreeEx, GetLastError, MEM_RESERVE, MEM_COMMIT, MEM_DECOMMIT, MEM_RELEASE, PAGE_EXECUTE_READWRITE
-from Aliases import getTag2Requirement
+from Aliases import getTag2Requirement, getTag2ExtraMoveProperty
 import json
 import os
 import sys
@@ -34,6 +34,12 @@ def getTag2RequirementAlias(req, param):
         param = requirement_detail['param_alias'].get(param, param)
             
     return requirement_detail['id'], param
+
+def getTag2ExtramovePropertyAlias(extra_property):
+    new_extra_property = getTag2ExtraMoveProperty(extra_property['type'], extra_property['id'])
+    if new_extra_property == None:
+        return extra_property['id']
+    return new_extra_property['id']
 
 def readInt(addr, bytes_length=4):
     return T.readInt(addr, bytes_length)
@@ -393,9 +399,11 @@ class MotbinPtr:
         self.extra_move_properties_ptr = self.align()
         
         for extra_property in self.m['extra_move_properties']:
-            self.writeInt(extra_property['u1'], 4)
-            self.writeInt(extra_property['u2'], 4)
-            self.writeInt(extra_property['u3'], 4)
+            if self.m['version'] == "Tag2":
+                extra_property['id'] = getTag2ExtramovePropertyAlias(extra_property)
+            self.writeInt(extra_property['type'], 4)
+            self.writeInt(extra_property['id'], 4)
+            self.writeInt(extra_property['value'], 4)
         
         return self.extra_move_properties_ptr, len(self.m['extra_move_properties'])
         
@@ -464,8 +472,6 @@ class MotbinPtr:
             
             voiceclip_addr = self.getVoiceclipFromId(move['voiceclip'])
             extra_properties_addr = self.getExtraMovePropertiesFromId(move['extra_properties_id'])
-            if self.m['version'] == "Tag2":
-                extra_properties_addr = 0
             
             self.writeInt(voiceclip_addr, 8)
             self.writeInt(extra_properties_addr, 8)
