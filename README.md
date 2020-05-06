@@ -14,7 +14,7 @@ You have to then start a game with the targeted moveset loaded up, and simply ru
 
 Every moveset extracted from Tekken7 will be prefixed with `7_`
 
-## Exporting from Tag2 (CEMU)
+## Exporting from Tag2 (CEMU, Wii U emulator)
 In order to work with Tag2, you need to first get the base address of the game in Cemu, and feed it to the variable `cemu_base` in `game_addresses.txt`
 This address changes everytime CEMU is started. You can find it by finding any game-related value (an easy one is 32770 for crouching and 32769 for standing, in big endian), then looking at what accesses the value and dumping the r13 register from there. The r13 register will contain the `cemu_base` address.
 Then, you need to run the extractor with the argument `tag2`. Example:
@@ -35,6 +35,7 @@ Administrator rights may be required to import the moveset into memory.
 
 # TODO:
 
+- Fix projectiles crashing when used on the wrong character (Geese projectile without Geese loaded)
 - Fix missing TAG2 commands that use command buffer. Placeholder?
 - Fix wallbreak, balcony break and floorbreak on both T7 & Tag2
 - Fix throws crashing (use a placeholder throw data the throw cannot be fully imported)
