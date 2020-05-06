@@ -39,7 +39,7 @@ def getTag2RequirementAlias(req, param):
     return requirement_detail['id'], param
 
 def getTag2ExtramovePropertyAlias(type, id):
-    new_extra_property = getTag2ExtraMoveProperty(id)
+    new_extra_property = getTag2ExtraMoveProperty(type, id)
     if new_extra_property == None:
         return type, id
     if 'type_replace' in new_extra_property:
@@ -522,7 +522,7 @@ class MotbinPtr:
             voiceclip_addr = self.getVoiceclipFromId(move['voiceclip'])
             extra_properties_addr = self.getExtraMovePropertiesFromId(move['extra_properties_id'])
             
-            if move['hitlevel'] == 2560: #disable throws damage until they are properly imported
+            if move['hitlevel'] == 2560: #disable throw damage until they are properly imported
                 extra_properties_addr = 0
             
             self.writeInt(voiceclip_addr, 8)

@@ -125,8 +125,17 @@ class ExtraProperty:
         self.id = bToInt(data, 4, 4)
         self.value= bToInt(data, 8, 4)
         
-    def print(self):
-        print("%x - Type: %x | ID: %x | value: %x" % (self.addr, self.type, self.id, self.value))
+    def dict(self):
+        return {
+            'type': self.type,
+            'id': self.id,
+            'value': self.value
+        }
+        
+    def print(self, printAddress=False):
+        if printAddress:
+            print("%x - " % (self.addr), end='')
+        print("Type: %x | ID: %x | value: %x" % (self.type, self.id, self.value))
         
     def __eq__(self, other):
         return self.type == other.type and self.value == other.value
@@ -143,14 +152,22 @@ class Cancel:
         self.move_id = bToInt(data, 0x24, 2)
         self.unknown = bToInt(data, 0x26, 2)
         
+        self.name = ''
+        
         self.requirements = getRequirementList(bToInt(data, 0x8, 8))
+        
+    def getName(self, movelist):
+        if self.name == '':
+            self.name = getMoveName(self.move_id, movelist)
+        return self.name
         
     def __eq__(self, other):
         if self.frame_window_start == other.frame_window_start \
             and self.frame_window_end == other.frame_window_end \
             and self.starting_frame == other.starting_frame \
             and self.command == other.command \
-            and self.unknown == other.unknown:
+            and self.unknown == other.unknown \
+            and self.name == other.name:
                 return True
         return False
 
@@ -226,6 +243,10 @@ class Move:
             cancel = Cancel(cancel_ptr)
             self.cancels.append(cancel)
         return self.cancels
+        
+    def loadCancelNames(self, movelist):
+        for cancel in self.cancels:
+            cancel.getName(movelist)
             
     def printAttackReactions(self):
         if self.hitlevel == 0:
@@ -254,6 +275,12 @@ class Player:
         self.id = id
     
         motbin_ptr = readInt(addr + 0x14a0, 8)
+        
+        self.name = readStringPtr(motbin_ptr + 8)
+        self.uname = self.name.upper()
+        
+        if self.name[0] == '[':
+            self.uname = self.uname[1:-1]
         
         self.movelist_head = readInt(motbin_ptr + 0x210, 8)
         self.movelist_size = readInt(motbin_ptr + 0x218, 4)
@@ -324,8 +351,210 @@ class Player:
         extraMoveInfo = '(Second movelist)' if self.using_second_movelist else ''
         print("Current move: %d [%s]" % (self.curr_move, self.curr_move_name), extraMoveInfo)
         print("\n")
+        
+def getSharedMoves(P1, P2):
+    return [(move, P2.movelist[P2.movelist.index(move)]) for move in P1.movelist if move in P2.movelist]
+    
+def saveExtraProperties():
+    P1 = Player(GameAddresses.a['p1_ptr'], '1')
+    P2 = Player(GameAddresses.a['p2_ptr'], '2')
+    
+    print("Comparing %s to %s..." % (P1.name, P2.name))
+    
+    if P1.name.upper() != P2.name.upper() and (len(sys.argv) < 3 or sys.argv[2] != "--force"):
+        print("Unmatching movelist names, exiting")
+        return
+    
+    
+    sharedMoves = getSharedMoves(P1, P2)
+    aliasedList = []
+    fileContent = []
+    
+    for tag2_move, t7_move in sharedMoves:
+        proplist_1 = tag2_move.loadExtraProperties()
+        proplist_2 = t7_move.loadExtraProperties()
+        
+        for tag2_prop in proplist_1:
+            if tag2_prop in proplist_2:
+                t7_prop = next(prop for prop in proplist_2 if prop == tag2_prop)
+                if t7_prop.id in aliasedList:
+                    continue
+                aliasedList.append(t7_prop.id)
+                fileContent.append("    { 'type': %d, 'id': 0x%x, 'tag2_id': 0x%x, 'desc': '%s' }," % (t7_prop.type, t7_prop.id, tag2_prop.id, tag2_move.name))
+                    
+    f = open("./file.txt", "a")
+                    
+    f.write("# %s #\n" % (P1.name))
+    for line in fileContent:
+        f.write(line)
+        f.write("\n")
+    f.close()
+    print("File saved.")
+    os._exit(0)
+    
+    
+class PropertyLol:
+    def __init__(self, data):
+        self.type = data['type']
+        self.id = data['id']
+        self.tag2_id = data['tag2_id']
+        self.desc = data['desc']
+        
+    def __eq__(self, other):
+        return self.id == other.id and self.type == other.type
+        
+    def __str__(self):
+        return ("    { 'type': %d, 'id': 0x%x, 'tag2_id': 0x%x, 'desc': '%s (unik)' },\n" % (self.type, self.id, self.tag2_id, self.desc))
+        
+def saveUniqueProperties():
+    
+    final = []
+    redundants = []
+    
+    propertyList = [PropertyLol(prop) for prop in extra_move_properties]
+
+    for prop in propertyList:
+        if propertyList.count(prop) == 1:
+            final.append(prop)
+        else:
+            redundants.append(prop)
+            
+    print("%d uniques, %d redundants" % (len(final), len(redundants)))
+
+    for prop in redundants:
+        commonPropList = [p for p in redundants if p == prop and p.tag2_id != prop.tag2_id]
+        commonPropList2 = []#[p for p in redundants if p != prop and p.tag2_id == prop.tag2_id]
+        if len(commonPropList + commonPropList2) == 0 and prop not in final:
+            final.append(prop)
+
+    print("%d total" % (len(final)))
+        
+    with open("test.txt", "w") as f:
+        for prop in final:
+            f.write(str(prop))
+    os._exit(0)
+    
+def propertyStuff(P1, P2):
+
+    sharedMoves = getSharedMoves(P1, P2)
+    p1move, p2move = P1.getCurrmoveId(), P2.getCurrmoveId()
+    p1movename, p2movename = P1.getCurrmoveName(), P2.getCurrmoveName()
+    aliasedList = list(set([req['id'] for req in extra_move_properties]))
+    printT7PropsToo = True
+    requiredMoveName = "Ym_rotmvR00"
+    
+    for tag2_move, t7_move in sharedMoves:
+        if (requiredMoveName != None and requiredMoveName != "") and tag2_move != requiredMoveName:
+            continue
+        proplist_1 = tag2_move.loadExtraProperties()
+        proplist_2 = t7_move.loadExtraProperties()
+        
+        if printT7PropsToo:
+            print("Tag2:")
+            tag2_move.printProperties()
+            print("\nT7:")
+            t7_move.printProperties()
+            print("--END--")
+        
+        print("\n")
+        for tag2_prop in proplist_1:
+            if tag2_prop in proplist_2 and not printT7PropsToo:
+                t7_prop = next(prop for prop in proplist_2 if prop == tag2_prop)
+                if t7_prop.id in aliasedList:
+                    #print("aliased")
+                    continue
+                aliasedList.append(t7_prop.id)
+                print("    { 'id': 0x%x, 'tag2_id': 0x%x, 'desc': '%s' }," % (t7_prop.id, tag2_prop.id, tag2_move.name))
+            elif printT7PropsToo:
+                tag2_prop.print()
+                
+        if printT7PropsToo:
+            print("\n")
+            for t7_prop in proplist_2:
+                if t7_prop not in proplist_1:
+                    t7_prop.print()
+                    
+def saveAliasRequirements():
+    P1 = Player(GameAddresses.a['p1_ptr'], '1')
+    P2 = Player(GameAddresses.a['p2_ptr'], '2')
+    
+    print("Comparing %s to %s..." % (P1.name, P2.name))
+    
+    if P1.name.upper() != P2.name.upper() and (len(sys.argv) < 3 or sys.argv[2] != "--force"):
+        print("Unmatching movelist names, exiting")
+        return
+
+    P1.setSecondMovelist(P2.movelist)
+    P2.setSecondMovelist(P1.movelist)
+    
+
+    sharedMoves = getSharedMoves(P1, P2)
+    requiredMoveName = "Kz_bodylp00"
+    
+    aliasList = []
+    for tag2_move, t7_move in sharedMoves:
+        tag2_move.loadCancels()
+        tag2_move.loadCancelNames(P1.movelist)
+        t7_move.loadCancels()
+        t7_move.loadCancelNames(P2.movelist)
+        
+        for cancel in tag2_move.cancels:
+            name = cancel.name
+            
+            similarCancels = [s_cancel for s_cancel in t7_move.cancels if s_cancel == cancel]
+            t7_cancel = [s_cancel for s_cancel in similarCancels if len(s_cancel.requirements) == len(cancel.requirements)]
+            
+            if len(t7_cancel) != 1:
+                continue
+                
+            t7_cancel = t7_cancel[0]
+            sameParams = True
+            tmpAliasList = {}
+            
+            for req, t7_req in zip(cancel.requirements, t7_cancel.requirements): 
+                if req.param != t7_req.param:
+                    sameParams = False
+                if req.req != t7_req.req:
+                    tmpAliasList[t7_req.req] = req.req
+                    
+            if not sameParams:
+                continue
+                
+            for key in tmpAliasList.keys():
+                if len([a for a in aliasList if a['id'] == key]) > 0:
+                    continue
+                aliasList.append({
+                    'id': key,
+                    'tag2_id': tmpAliasList[key],
+                    'desc': '(%s) %s -> %s' % (P1.uname, tag2_move.name, name)
+                })
+
+    aliasList = sorted(aliasList, key = lambda t: t['id'])
+    for alias in aliasList:
+        if len([a for a in requirements if a['id'] == alias['id']]) > 0:
+            continue
+        requirements.append(alias)
+        print(alias)
+        
+    aliasList = sorted(requirements, key = lambda t: t['id'])
+    
+    with open("./test.py", "w") as f:
+        f.write("requirements = [\n")
+        for alias in aliasList:
+            text = "    { 'id': %d, 'tag2_id': %d, 'desc': '%s' }," % (alias['id'], alias['tag2_id'], alias['desc'])
+            f.write(text + "\n")
+        f.write("]")
+        
+    print("\nSaved.")
+    os._exit(0)
             
 if __name__ == "__main__":
+    #saveUniqueProperties()
+    #saveExtraProperties()
+    saveAliasRequirements()
+    
+    
+    
     P1 = Player(GameAddresses.a['p1_ptr'], '1')
     P2 = Player(GameAddresses.a['p2_ptr'], '2')
 
@@ -341,72 +570,60 @@ if __name__ == "__main__":
     p1Show = sys.argv[1]
     p2Show = 'none' if len(sys.argv) == 2 else sys.argv[2]
     
-    dict1 = {}
-    u15list = {}
-    moveeelist = []
-    test = []
-    
-    sharedMoves = [move for move in P1.movelist if move in P2.movelist]
-    sharedMoves = [(move, P2.movelist[P2.movelist.index(move)]) for move in sharedMoves]
 
-    p1move, p2move = P1.getCurrmoveId(), P2.getCurrmoveId()
-    p1movename, p2movename = P1.getCurrmoveName(), P2.getCurrmoveName()
-    """
-    print("%s (%d)" % (p1movename, p1move))
-    P1.printProperties()
-    print('\n')
-    print("%s (%d)" % (p2movename, p2move))
-    P2.printProperties()
-    os._exit(0)
-    """
-    aliasedList = list(set([req['id'] for req in extra_move_properties]))
+    sharedMoves = getSharedMoves(P1, P2)
+    requiredMoveName = "Kz_bodylp00"
     
-    #for a in extra_move_properties:
-    #    print("    { 'id': 0x%x, 'tag2_id': 0x%x, 'desc': '%s' }," % (a['id'], a['id'], a['desc']))
-    
-    if len(P1.movelist) == len(P2.movelist):
-        print("Identical movelist size.")
-    else:
-        biggest = max(len(P1.movelist), len(P2.movelist))
-        print("%d/%d shared moves" % (len(sharedMoves), biggest))
-    """
-    testlist = []
-    """
-    for move, move2 in sharedMoves:
-        p1Cancels = move.loadCancels()
-        p2Cancels = move2.loadCancels()
+    aliasList = []
+    for tag2_move, t7_move in sharedMoves:
+        tag2_move.loadCancels()
+        tag2_move.loadCancelNames(P1.movelist)
+        t7_move.loadCancels()
+        t7_move.loadCancelNames(P2.movelist)
         
-        if len(p1Cancels) != len(p2Cancels):
-            continue
-        
-        for cancel, cancel2 in zip(p1Cancels, p2Cancels):
-            if cancel != cancel2 or len(cancel.requirements) != len(cancel2.requirements):
+        for cancel in [tag2_cancel for tag2_cancel in tag2_move.cancels if tag2_cancel.move_id < 32000]:
+            name = cancel.name
+            
+            similarCancels = [s_cancel for s_cancel in t7_move.cancels if s_cancel == cancel]
+            t7_cancel = [s_cancel for s_cancel in similarCancels if len(s_cancel.requirements) == len(cancel.requirements)]
+            
+            if len(t7_cancel) != 1:
                 continue
-            for req, req2 in zip(cancel.requirements, cancel2.requirements):
-                if req.req == req2.req or req.param != req2.param or req2.req in aliasedList:
+                
+            t7_cancel = t7_cancel[0]
+            sameParams = True
+            tmpAliasList = {}
+            
+            for req, t7_req in zip(cancel.requirements, t7_cancel.requirements): 
+                if req.param != t7_req.param:
+                    sameParams = False
+                if req.req != t7_req.req:
+                    tmpAliasList[t7_req.req] = req.req
+                    
+            if not sameParams:
+                continue
+                
+            for key in tmpAliasList.keys():
+                if len([a for a in aliasList if a['id'] == key]) > 0:
                     continue
-                aliasedList.append(req2.req)
-                #print("    { 'id': %d, 'tag2_id': %d, 'desc': '%s' }," % (req2.req, req.req, move.name))
-                testlist.append("    { 'id': %d, 'tag2_id': %d, 'desc': '%s' }," % (req2.req, req.req, move.name))
+                aliasList.append({
+                    'id': key,
+                    'tag2_id': tmpAliasList[key],
+                    'desc': '%s -> %s' % (tag2_move.name, name)
+                })
 
+    aliasList = sorted(aliasList, key = lambda t: t['id'])
     
-    """
-    for move, move2 in sharedMoves:
-        p1Properties = move.loadExtraProperties()
-        p2Properties = move2.loadExtraProperties()
-    
-        for prop1, prop2 in zip(p1Properties, p2Properties):
-            if prop1.id not in aliasedList and prop1.type == prop2.type and prop1.id != prop2.id and prop1.value == prop2.value:
-                aliasedList.append(prop1.id)
-                print("    { 'id': 0x%x, 'tag2_id': 0x%x, 'desc': '%s' }," % (prop2.id, prop1.id, move.name))
+    with open("./reqAliasListv1.txt", "a") as f:
+        for alias in aliasList:
+            if len([a for a in requirements if a['id'] == alias['id']]) > 0:
                 continue
-            elif prop1.type != prop2.type or prop1.value != prop2.value:
-                break
-    testlist = sorted(testlist)
-    for x in testlist:
-        print(x)
+            text = "    { 'id': %d, 'tag2_id': %d, 'desc': '%s' }," % (alias['id'], alias['tag2_id'], alias['desc'])
+            f.write(text + "\n")
+        
+        
+
     os._exit(0)
-    """
 
     if p1Show != None and p1Show.lower() != "none":
         P1.printBasicData()
