@@ -647,16 +647,17 @@ if __name__ == "__main__":
     #saveUniqueProperties()
     #saveExtraProperties()
     #saveAliasRequirements()
-    
+   
     new_requirements_mapping = {}
     for key in [k for k in sorted(requirements_mapping.keys())]:
         key_value = getKeyValue(key)
         if key_value!= None:
+            desc = 'AUTO' if key not in tag2_requirements2 else tag2_requirements2[key]['desc']
             new_requirements_mapping[key] = {
                 't7_id': key_value,
-                'desc': 'AUTO'
+                'desc': desc
             }
-            text = "    %d: { 't7_id': %d, 'desc': '%s' }," % (key, key_value, 'AUTO')
+            text = "    %d: { 't7_id': %d, 'desc': '%s' }," % (key, key_value, desc)
             print(text)
     print("%d keys" % (len(new_requirements_mapping.keys())))
     os._exit(0)
