@@ -41,8 +41,4 @@ Administrator rights may be required to import the moveset into memory.
 - Fix throws crashing (use a placeholder throw data the throw cannot be fully imported)
 - Fix high and low wallsplats that have broken animations in Tag2
 - Fix Jin U/F+4 too small hitbox in Tag2
-- Fix doing an U/F, U, or U/B attack at the same time as the opponent causing to turn 
-- Fix sidestep movesaround
-- Alias more conditions
 - Make bound use screw ressource?
-- Fix Heihachi OTGF and possibly Hwoarang JFSR

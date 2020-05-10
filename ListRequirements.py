@@ -3,9 +3,10 @@
 # Dumping info about movelists and comparing them will be necessary to build reliable alias lists
 
 from Addresses import GameAddresses, GameClass
-from Aliases import getRequirement, getTag2Requirement, extra_move_properties, requirements
+from Aliases import getRequirement, getTag2Requirement, extra_move_properties, tag2_requirements2, requirements_mapping
 import sys
 import os
+import json
 
 T = GameClass("TekkenGame-Win64-Shipping.exe" )
     
@@ -94,8 +95,11 @@ class Requirement:
        
     def print(self):
         reqData = getRequirement(self.req)
-        reqName = '' if reqData == None else ("(%s) " % (reqData['description']))
+        reqName = '' if reqData == None else ("(%s) " % (reqData['desc']))
         print("R: %d %s| P: %d" % (self.req, reqName, self.param))
+        
+    def __eq__(self, other):
+        return self.param == other.param
         
 class ReactionScenario:
     def __init__(self, addr):
@@ -107,14 +111,31 @@ class ReactionScenario:
         reaction_addr = bToInt(data, 0x10, 8)
         
         reaction_data = readBytes(reaction_addr + 0x50, 24)
-        self.moveid_list = [bToInt(reaction_data, (offset * 2), 2) for offset in range (14)]
+        self.moveid_list = [bToInt(reaction_data, (offset * 2), 2) for offset in range (15)]
+        self.names = [''] * 15
         
-    def print(self):
+        
+    def loadNames(self, movelist):
+        for i, n in enumerate(self.names):
+            if n == '':
+                self.names[i] = getMoveName(self.moveid_list[i], movelist)
+                
+    def __eq__(self, other):
+        if len(self.requirements) !=  len(other.requirements):
+            return False
+        for r, r2 in zip(self.requirements, other.requirements):
+            if r.param != r2.param:
+                return False
+        return True
+        
+    def print(self, printReqs=True):
         print("%d damage" % (self.attack_dmg))
-        for req in self.requirements:
-            req.print()
-        print("0x%x" % (self.addr))
+        if printReqs:
+            for req in self.requirements:
+                req.print()
+        #print("0x%x" % (self.addr))
         print(self.moveid_list)
+        print(self.names)
         
 class ExtraProperty:
     def __init__(self, addr):
@@ -247,6 +268,10 @@ class Move:
     def loadCancelNames(self, movelist):
         for cancel in self.cancels:
             cancel.getName(movelist)
+        
+    def loadReactionNames(self, movelist):
+        for reaction in self.reaction_list:
+            reaction.loadNames(movelist)
             
     def printAttackReactions(self):
         if self.hitlevel == 0:
@@ -387,7 +412,7 @@ def saveExtraProperties():
     f.write("# %s #\n" % (P1.name))
     for line in fileContent:
         f.write(line)
-        f.write("\n")
+        f.write("\n")   
     f.close()
     print("File saved.")
     os._exit(0)
@@ -474,6 +499,51 @@ def propertyStuff(P1, P2):
                 if t7_prop not in proplist_1:
                     t7_prop.print()
                     
+def checkForbiddenReq(forbiddenReqs, val):
+    for x in forbiddenReqs:
+        if x[0] == val:
+            return False
+    return True
+    
+def addKeyMapping(key, value):
+    if key not in requirements_mapping.keys():
+        requirements_mapping[key] = { value: 1 }
+    else:
+        if value not in requirements_mapping[key].keys():
+            requirements_mapping[key][value] = 1
+        else:
+            requirements_mapping[key][value] += 1
+    
+def isKeyReliable(key):
+    if key in requirements_mapping:
+        if len(requirements_mapping[key].keys()) > 1:
+            return False
+    return True
+    
+def getKeyValue(key):
+    threshold = 1.25
+    if key in requirements_mapping:
+        alias = requirements_mapping[key]
+        key_list = [k for k in alias]
+        if len(key_list) == 1:
+            return key_list[0]
+        
+        biggest = key_list[0]
+        second_biggest = key_list[0]
+        
+        for k in key_list:
+            if alias[k] > alias[biggest]:
+                biggest = k
+            elif alias[k] > alias[second_biggest] or biggest == second_biggest:
+                second_biggest = k
+                
+        if alias[biggest] > (alias[second_biggest] * threshold):
+            #print(alias[biggest], alias[second_biggest])
+            return biggest
+        #print("ERR-", biggest, alias[biggest], alias[second_biggest])
+    return None
+        
+                    
 def saveAliasRequirements():
     P1 = Player(GameAddresses.a['p1_ptr'], '1')
     P2 = Player(GameAddresses.a['p2_ptr'], '2')
@@ -484,66 +554,91 @@ def saveAliasRequirements():
         print("Unmatching movelist names, exiting")
         return
 
+    print("Getting movelists...")
     P1.setSecondMovelist(P2.movelist)
     P2.setSecondMovelist(P1.movelist)
     
 
-    sharedMoves = getSharedMoves(P1, P2)
-    requiredMoveName = "Kz_bodylp00"
+    sharedMoves = getSharedMoves(P1, P2)    
+    globalAliases = {}
+    targetMove = ''
     
-    aliasList = []
     for tag2_move, t7_move in sharedMoves:
+        if targetMove != '' and targetMove != tag2_move:
+            continue
         tag2_move.loadCancels()
+        tag2_move.loadReactions()
+        tag2_move.loadReactionNames(P1.movelist)
         tag2_move.loadCancelNames(P1.movelist)
         t7_move.loadCancels()
+        t7_move.loadReactions()
+        t7_move.loadReactionNames(P1.movelist)
         t7_move.loadCancelNames(P2.movelist)
         
-        for cancel in tag2_move.cancels:
-            name = cancel.name
+        currentMoveAliases = {}
+        forbiddenReqs = []
+       
+        """
+        for t2_reaction in tag2_move.reaction_list:
+            t7_reaction = [r for r in t7_move.reaction_list if r == t2_reaction and len(r.requirements) > 0]
             
-            similarCancels = [s_cancel for s_cancel in t7_move.cancels if s_cancel == cancel]
-            t7_cancel = [s_cancel for s_cancel in similarCancels if len(s_cancel.requirements) == len(cancel.requirements)]
+            if len(t7_reaction) != 1:
+                continue
+                
+            t7_reaction = t7_reaction[0]
+            for t2_req, t7_req in zip(t2_reaction.requirements, t7_reaction.requirements):
+                if t2_req.req == t7_req.req:
+                    continue
+                addKeyMapping(t2_req.req, t7_req.req)
+                if t2_req.req not in currentMoveAliases:
+                    currentMoveAliases[t2_req.req] = {
+                        't7_id': t7_req.req,
+                        'desc': '(%s) %s R' % (P1.uname, t7_move.name)
+                    }
+                elif currentMoveAliases[t2_req.req] != t7_req.req:
+                    forbiddenReqs += [t2_req.req]
+        
+        for t2_cancel in tag2_move.cancels:
+            t7_cancel = [c for c in t7_move.cancels if c == t2_cancel and c.requirements == t2_cancel.requirements]
             
             if len(t7_cancel) != 1:
                 continue
-                
             t7_cancel = t7_cancel[0]
-            sameParams = True
-            tmpAliasList = {}
-            
-            for req, t7_req in zip(cancel.requirements, t7_cancel.requirements): 
-                if req.param != t7_req.param:
-                    sameParams = False
-                if req.req != t7_req.req:
-                    tmpAliasList[t7_req.req] = req.req
-                    
-            if not sameParams:
-                continue
-                
-            for key in tmpAliasList.keys():
-                if len([a for a in aliasList if a['id'] == key]) > 0:
-                    continue
-                aliasList.append({
-                    'id': key,
-                    'tag2_id': tmpAliasList[key],
-                    'desc': '(%s) %s -> %s' % (P1.uname, tag2_move.name, name)
-                })
 
-    aliasList = sorted(aliasList, key = lambda t: t['id'])
-    for alias in aliasList:
-        if len([a for a in requirements if a['id'] == alias['id']]) > 0:
-            continue
-        requirements.append(alias)
-        print(alias)
+            for t2_req, t7_req in zip(t2_cancel.requirements, t7_cancel.requirements):
+                if t2_req.req == t7_req.req:
+                    continue
+                addKeyMapping(t2_req.req, t7_req.req)
+                if t2_req.req not in currentMoveAliases:
+                    currentMoveAliases[t2_req.req] = {
+                        't7_id': t7_req.req,
+                        'desc': '(%s) %s -> %s' % (P1.uname, t7_move.name, t7_cancel.name)
+                    }
+                elif currentMoveAliases[t2_req.req] != t7_req.req:
+                    forbiddenReqs += [t2_req.req]
+        """
+                
+        currmove_keys = [key for key in currentMoveAliases.keys() if key not in forbiddenReqs and key not in globalAliases]
+        for key in currmove_keys:
+            globalAliases[key] = currentMoveAliases[key]
+                
+    alias_keys = [key for key in globalAliases.keys() if key not in tag2_requirements2]
+    for key in alias_keys:
+        tag2_requirements2[key] = globalAliases[key]
+        print(key, globalAliases[key])
         
-    aliasList = sorted(requirements, key = lambda t: t['id'])
+    reliable_key_list = [key for key in tag2_requirements2.keys() if isKeyReliable(key)]
+    final_requirements = {key:tag2_requirements2[key] for key in reliable_key_list}
     
     with open("./test.py", "w") as f:
-        f.write("requirements = [\n")
-        for alias in aliasList:
-            text = "    { 'id': %d, 'tag2_id': %d, 'desc': '%s' }," % (alias['id'], alias['tag2_id'], alias['desc'])
+        f.write("tag2_requirements2 = {\n")
+        for key in final_requirements.keys():
+            alias = final_requirements[key]
+            text = "    %d: { 't7_id': %d, 'desc': '%s' }," % (key, alias['t7_id'], alias['desc'])
             f.write(text + "\n")
-        f.write("]")
+        f.write("}\n\n")
+        
+        f.write("requirements_mapping = " + str(requirements_mapping))
         
     print("\nSaved.")
     os._exit(0)
@@ -551,7 +646,20 @@ def saveAliasRequirements():
 if __name__ == "__main__":
     #saveUniqueProperties()
     #saveExtraProperties()
-    saveAliasRequirements()
+    #saveAliasRequirements()
+    
+    new_requirements_mapping = {}
+    for key in [k for k in sorted(requirements_mapping.keys())]:
+        key_value = getKeyValue(key)
+        if key_value!= None:
+            new_requirements_mapping[key] = {
+                't7_id': key_value,
+                'desc': 'AUTO'
+            }
+            text = "    %d: { 't7_id': %d, 'desc': '%s' }," % (key, key_value, 'AUTO')
+            print(text)
+    print("%d keys" % (len(new_requirements_mapping.keys())))
+    os._exit(0)
     
     
     
@@ -572,65 +680,13 @@ if __name__ == "__main__":
     
 
     sharedMoves = getSharedMoves(P1, P2)
-    requiredMoveName = "Kz_bodylp00"
-    
-    aliasList = []
-    for tag2_move, t7_move in sharedMoves:
-        tag2_move.loadCancels()
-        tag2_move.loadCancelNames(P1.movelist)
-        t7_move.loadCancels()
-        t7_move.loadCancelNames(P2.movelist)
-        
-        for cancel in [tag2_cancel for tag2_cancel in tag2_move.cancels if tag2_cancel.move_id < 32000]:
-            name = cancel.name
-            
-            similarCancels = [s_cancel for s_cancel in t7_move.cancels if s_cancel == cancel]
-            t7_cancel = [s_cancel for s_cancel in similarCancels if len(s_cancel.requirements) == len(cancel.requirements)]
-            
-            if len(t7_cancel) != 1:
-                continue
-                
-            t7_cancel = t7_cancel[0]
-            sameParams = True
-            tmpAliasList = {}
-            
-            for req, t7_req in zip(cancel.requirements, t7_cancel.requirements): 
-                if req.param != t7_req.param:
-                    sameParams = False
-                if req.req != t7_req.req:
-                    tmpAliasList[t7_req.req] = req.req
-                    
-            if not sameParams:
-                continue
-                
-            for key in tmpAliasList.keys():
-                if len([a for a in aliasList if a['id'] == key]) > 0:
-                    continue
-                aliasList.append({
-                    'id': key,
-                    'tag2_id': tmpAliasList[key],
-                    'desc': '%s -> %s' % (tag2_move.name, name)
-                })
-
-    aliasList = sorted(aliasList, key = lambda t: t['id'])
-    
-    with open("./reqAliasListv1.txt", "a") as f:
-        for alias in aliasList:
-            if len([a for a in requirements if a['id'] == alias['id']]) > 0:
-                continue
-            text = "    { 'id': %d, 'tag2_id': %d, 'desc': '%s' }," % (alias['id'], alias['tag2_id'], alias['desc'])
-            f.write(text + "\n")
-        
-        
-
-    os._exit(0)
 
     if p1Show != None and p1Show.lower() != "none":
         P1.printBasicData()
         if p1Show.lower().startswith("properties"):
             P1.printProperties()
         elif p1Show.lower().startswith("cancel"):
-            P1.printCancels(False)
+            P1.printCancels(True)
         elif p1Show.lower().startswith("reaction"):
             P1.printAttackReactions()
         else:
@@ -641,7 +697,7 @@ if __name__ == "__main__":
         if p2Show.lower().startswith("properties"):
             P2.printProperties()
         elif p2Show.lower().startswith("cancel"):
-            P2.printCancels(False)
+            P2.printCancels(True)
         elif p2Show.lower().startswith("reaction"):
             P2.printAttackReactions()
         else:
