@@ -38,11 +38,11 @@ def getTag2RequirementAlias(req, param):
             
     return requirement_detail['t7_id'], param
 
-def getTag2ExtramovePropertyAlias(type, id):
-    new_extra_property = getTag2ExtraMoveProperty(type, id)
+def getTag2ExtramovePropertyAlias(id):
+    new_extra_property = getTag2ExtraMoveProperty(id)
     if new_extra_property == None:
-        return type, id
-    return type, new_extra_property['t7_id']
+        return id
+    return new_extra_property['t7_id']
 
 def readInt(addr, bytes_length=4):
     return T.readInt(addr, bytes_length)
@@ -447,7 +447,7 @@ class MotbinPtr:
         for extra_property in self.m['extra_move_properties']:
             type, id, value = extra_property.values()
             if self.m['version'] == "Tag2":
-                type, id = getTag2ExtramovePropertyAlias(type, id)
+                id = getTag2ExtramovePropertyAlias(id)
             self.writeInt(type, 4)
             self.writeInt(id, 4)
             self.writeInt(value, 4)

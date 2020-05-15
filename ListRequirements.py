@@ -617,7 +617,12 @@ def saveAliasRequirements():
         
     print("\nSaved.")
     os._exit(0)
-            
+    
+def getDesc(key):
+    for k in extra_move_properties2:
+        if k['tag2_id'] == key:
+            return k['desc']
+    return 'AUTO'
 if __name__ == "__main__":
     #saveExtraProperties()
     #saveAliasRequirements()
@@ -626,7 +631,7 @@ if __name__ == "__main__":
     for key in [k for k in sorted(testmapping.keys())]:
         key_value = getKeyValue(key)
         if key_value!= None:
-            desc = 'AUTO'
+            desc = getDesc(key)
             new_testmapping[key] = {
                 't7_id': key_value,
                 'desc': desc
