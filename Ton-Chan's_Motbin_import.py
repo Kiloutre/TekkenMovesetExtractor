@@ -2,7 +2,7 @@
 # Python 3.6.5
 
 from Addresses import GameAddresses, GameClass, VirtualAllocEx, VirtualFreeEx, GetLastError, MEM_RESERVE, MEM_COMMIT, MEM_DECOMMIT, MEM_RELEASE, PAGE_EXECUTE_READWRITE
-from Aliases import getTag2Requirement, getTag2ExtraMoveProperty
+from Aliases import getTag2Requirement, getTag2ExtraMoveProperty, fillAliasesDictonnaries
 import json
 import os
 import sys
@@ -486,17 +486,12 @@ class MotbinPtr:
             self.writeInt(move['vuln'], 4)
             self.writeInt(move['hitlevel'], 4)
             self.writeInt(self.getCancelFromId(move['cancel']), 8)
-                
-            move['u1'] = 0 #pointer, toremove
-            move['u5'] = 0 #pointer, toremove
-            move['u13'] = 0 #pointer, toremove
-            move['u14'] = 0 #pointer, toremove
             
-            self.writeInt(move['u1'], 8)
+            self.writeInt(0, 8) #['u1'], ptr
             self.writeInt(move['u2'], 8)
             self.writeInt(move['u3'], 8)
             self.writeInt(move['u4'], 8)
-            self.writeInt(move['u5'], 8)
+            self.writeInt(0, 8) #['u5'], ptr
             self.writeInt(move['u6'], 4)
             
             self.writeInt(move['transition'], 2)
@@ -520,14 +515,14 @@ class MotbinPtr:
             voiceclip_addr = self.getVoiceclipFromId(move['voiceclip'])
             extra_properties_addr = self.getExtraMovePropertiesFromId(move['extra_properties_id'])
             
-            if move['hitlevel'] == 2560: #disable throws damage until they are properly imported
-                extra_properties_addr = 0
+            #if move['hitlevel'] == 2560: #disable throws damage until they are properly imported
+            #    extra_properties_addr = 0
             
             self.writeInt(voiceclip_addr, 8)
             self.writeInt(extra_properties_addr, 8)
             
-            self.writeInt(move['u13'], 8)
-            self.writeInt(move['u14'], 8)
+            self.writeInt(0, 8) #['u13'], ptr
+            self.writeInt(0, 8) #['u14'], ptr
             self.writeInt(move['u15'], 4)
             
             self.writeInt(move['hitbox_location'], 4)
@@ -553,6 +548,8 @@ def versionMatches(version):
     return importUpperVersion == exportUpperVersion
 
 if __name__ == "__main__":
+    fillAliasesDictonnaries()
+
     motbin_ptr_addr = GameAddresses.a['p1_ptr'] + 0x14a0 #
     motbin_ptr = readInt(motbin_ptr_addr, 8)
     
