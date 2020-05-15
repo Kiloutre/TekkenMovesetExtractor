@@ -3,7 +3,7 @@
 # Dumping info about movelists and comparing them will be necessary to build reliable alias lists
 
 from Addresses import GameAddresses, GameClass
-from Aliases import getRequirement, getTag2Requirement, extra_move_properties, tag2_requirements2, requirements_mapping
+from Aliases import getRequirement, getTag2Requirement, extra_move_properties2, testmapping
 import sys
 import os
 import json
@@ -380,130 +380,105 @@ class Player:
 def getSharedMoves(P1, P2):
     return [(move, P2.movelist[P2.movelist.index(move)]) for move in P1.movelist if move in P2.movelist]
     
+        
+class ExtraProperty2:
+    def __init__(self, object):
+        self.type = object.type
+        self.id = object.id
+        self.value = object.value
+        
+    def __eq__(self, other):
+        return self.type == other.type and self.value == other.value and self.id != other.id
+        
+    
+def addTestMapping(key, value):
+    global testmapping
+    if key not in testmapping.keys():
+        testmapping[key] = { value: 1 }
+    else:
+        if value not in testmapping[key].keys():
+            testmapping[key][value] = 1
+        else:
+            testmapping[key][value] += 1
+            
+def addUniqueAlias(alias2):
+    global extra_move_properties2
+    
+    for e in extra_move_properties2:
+        if e['tag2_id'] == alias2['tag2_id']:
+            return False
+        
+    extra_move_properties2.append(alias2)
+        
+def isPropAliasUniq(alias):
+    global extra_move_properties2
+    
+    for e in extra_move_properties2:
+        if e['tag2_id'] == alias['tag2_id'] and (e['t7_id'] != alias['t7_id']):
+            return False
+    return True
+    
+def isPropKeyReliable(key):
+    global testmapping
+    if key in testmapping:
+        if len(testmapping[key].keys()) > 1:
+            return False
+    return True
+        
 def saveExtraProperties():
+    global extra_move_properties2
+    global testmapping
+    
     P1 = Player(GameAddresses.a['p1_ptr'], '1')
     P2 = Player(GameAddresses.a['p2_ptr'], '2')
     
     print("Comparing %s to %s..." % (P1.name, P2.name))
     
-    if P1.name.upper() != P2.name.upper() and (len(sys.argv) < 3 or sys.argv[2] != "--force"):
+    if P1.name.upper() != P2.name.upper():
         print("Unmatching movelist names, exiting")
         return
-    
     
     sharedMoves = getSharedMoves(P1, P2)
     aliasedList = []
     fileContent = []
     
+    aliasList = []
+    
     for tag2_move, t7_move in sharedMoves:
-        proplist_1 = tag2_move.loadExtraProperties()
-        proplist_2 = t7_move.loadExtraProperties()
+        proplist1 = [ExtraProperty2(t) for t in tag2_move.loadExtraProperties()]
+        proplist2 = [ExtraProperty2(t) for t in t7_move.loadExtraProperties()]
         
-        for tag2_prop in proplist_1:
-            if tag2_prop in proplist_2:
-                t7_prop = next(prop for prop in proplist_2 if prop == tag2_prop)
-                if t7_prop.id in aliasedList:
-                    continue
-                aliasedList.append(t7_prop.id)
-                fileContent.append("    { 'type': %d, 'id': 0x%x, 'tag2_id': 0x%x, 'desc': '%s' }," % (t7_prop.type, t7_prop.id, tag2_prop.id, tag2_move.name))
-                    
-    f = open("./file.txt", "a")
-                    
-    f.write("# %s #\n" % (P1.name))
-    for line in fileContent:
-        f.write(line)
-        f.write("\n")   
-    f.close()
+        for prop in proplist1:
+            t7Props = [p for p in proplist2 if p == prop]
+            if len(t7Props) != 1:
+                continue
+            propAlias = {
+                'type': prop.type,
+                't7_id': t7Props[0].id,
+                'tag2_id': prop.id,
+                'desc': "(%s) %s" % (P1.uname, tag2_move.name)
+            }
+            aliasList.append(propAlias)
+    
+    oldLen = len(extra_move_properties2)
+    for alias in aliasList:
+        addTestMapping(alias['tag2_id'], alias['t7_id'])
+        addUniqueAlias(alias)
+        
+    new_extra_move_properties = [alias for alias in extra_move_properties2 if isPropAliasUniq(alias) and isPropKeyReliable(alias['tag2_id'])]
+    print("%d new aliases." % (len(new_extra_move_properties) - oldLen))
+    
+    with open("./test.py", "w") as f:
+        f.write("extra_move_properties2 = [\n")
+        for item in new_extra_move_properties:
+            text = "   { 't7_id': 0x%x, 'tag2_id': 0x%x, 'desc': '%s' }," % (item['t7_id'], item['tag2_id'], item['desc'])
+            f.write(text + "\n")
+        f.write("]\n\n")
+        
+        f.write("testmapping = " + str(testmapping))
+        
     print("File saved.")
     os._exit(0)
-    
-    
-class PropertyLol:
-    def __init__(self, data):
-        self.type = data['type']
-        self.id = data['id']
-        self.tag2_id = data['tag2_id']
-        self.desc = data['desc']
-        
-    def __eq__(self, other):
-        return self.id == other.id and self.type == other.type
-        
-    def __str__(self):
-        return ("    { 'type': %d, 'id': 0x%x, 'tag2_id': 0x%x, 'desc': '%s (unik)' },\n" % (self.type, self.id, self.tag2_id, self.desc))
-        
-def saveUniqueProperties():
-    
-    final = []
-    redundants = []
-    
-    propertyList = [PropertyLol(prop) for prop in extra_move_properties]
-
-    for prop in propertyList:
-        if propertyList.count(prop) == 1:
-            final.append(prop)
-        else:
-            redundants.append(prop)
-            
-    print("%d uniques, %d redundants" % (len(final), len(redundants)))
-
-    for prop in redundants:
-        commonPropList = [p for p in redundants if p == prop and p.tag2_id != prop.tag2_id]
-        commonPropList2 = []#[p for p in redundants if p != prop and p.tag2_id == prop.tag2_id]
-        if len(commonPropList + commonPropList2) == 0 and prop not in final:
-            final.append(prop)
-
-    print("%d total" % (len(final)))
-        
-    with open("test.txt", "w") as f:
-        for prop in final:
-            f.write(str(prop))
-    os._exit(0)
-    
-def propertyStuff(P1, P2):
-
-    sharedMoves = getSharedMoves(P1, P2)
-    p1move, p2move = P1.getCurrmoveId(), P2.getCurrmoveId()
-    p1movename, p2movename = P1.getCurrmoveName(), P2.getCurrmoveName()
-    aliasedList = list(set([req['id'] for req in extra_move_properties]))
-    printT7PropsToo = True
-    requiredMoveName = "Ym_rotmvR00"
-    
-    for tag2_move, t7_move in sharedMoves:
-        if (requiredMoveName != None and requiredMoveName != "") and tag2_move != requiredMoveName:
-            continue
-        proplist_1 = tag2_move.loadExtraProperties()
-        proplist_2 = t7_move.loadExtraProperties()
-        
-        if printT7PropsToo:
-            print("Tag2:")
-            tag2_move.printProperties()
-            print("\nT7:")
-            t7_move.printProperties()
-            print("--END--")
-        
-        print("\n")
-        for tag2_prop in proplist_1:
-            if tag2_prop in proplist_2 and not printT7PropsToo:
-                t7_prop = next(prop for prop in proplist_2 if prop == tag2_prop)
-                if t7_prop.id in aliasedList:
-                    #print("aliased")
-                    continue
-                aliasedList.append(t7_prop.id)
-                print("    { 'id': 0x%x, 'tag2_id': 0x%x, 'desc': '%s' }," % (t7_prop.id, tag2_prop.id, tag2_move.name))
-            elif printT7PropsToo:
-                tag2_prop.print()
-                
-        if printT7PropsToo:
-            print("\n")
-            for t7_prop in proplist_2:
-                if t7_prop not in proplist_1:
-                    t7_prop.print()
-                    
-def checkForbiddenReq(forbiddenReqs, val):
-    for x in forbiddenReqs:
-        if x[0] == val:
-            return False
-    return True
     
 def addKeyMapping(key, value):
     if key not in requirements_mapping.keys():
@@ -522,8 +497,8 @@ def isKeyReliable(key):
     
 def getKeyValue(key):
     threshold = 1.25
-    if key in requirements_mapping:
-        alias = requirements_mapping[key]
+    if key in testmapping:
+        alias = testmapping[key]
         key_list = [k for k in alias]
         if len(key_list) == 1:
             return key_list[0]
@@ -644,22 +619,21 @@ def saveAliasRequirements():
     os._exit(0)
             
 if __name__ == "__main__":
-    #saveUniqueProperties()
     #saveExtraProperties()
     #saveAliasRequirements()
    
-    new_requirements_mapping = {}
-    for key in [k for k in sorted(requirements_mapping.keys())]:
+    new_testmapping = {}
+    for key in [k for k in sorted(testmapping.keys())]:
         key_value = getKeyValue(key)
         if key_value!= None:
-            desc = 'AUTO' if key not in tag2_requirements2 else tag2_requirements2[key]['desc']
-            new_requirements_mapping[key] = {
+            desc = 'AUTO'
+            new_testmapping[key] = {
                 't7_id': key_value,
                 'desc': desc
             }
-            text = "    %d: { 't7_id': %d, 'desc': '%s' }," % (key, key_value, desc)
+            text = "    0x%x: { 't7_id': 0x%x, 'desc': '%s' }," % (key, key_value, desc)
             print(text)
-    print("%d keys" % (len(new_requirements_mapping.keys())))
+    print("%d keys" % (len(new_testmapping.keys())))
     os._exit(0)
     
     

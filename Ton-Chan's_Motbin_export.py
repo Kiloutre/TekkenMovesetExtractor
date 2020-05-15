@@ -792,6 +792,6 @@ if __name__ == "__main__":
     
     m2 = Motbin(base + motbin_ptr)
     if m.name != m2.name:
-        m2.extractMoveset()
+        pass#m2.extractMoveset()
     
     

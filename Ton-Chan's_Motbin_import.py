@@ -42,9 +42,7 @@ def getTag2ExtramovePropertyAlias(type, id):
     new_extra_property = getTag2ExtraMoveProperty(type, id)
     if new_extra_property == None:
         return type, id
-    if 'type_replace' in new_extra_property:
-        type = new_extra_property['type_replace']
-    return type, new_extra_property['id']
+    return type, new_extra_property['t7_id']
 
 def readInt(addr, bytes_length=4):
     return T.readInt(addr, bytes_length)
@@ -643,4 +641,3 @@ if __name__ == "__main__":
     print("OLD moveset pointer: 0x%x (%s)" % (motbin_ptr, old_character_name))
     print("New moveset pointer: 0x%x (%s)" % (p.motbin_ptr, m['character_name']))
     print("%d/%d bytes left." % (p.size - (p.curr_ptr - p.head_ptr), p.size))
-    
