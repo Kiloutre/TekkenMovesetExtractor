@@ -42,7 +42,8 @@ def GetTT2Pos(data):
         data[1:].find(b'\x00\x64\x00\x17\x00'),
         data[1:].find(b'\x00\x64\x00\x1B\x00'),
         data[1:].find(b'\x00\xC8\x00\x17'),
-        data[1:].find(b'motOrigin')
+        data[1:].find(b'motOrigin'),
+        data[1:].find(bytes([0] * 100))
     ]
     
 def GetT7Pos(data):
@@ -50,7 +51,8 @@ def GetT7Pos(data):
         data[1:].find(b'\x64\x00\x17\x00'),
         data[1:].find(b'\x64\x00\x1B\x00'),
         data[1:].find(b'\xC8\x00\x17'),
-        data[1:].find(b'motOrigin')
+        data[1:].find(b'motOrigin'),
+        data[1:].find(bytes([0] * 100))
     ]
     
 def getEndPos(data):
@@ -70,6 +72,7 @@ class AnimData:
             read_size = 8192
             offset = 0
             prev_bytes = None
+            maxSize = 50000000 
             
             while read_size >= 16:
                 try:
@@ -87,6 +90,8 @@ class AnimData:
                         break
                     
                     prev_bytes = tmp
+                    if offset + read_size > maxSize:
+                        break
                     offset += read_size
                     
             self.data = None if offset == 0 else readBytes(self.addr, offset)
