@@ -472,8 +472,6 @@ class MotbinPtr:
         
         self.move_names_table = {move['name']:self.writeString(move['name']) for move in moves}
         
-        missingAliasList = []
-        
         self.movelist_ptr = self.align()
         for move in moves:
             name_addr = self.move_names_table.get(move['name'], 0)
@@ -536,9 +534,6 @@ class MotbinPtr:
             self.writeInt(move['u16'], 2)
             self.writeInt(move['u17'], 2)
             self.writeInt(move['u18'], 4)
-            
-        for u15 in list(set(missingAliasList)):
-            print("Missing alias for offset 0x98: %d" % (u15))
         
         return self.movelist_ptr, moveCount
         
@@ -548,6 +543,10 @@ def versionMatches(version):
     
     pos = importVersion.rfind('.')
     importUpperVersion = importVersion[:pos]
+    
+    if importUpperVersion == exportUpperVersion and version != importVersion:
+        print("\nVersion mismatch: consider exporting the moveset again.")
+        print("Moveset version: %s. Importer version: %s.\n" % (version, importVersion))
     
     return importUpperVersion == exportUpperVersion
 

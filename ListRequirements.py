@@ -631,7 +631,7 @@ def printMoveProperty(movelist, name):
         if m.name == name:
             #propertyList = m.loadExtraProperties()
             print("%s properties:\n" % (name))
-            m.printProperties()
+            #m.printProperties()
             
             print()
             return True
@@ -662,8 +662,13 @@ if __name__ == "__main__":
     P1 = Player(GameAddresses.a['p1_ptr'], '1')
     P2 = Player(GameAddresses.a['p2_ptr'], '2')
     
-    printMoveProperty(P1.movelist, "wDm_AirF_Up")
-    printMoveProperty(P2.movelist, "wDm_AirF_Up")
+    for move in P1.movelist:
+        move.loadCancels()
+        for cancel in move.cancels:
+            if cancel.move_id == 489:
+                cancel.print()
+            
+    #printMoveProperty(P2.movelist, "wDm_AirF_Up")
     os._exit(0)
 
     P1.setSecondMovelist(P2.movelist)

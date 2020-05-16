@@ -13,7 +13,7 @@ TekkenVersion = 7
 if len(sys.argv) > 1 and sys.argv[1].lower() == "tag2":
     TekkenVersion = 2
 
-exportVersion = "0.2.0"
+exportVersion = "0.2.1"
 T = GameClass("TekkenGame-Win64-Shipping.exe" if TekkenVersion == 7 else "Cemu.exe")
 ptr_size = 8 if TekkenVersion == 7 else 4
 base = 0x0 if TekkenVersion == 7 else GameAddresses.a['cemu_base']
@@ -374,9 +374,9 @@ class Move:
             attack_startup = bToInt(move_bytes, 0x64, 4)
             attack_recovery = bToInt(move_bytes, 0x68, 4)
             
-            u16 = 0
+            u16 = bToInt(move_bytes, 0x6c, 2) 
             u17 = bToInt(move_bytes, 0x6e, 2) 
-            u18 = bToInt(move_bytes, 0x6c, 2)
+            u18 = 0
             
         
         self.name = readString(base + move_name_addr)
