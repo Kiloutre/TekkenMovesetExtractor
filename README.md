@@ -40,5 +40,4 @@ Administrator rights may be required to import the moveset into memory.
 - Fix wallbreak, balcony break and floorbreak on both T7 & Tag2
 - Fix throws crashing (use a placeholder throw data the throw cannot be fully imported)
 - Fix high and low wallsplats that have broken animations in Tag2
-- Fix Jin U/F+4 too small hitbox in Tag2
 - Make bound use screw ressource?
