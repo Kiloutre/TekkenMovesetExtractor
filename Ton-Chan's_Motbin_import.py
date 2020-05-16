@@ -12,7 +12,7 @@ if len(sys.argv) == 1:
     os._exit(1)
    
 T = GameClass("TekkenGame-Win64-Shipping.exe")
-importVersion = "0.4.0"
+importVersion = "0.5.0"
 folderName = sys.argv[1]
 charaName = folderName[2:]
 jsonFilename = "%s.json" % (charaName)
@@ -29,6 +29,8 @@ voiceclip_size = 0x4
 input_sequence_size = 0x10
 input_extradata_size = 0x8
 projectile_size = 0xa8
+throw_extras_size = 0xC
+throws_size = 0x10
 
 forbiddenMoves = ['Co_DA_Ground', '___________']
 
@@ -151,6 +153,12 @@ def getTotalSize(m):
     size = align8Bytes(size)
     size += len(m['projectiles']) * projectile_size
     
+    size = align8Bytes(size)
+    size += len(m['throw_extras']) * throw_extras_size
+    
+    size = align8Bytes(size)
+    size += len(m['throws']) * throws_size
+    
     return size
     
 class MotbinPtr:
@@ -184,6 +192,8 @@ class MotbinPtr:
         self.input_extradata_ptr = 0
         self.input_sequences_ptr = 0
         self.projectile_ptr = 0
+        self.throw_extras_ptr = 0
+        self.throws_ptr = 0
         
         self.move_names_table = {}
         self.animation_table = {}
@@ -251,6 +261,11 @@ class MotbinPtr:
         if self.extra_data_ptr == 0:
             return 0
         return self.extra_data_ptr + (idx * 4)
+        
+    def getThrowExtraFromId(self, idx):
+        if self.throw_extras_ptr == 0:
+            return 0
+        return self.throw_extras_ptr + (idx * throw_extras_size)
         
     def getReactionListFromId(self, idx):
         if self.reaction_list_ptr == 0:
@@ -514,6 +529,28 @@ class MotbinPtr:
         
         return self.projectile_ptr, len(self.m['projectiles'])
         
+    def allocateThrowExtras(self):
+        print("Allocating throw extras...")
+        self.throw_extras_ptr = self.align()
+        
+        for t in self.m['throw_extras']:
+            self.writeInt(t['u1'], 4)
+            for short in t['u2']:
+                self.writeInt(short, 2)
+        
+        return self.throw_extras_ptr, len(self.m['throw_extras'])
+        
+    def allocateThrows(self):
+        print("Allocating throws...")
+        self.throws_ptr = self.align()
+        
+        for t in self.m['throws']:
+            self.writeInt(t['u1'], 8)
+            extra_addr = self.getThrowExtraFromId(t['unknown_idx'])
+            self.writeInt(extra_addr, 8)
+        
+        return self.throws_ptr, len(self.m['throws'])
+        
     def allocateExtraMoveProperties(self):
         print("Allocating extra move properties...")
         self.extra_move_properties_ptr = self.align()
@@ -591,9 +628,6 @@ class MotbinPtr:
             
             voiceclip_addr = self.getVoiceclipFromId(move['voiceclip'])
             extra_properties_addr = self.getExtraMovePropertiesFromId(move['extra_properties_id'])
-            
-            if move['hitlevel'] == 2560: #disable throws damage until they are properly imported
-                extra_properties_addr = 0
             
             self.writeInt(voiceclip_addr, 8)
             self.writeInt(extra_properties_addr, 8)
@@ -675,6 +709,8 @@ if __name__ == "__main__":
     input_extradata_ptr, input_extradata_count = p.allocateInputExtradata()
     input_sequences_ptr, input_sequences_count = p.allocateInputSequences()
     projectiles_ptr, projectiles_count = p.allocateProjectiles()
+    throw_extras_ptr, throw_extras_count = p.allocateThrowExtras()
+    throws_ptr, throws_count = p.allocateThrows()
     
     writeInt(p.motbin_ptr + 0x0, 65536, 4)
     writeInt(p.motbin_ptr + 0x4, 4475208, 4)
@@ -727,6 +763,12 @@ if __name__ == "__main__":
     
     writeInt(p.motbin_ptr + 0x240, input_extradata_ptr, 8)
     writeInt(p.motbin_ptr + 0x248, input_extradata_count, 8)
+    
+    writeInt(p.motbin_ptr + 0x260, throw_extras_ptr, 8)
+    writeInt(p.motbin_ptr + 0x268, throw_extras_count, 8)
+    
+    writeInt(p.motbin_ptr + 0x270, throws_ptr, 8)
+    writeInt(p.motbin_ptr + 0x278, throws_count, 8)
 
     writeInt(motbin_ptr_addr, p.motbin_ptr, 8)
     

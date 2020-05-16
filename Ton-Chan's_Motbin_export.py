@@ -13,7 +13,7 @@ TekkenVersion = 7
 if len(sys.argv) > 1 and sys.argv[1].lower() == "tag2":
     TekkenVersion = 2
 
-exportVersion = "0.4.0"
+exportVersion = "0.5.0"
 T = GameClass("TekkenGame-Win64-Shipping.exe" if TekkenVersion == 7 else "Cemu.exe")
 ptr_size = 8 if TekkenVersion == 7 else 4
 base = 0x0 if TekkenVersion == 7 else GameAddresses.a['cemu_base']
@@ -638,6 +638,43 @@ class Projectile:
     def setCancelIdx(self, cancel_idx):
         self.cancel_idx = cancel_idx
         
+class ThrowExtra:
+    size = 0xC
+    
+    def __init__(self, addr):
+        self.addr = addr
+        data = readBytes(base + addr, ThrowExtra.size)
+        
+        self.u1 = bToInt(data, 0x0, 4)
+        self.u2 = [bToInt(data, 4 + offset * 2, 2) for offset in range(4)]
+
+    def dict(self):
+        return {
+            'u1': self.u1,
+            'u2': self.u2
+        }
+        
+class Throw:
+    size = 0x10 if TekkenVersion == 7 else 0x8
+    
+    def __init__(self, addr):
+        self.addr = addr
+        data = readBytes(base + addr, Throw.size)
+        
+        self.u1 = bToInt(data, 0, ptr_size)
+        self.unknown_addr = bToInt(data, ptr_size, ptr_size)
+        
+        self.unknown_idx = -1
+        
+    def dict(self):
+        return {
+            'u1': self.u1,
+            'unknown_idx': self.unknown_idx
+        }
+        
+    def setUnknownIdx(self, idx):
+        self.unknown_idx = idx
+        
 class Motbin:
     def __init__(self, addr):
         self.addr = addr
@@ -726,6 +763,16 @@ class Motbin:
         self.input_extradata_ptr = readInt(addr + input_extradata_ptr, ptr_size)
         self.input_extradata_size = readInt(addr + input_extradata_size, ptr_size)
 
+        throw_extras_ptr = 0x260 if TekkenVersion == 7 else 0x1c8
+        throw_extras_size = throw_extras_ptr + ptr_size
+        self.throw_extras_ptr = readInt(addr + throw_extras_ptr, ptr_size)
+        self.throw_extras_size = readInt(addr + throw_extras_size, ptr_size)
+
+        throws_ptr = 0x270 if TekkenVersion == 7 else 0x1d0
+        throws_size = throws_ptr + ptr_size
+        self.throws_ptr = readInt(addr + throws_ptr, ptr_size)
+        self.throws_size = readInt(addr + throws_size, ptr_size)
+
         test_ptr = 0x250 if TekkenVersion == 7 else 0x1c0
         test_size = test_ptr + ptr_size
         self.test_ptr = readInt(addr + test_ptr, ptr_size)
@@ -753,6 +800,8 @@ class Motbin:
         self.input_extradata = []
         self.cancel_extradata = []
         self.projectiles = []
+        self.throw_extras = []
+        self.throws = []
         
     def printBasicData(self):
         print("Character: %s" % (self.character_name))
@@ -785,7 +834,9 @@ class Motbin:
             'input_sequences': self.input_sequences,
             'input_extradata': self.input_extradata,
             'cancel_extradata': self.cancel_extradata,
-            'projectiles': self.projectiles
+            'projectiles': self.projectiles,
+            'throw_extras': self.throw_extras,
+            'throws': self.throws
         }
         
     def save(self):
@@ -894,6 +945,17 @@ class Motbin:
             if projectile.hit_condition_addr != 0:
                 projectile.setHitConditionIdx((projectile.hit_condition_addr - self.hit_conditions_ptr) // HitCondition.size)
             self.projectiles.append(projectile.dict())
+            
+        print("Reading throw extras...")
+        for i in range(self.throw_extras_size):
+            throw_extra = ThrowExtra(self.throw_extras_ptr + (i * ThrowExtra.size))
+            self.throw_extras.append(throw_extra.dict())
+            
+        print("Reading throws...")
+        for i in range(self.throws_size):
+            throw = Throw(self.throws_ptr + (i * Throw.size))
+            throw.setUnknownIdx((throw.unknown_addr - self.throw_extras_ptr) // ThrowExtra.size)
+            self.throws.append(throw.dict())
         
         print("Reading movelist...")
         for i in range(self.movelist_size):
@@ -925,6 +987,6 @@ if __name__ == "__main__":
     motbin_ptr = readInt(motbin_ptr_addr, ptr_size)
     
     m2 = Motbin(base + motbin_ptr)
-    #m2.extractMoveset()
+    m2.extractMoveset()
     
     
