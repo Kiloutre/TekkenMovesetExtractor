@@ -13,7 +13,7 @@ TekkenVersion = 7
 if len(sys.argv) > 1 and sys.argv[1].lower() == "tag2":
     TekkenVersion = 2
 
-exportVersion = "0.3.0"
+exportVersion = "0.4.0"
 T = GameClass("TekkenGame-Win64-Shipping.exe" if TekkenVersion == 7 else "Cemu.exe")
 ptr_size = 8 if TekkenVersion == 7 else 4
 base = 0x0 if TekkenVersion == 7 else GameAddresses.a['cemu_base']
@@ -566,6 +566,75 @@ class InputSequence:
             'extradata_id': self.extradata_idx
         }
         
+class Projectile:
+    size = 0xa8 if TekkenVersion == 7 else 0x88
+    
+    def __init__(self, addr):
+        self.addr = addr
+        data = readBytes(base + addr, Projectile.size)
+        
+        if TekkenVersion == 7:
+            self.u1 = bToInt(data, 0x0, 4)
+            self.u2 = bToInt(data, 0x1c, 4)
+            self.u3 = bToInt(data, 0x24, 4)
+            self.u4 = bToInt(data, 0x28, 4)
+            self.u5 = bToInt(data, 0x2c, 4)
+            self.u6 = bToInt(data, 0x30, 4)
+            self.u7 = bToInt(data, 0x34, 4)
+            self.u8 = bToInt(data, 0x38, 4)
+            self.u9 = bToInt(data, 0x54, 4)
+            
+            self.hit_condition_addr = bToInt(data, 0x60, ptr_size)
+            self.cancel_addr = bToInt(data, 0x68, ptr_size)
+            
+            self.u10 = bToInt(data, 0x74, 4)
+            self.u11 = bToInt(data, 0x78, 4)
+            self.u12 = bToInt(data, 0x7c, 4)
+        else:
+            self.u1 = bToInt(data, 0x0, 4)
+            self.u2 = bToInt(data, 0x1c, 4)
+            self.u3 = bToInt(data, 0x24, 4)
+            self.u4 = bToInt(data, 0x28, 4)
+            self.u5 = bToInt(data, 0x2c, 4)
+            self.u6 = bToInt(data, 0x30, 4)
+            self.u7 = bToInt(data, 0x34, 4)
+            self.u8 = bToInt(data, 0x38, 4)
+            self.u9 = bToInt(data, 0x54, 4)
+            
+            self.hit_condition_addr = bToInt(data, 0x60, ptr_size)
+            self.cancel_addr = bToInt(data, 0x68, ptr_size)
+            
+            self.u10 = bToInt(data, 0x74, 4)
+            self.u11 = bToInt(data, 0x78, 4)
+            self.u12 = bToInt(data, 0x7c, 4)
+        
+        self.hit_condition = -1
+        self.cancel_idx = -1
+        
+    def dict(self):
+        return {
+            'u1': self.u1,
+            'u2': self.u2,
+            'u3': self.u3,
+            'u4': self.u4,
+            'u5': self.u5,
+            'u6': self.u6,
+            'u7': self.u7,
+            'u8': self.u8,
+            'u9': self.u9,
+            'u10': self.u10,
+            'u11': self.u12,
+            'u12': self.u12,
+            'hit_condition': self.hit_condition,
+            'cancel': self.cancel_idx
+        }
+        
+    def setHitConditionIdx(self, idx):
+        self.hit_condition = idx
+        
+    def setCancelIdx(self, cancel_idx):
+        self.cancel_idx = cancel_idx
+        
 class Motbin:
     def __init__(self, addr):
         self.addr = addr
@@ -598,6 +667,11 @@ class Motbin:
         hit_conditions_size = hit_conditions_ptr + ptr_size
         self.hit_conditions_ptr = readInt(addr + hit_conditions_ptr, ptr_size)
         self.hit_conditions_size = readInt(addr + hit_conditions_size, ptr_size)
+        
+        projectile_ptr = 0x180 if TekkenVersion == 7 else 0x158
+        projectile_size = projectile_ptr + ptr_size
+        self.projectile_ptr = readInt(addr + projectile_ptr, ptr_size)
+        self.projectile_size = readInt(addr + projectile_size, ptr_size)
         
         pushback_ptr = 0x190 if TekkenVersion == 7 else 0x160
         pushback_list_size = pushback_ptr + ptr_size
@@ -656,7 +730,7 @@ class Motbin:
         
         
         aliasCopySize = 0x2a
-        aliasOffset = 0x98 if TekkenVersion == 7 else 0x88
+        aliasOffset = fulldate_addr + ptr_size
         aliasCount = 148
     
         self.aliases = [readInt(addr + aliasOffset + (offset * 2), 2) for offset in range(0, aliasCount)]
@@ -675,6 +749,7 @@ class Motbin:
         self.input_sequences = []
         self.input_extradata = []
         self.cancel_extradata = []
+        self.projectiles = []
         
     def printBasicData(self):
         print("Character: %s" % (self.character_name))
@@ -706,7 +781,8 @@ class Motbin:
             'voiceclips': self.voiceclips,
             'input_sequences': self.input_sequences,
             'input_extradata': self.input_extradata,
-            'cancel_extradata': self.cancel_extradata
+            'cancel_extradata': self.cancel_extradata,
+            'projectiles': self.projectiles
         }
         
     def save(self):
@@ -803,6 +879,15 @@ class Motbin:
         for i in range(self.voiceclip_list_size):
             voiceclip = Voiceclip(self.voiceclip_list_ptr + (i * Voiceclip.size))
             self.voiceclips.append(voiceclip.dict())
+            
+        print("Reading projectiles...")
+        for i in range(self.projectile_size):
+            projectile = Projectile(self.projectile_ptr + (i * Projectile.size))
+            if projectile.cancel_addr != 0:
+                projectile.setCancelIdx((projectile.cancel_addr - self.cancel_head_ptr) // Cancel.size)
+            if projectile.hit_condition_addr != 0:
+                projectile.setHitConditionIdx((projectile.hit_condition_addr - self.hit_conditions_ptr) // HitCondition.size)
+            self.projectiles.append(projectile.dict())
         
         print("Reading movelist...")
         for i in range(self.movelist_size):
@@ -834,7 +919,6 @@ if __name__ == "__main__":
     motbin_ptr = readInt(motbin_ptr_addr, ptr_size)
     
     m2 = Motbin(base + motbin_ptr)
-    if m.name != m2.name:
-        m2.extractMoveset()
+    m2.extractMoveset()
     
     
