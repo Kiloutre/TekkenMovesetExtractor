@@ -2,7 +2,7 @@
 # Python 3.6.5
 
 from Addresses import GameAddresses, GameClass, VirtualAllocEx, VirtualFreeEx, GetLastError, MEM_RESERVE, MEM_COMMIT, MEM_DECOMMIT, MEM_RELEASE, PAGE_EXECUTE_READWRITE
-from Aliases import getTag2Requirement, getTag2ExtraMoveProperty, fillAliasesDictonnaries, getTag2HitboxAliasedValue
+from Aliases import getTag2Requirement, getTag2ExtraMoveProperty, fillAliasesDictonnaries, getTag2HitboxAliasedValue, replaceRequirement
 import json
 import os
 import sys
@@ -319,6 +319,7 @@ class MotbinPtr:
             param = requirement['param']
             if self.m['version'] == "Tag2":
                 req, param = getTag2RequirementAlias(req, param)
+            req, param = replaceRequirement(req, param)
             self.writeInt(req, 4)
             self.writeInt(param, 4)
         
@@ -575,8 +576,6 @@ def versionMatches(version):
     return importUpperVersion == exportUpperVersion
 
 if __name__ == "__main__":
-    fillAliasesDictonnaries()
-
     motbin_ptr_addr = GameAddresses.a['p1_ptr'] + 0x14a0 #
     motbin_ptr = readInt(motbin_ptr_addr, 8)
     
@@ -593,6 +592,7 @@ if __name__ == "__main__":
             print("Moveset version: %s. Importer version: %s." % (m['export_version'], importVersion))
         os._exit(1)
 
+    fillAliasesDictonnaries()
     p = MotbinPtr(m, motbin_ptr)
     
     old_character_name = readString(readInt(motbin_ptr + 0x8, 8))

@@ -56,8 +56,8 @@ requirements = {
     172: { 't7_id': 189, 'desc': '(HEIHACHI) He_sDASHB -> wDASH_lkB' },
     173: { 't7_id': 190, 'desc': '(HEIHACHI) wDm_AirF_WB -> wDm_GndF_00' },
     199: { 't7_id': 216, 'desc': '(HEIHACHI) sOKI_00 -> sOKI_C00' },
-    200: { 't7_id': 217, 'desc': 'MAPPING' },
-    202: { 't7_id': 219, 'desc': 'MAPPING' },
+    200: { 't7_id': 217, 'desc': 'Player character id'},
+    202: { 't7_id': 219, 'desc': 'Opponent character id' },
     208: { 't7_id': 223, 'desc': '(ALISA) Co_IFLnage00vsOGR_n R' },
     214: { 't7_id': 225, 'desc': '(HEIHACHI) sJUMP_00_ -> Co_sJP_RP' },
     228: { 't7_id': 232, 'desc': '(NINA) sDm_KAOBntR -> R_bintrp' },
@@ -376,12 +376,23 @@ extra_move_properties = {
     0x813c: { 't7_id': 0x81e9, 'desc': 'Wallsplat (wDm_AirF_Up)' },
 }
 
+requirementsReplace = {
+    217: { 'id': 0, 'value': 0 }, #Player is specific character
+    219: { 'id': 0, 'value': 0 }, #Opponent is specific character
+}
+
 hitboxBytesAliases = {
     0x26: 0x2f, #leg hitbox
     0x25: 0x2e, #leg
     0x24: 0x2c, #leg
     0x44: 0x09  #kunimitsu b+2 right arm, tofix properly
 }
+
+def replaceRequirement(req, param):
+    requirementDetails = requirementsReplace.get(req, None)
+    if requirementDetails == None:
+        return req, param
+    return requirementDetails['id'], requirementDetails['value']
 
 def getTag2HitboxAliasedValue(value):
     byteList = [int(b) for b in value.to_bytes(4, 'big')]

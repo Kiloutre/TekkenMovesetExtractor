@@ -169,6 +169,7 @@ class Cancel:
         data = readBytes(addr, 0x28)
         
         self.command = bToInt(data, 0x0, 8)
+        self.requirements_addr = bToInt(data, 0x8, 8)
         self.frame_window_start = bToInt(data, 0x18, 4)
         self.frame_window_end = bToInt(data, 0x1C, 4)
         self.starting_frame = bToInt(data, 0x20, 4)
@@ -177,7 +178,7 @@ class Cancel:
         
         self.name = ''
         
-        self.requirements = getRequirementList(bToInt(data, 0x8, 8))
+        self.requirements = getRequirementList(self.requirements_addr)
         
     def getName(self, movelist):
         if self.name == '':
@@ -198,7 +199,7 @@ class Cancel:
         if printOnlyIfRequirements and len(self.requirements) == 0:
             return
         moveName = getMoveName(self.move_id, movelist) if movelist != None else ''
-        print("Move: %d [%s]" % (self.move_id, moveName))
+        print("Move: %d [%s] \t 0x%x" % (self.move_id, moveName, self.requirements_addr))
         print("Command: %s | %d->%d:%d" % (getMoveStr(self.command), self.frame_window_start, self.frame_window_end, self.starting_frame))
         for req in self.requirements:
             req.print()
@@ -664,7 +665,7 @@ if __name__ == "__main__":
     
     
     
-    printMoves = [i for i, m in enumerate(P1.movelist) if m.name == 'Dj_meiouken']
+    printMoves = [i for i, m in enumerate(P1.movelist) if m.name == 'ThrC_moveK3']
     
     for move in P1.movelist:
         move.loadCancels()

@@ -37,6 +37,5 @@ Administrator rights may be required to import the moveset into memory.
 
 - Fix projectiles crashing when used on the wrong character (Geese projectile without Geese loaded)
 - Fix missing TAG2 commands that use command buffer. Placeholder?
-- Fix wallbreak, balcony break and floorbreak on both T7 & Tag2
 - Fix throws crashing (use a placeholder throw data the throw cannot be fully imported)
 - Make bound use screw ressource?
