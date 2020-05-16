@@ -56,6 +56,7 @@ requirements = {
     172: { 't7_id': 189, 'desc': '(HEIHACHI) He_sDASHB -> wDASH_lkB' },
     173: { 't7_id': 190, 'desc': '(HEIHACHI) wDm_AirF_WB -> wDm_GndF_00' },
     199: { 't7_id': 216, 'desc': '(HEIHACHI) sOKI_00 -> sOKI_C00' },
+    200: { 't7_id': 217, 'desc': 'MAPPING' },
     202: { 't7_id': 219, 'desc': 'MAPPING' },
     208: { 't7_id': 223, 'desc': '(ALISA) Co_IFLnage00vsOGR_n R' },
     214: { 't7_id': 225, 'desc': '(HEIHACHI) sJUMP_00_ -> Co_sJP_RP' },
@@ -160,7 +161,6 @@ requirements = {
     33537: { 't7_id': 33996, 'desc': '(KUMA) Km_zenring -> Standing' },
     33539: { 't7_id': 33998, 'desc': 'MAPPING' },
     33546: { 't7_id': 34108, 'desc': '(HEIHACHI) sDm_2K3_Fy -> wDm_GndF_00' },
-    200: { 't7_id': 1, 'desc': 'Sidestep move, doing this to make the condition false' },
 }
 
 extra_move_properties = {

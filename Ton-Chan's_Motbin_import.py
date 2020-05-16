@@ -29,6 +29,8 @@ voiceclip_size = 0x4
 input_sequence_size = 0x10
 input_extradata_size = 0x8
 
+forbiddenMoves = ['Co_DA_Ground', '___________']
+
 def getTag2RequirementAlias(req, param):
     requirement_detail = getTag2Requirement(req)
     if requirement_detail == None:
@@ -463,6 +465,19 @@ class MotbinPtr:
         for name in self.m['anims']:
             with open("%s/anim/%s.bin" % (folderName, name), "rb") as f:
                 self.animation_table[name]['data_ptr'] = self.writeBytes(f.read())
+                
+    def forbidCancel(self, move_id, groupedCancels=False):
+        cancel_list = self.m['group_cancels' if groupedCancels else 'cancels']
+        cancel_head_ptr = self.grouped_cancel_ptr if groupedCancels else self.cancel_ptr
+        
+        if cancel_head_ptr == 0:
+            return
+        
+        cancels_toedit = [(i, c) for i, c in enumerate(cancel_list) if c['move_id'] == move_id]
+        
+        for i, cancel in cancels_toedit:
+            addr = cancel_head_ptr+ (i * cancel_size)
+            writeInt(addr, 0xFFFFFFFFFFFFFFFF, 8)
         
     def allocateMoves(self):
         print("Allocating moves...")
@@ -472,8 +487,13 @@ class MotbinPtr:
         
         self.move_names_table = {move['name']:self.writeString(move['name']) for move in moves}
         
+        forbiddenMoveIds = []
+        
         self.movelist_ptr = self.align()
-        for move in moves:
+        for i, move in enumerate(moves):
+            if move['name'] in forbiddenMoves:
+                forbiddenMoveIds.append(i)
+        
             name_addr = self.move_names_table.get(move['name'], 0)
             anim_dict = self.animation_table.get(move['anim_name'], None)
             anim_name, anim_ptr = anim_dict['name_ptr'], anim_dict['data_ptr']
@@ -535,6 +555,10 @@ class MotbinPtr:
             self.writeInt(move['u17'], 2)
             self.writeInt(move['u18'], 4)
         
+        for move_id in forbiddenMoveIds:
+            self.forbidCancel(move_id, groupedCancels = True)
+            self.forbidCancel(move_id, groupedCancels = False)
+            
         return self.movelist_ptr, moveCount
         
 def versionMatches(version):
