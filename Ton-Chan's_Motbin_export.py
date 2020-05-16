@@ -13,7 +13,7 @@ TekkenVersion = 7
 if len(sys.argv) > 1 and sys.argv[1].lower() == "tag2":
     TekkenVersion = 2
 
-exportVersion = "0.2.1"
+exportVersion = "0.2.2"
 T = GameClass("TekkenGame-Win64-Shipping.exe" if TekkenVersion == 7 else "Cemu.exe")
 ptr_size = 8 if TekkenVersion == 7 else 4
 base = 0x0 if TekkenVersion == 7 else GameAddresses.a['cemu_base']
@@ -41,44 +41,56 @@ def GetTT2Pos(data):
     return [
         data[1:].find(b'\x00\x64\x00\x17\x00'),
         data[1:].find(b'\x00\x64\x00\x1B\x00'),
-        data[1:].find(b'\x00\xC8\x00\x17')
+        data[1:].find(b'\x00\xC8\x00\x17'),
+        data[1:].find(b'motOrigin')
     ]
     
 def GetT7Pos(data):
     return [
         data[1:].find(b'\x64\x00\x17\x00'),
         data[1:].find(b'\x64\x00\x1B\x00'),
-        data[1:].find(b'\xC8\x00\x17')
+        data[1:].find(b'\xC8\x00\x17'),
+        data[1:].find(b'motOrigin')
     ]
     
-def CropAnim(data):
+def getEndPos(data):
     pos = GetT7Pos(data) if TekkenVersion == 7 else GetTT2Pos(data)
     pos = [p+1 for p in pos if p != -1]
-    x = pos
-    if len(pos) == 0:
-        return data
-    return data[:min(pos)]
+    return -1 if len(pos) == 0 else min(pos)
     
 class AnimData:
     def __init__(self, name, data_addr):
         self.name = name
         self.data = None    
         self.addr = data_addr
+        return None
                 
     def getData(self):
         if self.data == None:
-            read_size = 2000000
-            while self.data == None and read_size > 100:
-                try:
-                    self.data = CropAnim(readBytes(self.addr, read_size))
-                except Exception as e:
-                    read_size = int(read_size * 0.75)
+            read_size = 20000
+            offset = 0
+            prev_bytes = None
             
-            if TekkenVersion != 7:
+            while read_size >= 10:
                 try:
-                    self.data = SwapAnimBytes(self.data)
-                except:
-                    pass
+                    curr_bytes = readBytes(self.addr + offset, read_size)
+                    tmp = curr_bytes
+                    if prev_bytes != None:
+                        curr_bytes = prev_bytes + curr_bytes
+                    
+                    endPos = getEndPos(curr_bytes)
+                    if endPos != -1:
+                        offset += endPos
+                        break
+                    
+                    prev_bytes = tmp
+                    offset += read_size
+                except Exception as e:
+                    read_size //= 2
+                    
+            self.data = None if offset == 0 else readBytes(self.addr, offset)
+            if TekkenVersion != 7:
+                self.data = SwapAnimBytes(self.data)
         return self.data
         
     def __eq__(self, other):
@@ -624,8 +636,9 @@ class Motbin:
         
         aliasCopySize = 0x2a
         aliasOffset = 0x98 if TekkenVersion == 7 else 0x88
+        aliasCount = 148
     
-        self.aliases = [readInt(addr + aliasOffset + offset, 2) for offset in range(0, 42, 2)]
+        self.aliases = [readInt(addr + aliasOffset + (offset * 2), 2) for offset in range(0, aliasCount)]
         
         self.requirements = []
         self.cancels = []

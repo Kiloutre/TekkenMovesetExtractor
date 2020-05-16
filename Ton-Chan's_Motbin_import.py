@@ -12,7 +12,7 @@ if len(sys.argv) == 1:
     os._exit(1)
    
 T = GameClass("TekkenGame-Win64-Shipping.exe")
-importVersion = "0.2.1"
+importVersion = "0.2.2"
 folderName = sys.argv[1]
 charaName = folderName[2:]
 jsonFilename = "%s.json" % (charaName)
@@ -75,7 +75,7 @@ def writeAliases(motbin_ptr, aliases):
     for alias in aliases:
         writeInt(motbin_ptr + alias_offset, alias, 2)
         alias_offset += 2
-    writeInt(motbin_ptr + 0x98, aliases[1], 2)
+    writeInt(motbin_ptr + 0x98, aliases[1], 2) #required to move at all!
         
 def align8Bytes(value):
     return value + (8 - (value % 8))
