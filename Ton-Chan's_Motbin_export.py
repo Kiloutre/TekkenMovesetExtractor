@@ -67,13 +67,16 @@ class AnimData:
                 
     def getData(self):
         if self.data == None:
-            read_size = 20000
+            read_size = 8192
             offset = 0
             prev_bytes = None
             
-            while read_size >= 10:
+            while read_size >= 16:
                 try:
                     curr_bytes = readBytes(self.addr + offset, read_size)
+                except Exception as e:
+                    read_size //= 2
+                else:
                     tmp = curr_bytes
                     if prev_bytes != None:
                         curr_bytes = prev_bytes + curr_bytes
@@ -85,8 +88,6 @@ class AnimData:
                     
                     prev_bytes = tmp
                     offset += read_size
-                except Exception as e:
-                    read_size //= 2
                     
             self.data = None if offset == 0 else readBytes(self.addr, offset)
             if TekkenVersion != 7:
@@ -805,6 +806,6 @@ if __name__ == "__main__":
     
     m2 = Motbin(base + motbin_ptr)
     if m.name != m2.name:
-        pass#m2.extractMoveset()
+        m2.extractMoveset()
     
     

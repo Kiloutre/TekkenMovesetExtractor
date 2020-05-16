@@ -662,13 +662,18 @@ if __name__ == "__main__":
     P1 = Player(GameAddresses.a['p1_ptr'], '1')
     P2 = Player(GameAddresses.a['p2_ptr'], '2')
     
-    printMoves = [1509, 1510, 1649]
     
-    for move in [P1.movelist[move] for move in printMoves]:
+    
+    printMoves = [i for i, m in enumerate(P1.movelist) if m.name == 'Dj_meiouken']
+    
+    for move in P1.movelist:
         move.loadCancels()
-        move.print()
+        
+        cancelList = [cancel for cancel in move.cancels if cancel.move_id in printMoves]
+        
+        for c in cancelList:
+            c.print()
             
-    #printMoveProperty(P2.movelist, "wDm_AirF_Up")
     os._exit(0)
 
     P1.setSecondMovelist(P2.movelist)
