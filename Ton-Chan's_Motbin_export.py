@@ -96,7 +96,10 @@ class AnimData:
                     
             self.data = None if offset == 0 else readBytes(self.addr, offset)
             if TekkenVersion != 7:
-                self.data = SwapAnimBytes(self.data)
+                try:
+                    self.data = SwapAnimBytes(self.data)
+                except:
+                    self.data = None
         return self.data
         
     def __eq__(self, other):
@@ -601,8 +604,8 @@ class Projectile:
             self.u8 = bToInt(data, 0x38, 4)
             self.u9 = bToInt(data, 0x54, 4)
             
-            self.hit_condition_addr = bToInt(data, 0x60, ptr_size)
-            self.cancel_addr = bToInt(data, 0x68, ptr_size)
+            self.hit_condition_addr = 0#bToInt(data, 0x60, ptr_size)
+            self.cancel_addr = 0#bToInt(data, 0x68, ptr_size)
             
             self.u10 = bToInt(data, 0x74, 4)
             self.u11 = bToInt(data, 0x78, 4)
@@ -801,7 +804,10 @@ class Motbin:
         print("Saving animations...")
         for anim in self.anims:
             with open ("%s/%s.bin" % (anim_path, anim.name), "wb") as f:
-                f.write(anim.getData())
+                animdata = anim.getData()
+                f.write(animdata if animdata != None else bytes([0]))
+                if animdata == None:
+                    print("Error extracting animation %s" % (anim.name))
             
         print("Saved at path %s/%s\n" % (os.getcwd(), path[2:]))
         
@@ -919,6 +925,6 @@ if __name__ == "__main__":
     motbin_ptr = readInt(motbin_ptr_addr, ptr_size)
     
     m2 = Motbin(base + motbin_ptr)
-    m2.extractMoveset()
+    #m2.extractMoveset()
     
     
