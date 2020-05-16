@@ -13,7 +13,7 @@ TekkenVersion = 7
 if len(sys.argv) > 1 and sys.argv[1].lower() == "tag2":
     TekkenVersion = 2
 
-exportVersion = "0.2.2"
+exportVersion = "0.3.0"
 T = GameClass("TekkenGame-Win64-Shipping.exe" if TekkenVersion == 7 else "Cemu.exe")
 ptr_size = 8 if TekkenVersion == 7 else 4
 base = 0x0 if TekkenVersion == 7 else GameAddresses.a['cemu_base']
@@ -157,6 +157,18 @@ class Requirement:
     def setId(self, id):
         self.id = id
         
+class CancelExtradata:
+    size = 4
+    
+    def __init__(self, addr):
+        self.addr = addr
+        data = readBytes(base + addr, CancelExtradata.size)
+        self.value = bToInt(data, 0x0, 4)
+        
+    def dict(self):
+        return self.value
+        
+        
 class Cancel:
     size = 0x28 if TekkenVersion == 7 else 0x20
     
@@ -169,8 +181,7 @@ class Cancel:
         
         self.command = bToInt(data, 0x0, 8)
         self.requirement_addr = bToInt(data, 0x8, ptr_size)
-        extra_data_addr = bToInt(data, 0x8 + ptr_size, ptr_size) + base
-        self.extra_data = readInt(extra_data_addr, 4)
+        self.extradata_addr = bToInt(data, 0x8 + ptr_size, ptr_size)
         self.frame_window_start = bToInt(data, after_ptr_offset, 4)
         self.frame_window_end = bToInt(data, after_ptr_offset + 4, 4)
         self.starting_frame = bToInt(data,after_ptr_offset + 8, 4)
@@ -183,12 +194,13 @@ class Cancel:
             self.command = (t2 << 32) | t
         
         self.id = -1
+        self.extradata_id = -1
         
     def dict(self):
         return {
             'id': self.id,
             'command': self.command,
-            'extra_data': self.extra_data,
+            'extradata': self.extradata_id,
             'requirement': self.requirement_idx,
             'frame_window_start': self.frame_window_start,
             'frame_window_end': self.frame_window_end,
@@ -199,6 +211,9 @@ class Cancel:
     
     def setRequirementId(self, requirement_idx):
         self.requirement_idx = requirement_idx
+    
+    def setExtradataId(self, extradata_id):
+        self.extradata_id = extradata_id
         
     def setId(self, id):
         self.id = id
@@ -572,47 +587,47 @@ class Motbin:
         reaction_list_ptr = 0x150 if TekkenVersion == 7 else 0x140
         reaction_list_size = reaction_list_ptr + ptr_size
         self.reaction_list_ptr = readInt(addr + reaction_list_ptr, ptr_size)
-        self.reaction_list_size = readInt(addr + reaction_list_size, 4)
+        self.reaction_list_size = readInt(addr + reaction_list_size, ptr_size)
         
         requirements_ptr = 0x160 if TekkenVersion == 7 else 0x148
         requirement_count = requirements_ptr + ptr_size
         self.requirements_ptr = readInt(addr + requirements_ptr, ptr_size)
-        self.requirement_count = readInt(addr + requirement_count, 4)
+        self.requirement_count = readInt(addr + requirement_count, ptr_size)
         
         hit_conditions_ptr = 0x170 if TekkenVersion == 7 else 0x150
         hit_conditions_size = hit_conditions_ptr + ptr_size
         self.hit_conditions_ptr = readInt(addr + hit_conditions_ptr, ptr_size)
-        self.hit_conditions_size = readInt(addr + hit_conditions_size, 4)
+        self.hit_conditions_size = readInt(addr + hit_conditions_size, ptr_size)
         
         pushback_ptr = 0x190 if TekkenVersion == 7 else 0x160
         pushback_list_size = pushback_ptr + ptr_size
         self.pushback_ptr = readInt(addr + pushback_ptr, ptr_size)
-        self.pushback_list_size = readInt(addr + pushback_list_size, 4)
+        self.pushback_list_size = readInt(addr + pushback_list_size, ptr_size)
 
         pushback_extradata_ptr = 0x1A0 if TekkenVersion == 7 else 0x168
         pushback_extradata_size = pushback_extradata_ptr + ptr_size
         self.pushback_extradata_ptr = readInt(addr + pushback_extradata_ptr, ptr_size)
-        self.pushback_extradata_size = readInt(addr + pushback_extradata_size, 4)
+        self.pushback_extradata_size = readInt(addr + pushback_extradata_size, ptr_size)
 
         cancel_head_ptr = 0x1b0 if TekkenVersion == 7 else 0x170
         cancel_list_size = cancel_head_ptr + ptr_size
         self.cancel_head_ptr = readInt(addr + cancel_head_ptr, ptr_size)
-        self.cancel_list_size = readInt(addr + cancel_list_size, 4)
+        self.cancel_list_size = readInt(addr + cancel_list_size, ptr_size)
 
         group_cancel_head_ptr = 0x1c0 if TekkenVersion == 7 else 0x178
         group_cancel_list_size = group_cancel_head_ptr + ptr_size
         self.group_cancel_head_ptr = readInt(addr + group_cancel_head_ptr, ptr_size)
-        self.group_cancel_list_size = readInt(addr + group_cancel_list_size, 4)
+        self.group_cancel_list_size = readInt(addr + group_cancel_list_size, ptr_size)
 
         cancel_extradata_head_ptr = 0x1d0 if TekkenVersion == 7 else 0x180
         cancel_extradata_list_size = cancel_extradata_head_ptr + ptr_size
         self.cancel_extradata_head_ptr = readInt(addr + cancel_extradata_head_ptr, ptr_size)
-        self.cancel_extradata_list_size = readInt(addr + cancel_extradata_list_size, 4)
+        self.cancel_extradata_list_size = readInt(addr + cancel_extradata_list_size,ptr_size)
 
         extra_move_properties_ptr = 0x1e0 if TekkenVersion == 7 else 0x188
         extra_move_properties_size = extra_move_properties_ptr + ptr_size
         self.extra_move_properties_ptr = readInt(addr + extra_move_properties_ptr, ptr_size)
-        self.extra_move_properties_size = readInt(addr + extra_move_properties_size, 4)
+        self.extra_move_properties_size = readInt(addr + extra_move_properties_size, ptr_size)
 
         movelist_head_ptr = 0x210 if TekkenVersion == 7 else 0x1a0
         movelist_size = movelist_head_ptr + ptr_size
@@ -659,6 +674,7 @@ class Motbin:
         self.voiceclips = []
         self.input_sequences = []
         self.input_extradata = []
+        self.cancel_extradata = []
         
     def printBasicData(self):
         print("Character: %s" % (self.character_name))
@@ -689,7 +705,8 @@ class Motbin:
             'extra_move_properties': self.extra_move_properties,
             'voiceclips': self.voiceclips,
             'input_sequences': self.input_sequences,
-            'input_extradata': self.input_extradata
+            'input_extradata': self.input_extradata,
+            'cancel_extradata': self.cancel_extradata
         }
         
     def save(self):
@@ -731,11 +748,17 @@ class Motbin:
             condition = Requirement(self.requirements_ptr + (i * Requirement.size))
             condition.setId(i)
             self.requirements.append(condition.dict())
+            
+        print("Reading cancels extradatas...")
+        for i in range(self.cancel_extradata_list_size):
+            extradata = CancelExtradata(self.cancel_extradata_head_ptr + (i * CancelExtradata.size))
+            self.cancel_extradata.append(extradata.dict())
         
         print("Reading cancels...")
         for i in range(self.cancel_list_size):
             cancel = Cancel(self.cancel_head_ptr + (i * Cancel.size))
             cancel.setRequirementId((cancel.requirement_addr - self.requirements_ptr) // Requirement.size)
+            cancel.setExtradataId((cancel.extradata_addr - self.cancel_extradata_head_ptr) // CancelExtradata.size)
             cancel.setId(i)
             self.cancels.append(cancel.dict())
         
@@ -743,6 +766,7 @@ class Motbin:
         for i in range(self.group_cancel_list_size):
             cancel = Cancel(self.group_cancel_head_ptr + (i * Cancel.size))
             cancel.setRequirementId((cancel.requirement_addr - self.requirements_ptr) // Requirement.size)
+            cancel.setExtradataId((cancel.extradata_addr - self.cancel_extradata_head_ptr) // CancelExtradata.size)
             cancel.setId(i)
             self.group_cancels.append(cancel.dict())
         

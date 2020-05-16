@@ -12,7 +12,7 @@ if len(sys.argv) == 1:
     os._exit(1)
    
 T = GameClass("TekkenGame-Win64-Shipping.exe")
-importVersion = "0.2.2"
+importVersion = "0.3.0"
 folderName = sys.argv[1]
 charaName = folderName[2:]
 jsonFilename = "%s.json" % (charaName)
@@ -101,9 +101,7 @@ def getTotalSize(m):
     size += len(m['requirements']) * 8
         
     size = align8Bytes(size)
-    extra_data_list = [cancel['extra_data'] for cancel in m['cancels']]
-    extra_data_list += [cancel['extra_data'] for cancel in m['group_cancels']]
-    size += len(set(extra_data_list)) * 4
+    size += len(m['cancel_extradata']) * 4
     
     size = align8Bytes(size)
     size += len(m['cancels']) * 0x28
@@ -246,6 +244,11 @@ class MotbinPtr:
             return 0
         return self.requirements_ptr + (idx * requirement_size)
         
+    def getCancelExtradataFromId(self, idx):
+        if self.extra_data_ptr == 0:
+            return 0
+        return self.extra_data_ptr + (idx * 4)
+        
     def getReactionListFromId(self, idx):
         if self.reaction_list_ptr == 0:
             return 0
@@ -280,6 +283,19 @@ class MotbinPtr:
         if self.input_extradata_ptr == 0:
             return 0
         return self.input_extradata_ptr + (idx * input_extradata_size)
+                
+    def forbidCancel(self, move_id, groupedCancels=False):
+        cancel_list = self.m['group_cancels' if groupedCancels else 'cancels']
+        cancel_head_ptr = self.grouped_cancel_ptr if groupedCancels else self.cancel_ptr
+        
+        if cancel_head_ptr == 0:
+            return
+        
+        cancels_toedit = [(i, c) for i, c in enumerate(cancel_list) if c['move_id'] == move_id]
+        
+        for i, cancel in cancels_toedit:
+            addr = cancel_head_ptr+ (i * cancel_size)
+            writeInt(addr, 0xFFFFFFFFFFFFFFFF, 8)
         
     def allocateInputExtradata(self):
         if self.input_extradata_ptr != 0:
@@ -328,14 +344,13 @@ class MotbinPtr:
     def allocateCancelExtradata(self):
         if self.extra_data_ptr != 0:
             return
-        print("Allocating cancels extradata...")
+        print("Allocating cancel extradatas...")
         self.extra_data_ptr = self.align()
         
-        extra_data_list = [cancel['extra_data'] for cancel in self.m['cancels']]
-        extra_data_list += [cancel['extra_data'] for cancel in self.m['group_cancels']]
-        extra_data_list = set(extra_data_list)
+        for c in self.m['cancel_extradata']:
+            self.writeInt(c, 4)
         
-        self.extra_data_table = {value:self.writeInt(value, 4) for value in extra_data_list}
+        return self.extra_data_ptr, len(self.m['cancel_extradata'])
         
     def allocateVoiceclipIds(self):
         if self.voiceclip_ptr != 0:
@@ -348,9 +363,8 @@ class MotbinPtr:
         
         return self.voiceclip_ptr, len(self.m['voiceclips'])
         
-    def allocateCancels(self, cancels, grouped=False):
-        self.allocateCancelExtradata()
         
+    def allocateCancels(self, cancels, grouped=False):
         if grouped:
             print("Allocating grouped cancels...")
             self.grouped_cancel_ptr = self.align()
@@ -365,7 +379,7 @@ class MotbinPtr:
             requirements_addr = self.getRequirementFromId(cancel['requirement'])
             self.writeInt(requirements_addr, 8)
             
-            extraDataAddr = self.extra_data_table.get(cancel['extra_data'], 0)
+            extraDataAddr = self.getCancelExtradataFromId(cancel['extradata'])
             self.writeInt(extraDataAddr, 8)
             
             self.writeInt(cancel['frame_window_start'], 4)
@@ -466,19 +480,6 @@ class MotbinPtr:
         for name in self.m['anims']:
             with open("%s/anim/%s.bin" % (folderName, name), "rb") as f:
                 self.animation_table[name]['data_ptr'] = self.writeBytes(f.read())
-                
-    def forbidCancel(self, move_id, groupedCancels=False):
-        cancel_list = self.m['group_cancels' if groupedCancels else 'cancels']
-        cancel_head_ptr = self.grouped_cancel_ptr if groupedCancels else self.cancel_ptr
-        
-        if cancel_head_ptr == 0:
-            return
-        
-        cancels_toedit = [(i, c) for i, c in enumerate(cancel_list) if c['move_id'] == move_id]
-        
-        for i, cancel in cancels_toedit:
-            addr = cancel_head_ptr+ (i * cancel_size)
-            writeInt(addr, 0xFFFFFFFFFFFFFFFF, 8)
         
     def allocateMoves(self):
         print("Allocating moves...")
@@ -603,6 +604,7 @@ if __name__ == "__main__":
     fulldate = p.writeString(m['fulldate'])
     
     requirements_ptr, requirement_count = p.allocateRequirements()
+    cancel_extradata_ptr, cancel_extradata_size = p.allocateCancelExtradata()
     cancel_ptr, cancel_count = p.allocateCancels(m['cancels'])
     group_cancel_ptr, group_cancel_count = p.allocateCancels(m['group_cancels'], grouped=True)
     pushback_extras_ptr, pushback_extras_count = p.allocatePushbackExtras()
@@ -615,6 +617,9 @@ if __name__ == "__main__":
     moves_ptr, move_count = p.allocateMoves()
     input_extradata_ptr, input_extradata_count = p.allocateInputExtradata()
     input_sequences_ptr, input_sequences_count = p.allocateInputSequences()
+    
+    writeInt(p.motbin_ptr + 0x0, 65536, 4)
+    writeInt(p.motbin_ptr + 0x4, 4475208, 4)
     
     writeInt(p.motbin_ptr + 0x8, character_name, 8)
     writeInt(p.motbin_ptr + 0x10, creator_name, 8)
@@ -640,9 +645,12 @@ if __name__ == "__main__":
     
     writeInt(p.motbin_ptr + 0x1b0, cancel_ptr, 8)
     writeInt(p.motbin_ptr + 0x1b8, cancel_count, 8)
-    
+
     writeInt(p.motbin_ptr + 0x1c0, group_cancel_ptr, 8)
     writeInt(p.motbin_ptr + 0x1c8, group_cancel_count, 8)
+
+    writeInt(p.motbin_ptr + 0x1d0, cancel_extradata_ptr, 8)
+    writeInt(p.motbin_ptr + 0x1d8, cancel_extradata_size, 8)
     
     writeInt(p.motbin_ptr + 0x1e0, extra_move_properties_ptr, 8)
     writeInt(p.motbin_ptr + 0x1e8, extra_move_properties_count, 8)
