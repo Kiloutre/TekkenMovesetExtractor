@@ -2,7 +2,7 @@
 # Python 3.6.5
 
 from Addresses import GameAddresses, GameClass, VirtualAllocEx, VirtualFreeEx, GetLastError, MEM_RESERVE, MEM_COMMIT, MEM_DECOMMIT, MEM_RELEASE, PAGE_EXECUTE_READWRITE
-from Aliases import getTag2Requirement, getTag2ExtraMoveProperty, fillAliasesDictonnaries
+from Aliases import getTag2Requirement, getTag2ExtraMoveProperty, fillAliasesDictonnaries, getTag2HitboxAliasedValue
 import json
 import os
 import sys
@@ -525,7 +525,11 @@ class MotbinPtr:
             self.writeInt(0, 8) #['u14'], ptr
             self.writeInt(move['u15'], 4)
             
-            self.writeInt(move['hitbox_location'], 4)
+            hitbox = move['hitbox_location']
+            if self.m['version'] == "Tag2":
+                hitbox = getTag2HitboxAliasedValue(hitbox)
+            
+            self.writeInt(hitbox, 4)
             self.writeInt(move['startup'], 4)
             self.writeInt(move['recovery'], 4)
             
