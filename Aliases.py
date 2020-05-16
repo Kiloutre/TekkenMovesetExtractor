@@ -379,11 +379,15 @@ extra_move_properties = {
 hitboxBytesAliases = {
     0x26: 0x2f, #leg hitbox
     0x25: 0x2e, #leg
-    0x24: 0x2c  #leg
+    0x24: 0x2c, #leg
+    0x44: 0x09  #kunimitsu b+2 right arm, tofix properly
 }
 
 def getTag2HitboxAliasedValue(value):
-    byteList = [hitboxBytesAliases.get(b, b) for b in value.to_bytes(4, 'big')]
+    byteList = [int(b) for b in value.to_bytes(4, 'big')]
+    for i, b in enumerate(byteList):
+        if i % 2 != 0: #only affects 2nd and 4th byte
+            byteList[i] = hitboxBytesAliases.get(b, b)
     return int.from_bytes(byteList, 'big')
 
 def fillDict(dictionnary):
