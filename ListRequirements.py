@@ -3,7 +3,7 @@
 # Dumping info about movelists and comparing them will be necessary to build reliable alias lists
 
 from Addresses import GameAddresses, GameClass
-from Aliases import getRequirement, getTag2Requirement, extra_move_properties2, testmapping
+from Aliases import getRequirement, getTag2Requirement, getProperty
 import sys
 import os
 import json
@@ -156,7 +156,9 @@ class ExtraProperty:
     def print(self, printAddress=False):
         if printAddress:
             print("%x - " % (self.addr), end='')
-        print("Type: %x | ID: %x | value: %x" % (self.type, self.id, self.value))
+        propertyDetails = getProperty(self.id)
+        desc = '' if propertyDetails == None else ('| ' + propertyDetails['desc'])
+        print("Type: %x | ID: %x | value: %x" % (self.type, self.id, self.value), desc)
         
     def __eq__(self, other):
         return self.type == other.type and self.value == other.value
@@ -623,10 +625,23 @@ def getDesc(key):
         if k['tag2_id'] == key:
             return k['desc']
     return 'AUTO'
+    
+def printMoveProperty(movelist, name):
+    for m in movelist:
+        if m.name == name:
+            #propertyList = m.loadExtraProperties()
+            print("%s properties:\n" % (name))
+            m.printProperties()
+            
+            print()
+            return True
+    print("Move %s not found." %(name))
+    
 if __name__ == "__main__":
     #saveExtraProperties()
     #saveAliasRequirements()
    
+    """
     new_testmapping = {}
     for key in [k for k in sorted(testmapping.keys())]:
         key_value = getKeyValue(key)
@@ -640,11 +655,16 @@ if __name__ == "__main__":
             print(text)
     print("%d keys" % (len(new_testmapping.keys())))
     os._exit(0)
+    """
     
     
     
     P1 = Player(GameAddresses.a['p1_ptr'], '1')
     P2 = Player(GameAddresses.a['p2_ptr'], '2')
+    
+    printMoveProperty(P1.movelist, "wDm_AirF_Up")
+    printMoveProperty(P2.movelist, "wDm_AirF_Up")
+    os._exit(0)
 
     P1.setSecondMovelist(P2.movelist)
     P2.setSecondMovelist(P1.movelist)

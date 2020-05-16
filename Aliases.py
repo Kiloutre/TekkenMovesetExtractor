@@ -372,7 +372,8 @@ extra_move_properties = {
     0x82f9: { 't7_id': 0x84c4, 'desc': '(ALISA) Fall_dwKAM' },
     0x82fb: { 't7_id': 0x84c6, 'desc': '(ALISA) Co_sabaloRKn' },
     0x8301: { 't7_id': 0x84cc, 'desc': 'MAPPING' },
-    0x830b: { 't7_id': 0x853d, 'desc': '(ALISA) sDw_AIR00_' }
+    0x830b: { 't7_id': 0x853d, 'desc': '(ALISA) sDw_AIR00_' },
+    0x813c: { 't7_id': 0x81e9, 'desc': 'Wallsplat (wDm_AirF_Up)' },
 }
 
 hitboxBytesAliases = {
@@ -418,6 +419,16 @@ def getRequirement(id):
                 'tag2_id': key,
                 't7_id': requirements[key]['t7_id'],
                 'desc': requirements[key]['desc'],
+            }
+    return None
+
+def getProperty(id):
+    for key in extra_move_properties.keys():
+        if extra_move_properties[key]['t7_id'] == id:
+            return {
+                'tag2_id': key,
+                't7_id': extra_move_properties[key]['t7_id'],
+                'desc': extra_move_properties[key]['desc'],
             }
     return None
 
