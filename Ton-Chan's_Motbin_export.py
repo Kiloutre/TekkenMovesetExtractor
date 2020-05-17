@@ -13,7 +13,7 @@ TekkenVersion = 7
 if len(sys.argv) > 1 and sys.argv[1].lower() == "tag2":
     TekkenVersion = 2
 
-exportVersion = "0.5.0"
+exportVersion = "0.6.0"
 T = GameClass("TekkenGame-Win64-Shipping.exe" if TekkenVersion == 7 else "Cemu.exe")
 ptr_size = 8 if TekkenVersion == 7 else 4
 base = 0x0 if TekkenVersion == 7 else GameAddresses.a['cemu_base']
@@ -577,39 +577,19 @@ class Projectile:
         data = readBytes(base + addr, Projectile.size)
         
         if TekkenVersion == 7:
-            self.u1 = bToInt(data, 0x0, 4)
-            self.u2 = bToInt(data, 0x1c, 4)
-            self.u3 = bToInt(data, 0x24, 4)
-            self.u4 = bToInt(data, 0x28, 4)
-            self.u5 = bToInt(data, 0x2c, 4)
-            self.u6 = bToInt(data, 0x30, 4)
-            self.u7 = bToInt(data, 0x34, 4)
-            self.u8 = bToInt(data, 0x38, 4)
-            self.u9 = bToInt(data, 0x54, 4)
+            self.u1 = [bToInt(data, offset * 2, 2) for offset in range(48)]
             
             self.hit_condition_addr = bToInt(data, 0x60, ptr_size)
             self.cancel_addr = bToInt(data, 0x68, ptr_size)
             
-            self.u10 = bToInt(data, 0x74, 4)
-            self.u11 = bToInt(data, 0x78, 4)
-            self.u12 = bToInt(data, 0x7c, 4)
+            self.u2 = [bToInt(data, 0x70 + (offset * 2), 2) for offset in range(28)]
         else:
-            self.u1 = bToInt(data, 0x0, 4)
-            self.u2 = bToInt(data, 0x1c, 4)
-            self.u3 = bToInt(data, 0x24, 4)
-            self.u4 = bToInt(data, 0x28, 4)
-            self.u5 = bToInt(data, 0x2c, 4)
-            self.u6 = bToInt(data, 0x30, 4)
-            self.u7 = bToInt(data, 0x34, 4)
-            self.u8 = bToInt(data, 0x38, 4)
-            self.u9 = bToInt(data, 0x54, 4)
+            self.u1 = [0] * 48
             
             self.hit_condition_addr = 0#bToInt(data, 0x60, ptr_size)
             self.cancel_addr = 0#bToInt(data, 0x68, ptr_size)
             
-            self.u10 = bToInt(data, 0x74, 4)
-            self.u11 = bToInt(data, 0x78, 4)
-            self.u12 = bToInt(data, 0x7c, 4)
+            self.u2 = [0] * 28
         
         self.hit_condition = -1
         self.cancel_idx = -1
@@ -618,16 +598,6 @@ class Projectile:
         return {
             'u1': self.u1,
             'u2': self.u2,
-            'u3': self.u3,
-            'u4': self.u4,
-            'u5': self.u5,
-            'u6': self.u6,
-            'u7': self.u7,
-            'u8': self.u8,
-            'u9': self.u9,
-            'u10': self.u10,
-            'u11': self.u12,
-            'u12': self.u12,
             'hit_condition': self.hit_condition,
             'cancel': self.cancel_idx
         }

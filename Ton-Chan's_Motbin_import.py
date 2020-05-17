@@ -12,7 +12,7 @@ if len(sys.argv) == 1:
     os._exit(1)
    
 T = GameClass("TekkenGame-Win64-Shipping.exe")
-importVersion = "0.5.0"
+importVersion = "0.6.0"
 folderName = sys.argv[1]
 charaName = folderName[2:]
 jsonFilename = "%s.json" % (charaName)
@@ -483,26 +483,8 @@ class MotbinPtr:
             curr = self.curr_ptr
             writeBytes(self.curr_ptr, bytes([0] * projectile_size))
             
-            self.writeInt(p['u1'], 4)
-            
-            self.skip(0x18)
-            
-            self.writeInt(p['u2'], 4)
-            
-            self.skip(0x4)
-            
-            self.writeInt(p['u3'], 4)
-            self.writeInt(p['u4'], 4)
-            self.writeInt(p['u5'], 4)
-            self.writeInt(p['u6'], 4)
-            self.writeInt(p['u7'], 4)
-            self.writeInt(p['u8'], 4)
-            
-            self.skip(0x18)
-            
-            self.writeInt(p['u9'], 4)
-            
-            self.skip(0x8)
+            for short in p['u1']:
+                self.writeInt(short, 2)
             
             on_hit_addr = 0
             cancel_addr = 0
@@ -510,17 +492,11 @@ class MotbinPtr:
                 on_hit_addr = self.getHitConditionFromId(p['hit_condition'])
             if p['hit_condition'] != -1:
                 cancel_addr = self.getCancelFromId(p['cancel'])
-            
             self.writeInt(on_hit_addr, 8)
             self.writeInt(cancel_addr, 8)
             
-            self.skip(0x4)
-            
-            self.writeInt(p['u10'], 4)
-            self.writeInt(p['u11'], 4)
-            self.writeInt(p['u12'], 4)
-            
-            self.skip(0x28)
+            for short in p['u2']:
+                self.writeInt(short, 2)
             
             y = self.curr_ptr - curr 
             if y != 0xa8:
@@ -731,8 +707,8 @@ if __name__ == "__main__":
     writeInt(p.motbin_ptr + 0x170, hit_conditions_ptr, 8)
     writeInt(p.motbin_ptr + 0x178, hit_conditions_count, 8)
     
-    writeInt(p.motbin_ptr + 0x170, projectiles_ptr, 8)
-    writeInt(p.motbin_ptr + 0x178, projectiles_count, 8)
+    writeInt(p.motbin_ptr + 0x180, projectiles_ptr, 8)
+    writeInt(p.motbin_ptr + 0x188, projectiles_count, 8)
     
     writeInt(p.motbin_ptr + 0x190, pushback_ptr, 8)
     writeInt(p.motbin_ptr + 0x198, pushback_list_count, 8)

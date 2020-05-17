@@ -37,6 +37,7 @@ Administrator rights may be required to import the moveset into memory.
 
 - Fix projectiles crashing when used on the wrong character (Geese projectile without Geese loaded)
 - Fix missing TAG2 commands that use command buffer. Placeholder?
+- Alias throw camera values for tag2 (kunimitsu f4 f 4 4 4 4, angel 2+4)
 - Make bound use screw ressource?
 - Fix parries
 - Fix Kunimitsu Katon (D/B+1+2) that freezes up
