@@ -394,7 +394,8 @@ hitboxBytesAliases = {
     0x25: 0x2e, #leg
     0x24: 0x2c, #leg
     0x44: 0x09,  #kunimitsu b+2 right arm, tofix properly
-    0x45: 0x09   #kunimitsu doton 2 right arm, tofix properly
+    0x45: 0x09,  #kunimitsu doton 2 right arm, tofix properly,
+    0x40: 0x50   #DJ laser
 }
 
 def replaceRequirement(req, param):
