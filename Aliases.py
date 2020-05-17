@@ -49,6 +49,13 @@ requirements = {
     149: { 't7_id': 151, 'desc': '(HEIHACHI) sWALK_01L -> sJUMP_00_' },
     152: { 't7_id': 154, 'desc': '(KUMA) Km_spgoro3 -> UNKNOWN-MOVE' },
     153: { 't7_id': 155, 'desc': '(DRAGUNOV) Cn_lplkrp -> Cn_lplkrpuraNSP' },
+    159: {
+        't7_id': 163,
+        'desc': 'Is character wallsplat',
+        'param_alias': {
+            8233: 8295
+        }
+    },
     160: { 't7_id': 164, 'desc': 'MAPPING' },
     161: { 't7_id': 165, 'desc': 'MAPPING' },
     163: { 't7_id': 167, 'desc': '(KUMA) Km_4KAM02_ -> KUMA_MK' },
@@ -374,9 +381,10 @@ extra_move_properties = {
     0x8301: { 't7_id': 0x84cc, 'desc': 'MAPPING' },
     0x830b: { 't7_id': 0x853d, 'desc': '(ALISA) sDw_AIR00_' },
     0x813c: { 't7_id': 0x81e9, 'desc': 'Wallsplat (wDm_AirF_Up)' },
+    0x8146: { 't7_id': 0x81f3, 'desc': 'Dj_beam_01' },
 }
 
-requirementsReplace = {
+globalRequirementsReplace = {
     217: { 'id': 0, 'value': 0 }, #Player is specific character
     219: { 'id': 0, 'value': 0 }, #Opponent is specific character
 }
@@ -390,7 +398,7 @@ hitboxBytesAliases = {
 }
 
 def replaceRequirement(req, param):
-    requirementDetails = requirementsReplace.get(req, None)
+    requirementDetails = globalRequirementsReplace.get(req, None)
     if requirementDetails == None:
         return req, param
     return requirementDetails['id'], requirementDetails['value']
@@ -411,11 +419,12 @@ def fillDict(dictionnary):
         nextkey = keylist[i + 1]
         key_diff = nextkey - (key + 1)
         
+        
         alias_offset = dictionnary[key]['t7_id'] - key
         alias_offset2 = dictionnary[nextkey]['t7_id'] - nextkey
         
         if alias_offset == alias_offset2 and key_diff > 0:
-            for i in range(key_diff):
+            for i in range(1, key_diff + 1):
                 dictionnary[key + i] = {
                     't7_id': dictionnary[key]['t7_id'] + i,
                     'desc': 'FILLED'
@@ -423,10 +432,13 @@ def fillDict(dictionnary):
                 generatedKeys += 1
                 
     print("Generated %d keys" % (generatedKeys))
+    return dictionnary
                 
 def fillAliasesDictonnaries():
-    fillDict(requirements)
-    fillDict(extra_move_properties)
+    global extra_move_properties
+    global requirements
+    requirements = fillDict(requirements)
+    extra_move_properties = fillDict(extra_move_properties)
 
 def getRequirement(id):
     for key in requirements.keys():

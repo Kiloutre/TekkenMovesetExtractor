@@ -3,10 +3,12 @@
 # Dumping info about movelists and comparing them will be necessary to build reliable alias lists
 
 from Addresses import GameAddresses, GameClass
-from Aliases import getRequirement, getTag2Requirement, getProperty
+from Aliases import getRequirement, getTag2Requirement, getProperty, fillAliasesDictonnaries
 import sys
 import os
 import json
+
+fillAliasesDictonnaries()
 
 T = GameClass("TekkenGame-Win64-Shipping.exe" )
     
@@ -315,10 +317,22 @@ class Player:
         self.movelist = [Move(self.movelist_head, i) for i in range(self.movelist_size)]
         self.movelist2 = []
         
+        self.cancel_head = readInt(motbin_ptr + 0x1b0, 8)
+        self.cancel_size = readInt(motbin_ptr + 0x1b8, 8)
+        self.grouped_cancel_head = readInt(motbin_ptr + 0x1c0, 8)
+        self.grouped_cancel_size = readInt(motbin_ptr + 0x1c8, 8)
+        
+        self.cancels = []
+        self.grouped_cancels = []
+        
         self.curr_move = 0
         self.curr_move_ptr = 0
         self.curr_move_name = ''
         self.using_second_movelist = False
+        
+    def loadRawCancels(self):
+        self.cancels = [Cancel(self.cancel_head + (i * 0x28)) for i in range(self.cancel_size)]
+        self.grouped_cancels = [Cancel(self.grouped_cancel_head + (i * 0x28)) for i in range(self.grouped_cancel_size)]
         
     def setSecondMovelist(self, movelist):
         self.movelist2 = movelist
@@ -663,19 +677,18 @@ if __name__ == "__main__":
     P1 = Player(GameAddresses.a['p1_ptr'], '1')
     P2 = Player(GameAddresses.a['p2_ptr'], '2')
     
+    """
+    P1.loadRawCancels()
+    printMoves = [i for i, m in enumerate(P1.movelist) if m.name == 'Kg_AirWallF_n']
     
-    
-    printMoves = [i for i, m in enumerate(P1.movelist) if m.name == 'ThrC_moveK3']
-    
-    for move in P1.movelist:
-        move.loadCancels()
-        
-        cancelList = [cancel for cancel in move.cancels if cancel.move_id in printMoves]
-        
-        for c in cancelList:
-            c.print()
+    cancellist = [cancel for cancel in P1.cancels if cancel.move_id in printMoves]
+    cancellist += [cancel for cancel in P1.grouped_cancels if cancel.move_id in printMoves]
+            
+    for c in cancellist:
+        c.print()
             
     os._exit(0)
+    """
 
     P1.setSecondMovelist(P2.movelist)
     P2.setSecondMovelist(P1.movelist)
