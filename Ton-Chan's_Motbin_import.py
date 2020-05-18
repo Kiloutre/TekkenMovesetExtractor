@@ -47,6 +47,10 @@ def getTag2ExtramovePropertyAlias(type, id):
     new_extra_property = getTag2ExtraMoveProperty(id)
     if new_extra_property == None:
         return type, id
+    elif 'force_type' in new_extra_property:
+        type = new_extra_property['force_type']
+        print(new_extra_property)
+        print(type)
     return type, new_extra_property['t7_id']
 
 def readInt(addr, bytes_length=4):

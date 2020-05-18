@@ -252,7 +252,7 @@ extra_move_properties = {
     0x8111: { 't7_id': 0x81aa, 'desc': '(KUMA) Km_spgoroE' },
     0x8113: { 't7_id': 0x81ac, 'desc': '(ALISA) wDm_AirF_WB' },
     0x8114: { 't7_id': 0x81ad, 'desc': '(ALISA) FallBalconyFKAM' },
-    0x812a: { 't7_id': 0x81d6, 'desc': '(ALISA) Fall_sKAM' },
+    0x812a: { 't7_id': 0x81d6, 'desc': 'Timestop at frame X' },
     0x812f: { 't7_id': 0x81db, 'desc': '(BRYAN) Bx_midco_RK' },
     0x8131: { 't7_id': 0x81dd, 'desc': '(EDDY) Co_Uokilk01' },
     0x8132: { 't7_id': 0x81de, 'desc': '(KING) sGrd_Kgfrank00' },
@@ -382,6 +382,8 @@ extra_move_properties = {
     0x830b: { 't7_id': 0x853d, 'desc': '(ALISA) sDw_AIR00_' },
     0x813c: { 't7_id': 0x81e9, 'desc': 'Wallsplat (wDm_AirF_Up)' },
     0x8146: { 't7_id': 0x81f3, 'desc': 'Dj_beam_01' },
+    0x81d6: { 't7_id': 0x81f3, 'desc': 'Tag2 projectiles fix timestop (tochange)' },
+    0x823c: { 't7_id': 0x8393, 'desc': '(ALISA) Aa_spiral' }
 }
 
 globalRequirementsReplace = {
@@ -389,13 +391,18 @@ globalRequirementsReplace = {
     219: { 'id': 0, 'value': 0 }, #Opponent is specific character
 }
 
-hitboxBytesAliases = {
+oddHitboxBytesAliases = {
     0x26: 0x2f, #leg hitbox
     0x25: 0x2e, #leg
     0x24: 0x2c, #leg
-    0x44: 0x09,  #kunimitsu b+2 right arm, tofix properly
-    0x45: 0x09,  #kunimitsu doton 2 right arm, tofix properly,
-    0x40: 0x50   #DJ laser
+    0x44: 0x09, #kunimitsu b+2 right arm, tofix properly
+    0x45: 0x09, #kunimitsu doton 2 right arm, tofix properly,
+    0x40: 0x50, #DJ laser
+    0x1e: 0x50, #kunimitsu fire breath
+}
+
+evenHitboxBytesAliases = {
+    0x1e: 0x16 #kunimitsu fire breath
 }
 
 def replaceRequirement(req, param):
@@ -408,7 +415,9 @@ def getTag2HitboxAliasedValue(value):
     byteList = [int(b) for b in value.to_bytes(4, 'big')]
     for i, b in enumerate(byteList):
         if i % 2 != 0: #only affects 2nd and 4th byte
-            byteList[i] = hitboxBytesAliases.get(b, b)
+            byteList[i] = oddHitboxBytesAliases.get(b, b)
+        else:
+            byteList[i] = evenHitboxBytesAliases.get(b, b)
     return int.from_bytes(byteList, 'big')
 
 def fillDict(dictionnary):
