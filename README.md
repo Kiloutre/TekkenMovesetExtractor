@@ -39,7 +39,6 @@ Administrator rights may be required to import the moveset into memory.
 - Fix missing TAG2 commands that use command buffer. Placeholder?
 - Alias throw camera values for tag2 (kunimitsu f4 f 4 4 4 4, angel 2+4)
 - Make bound use screw ressource?
-- Fix parries
 - Fix King Tag2 shining wizard that always thinks he's at the wall
 - Fix Kunimitsu backturned 4 that doesn't turn around
 - Fix bound floorbreak that doesn't bound
