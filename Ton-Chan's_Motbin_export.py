@@ -651,109 +651,114 @@ class Motbin:
         
         self.version = "Tekken7" if TekkenVersion == 7 else "Tag2"
         self.extraction_date = datetime.now(timezone.utc).__str__()
+        self.extraction_path = ''
     
         character_name_addr = 0x8
         creator_name_addr = character_name_addr + ptr_size
         date_addr = creator_name_addr + ptr_size
         fulldate_addr = date_addr + ptr_size
+
+        try:
+            self.character_name = readStringPtr(addr + character_name_addr)
+            self.name = self.character_name[1:-1]
+            self.creator_name = readStringPtr(addr + creator_name_addr)
+            self.date = readStringPtr(addr + date_addr)
+            self.fulldate = readStringPtr(addr + fulldate_addr)
         
-        self.character_name = readStringPtr(addr + character_name_addr)
-        self.name = self.character_name[1:-1]
-        self.creator_name = readStringPtr(addr + creator_name_addr)
-        self.date = readStringPtr(addr + date_addr)
-        self.fulldate = readStringPtr(addr + fulldate_addr)
+            reaction_list_ptr = 0x150 if TekkenVersion == 7 else 0x140
+            reaction_list_size = reaction_list_ptr + ptr_size
+            self.reaction_list_ptr = readInt(addr + reaction_list_ptr, ptr_size)
+            self.reaction_list_size = readInt(addr + reaction_list_size, ptr_size)
+            
+            requirements_ptr = 0x160 if TekkenVersion == 7 else 0x148
+            requirement_count = requirements_ptr + ptr_size
+            self.requirements_ptr = readInt(addr + requirements_ptr, ptr_size)
+            self.requirement_count = readInt(addr + requirement_count, ptr_size)
+            
+            hit_conditions_ptr = 0x170 if TekkenVersion == 7 else 0x150
+            hit_conditions_size = hit_conditions_ptr + ptr_size
+            self.hit_conditions_ptr = readInt(addr + hit_conditions_ptr, ptr_size)
+            self.hit_conditions_size = readInt(addr + hit_conditions_size, ptr_size)
+            
+            projectile_ptr = 0x180 if TekkenVersion == 7 else 0x158
+            projectile_size = projectile_ptr + ptr_size
+            self.projectile_ptr = readInt(addr + projectile_ptr, ptr_size)
+            self.projectile_size = readInt(addr + projectile_size, ptr_size)
+            
+            pushback_ptr = 0x190 if TekkenVersion == 7 else 0x160
+            pushback_list_size = pushback_ptr + ptr_size
+            self.pushback_ptr = readInt(addr + pushback_ptr, ptr_size)
+            self.pushback_list_size = readInt(addr + pushback_list_size, ptr_size)
 
-        reaction_list_ptr = 0x150 if TekkenVersion == 7 else 0x140
-        reaction_list_size = reaction_list_ptr + ptr_size
-        self.reaction_list_ptr = readInt(addr + reaction_list_ptr, ptr_size)
-        self.reaction_list_size = readInt(addr + reaction_list_size, ptr_size)
+            pushback_extradata_ptr = 0x1A0 if TekkenVersion == 7 else 0x168
+            pushback_extradata_size = pushback_extradata_ptr + ptr_size
+            self.pushback_extradata_ptr = readInt(addr + pushback_extradata_ptr, ptr_size)
+            self.pushback_extradata_size = readInt(addr + pushback_extradata_size, ptr_size)
+
+            cancel_head_ptr = 0x1b0 if TekkenVersion == 7 else 0x170
+            cancel_list_size = cancel_head_ptr + ptr_size
+            self.cancel_head_ptr = readInt(addr + cancel_head_ptr, ptr_size)
+            self.cancel_list_size = readInt(addr + cancel_list_size, ptr_size)
+
+            group_cancel_head_ptr = 0x1c0 if TekkenVersion == 7 else 0x178
+            group_cancel_list_size = group_cancel_head_ptr + ptr_size
+            self.group_cancel_head_ptr = readInt(addr + group_cancel_head_ptr, ptr_size)
+            self.group_cancel_list_size = readInt(addr + group_cancel_list_size, ptr_size)
+
+            cancel_extradata_head_ptr = 0x1d0 if TekkenVersion == 7 else 0x180
+            cancel_extradata_list_size = cancel_extradata_head_ptr + ptr_size
+            self.cancel_extradata_head_ptr = readInt(addr + cancel_extradata_head_ptr, ptr_size)
+            self.cancel_extradata_list_size = readInt(addr + cancel_extradata_list_size,ptr_size)
+
+            extra_move_properties_ptr = 0x1e0 if TekkenVersion == 7 else 0x188
+            extra_move_properties_size = extra_move_properties_ptr + ptr_size
+            self.extra_move_properties_ptr = readInt(addr + extra_move_properties_ptr, ptr_size)
+            self.extra_move_properties_size = readInt(addr + extra_move_properties_size, ptr_size)
+
+            movelist_head_ptr = 0x210 if TekkenVersion == 7 else 0x1a0
+            movelist_size = movelist_head_ptr + ptr_size
+            self.movelist_head_ptr = readInt(addr + movelist_head_ptr, ptr_size)
+            self.movelist_size = readInt(addr + movelist_size, ptr_size)
+
+            voiceclip_list_ptr = 0x220 if TekkenVersion == 7 else 0x1a8
+            voiceclip_list_size = voiceclip_list_ptr + ptr_size
+            self.voiceclip_list_ptr = readInt(addr + voiceclip_list_ptr, ptr_size)
+            self.voiceclip_list_size = readInt(addr + voiceclip_list_size, ptr_size)
+
+            input_sequence_ptr = 0x230 if TekkenVersion == 7 else 0x1b0
+            input_sequence_size = input_sequence_ptr + ptr_size
+            self.input_sequence_ptr = readInt(addr + input_sequence_ptr, ptr_size)
+            self.input_sequence_size = readInt(addr + input_sequence_size, ptr_size)
+
+            input_extradata_ptr = 0x240 if TekkenVersion == 7 else 0x1b8
+            input_extradata_size = input_extradata_ptr + ptr_size
+            self.input_extradata_ptr = readInt(addr + input_extradata_ptr, ptr_size)
+            self.input_extradata_size = readInt(addr + input_extradata_size, ptr_size)
+
+            throw_extras_ptr = 0x260 if TekkenVersion == 7 else 0x1c8
+            throw_extras_size = throw_extras_ptr + ptr_size
+            self.throw_extras_ptr = readInt(addr + throw_extras_ptr, ptr_size)
+            self.throw_extras_size = readInt(addr + throw_extras_size, ptr_size)
+
+            throws_ptr = 0x270 if TekkenVersion == 7 else 0x1d0
+            throws_size = throws_ptr + ptr_size
+            self.throws_ptr = readInt(addr + throws_ptr, ptr_size)
+            self.throws_size = readInt(addr + throws_size, ptr_size)
+
+            test_ptr = 0x250 if TekkenVersion == 7 else 0x1c0
+            test_size = test_ptr + ptr_size
+            self.test_ptr = readInt(addr + test_ptr, ptr_size)
+            self.test_size = readInt(addr + test_size, ptr_size)
+            
+            
+            aliasCopySize = 0x2a
+            aliasOffset = fulldate_addr + ptr_size
+            aliasCount = 148
         
-        requirements_ptr = 0x160 if TekkenVersion == 7 else 0x148
-        requirement_count = requirements_ptr + ptr_size
-        self.requirements_ptr = readInt(addr + requirements_ptr, ptr_size)
-        self.requirement_count = readInt(addr + requirement_count, ptr_size)
-        
-        hit_conditions_ptr = 0x170 if TekkenVersion == 7 else 0x150
-        hit_conditions_size = hit_conditions_ptr + ptr_size
-        self.hit_conditions_ptr = readInt(addr + hit_conditions_ptr, ptr_size)
-        self.hit_conditions_size = readInt(addr + hit_conditions_size, ptr_size)
-        
-        projectile_ptr = 0x180 if TekkenVersion == 7 else 0x158
-        projectile_size = projectile_ptr + ptr_size
-        self.projectile_ptr = readInt(addr + projectile_ptr, ptr_size)
-        self.projectile_size = readInt(addr + projectile_size, ptr_size)
-        
-        pushback_ptr = 0x190 if TekkenVersion == 7 else 0x160
-        pushback_list_size = pushback_ptr + ptr_size
-        self.pushback_ptr = readInt(addr + pushback_ptr, ptr_size)
-        self.pushback_list_size = readInt(addr + pushback_list_size, ptr_size)
-
-        pushback_extradata_ptr = 0x1A0 if TekkenVersion == 7 else 0x168
-        pushback_extradata_size = pushback_extradata_ptr + ptr_size
-        self.pushback_extradata_ptr = readInt(addr + pushback_extradata_ptr, ptr_size)
-        self.pushback_extradata_size = readInt(addr + pushback_extradata_size, ptr_size)
-
-        cancel_head_ptr = 0x1b0 if TekkenVersion == 7 else 0x170
-        cancel_list_size = cancel_head_ptr + ptr_size
-        self.cancel_head_ptr = readInt(addr + cancel_head_ptr, ptr_size)
-        self.cancel_list_size = readInt(addr + cancel_list_size, ptr_size)
-
-        group_cancel_head_ptr = 0x1c0 if TekkenVersion == 7 else 0x178
-        group_cancel_list_size = group_cancel_head_ptr + ptr_size
-        self.group_cancel_head_ptr = readInt(addr + group_cancel_head_ptr, ptr_size)
-        self.group_cancel_list_size = readInt(addr + group_cancel_list_size, ptr_size)
-
-        cancel_extradata_head_ptr = 0x1d0 if TekkenVersion == 7 else 0x180
-        cancel_extradata_list_size = cancel_extradata_head_ptr + ptr_size
-        self.cancel_extradata_head_ptr = readInt(addr + cancel_extradata_head_ptr, ptr_size)
-        self.cancel_extradata_list_size = readInt(addr + cancel_extradata_list_size,ptr_size)
-
-        extra_move_properties_ptr = 0x1e0 if TekkenVersion == 7 else 0x188
-        extra_move_properties_size = extra_move_properties_ptr + ptr_size
-        self.extra_move_properties_ptr = readInt(addr + extra_move_properties_ptr, ptr_size)
-        self.extra_move_properties_size = readInt(addr + extra_move_properties_size, ptr_size)
-
-        movelist_head_ptr = 0x210 if TekkenVersion == 7 else 0x1a0
-        movelist_size = movelist_head_ptr + ptr_size
-        self.movelist_head_ptr = readInt(addr + movelist_head_ptr, ptr_size)
-        self.movelist_size = readInt(addr + movelist_size, ptr_size)
-
-        voiceclip_list_ptr = 0x220 if TekkenVersion == 7 else 0x1a8
-        voiceclip_list_size = voiceclip_list_ptr + ptr_size
-        self.voiceclip_list_ptr = readInt(addr + voiceclip_list_ptr, ptr_size)
-        self.voiceclip_list_size = readInt(addr + voiceclip_list_size, ptr_size)
-
-        input_sequence_ptr = 0x230 if TekkenVersion == 7 else 0x1b0
-        input_sequence_size = input_sequence_ptr + ptr_size
-        self.input_sequence_ptr = readInt(addr + input_sequence_ptr, ptr_size)
-        self.input_sequence_size = readInt(addr + input_sequence_size, ptr_size)
-
-        input_extradata_ptr = 0x240 if TekkenVersion == 7 else 0x1b8
-        input_extradata_size = input_extradata_ptr + ptr_size
-        self.input_extradata_ptr = readInt(addr + input_extradata_ptr, ptr_size)
-        self.input_extradata_size = readInt(addr + input_extradata_size, ptr_size)
-
-        throw_extras_ptr = 0x260 if TekkenVersion == 7 else 0x1c8
-        throw_extras_size = throw_extras_ptr + ptr_size
-        self.throw_extras_ptr = readInt(addr + throw_extras_ptr, ptr_size)
-        self.throw_extras_size = readInt(addr + throw_extras_size, ptr_size)
-
-        throws_ptr = 0x270 if TekkenVersion == 7 else 0x1d0
-        throws_size = throws_ptr + ptr_size
-        self.throws_ptr = readInt(addr + throws_ptr, ptr_size)
-        self.throws_size = readInt(addr + throws_size, ptr_size)
-
-        test_ptr = 0x250 if TekkenVersion == 7 else 0x1c0
-        test_size = test_ptr + ptr_size
-        self.test_ptr = readInt(addr + test_ptr, ptr_size)
-        self.test_size = readInt(addr + test_size, ptr_size)
-        
-        
-        aliasCopySize = 0x2a
-        aliasOffset = fulldate_addr + ptr_size
-        aliasCount = 148
-    
-        self.aliases = [readInt(addr + aliasOffset + (offset * 2), 2) for offset in range(0, aliasCount)]
+            self.aliases = [readInt(addr + aliasOffset + (offset * 2), 2) for offset in range(0, aliasCount)]
+        except Exception as e:
+            print("Invalid character or moveset.")
+            raise e
         
         self.requirements = []
         self.cancels = []
@@ -772,6 +777,12 @@ class Motbin:
         self.projectiles = []
         self.throw_extras = []
         self.throws = []
+        
+    def __eq__(self, other):
+        return self.character_name == other.character_name \
+            and self.creator_name == other.creator_name \
+            and self.date == other.date \
+            and self.fulldate == other.fulldate
         
     def printBasicData(self):
         print("Character: %s" % (self.character_name))
@@ -809,9 +820,14 @@ class Motbin:
             'throws': self.throws
         }
         
-    def save(self):
+    def save(self, path=''):
         print("Saving data...")
-        path = "./%d_%s" % (TekkenVersion, self.name)
+        
+        if path == '':
+            path = "./%d_%s" % (TekkenVersion, self.name)
+         
+        self.extraction_path = path
+           
         anim_path = "%s/anim" % (path)
         
         if not os.path.isdir(path):
@@ -830,9 +846,9 @@ class Motbin:
                 if animdata == None:
                     print("Error extracting animation %s" % (anim.name))
             
-        print("Saved at path %s/%s\n" % (os.getcwd(), path[2:]))
+        print("Saved at path %s/%s" % (os.getcwd().replace("\\", "/"), path[2:]))
         
-    def extractMoveset(self):
+    def extractMoveset(self, output_path):
         self.printBasicData()
         
         print("Reading input extradata...")
@@ -942,21 +958,55 @@ class Motbin:
             if move.anim not in self.anims:
                 self.anims.append(move.anim)
         
-        self.save()
+        self.save(output_path)
         
-if __name__ == "__main__":
-    cemu_motbin_base = (base + GameAddresses.a['cemu_p1_base'] - 0x98)
-    motbin_ptr_addr = (GameAddresses.a['p1_ptr'] + 0x14a0) if TekkenVersion == 7 else cemu_motbin_base
-    motbin_ptr = readInt(motbin_ptr_addr, ptr_size)
+def getMotbinPtr(playerAddress):
+    motbin_ptr_addr = (playerAddress + 0x14a0) if TekkenVersion == 7 else playerAddress - 0x98
+    return readInt(motbin_ptr_addr, ptr_size)
+        
+def getPlayerMovesetName(playerAddress):
+    motbin_ptr = getMotbinPtr(base + playerAddress)
+    return readStringPtr(base + motbin_ptr + 8)
+        
+def exportMoveset(playerAddress, output_path=''):
+    motbin_ptr = getMotbinPtr(base + playerAddress)
     
     m = Motbin(base + motbin_ptr)
-    m.extractMoveset()
+    m.extractMoveset(output_path)
+    return m
+        
+if __name__ == "__main__":
+    extractedMovesetNames = []
+    extractedMovesets = []
+    key_prefix = "p" if TekkenVersion == 7 else "cemu_p"
     
-    cemu_motbin_base = (base + GameAddresses.a['cemu_p2_base'] - 0x98)
-    motbin_ptr_addr = (GameAddresses.a['p2_ptr'] + 0x14a0) if TekkenVersion == 7 else cemu_motbin_base
-    motbin_ptr = readInt(motbin_ptr_addr, ptr_size)
+    playerId = 1
+    while True:
+        playerKey = key_prefix + str(playerId) + "_ptr"
+        playerId += 1
+        
+        if playerKey not in GameAddresses.a:
+            break
+            
+        player_addr = GameAddresses.a[playerKey]
+        
+        try:
+            player_name = getPlayerMovesetName(player_addr)
+        except Exception as e:
+            print(e)
+            print("%s: Invalid character or moveset." % (playerKey))
+            continue
+        
+        if player_name in extractedMovesetNames:
+            print("%s: Player %s already extracted, skipping extraction." % (playerKey, player_name))
+            continue
+            
+        
+        moveset = exportMoveset(player_addr)
+        extractedMovesetNames.append(player_name)
+        extractedMovesets.append(moveset)
     
-    m2 = Motbin(base + motbin_ptr)
-    m2.extractMoveset()
-    
-    
+    if len(extractedMovesets) > 0:
+        print("\nSuccessfully extracted:")
+        for moveset in extractedMovesets:
+            print(moveset.name, "at", moveset.extraction_path)

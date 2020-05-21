@@ -47,10 +47,6 @@ def getTag2ExtramovePropertyAlias(type, id):
     new_extra_property = getTag2ExtraMoveProperty(id)
     if new_extra_property == None:
         return type, id
-    elif 'force_type' in new_extra_property:
-        type = new_extra_property['force_type']
-        print(new_extra_property)
-        print(type)
     return type, new_extra_property['t7_id']
 
 def readInt(addr, bytes_length=4):
@@ -664,7 +660,8 @@ if __name__ == "__main__":
             print("Moveset version: %s. Importer version: %s." % (m['export_version'], importVersion))
         os._exit(1)
 
-    fillAliasesDictonnaries()
+    if m['version'] == "Tag2":
+        fillAliasesDictonnaries()
     p = MotbinPtr(m, motbin_ptr)
     
     old_character_name = readString(readInt(motbin_ptr + 0x8, 8))
