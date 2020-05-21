@@ -371,6 +371,7 @@ extra_move_properties = {
     0x82db: { 't7_id': 0x842e, 'desc': 'MAPPING' },
     0x82dc: { 't7_id': 0x842f, 'desc': 'MAPPING' },
     0x82e9: { 't7_id': 0x843c, 'desc': 'MAPPING' },
+    0x82ea: { 't7_id': 0x843d, 'desc': 'Throw camera' },
     0x82ec: { 't7_id': 0x843f, 'desc': '(LARS) La_rk00B_n' },
     0x82ed: { 't7_id': 0x84d1, 'desc': 'MAPPING' },
     0x82ee: { 't7_id': 0x8441, 'desc': '(ALISA) Male_Cnt_M1' },
@@ -392,6 +393,21 @@ globalRequirementsReplace = {
     219: { 'id': 0, 'value': 0 }, #Opponent is specific character
 }
 
+tag2CharacterSpecificFixes = {
+    "[Kunimitsu]": {
+        'extraproperty': [
+            {
+                'type': 0x8001,
+                'id': 0x82ea,
+                'value': 0x31,
+                'value_alias': {
+                    0x31: 0x12 #fixes f4, 4 camera
+                }
+            }
+        ]
+    }
+}
+
 oddHitboxBytesAliases = {
     0x26: 0x2f, #leg hitbox
     0x25: 0x2e, #leg
@@ -405,6 +421,23 @@ oddHitboxBytesAliases = {
 evenHitboxBytesAliases = {
     0x1e: 0x16 #kunimitsu fire breath
 }
+
+
+def applyCharacterSpecificFixes(m):
+    character_name = m['character_name']
+    if character_name not in tag2CharacterSpecificFixes:
+        return
+    for alias in tag2CharacterSpecificFixes[character_name]['extraproperty']:
+        for i, property in enumerate(m['extra_move_properties']):
+            type, id, value = property.values()
+            
+            if 'type' in alias and alias['type'] != type:
+                continue
+            if 'id' in alias and alias['id'] != id:
+                continue
+            if 'value' in alias and alias['value'] != value:
+                continue
+            m['extra_move_properties'][i]['value'] = alias['value_alias'].get(value, value)
 
 def replaceRequirement(req, param):
     requirementDetails = globalRequirementsReplace.get(req, None)

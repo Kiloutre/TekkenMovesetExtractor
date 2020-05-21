@@ -2,7 +2,7 @@
 # Python 3.6.5
 
 from Addresses import GameAddresses, GameClass, VirtualAllocEx, VirtualFreeEx, GetLastError, MEM_RESERVE, MEM_COMMIT, MEM_DECOMMIT, MEM_RELEASE, PAGE_EXECUTE_READWRITE
-from Aliases import getTag2Requirement, getTag2ExtraMoveProperty, fillAliasesDictonnaries, getTag2HitboxAliasedValue, replaceRequirement
+from Aliases import getTag2Requirement, getTag2ExtraMoveProperty, fillAliasesDictonnaries, getTag2HitboxAliasedValue, replaceRequirement, applyCharacterSpecificFixes
 import json
 import os
 import sys
@@ -662,6 +662,7 @@ if __name__ == "__main__":
 
     if m['version'] == "Tag2":
         fillAliasesDictonnaries()
+        applyCharacterSpecificFixes(m)
     p = MotbinPtr(m, motbin_ptr)
     
     old_character_name = readString(readInt(motbin_ptr + 0x8, 8))
