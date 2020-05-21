@@ -458,6 +458,9 @@ def fillDict(dictionnary):
     keylist = sorted(dictionnary)
     generatedKeys = 0
     
+    if 0xFFFF in dictionnary:
+        return dictionnary
+    
     for i in range(len(keylist) - 1):
         key = keylist[i]
         nextkey = keylist[i + 1]
@@ -474,7 +477,7 @@ def fillDict(dictionnary):
                     'desc': 'FILLED'
                 }
                 generatedKeys += 1
-                
+    dictionnary[0xFFFF] = 'FILLED_DICT'
     print("Generated %d keys" % (generatedKeys))
     return dictionnary
                 

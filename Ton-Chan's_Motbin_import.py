@@ -6,16 +6,9 @@ from Aliases import getTag2Requirement, getTag2ExtraMoveProperty, fillAliasesDic
 import json
 import os
 import sys
-
-if len(sys.argv) == 1:
-    print("Usage: [FOLDER_NAME]")
-    os._exit(1)
    
 T = GameClass("TekkenGame-Win64-Shipping.exe")
 importVersion = "0.6.0"
-folderName = sys.argv[1]
-charaName = folderName[2:]
-jsonFilename = "%s.json" % (charaName)
 
 requirement_size = 0x8
 cancel_size = 0x28
@@ -92,7 +85,7 @@ def reverseBitOrder(number):
 def convertU15(number):
     return (number >> 7) | ((reverseBitOrder(number)) << 24)
     
-def getTotalSize(m):
+def getTotalSize(m, folderName):
     size = 0
     size += len(m['character_name']) + 1
     size += len(m['creator_name']) + 1
@@ -161,14 +154,15 @@ def getTotalSize(m):
     
     return size
     
-class MotbinPtr:
-    def __init__(self, motbin, curr_motbin_addr):
-        allocSize = getTotalSize(m)
+class MotbinStruct:
+    def __init__(self, motbin, folderName):
+        allocSize = getTotalSize(motbin, folderName)
         head_ptr = allocateMem(allocSize)
         
-        data = readBytes(curr_motbin_addr, 0x2e0)
-        self.motbin_ptr = allocateMem(len(data))
-        writeBytes(self.motbin_ptr, data)
+        self.motbin_ptr = allocateMem(0x2e0)
+        writeBytes(self.motbin_ptr, bytes([0] * 0x2e0))
+        
+        self.folderName = folderName
         
         self.m = motbin
         self.size = allocSize
@@ -548,10 +542,12 @@ class MotbinPtr:
         
         self.animation_ptr = self.align()
         for name in self.m['anims']:
-            with open("%s/anim/%s.bin" % (folderName, name), "rb") as f:
+            with open("%s/anim/%s.bin" % (self.folderName, name), "rb") as f:
                 self.animation_table[name]['data_ptr'] = self.writeBytes(f.read())
         
     def allocateMoves(self):
+        self.allocateAnimations()
+    
         print("Allocating moves...")
         self.movelist_names_ptr =  self.align()
         moves = self.m['moves']
@@ -629,6 +625,21 @@ class MotbinPtr:
             self.forbidCancel(move_id, groupedCancels = False)
             
         return self.movelist_ptr, moveCount
+    
+    def copyUnknownOffsets(self, motbin_ptr):
+        offsets = [
+            (0x1f0, 8),
+            (0x1f8, 8),
+            (0x200, 8),
+            (0x208, 8),
+            (0x250, 8),
+            (0x258, 8),
+            (0x280, 0x60)
+        ]
+        
+        for offset, read_size in offsets:
+            offsetBytes = readBytes(motbin_ptr + offset, read_size)
+            writeBytes(self.motbin_ptr + offset, offsetBytes)
         
 def versionMatches(version):
     pos = version.rfind('.')
@@ -642,13 +653,24 @@ def versionMatches(version):
         print("Moveset version: %s. Importer version: %s.\n" % (version, importVersion))
     
     return importUpperVersion == exportUpperVersion
-
-if __name__ == "__main__":
-    motbin_ptr_addr = GameAddresses.a['p1_ptr'] + 0x14a0 #
-    motbin_ptr = readInt(motbin_ptr_addr, 8)
     
+    
+def importMoveset(playerAddr, folderName):
+    moveset = loadMoveset(folderName)
+    
+    motbin_ptr_addr = playerAddr + 0x14a0
+    current_motbin_ptr = readInt(motbin_ptr_addr, 8)
+    old_character_name = readString(readInt(current_motbin_ptr + 0x8, 8))
+    moveset.copyUnknownOffsets(current_motbin_ptr) #Required because we aren't self sufficient yet
+    
+    print("\nOLD moveset pointer: 0x%x (%s)" % (current_motbin_ptr, old_character_name))
+    print("NEW moveset pointer: 0x%x (%s)" % (moveset.motbin_ptr, moveset.m['character_name']))
+    writeInt(motbin_ptr_addr, moveset.motbin_ptr, 8)
+    
+def loadMoveset(folderName):
     m = None
     
+    jsonFilename = "%s.json" % (folderName[2:])
     print("Reading %s..." % (jsonFilename))
     with open("%s/%s" % (folderName, jsonFilename), "r") as f:
         m = json.load(f)
@@ -663,9 +685,7 @@ if __name__ == "__main__":
     if m['version'] == "Tag2":
         fillAliasesDictonnaries()
         applyCharacterSpecificFixes(m)
-    p = MotbinPtr(m, motbin_ptr)
-    
-    old_character_name = readString(readInt(motbin_ptr + 0x8, 8))
+    p = MotbinStruct(m, folderName)
         
     character_name = p.writeString(m['character_name'])
     creator_name = p.writeString(m['creator_name'])
@@ -682,7 +702,6 @@ if __name__ == "__main__":
     extra_move_properties_ptr, extra_move_properties_count = p.allocateExtraMoveProperties()
     voiceclip_list_ptr, voiceclip_list_count = p.allocateVoiceclipIds()
     hit_conditions_ptr, hit_conditions_count = p.allocateHitConditions()
-    p.allocateAnimations()
     moves_ptr, move_count = p.allocateMoves()
     input_extradata_ptr, input_extradata_count = p.allocateInputExtradata()
     input_sequences_ptr, input_sequences_count = p.allocateInputSequences()
@@ -747,10 +766,19 @@ if __name__ == "__main__":
     
     writeInt(p.motbin_ptr + 0x270, throws_ptr, 8)
     writeInt(p.motbin_ptr + 0x278, throws_count, 8)
-
-    writeInt(motbin_ptr_addr, p.motbin_ptr, 8)
     
-    print("%s successfully imported in memory.\n" % (jsonFilename))
-    print("OLD moveset pointer: 0x%x (%s)" % (motbin_ptr, old_character_name))
-    print("New moveset pointer: 0x%x (%s)" % (p.motbin_ptr, m['character_name']))
+    print("%s successfully imported in memory at 0x%x." % (jsonFilename, p.motbin_ptr))
     print("%d/%d bytes left." % (p.size - (p.curr_ptr - p.head_ptr), p.size))
+    
+    return p
+
+if __name__ == "__main__":
+    if len(sys.argv) == 1:
+        print("Usage: [FOLDER_NAME]")
+        os._exit(1)
+    
+    importMoveset(GameAddresses.a['p1_ptr'], sys.argv[1])
+    
+    if len(sys.argv) > 2:
+        importMoveset(GameAddresses.a['p2_ptr'], sys.argv[2])
+    
