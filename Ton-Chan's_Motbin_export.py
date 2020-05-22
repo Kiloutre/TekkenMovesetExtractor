@@ -10,43 +10,42 @@ import sys
 
 exportVersion = "0.7.0"
 
-class TekkenStructure:
-    def __init__(self, parent, addr=0, size=0):
-        self.addr = addr
-        self.T = parent.T
-        self.TekkenVersion = parent.TekkenVersion
-        self.ptr_size = parent.ptr_size
-        self.base = parent.base
-        self.endian = parent.endian
+def initTekkenStructure(self, parent, addr=0, size=0):
+    self.addr = addr
+    self.T = parent.T
+    self.TekkenVersion = parent.TekkenVersion
+    self.ptr_size = parent.ptr_size
+    self.base = parent.base
+    self.endian = parent.endian
+    
+    self.readInt = parent.readInt
+    self.readBytes = parent.readBytes
+    self.readString = parent.readString
+    self.readStringPtr = parent.readStringPtr
+    self.bToInt = parent.bToInt
+    
+    if addr != 0 and size != 0:
+        self.data = self.readBytes(self.base + addr, size)
+    else:
+        self.data = None
+    return self.data
         
-        self.readInt = parent.readInt
-        self.readBytes = parent.readBytes
-        self.readString = parent.readString
-        self.readStringPtr = parent.readStringPtr
-        self.bToInt = parent.bToInt
-        
-        if addr != 0 and size != 0:
-            self.data = self.readBytes(self.base + addr, size)
-        else:
-            self.data = None
-        return self.data
-        
-    def setStructureSizes(self):
-        self.Pushback_size = 0x10 if self.TekkenVersion == 7 else 0xC
-        self.PushbackExtradata_size = 0x2
-        self.Requirement_size = 0x8
-        self.CancelExtradata_size = 0x4
-        self.Cancel_size = 0x28 if self.TekkenVersion == 7 else 0x20
-        self.ReactionList_size = 0x70 if self.TekkenVersion == 7 else 0x50
-        self.HitCondition_size = 0x18 if self.TekkenVersion == 7 else 0xC
-        self.ExtraMoveProperty_size = 0xC
-        self.Move_size = 0xB0 if self.TekkenVersion == 7 else 0x70
-        self.Voiceclip_size = 0x4
-        self.InputExtradata_size = 8
-        self.InputSequence_size = 0x10 if self.TekkenVersion == 7 else 0x8
-        self.Projectile_size = 0xa8 if self.TekkenVersion == 7 else 0x88
-        self.ThrowExtra_size = 0xC
-        self.Throw_size = 0x10 if self.TekkenVersion == 7 else 0x8
+def setStructureSizes(self):
+    self.Pushback_size = 0x10 if self.TekkenVersion == 7 else 0xC
+    self.PushbackExtradata_size = 0x2
+    self.Requirement_size = 0x8
+    self.CancelExtradata_size = 0x4
+    self.Cancel_size = 0x28 if self.TekkenVersion == 7 else 0x20
+    self.ReactionList_size = 0x70 if self.TekkenVersion == 7 else 0x50
+    self.HitCondition_size = 0x18 if self.TekkenVersion == 7 else 0xC
+    self.ExtraMoveProperty_size = 0xC
+    self.Move_size = 0xB0 if self.TekkenVersion == 7 else 0x70
+    self.Voiceclip_size = 0x4
+    self.InputExtradata_size = 8
+    self.InputSequence_size = 0x10 if self.TekkenVersion == 7 else 0x8
+    self.Projectile_size = 0xa8 if self.TekkenVersion == 7 else 0x88
+    self.ThrowExtra_size = 0xC
+    self.Throw_size = 0x10 if self.TekkenVersion == 7 else 0x8
             
 class Exporter:
     def __init__(self, TekkenVersion):
@@ -112,9 +111,9 @@ def getAnimEndPos(TekkenVersion, data):
     pos = [p+1 for p in pos if p != -1]
     return -1 if len(pos) == 0 else min(pos)
     
-class AnimData():
+class AnimData:
     def __init__(self, name, data_addr, parent):
-        TekkenStructure.__init__(self, parent, data_addr, 0)
+        initTekkenStructure(self, parent, data_addr, 0)
         self.name = name
                 
     def getData(self):
@@ -155,9 +154,9 @@ class AnimData():
     def __eq__(self, other):
         return self.name == other.name
         
-class Pushback(TekkenStructure):
+class Pushback:
     def __init__(self, addr, parent):
-        data = TekkenStructure.__init__(self, parent, addr, parent.Pushback_size)
+        data = initTekkenStructure(self, parent, addr, parent.Pushback_size)
         
         self.val1 = self.bToInt(data, 0, 2)
         self.val2 = self.bToInt(data, 2, 2)
@@ -176,18 +175,18 @@ class Pushback(TekkenStructure):
     def setExtraIndex(self, idx):
         self.extra_index = idx
         
-class PushbackExtradata(TekkenStructure):
+class PushbackExtradata:
     def __init__(self, addr, parent):
-        data = TekkenStructure.__init__(self, parent, addr, parent.PushbackExtradata_size)
+        data = initTekkenStructure(self, parent, addr, parent.PushbackExtradata_size)
         
         self.value = self.bToInt(data, 0, 2)
         
     def dict(self):
         return self.value
         
-class Requirement(TekkenStructure):
+class Requirement:
     def __init__(self, addr, parent):
-        data = TekkenStructure.__init__(self, parent, addr, parent.Requirement_size)
+        data = initTekkenStructure(self, parent, addr, parent.Requirement_size)
         
         data = self.readBytes(self.base + addr, 0x8)
         self.req = self.bToInt(data, 0, 4)
@@ -206,7 +205,7 @@ class Requirement(TekkenStructure):
         
 class CancelExtradata:
     def __init__(self, addr, parent):
-        data = TekkenStructure.__init__(self, parent, addr, parent.CancelExtradata_size)
+        data = initTekkenStructure(self, parent, addr, parent.CancelExtradata_size)
         
         self.value = self.bToInt(data, 0x0, 4)
         
@@ -216,7 +215,7 @@ class CancelExtradata:
         
 class Cancel:
     def __init__(self, addr, parent):
-        data = TekkenStructure.__init__(self, parent, addr, parent.Cancel_size)
+        data = initTekkenStructure(self, parent, addr, parent.Cancel_size)
         
         
         after_ptr_offset = 0x18 if self.TekkenVersion == 7 else 0x10
@@ -262,7 +261,7 @@ class Cancel:
         
 class ReactionList:
     def __init__(self, addr, parent):
-        data = TekkenStructure.__init__(self, parent, addr, parent.ReactionList_size)
+        data = initTekkenStructure(self, parent, addr, parent.ReactionList_size)
         
         self.ptr_list = [self.bToInt(data, i * self.ptr_size, self.ptr_size) for i in range(7)]
         self.pushback_indexes = [-1] * 7
@@ -316,7 +315,7 @@ class ReactionList:
     
 class HitCondition:
     def __init__(self, addr, parent):
-        data = TekkenStructure.__init__(self, parent, addr, parent.HitCondition_size)
+        data = initTekkenStructure(self, parent, addr, parent.HitCondition_size)
         
         self.reaction_list_idx = -1
         self.requirement_idx = -1
@@ -340,7 +339,7 @@ class HitCondition:
     
 class ExtraMoveProperty:
     def __init__(self, addr, parent):
-        data = TekkenStructure.__init__(self, parent, addr, parent.ExtraMoveProperty_size)
+        data = initTekkenStructure(self, parent, addr, parent.ExtraMoveProperty_size)
         
         self.type = self.bToInt(data, 0, 4)
         self.id = self.bToInt(data, 4, 4)
@@ -355,7 +354,7 @@ class ExtraMoveProperty:
     
 class Move:
     def __init__(self, addr, parent):
-        data = TekkenStructure.__init__(self, parent, addr, parent.Move_size)
+        data = initTekkenStructure(self, parent, addr, parent.Move_size)
         
         if self.TekkenVersion == 7:
             move_name_addr = self.bToInt(data, 0x0, self.ptr_size)
@@ -543,7 +542,7 @@ class Move:
     
 class Voiceclip:
     def __init__(self, addr, parent):
-        data = TekkenStructure.__init__(self, parent, addr, parent.Voiceclip_size)
+        data = initTekkenStructure(self, parent, addr, parent.Voiceclip_size)
         
         self.value = self.bToInt(data, 0, 4)
 
@@ -552,7 +551,7 @@ class Voiceclip:
         
 class InputExtradata:
     def __init__(self, addr, parent):
-        data = TekkenStructure.__init__(self, parent, addr, parent.InputExtradata_size)
+        data = initTekkenStructure(self, parent, addr, parent.InputExtradata_size)
         
         self.u1 = self.bToInt(data, 0, 4)
         self.u2 = self.bToInt(data, 4, 4)
@@ -565,7 +564,7 @@ class InputExtradata:
         
 class InputSequence:
     def __init__(self, addr, parent):
-        data = TekkenStructure.__init__(self, parent, addr, parent.InputSequence_size)
+        data = initTekkenStructure(self, parent, addr, parent.InputSequence_size)
         
         if self.TekkenVersion == 7:
             self.u1 = self.bToInt(data, 0, 2)
@@ -593,7 +592,7 @@ class InputSequence:
         
 class Projectile:
     def __init__(self, addr, parent):
-        data = TekkenStructure.__init__(self, parent, addr, parent.Projectile_size)
+        data = initTekkenStructure(self, parent, addr, parent.Projectile_size)
         
         if self.TekkenVersion == 7:
             self.u1 = [self.bToInt(data, offset * 2, 2) for offset in range(48)]
@@ -629,7 +628,7 @@ class Projectile:
         
 class ThrowExtra:
     def __init__(self, addr, parent):
-        data = TekkenStructure.__init__(self, parent, addr, parent.ThrowExtra_size)
+        data = initTekkenStructure(self, parent, addr, parent.ThrowExtra_size)
         
         self.u1 = self.bToInt(data, 0x0, 4)
         self.u2 = [self.bToInt(data, 4 + offset * 2, 2) for offset in range(4)]
@@ -642,7 +641,7 @@ class ThrowExtra:
         
 class Throw:
     def __init__(self, addr, parent):
-        data = TekkenStructure.__init__(self, parent, addr, parent.Throw_size)
+        data = initTekkenStructure(self, parent, addr, parent.Throw_size)
         
         self.u1 = self.bToInt(data, 0, self.ptr_size)
         self.unknown_addr = self.bToInt(data, self.ptr_size, self.ptr_size)
@@ -658,10 +657,10 @@ class Throw:
     def setUnknownIdx(self, idx):
         self.unknown_idx = idx
         
-class Motbin(TekkenStructure):
+class Motbin:
     def __init__(self, addr, exporterObject, name=''):
-        TekkenStructure.__init__(self, exporterObject, addr, size=0)
-        TekkenStructure.setStructureSizes(self)
+        initTekkenStructure(self, exporterObject, addr, size=0)
+        setStructureSizes(self)
     
         self.name = name
         self.version = "Tekken7" if self.TekkenVersion == 7 else "Tag2"

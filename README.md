@@ -9,7 +9,7 @@ This tool exports movesets from memory, you therefore need the game running with
 The extractor works with both Tekken 7 and Tag 2, as there is little differences between their moveset formats.
 
 ## Exporting from Tekken 7
-In order to work with Tekken 7, the extractor only needs the player's base addresses, to be indicated at the entry `p1_addres` of the file `game_addresses.txt`.
+In order to work with Tekken 7, the extractor only needs the player's base addresses, to be indicated at the entry `p1_addr` of the file `game_addresses.txt`.
 You have to then start a game with the targeted moveset loaded up, and simply running the tool `Ton-Chan's_Motbin_export.py` without any arguments will do the job.
 
 Every moveset extracted from Tekken7 will be prefixed with `7_`

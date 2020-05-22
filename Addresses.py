@@ -5,18 +5,17 @@ from ctypes import wintypes as w
 from win32com.client import GetObject
 from re import findall
 
-class GameAddresses:
-    def __init__(self):
-        self.game_addresses = {}
-        with open("game_addresses.txt", "r") as f:
+class AddressFile:
+    def __init__(self, path):
+        self.addresses = {}
+        with open(path, "r") as f:
             try:
-                game_addresses = {}
                 for line in f:
                     line = line.strip()
                     if len(line) == 0 or line[0] == "#":
                         continue
                     name, addr, _ = findall('([a-z0-9\_\-]+) += +((0x)?[a-fA-F0-9]+)', line)[0]
-                    self.game_addresses[name] = int(addr, 16)
+                    self.addresses[name] = int(addr, 16)
             except Exception as e:
                 print(e)
                 print("Invalid game_addresses.txt format at line.")
@@ -85,5 +84,4 @@ GetLastError = ctypes.windll.kernel32.GetLastError
 GetLastError.restype = ctypes.wintypes.DWORD
 GetLastError.argtypes = ()
 
-game_addresses = GameAddresses()
-game_addresses = game_addresses.game_addresses
+game_addresses = AddressFile("game_addresses.txt").addresses
