@@ -41,3 +41,4 @@ Administrator rights may be required to import the moveset into memory.
 - Fix King Tag2 shining wizard that always thinks he's at the wall
 - Fix Kunimitsu backturned 4 that doesn't turn around
 - Fix bound floorbreak that doesn't bound
+- Look at tag2 intro, especially mokujin & combot
