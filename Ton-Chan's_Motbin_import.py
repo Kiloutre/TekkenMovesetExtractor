@@ -6,8 +6,7 @@ from Aliases import getTag2Requirement, getTag2ExtraMoveProperty, fillAliasesDic
 import json
 import os
 import sys
-   
-T = None
+
 importVersion = "0.6.0"
 
 requirement_size = 0x8
@@ -26,10 +25,170 @@ throw_extras_size = 0xC
 throws_size = 0x10
 
 forbiddenMoves = ['Co_DA_Ground', '___________']
+    
+class Importer:
+    def __init__(self):
+        self.T = GameClass("TekkenGame-Win64-Shipping.exe")
 
-def initGameInstance(GameInstance):
-    global T
-    T = GameInstance
+    def readInt(self, addr, bytes_length=4):
+        return self.T.readInt(addr, bytes_length)
+        
+    def writeInt(self, addr, value, bytes_length=0):
+        return self.T.writeInt(addr, value, bytes_length=bytes_length)
+
+    def readBytes(self, addr, bytes_length):
+        return self.T.readBytes(addr, bytes_length)
+        
+    def writeBytes(self, addr, data):
+        return self.T.writeBytes(addr, data)
+        
+    def writeString(self, addr, text):
+        return self.writeBytes(addr, bytes(text + "\x00", 'ascii'))
+        
+    def readString(self, addr):
+        offset = 0
+        while self.readInt(addr + offset, 1) != 0:
+            offset += 1
+        return self.readBytes(addr, offset).decode("ascii")
+
+    def allocateMem(self, allocSize):
+        return VirtualAllocEx(self.T.handle, 0, allocSize, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE)
+                
+    def importMoveset(self, playerAddr, folderName):
+        moveset = self.loadMoveset(folderName)
+        
+        motbin_ptr_addr = playerAddr + 0x14a0
+        current_motbin_ptr = self.readInt(motbin_ptr_addr, 8)
+        old_character_name = self.readString(self.readInt(current_motbin_ptr + 0x8, 8))
+        moveset.copyUnknownOffsets(current_motbin_ptr) #Required because we aren't self sufficient yet
+        
+        print("\nOLD moveset pointer: 0x%x (%s)" % (current_motbin_ptr, old_character_name))
+        print("NEW moveset pointer: 0x%x (%s)" % (moveset.motbin_ptr, moveset.m['character_name']))
+        self.writeInt(motbin_ptr_addr, moveset.motbin_ptr, 8)
+        
+    def loadMoveset(self, folderName):
+        m = None
+        
+        jsonFilename = "%s.json" % (folderName[2:])
+        print("Reading %s..." % (jsonFilename))
+        with open("%s/%s" % (folderName, jsonFilename), "r") as f:
+            m = json.load(f)
+            f.close()
+            
+        if 'export_version' not in m or not versionMatches(m['export_version']):
+            print("Error: trying to import outdated moveset, please extract again.")
+            if 'export_version' in m:
+                print("Moveset version: %s. Importer version: %s." % (m['export_version'], importVersion))
+            os._exit(1)
+
+        if m['version'] == "Tag2":
+            fillAliasesDictonnaries()
+            applyCharacterSpecificFixes(m)
+        p = MotbinStruct(m, folderName, self)
+            
+        character_name = p.writeString(m['character_name'])
+        creator_name = p.writeString(m['creator_name'])
+        date = p.writeString(m['date'])
+        fulldate = p.writeString(m['fulldate'])
+        
+        requirements_ptr, requirement_count = p.allocateRequirements()
+        cancel_extradata_ptr, cancel_extradata_size = p.allocateCancelExtradata()
+        cancel_ptr, cancel_count = p.allocateCancels(m['cancels'])
+        group_cancel_ptr, group_cancel_count = p.allocateCancels(m['group_cancels'], grouped=True)
+        pushback_extras_ptr, pushback_extras_count = p.allocatePushbackExtras()
+        pushback_ptr, pushback_list_count = p.allocatePushbacks()
+        reaction_list_ptr, reaction_list_count = p.allocateReactionList()
+        extra_move_properties_ptr, extra_move_properties_count = p.allocateExtraMoveProperties()
+        voiceclip_list_ptr, voiceclip_list_count = p.allocateVoiceclipIds()
+        hit_conditions_ptr, hit_conditions_count = p.allocateHitConditions()
+        moves_ptr, move_count = p.allocateMoves()
+        input_extradata_ptr, input_extradata_count = p.allocateInputExtradata()
+        input_sequences_ptr, input_sequences_count = p.allocateInputSequences()
+        projectiles_ptr, projectiles_count = p.allocateProjectiles()
+        throw_extras_ptr, throw_extras_count = p.allocateThrowExtras()
+        throws_ptr, throws_count = p.allocateThrows()
+        
+        self.writeInt(p.motbin_ptr + 0x0, 65536, 4)
+        self.writeInt(p.motbin_ptr + 0x4, 4475208, 4)
+        
+        self.writeInt(p.motbin_ptr + 0x8, character_name, 8)
+        self.writeInt(p.motbin_ptr + 0x10, creator_name, 8)
+        self.writeInt(p.motbin_ptr + 0x18, date, 8)
+        self.writeInt(p.motbin_ptr + 0x20, fulldate, 8)
+        
+        self.writeAliases(p.motbin_ptr, m)
+        
+        self.writeInt(p.motbin_ptr + 0x150, reaction_list_ptr, 8)
+        self.writeInt(p.motbin_ptr + 0x158, reaction_list_count, 8)
+        
+        self.writeInt(p.motbin_ptr + 0x160, requirements_ptr, 8)
+        self.writeInt(p.motbin_ptr + 0x168, requirement_count, 8)
+        
+        self.writeInt(p.motbin_ptr + 0x170, hit_conditions_ptr, 8)
+        self.writeInt(p.motbin_ptr + 0x178, hit_conditions_count, 8)
+        
+        self.writeInt(p.motbin_ptr + 0x180, projectiles_ptr, 8)
+        self.writeInt(p.motbin_ptr + 0x188, projectiles_count, 8)
+        
+        self.writeInt(p.motbin_ptr + 0x190, pushback_ptr, 8)
+        self.writeInt(p.motbin_ptr + 0x198, pushback_list_count, 8)
+        
+        self.writeInt(p.motbin_ptr + 0x1A0, pushback_extras_ptr, 8)
+        self.writeInt(p.motbin_ptr + 0x1A8, pushback_extras_count, 8)
+        
+        self.writeInt(p.motbin_ptr + 0x1b0, cancel_ptr, 8)
+        self.writeInt(p.motbin_ptr + 0x1b8, cancel_count, 8)
+
+        self.writeInt(p.motbin_ptr + 0x1c0, group_cancel_ptr, 8)
+        self.writeInt(p.motbin_ptr + 0x1c8, group_cancel_count, 8)
+
+        self.writeInt(p.motbin_ptr + 0x1d0, cancel_extradata_ptr, 8)
+        self.writeInt(p.motbin_ptr + 0x1d8, cancel_extradata_size, 8)
+        
+        self.writeInt(p.motbin_ptr + 0x1e0, extra_move_properties_ptr, 8)
+        self.writeInt(p.motbin_ptr + 0x1e8, extra_move_properties_count, 8)
+        
+        self.writeInt(p.motbin_ptr + 0x210, moves_ptr, 8)
+        self.writeInt(p.motbin_ptr + 0x218, move_count, 8)
+        
+        self.writeInt(p.motbin_ptr + 0x220, voiceclip_list_ptr, 8)
+        self.writeInt(p.motbin_ptr + 0x228, voiceclip_list_count, 8)
+       
+        self.writeInt(p.motbin_ptr + 0x230, input_sequences_ptr, 8)
+        self.writeInt(p.motbin_ptr + 0x238, input_sequences_count, 8)
+        
+        self.writeInt(p.motbin_ptr + 0x240, input_extradata_ptr, 8)
+        self.writeInt(p.motbin_ptr + 0x248, input_extradata_count, 8)
+        
+        self.writeInt(p.motbin_ptr + 0x260, throw_extras_ptr, 8)
+        self.writeInt(p.motbin_ptr + 0x268, throw_extras_count, 8)
+        
+        self.writeInt(p.motbin_ptr + 0x270, throws_ptr, 8)
+        self.writeInt(p.motbin_ptr + 0x278, throws_count, 8)
+        
+        print("%s successfully imported in memory at 0x%x." % (jsonFilename, p.motbin_ptr))
+        print("%d/%d bytes left." % (p.size - (p.curr_ptr - p.head_ptr), p.size))
+        
+        return p
+    
+    def writeAliases(self, motbin_ptr, m):
+        alias_offset = 0x28
+        for alias in m['aliases']:
+            self.writeInt(motbin_ptr + alias_offset, alias, 2)
+            alias_offset += 2
+        
+def versionMatches(version):
+    pos = version.rfind('.')
+    exportUpperVersion = version[:pos]
+    
+    pos = importVersion.rfind('.')
+    importUpperVersion = importVersion[:pos]
+    
+    if importUpperVersion == exportUpperVersion and version != importVersion:
+        print("\nVersion mismatch: consider exporting the moveset again.")
+        print("Moveset version: %s. Importer version: %s.\n" % (version, importVersion))
+    
+    return importUpperVersion == exportUpperVersion
 
 def getTag2RequirementAlias(req, param):
     requirement_detail = getTag2Requirement(req)
@@ -45,36 +204,6 @@ def getTag2ExtramovePropertyAlias(type, id):
     if new_extra_property == None:
         return type, id
     return type, new_extra_property['t7_id']
-
-def readInt(addr, bytes_length=4):
-    return T.readInt(addr, bytes_length)
-    
-def writeInt(addr, value, bytes_length=0):
-    return T.writeInt(addr, value, bytes_length=bytes_length)
-
-def readBytes(addr, bytes_length):
-    return T.readBytes(addr, bytes_length)
-    
-def writeBytes(addr, data):
-    return T.writeBytes(addr, data)
-    
-def writeString(addr, text):
-    return writeBytes(addr, bytes(text + "\x00", 'ascii'))
-    
-def readString(addr):
-    offset = 0
-    while readInt(addr + offset, 1) != 0:
-        offset += 1
-    return readBytes(addr, offset).decode("ascii")
-
-def allocateMem(allocSize):
-    return VirtualAllocEx(T.handle, 0, allocSize, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE)
-    
-def writeAliases(motbin_ptr, m):
-    alias_offset = 0x28
-    for alias in m['aliases']:
-        writeInt(motbin_ptr + alias_offset, alias, 2)
-        alias_offset += 2
         
 def align8Bytes(value):
     return value + (8 - (value % 8))
@@ -159,12 +288,13 @@ def getTotalSize(m, folderName):
     return size
     
 class MotbinStruct:
-    def __init__(self, motbin, folderName):
+    def __init__(self, motbin, folderName, importerObject):
+        self.importer = importerObject
         allocSize = getTotalSize(motbin, folderName)
-        head_ptr = allocateMem(allocSize)
+        head_ptr = self.importer.allocateMem(allocSize)
         
-        self.motbin_ptr = allocateMem(0x2e0)
-        writeBytes(self.motbin_ptr, bytes([0] * 0x2e0))
+        self.motbin_ptr = self.importer.allocateMem(0x2e0)
+        self.importer.writeBytes(self.motbin_ptr, bytes([0] * 0x2e0))
         
         self.folderName = folderName
         
@@ -208,7 +338,7 @@ class MotbinStruct:
             raise
         
         dataPtr = self.curr_ptr
-        writeBytes(dataPtr, data)
+        self.importer.writeBytes(dataPtr, data)
         self.curr_ptr += data_len
         return dataPtr
         
@@ -218,7 +348,7 @@ class MotbinStruct:
             raise
             
         textAddr = self.curr_ptr
-        writeString(textAddr, text)
+        self.importer.writeString(textAddr, text)
         self.curr_ptr += text_len + 1
         return textAddr
         
@@ -227,7 +357,7 @@ class MotbinStruct:
             raise
             
         valueAddr = self.curr_ptr
-        writeInt(valueAddr, value, bytes_length)
+        self.importer.writeInt(valueAddr, value, bytes_length)
         self.curr_ptr += bytes_length
         return valueAddr
         
@@ -310,8 +440,8 @@ class MotbinStruct:
         cancels_toedit = [(i, c) for i, c in enumerate(cancel_list) if c['move_id'] == move_id]
         
         for i, cancel in cancels_toedit:
-            addr = cancel_head_ptr+ (i * cancel_size)
-            writeInt(addr, 0xFFFFFFFFFFFFFFFF, 8)
+            addr = cancel_head_ptr + (i * cancel_size)
+            self.importer.writeInt(addr, 0xFFFFFFFFFFFFFFFF, 8)
         
     def allocateInputExtradata(self):
         if self.input_extradata_ptr != 0:
@@ -432,7 +562,7 @@ class MotbinStruct:
         self.reaction_list_ptr = self.align()
         
         for reaction_list in self.m['reaction_list']:
-            writeBytes(self.curr_ptr, bytes([0] * reaction_list_size))
+            self.importer.writeBytes(self.curr_ptr, bytes([0] * reaction_list_size))
             
             for pushback in reaction_list['pushback_indexes']:
                 self.writeInt(self.getPushbackFromId(pushback), 8)
@@ -479,7 +609,7 @@ class MotbinStruct:
         
         for p in self.m['projectiles']:
             curr = self.curr_ptr
-            writeBytes(self.curr_ptr, bytes([0] * projectile_size))
+            self.importer.writeBytes(self.curr_ptr, bytes([0] * projectile_size))
             
             for short in p['u1']:
                 self.writeInt(short, 2)
@@ -642,152 +772,17 @@ class MotbinStruct:
         ]
         
         for offset, read_size in offsets:
-            offsetBytes = readBytes(motbin_ptr + offset, read_size)
-            writeBytes(self.motbin_ptr + offset, offsetBytes)
-        
-def versionMatches(version):
-    pos = version.rfind('.')
-    exportUpperVersion = version[:pos]
-    
-    pos = importVersion.rfind('.')
-    importUpperVersion = importVersion[:pos]
-    
-    if importUpperVersion == exportUpperVersion and version != importVersion:
-        print("\nVersion mismatch: consider exporting the moveset again.")
-        print("Moveset version: %s. Importer version: %s.\n" % (version, importVersion))
-    
-    return importUpperVersion == exportUpperVersion
-    
-    
-def importMoveset(playerAddr, folderName):
-    moveset = loadMoveset(folderName)
-    
-    motbin_ptr_addr = playerAddr + 0x14a0
-    current_motbin_ptr = readInt(motbin_ptr_addr, 8)
-    old_character_name = readString(readInt(current_motbin_ptr + 0x8, 8))
-    moveset.copyUnknownOffsets(current_motbin_ptr) #Required because we aren't self sufficient yet
-    
-    print("\nOLD moveset pointer: 0x%x (%s)" % (current_motbin_ptr, old_character_name))
-    print("NEW moveset pointer: 0x%x (%s)" % (moveset.motbin_ptr, moveset.m['character_name']))
-    writeInt(motbin_ptr_addr, moveset.motbin_ptr, 8)
-    
-def loadMoveset(folderName):
-    m = None
-    
-    jsonFilename = "%s.json" % (folderName[2:])
-    print("Reading %s..." % (jsonFilename))
-    with open("%s/%s" % (folderName, jsonFilename), "r") as f:
-        m = json.load(f)
-        f.close()
-        
-    if 'export_version' not in m or not versionMatches(m['export_version']):
-        print("Error: trying to import outdated moveset, please extract again.")
-        if 'export_version' in m:
-            print("Moveset version: %s. Importer version: %s." % (m['export_version'], importVersion))
-        os._exit(1)
-
-    if m['version'] == "Tag2":
-        fillAliasesDictonnaries()
-        applyCharacterSpecificFixes(m)
-    p = MotbinStruct(m, folderName)
-        
-    character_name = p.writeString(m['character_name'])
-    creator_name = p.writeString(m['creator_name'])
-    date = p.writeString(m['date'])
-    fulldate = p.writeString(m['fulldate'])
-    
-    requirements_ptr, requirement_count = p.allocateRequirements()
-    cancel_extradata_ptr, cancel_extradata_size = p.allocateCancelExtradata()
-    cancel_ptr, cancel_count = p.allocateCancels(m['cancels'])
-    group_cancel_ptr, group_cancel_count = p.allocateCancels(m['group_cancels'], grouped=True)
-    pushback_extras_ptr, pushback_extras_count = p.allocatePushbackExtras()
-    pushback_ptr, pushback_list_count = p.allocatePushbacks()
-    reaction_list_ptr, reaction_list_count = p.allocateReactionList()
-    extra_move_properties_ptr, extra_move_properties_count = p.allocateExtraMoveProperties()
-    voiceclip_list_ptr, voiceclip_list_count = p.allocateVoiceclipIds()
-    hit_conditions_ptr, hit_conditions_count = p.allocateHitConditions()
-    moves_ptr, move_count = p.allocateMoves()
-    input_extradata_ptr, input_extradata_count = p.allocateInputExtradata()
-    input_sequences_ptr, input_sequences_count = p.allocateInputSequences()
-    projectiles_ptr, projectiles_count = p.allocateProjectiles()
-    throw_extras_ptr, throw_extras_count = p.allocateThrowExtras()
-    throws_ptr, throws_count = p.allocateThrows()
-    
-    writeInt(p.motbin_ptr + 0x0, 65536, 4)
-    writeInt(p.motbin_ptr + 0x4, 4475208, 4)
-    
-    writeInt(p.motbin_ptr + 0x8, character_name, 8)
-    writeInt(p.motbin_ptr + 0x10, creator_name, 8)
-    writeInt(p.motbin_ptr + 0x18, date, 8)
-    writeInt(p.motbin_ptr + 0x20, fulldate, 8)
-    
-    writeAliases(p.motbin_ptr, m)
-    
-    writeInt(p.motbin_ptr + 0x150, reaction_list_ptr, 8)
-    writeInt(p.motbin_ptr + 0x158, reaction_list_count, 8)
-    
-    writeInt(p.motbin_ptr + 0x160, requirements_ptr, 8)
-    writeInt(p.motbin_ptr + 0x168, requirement_count, 8)
-    
-    writeInt(p.motbin_ptr + 0x170, hit_conditions_ptr, 8)
-    writeInt(p.motbin_ptr + 0x178, hit_conditions_count, 8)
-    
-    writeInt(p.motbin_ptr + 0x180, projectiles_ptr, 8)
-    writeInt(p.motbin_ptr + 0x188, projectiles_count, 8)
-    
-    writeInt(p.motbin_ptr + 0x190, pushback_ptr, 8)
-    writeInt(p.motbin_ptr + 0x198, pushback_list_count, 8)
-    
-    writeInt(p.motbin_ptr + 0x1A0, pushback_extras_ptr, 8)
-    writeInt(p.motbin_ptr + 0x1A8, pushback_extras_count, 8)
-    
-    writeInt(p.motbin_ptr + 0x1b0, cancel_ptr, 8)
-    writeInt(p.motbin_ptr + 0x1b8, cancel_count, 8)
-
-    writeInt(p.motbin_ptr + 0x1c0, group_cancel_ptr, 8)
-    writeInt(p.motbin_ptr + 0x1c8, group_cancel_count, 8)
-
-    writeInt(p.motbin_ptr + 0x1d0, cancel_extradata_ptr, 8)
-    writeInt(p.motbin_ptr + 0x1d8, cancel_extradata_size, 8)
-    
-    writeInt(p.motbin_ptr + 0x1e0, extra_move_properties_ptr, 8)
-    writeInt(p.motbin_ptr + 0x1e8, extra_move_properties_count, 8)
-    
-    writeInt(p.motbin_ptr + 0x210, moves_ptr, 8)
-    writeInt(p.motbin_ptr + 0x218, move_count, 8)
-    
-    writeInt(p.motbin_ptr + 0x220, voiceclip_list_ptr, 8)
-    writeInt(p.motbin_ptr + 0x228, voiceclip_list_count, 8)
-    
-    writeInt(p.motbin_ptr + 0x230, input_sequences_ptr, 8)
-    writeInt(p.motbin_ptr + 0x238, input_sequences_count, 8)
-    
-    writeInt(p.motbin_ptr + 0x240, input_extradata_ptr, 8)
-    writeInt(p.motbin_ptr + 0x248, input_extradata_count, 8)
-    
-    writeInt(p.motbin_ptr + 0x260, throw_extras_ptr, 8)
-    writeInt(p.motbin_ptr + 0x268, throw_extras_count, 8)
-    
-    writeInt(p.motbin_ptr + 0x270, throws_ptr, 8)
-    writeInt(p.motbin_ptr + 0x278, throws_count, 8)
-    
-    print("%s successfully imported in memory at 0x%x." % (jsonFilename, p.motbin_ptr))
-    print("%d/%d bytes left." % (p.size - (p.curr_ptr - p.head_ptr), p.size))
-    
-    return p
+            offsetBytes = self.importer.readBytes(motbin_ptr + offset, read_size)
+            self.importer.writeBytes(self.motbin_ptr + offset, offsetBytes)
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
         print("Usage: [FOLDER_NAME]")
         os._exit(1)
         
-    try:
-        initGameInstance(GameClass("TekkenGame-Win64-Shipping.exe"))
-    except:
-        os._exit(1)
-    
-    importMoveset(GameAddresses.a['p1_ptr'], sys.argv[1])
+    TekkenImporter = Importer()
+    TekkenImporter.importMoveset(GameAddresses.a['p1_ptr'], sys.argv[1])
     
     if len(sys.argv) > 2:
-        importMoveset(GameAddresses.a['p2_ptr'], sys.argv[2])
+        TekkenImporter.importMoveset(GameAddresses.a['p2_ptr'], sys.argv[2])
     

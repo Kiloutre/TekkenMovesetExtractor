@@ -8,21 +8,16 @@ import json
 import os
 import sys
    
+TekkenVersion = 7
 
 if len(sys.argv) > 1 and sys.argv[1].lower() == "tag2":
     TekkenVersion = 2
-else:
-    TekkenVersion = 7
 
 exportVersion = "0.6.0"
 T = None
 ptr_size = 8 if TekkenVersion == 7 else 4
 base = 0x0 if TekkenVersion == 7 else GameAddresses.a['cemu_base']
 endian = 'little' if TekkenVersion == 7 else 'big'
-
-def initGameInstance(GameInstance):
-    global T
-    T = GameInstance
     
 def readInt(addr, len):
     return T.readInt(addr, len, endian=endian)
@@ -984,7 +979,7 @@ def exportMoveset(playerAddress, name=''):
         
 if __name__ == "__main__":
     try:
-        initGameInstance(GameClass("TekkenGame-Win64-Shipping.exe" if TekkenVersion == 7 else "Cemu.exe"))
+        T = GameClass("TekkenGame-Win64-Shipping.exe" if TekkenVersion == 7 else "Cemu.exe")
     except Exception as e:
         print(e)
         os._exit(0)

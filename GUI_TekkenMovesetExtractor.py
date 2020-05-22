@@ -2,28 +2,18 @@
 
 from tkinter import *
 from tkinter.ttk import *
-from Addresses import GameClass, GameAddresses
+from Addresses import GameAddresses
 exportLib = __import__("Ton-Chan's_Motbin_export")
 importLib = __import__("Ton-Chan's_Motbin_import")
-
-exportMoveset = exportLib.exportMoveset
-importMoveset = importLib.importMoveset
 
 charactersPath = "extracted_chars"
 game_addresses = GameAddresses.a
 
 def exportCharacter(tekkenVersion, playerAddr, name=''):
-    processName = "TekkenGame-Win64-Shipping.exe" if tekkenVersion == 7 else "Cemu.exe"
-    
-    try:
-        TekkenInstance = GameClass(processName)
-    except:
-        print("Could not find", processName, "process.")
-        return
         
     exportLib.initGlobals(tekkenVersion)
-    exportLib.initGameInstance(TekkenInstance)
-    exportMoveset(playerAddr, name)
+    exportLib.initGameInstance(TekkenInstance, tekkenVersion)
+    exportLib.exportMoveset(playerAddr, name)
 
 class GUI_TekkenMovesetExtractor(Tk):
     def __init__(self):
