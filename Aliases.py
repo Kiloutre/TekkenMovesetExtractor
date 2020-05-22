@@ -5,6 +5,8 @@ requirements = {
     468: { 't7_id': 615, 'desc': 'Juggle' },
     65: { 't7_id': 68, 'desc': 'Incoming high' },
     133: { 't7_id': 135, 'desc': 'Death' },
+    3: { 't7_id': 3, 'desc': '1536: Enemy standing (checking vuln?)' },
+    27: { 't7_id': 27, 'desc': '2536: Enemy airborne (checking vuln?)' },
     46: { 't7_id': 44, 'desc': 'MAPPING' },
     49: { 't7_id': 47, 'desc': 'MAPPING' },
     51: { 't7_id': 48, 'desc': 'MAPPING' },
@@ -53,7 +55,8 @@ requirements = {
         't7_id': 163,
         'desc': 'Is character wallsplat',
         'param_alias': {
-            8233: 8295
+            8233: 8295,
+            9237: 11755 #assumption, to verify
         }
     },
     160: { 't7_id': 164, 'desc': 'MAPPING' },
@@ -64,7 +67,10 @@ requirements = {
     173: { 't7_id': 190, 'desc': '(HEIHACHI) wDm_AirF_WB -> wDm_GndF_00' },
     199: { 't7_id': 216, 'desc': '(HEIHACHI) sOKI_00 -> sOKI_C00' },
     200: { 't7_id': 217, 'desc': 'Player character id'},
+    201: { 't7_id': 218, 'desc': 'Player NOT character id'},
     202: { 't7_id': 219, 'desc': 'Opponent character id' },
+    203: { 't7_id': 220, 'desc': 'Opponent NOT character id' },
+    204: { 't7_id': 0, 'desc': 'Team character ID is ??'}, #unknown t7 id
     208: { 't7_id': 223, 'desc': '(ALISA) Co_IFLnage00vsOGR_n R' },
     214: { 't7_id': 225, 'desc': '(HEIHACHI) sJUMP_00_ -> Co_sJP_RP' },
     228: { 't7_id': 232, 'desc': '(NINA) sDm_KAOBntR -> R_bintrp' },
@@ -365,10 +371,11 @@ requirements = {
             45: 65,
         }
     },
-    
+    #481: { 't7_id': 0, 'desc': 'Player has tag team' }, #unknown t7 id
 }
 
 extra_move_properties = {
+    0x8193: { 't7_id': 0x8255, 'desc': 'Screw' },
     0x8001: { 't7_id': 0x800b, 'desc': 'MAPPING' },
     0x8002: { 't7_id': 0x800b, 'desc': 'MAPPING' },
     0x8003: { 't7_id': 0x800b, 'desc': 'MAPPING' },
@@ -480,7 +487,6 @@ extra_move_properties = {
     0x818c: { 't7_id': 0x824e, 'desc': '(ALISA) wDm_GndF_00E' },
     0x818f: { 't7_id': 0x8251, 'desc': '(ALISA) Co_Change_Kam' },
     0x8192: { 't7_id': 0x8254, 'desc': '(HEIHACHI) He_shoryu_S' },
-    0x8193: { 't7_id': 0x8255, 'desc': '(LARS) SPLa_9_y' },
     0x8194: { 't7_id': 0x8256, 'desc': '(KING) Kg_AirRRbom_y' },
     0x8196: { 't7_id': 0x8257, 'desc': '(BOB_SATSUMA) Ft_tsshoryu' },
     0x8197: { 't7_id': 0x8258, 'desc': '(YOSHIMITSU) Ym_sideL00Rv' },
@@ -597,13 +603,23 @@ tag2CharacterSpecificFixes = {
             {
                 'type': 0x8001,
                 'id': 0x82ea,
-                'value': 0x31,
                 'value_alias': {
                     0x31: 0x12 #fixes f4, 4 camera
                 }
             }
         ]
-    }
+    },
+    "[ANGEL]": {
+        'extraproperty': [
+            {
+                'type': 0x8010,
+                'id': 0x82ea,
+                'value_alias': {
+                    0x32: 0 #fixes f4, 4 camera
+                }
+            }
+        ]
+    },
 }
 
 oddHitboxBytesAliases = {
@@ -633,8 +649,7 @@ def applyCharacterSpecificFixes(m):
                 continue
             if 'id' in alias and alias['id'] != id:
                 continue
-            if 'value' in alias and alias['value'] != value:
-                continue
+            print('o')
             m['extra_move_properties'][i]['value'] = alias['value_alias'].get(value, value)
 
 def replaceRequirement(req, param):
