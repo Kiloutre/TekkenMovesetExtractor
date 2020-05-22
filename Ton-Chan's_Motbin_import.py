@@ -7,7 +7,7 @@ import json
 import os
 import sys
 
-importVersion = "0.6.0"
+importVersion = "0.7.0"
 
 requirement_size = 0x8
 cancel_size = 0x28
@@ -569,7 +569,7 @@ class MotbinStruct:
             for unknown in reaction_list['u1list']:
                 self.writeInt(unknown, 2)
                 
-            self.skip(0xC)
+            self.skip(0x8)
             self.writeInt(reaction_list['vertical_pushback'], 4)
             self.writeInt(reaction_list['standing'], 2)
             self.writeInt(reaction_list['crouch'], 2)
