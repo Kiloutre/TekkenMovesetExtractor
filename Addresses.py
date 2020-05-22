@@ -6,23 +6,21 @@ from win32com.client import GetObject
 from re import findall
 
 class GameAddresses:
-    a = {}
-
     def __init__(self):
-        try:
-            f = open("game_addresses.txt", "r")
+        self.game_addresses = {}
+        with open("game_addresses.txt", "r") as f:
             try:
+                game_addresses = {}
                 for line in f:
                     line = line.strip()
                     if len(line) == 0 or line[0] == "#":
                         continue
                     name, addr, _ = findall('([a-z0-9\_\-]+) += +((0x)?[a-fA-F0-9]+)', line)[0]
-                    GameAddresses.a[name] = int(addr, 16)
+                    self.game_addresses[name] = int(addr, 16)
             except Exception as e:
-                print("Invalid game_addresses.txt format")
                 print(e)
-        except:
-            print("Could not open file game_addresses.txt")
+                print("Invalid game_addresses.txt format at line.")
+                print("Last line: ", line)
 
 class GameClass:
     def __init__(self, processName):
@@ -87,4 +85,5 @@ GetLastError = ctypes.windll.kernel32.GetLastError
 GetLastError.restype = ctypes.wintypes.DWORD
 GetLastError.argtypes = ()
 
-GameAddresses()
+game_addresses = GameAddresses()
+game_addresses = game_addresses.game_addresses

@@ -985,7 +985,7 @@ if __name__ == "__main__":
     
     playerId = 1
     while True:
-        playerKey = key_prefix + str(playerId) + "_ptr"
+        playerKey = key_prefix + str(playerId) + "_addr"
         playerId += 1
         
         if playerKey not in GameAddresses.a:

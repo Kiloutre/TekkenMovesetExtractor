@@ -1,7 +1,7 @@
 # --- Ton-Chan's Motbin import --- #
 # Python 3.6.5
 
-from Addresses import GameAddresses, GameClass, VirtualAllocEx, VirtualFreeEx, GetLastError, MEM_RESERVE, MEM_COMMIT, MEM_DECOMMIT, MEM_RELEASE, PAGE_EXECUTE_READWRITE
+from Addresses import game_addresses, GameClass, VirtualAllocEx, VirtualFreeEx, GetLastError, MEM_RESERVE, MEM_COMMIT, MEM_DECOMMIT, MEM_RELEASE, PAGE_EXECUTE_READWRITE
 from Aliases import getTag2Requirement, getTag2ExtraMoveProperty, fillAliasesDictonnaries, getTag2HitboxAliasedValue, replaceRequirement, applyCharacterSpecificFixes
 import json
 import os
@@ -781,8 +781,8 @@ if __name__ == "__main__":
         os._exit(1)
         
     TekkenImporter = Importer()
-    TekkenImporter.importMoveset(GameAddresses.a['p1_ptr'], sys.argv[1])
+    TekkenImporter.importMoveset(game_addresses['p1_addr'], sys.argv[1])
     
     if len(sys.argv) > 2:
-        TekkenImporter.importMoveset(GameAddresses.a['p2_ptr'], sys.argv[2])
+        TekkenImporter.importMoveset(game_addresses['p2_addr'], sys.argv[2])
     

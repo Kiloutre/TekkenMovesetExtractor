@@ -2,19 +2,19 @@
 
 from tkinter import *
 from tkinter.ttk import *
-from Addresses import GameAddresses
+from re import match
+from Addresses import game_addresses
 exportLib = __import__("Ton-Chan's_Motbin_export")
 importLib = __import__("Ton-Chan's_Motbin_import")
 
 charactersPath = "extracted_chars"
-game_addresses = GameAddresses.a
 
 def exportCharacter(tekkenVersion, playerAddr, name=''):
     TekkenExporter = exportLib.Exporter(tekkenVersion)
     TekkenExporter.exportMoveset(playerAddr)
     
-def exportAll(tekkenVersion, prefix):
-    player_addresses = [game_addresses[key] for key in game_addresses if key.startswith(prefix)] #replace prefix with regex match
+def exportAll(tekkenVersion, key_match):
+    player_addresses = [game_addresses[key] for key in game_addresses if match(key_match, key)]
     TekkenExporter = exportLib.Exporter(tekkenVersion)
     
     exportedMovesets = []
@@ -40,26 +40,26 @@ class GUI_TekkenMovesetExtractor(Tk):
         
         playerid = 1
         while playerid < 3:
-            key = "p%d_ptr" % (playerid)
+            key = "p%d_addr" % (playerid)
             if key not in game_addresses:
                 break
-            self.createExportButton("Tekken 7: Player %d" % (playerid), 7, game_addresses[key], exportCharacter)
+            self.createExportButton("Tekken 7: Player %d" % (playerid), (7, game_addresses[key]), exportCharacter)
             playerid += 1
-        self.createExportButton("Tekken 7: All", 7, "p", exportAll)
+        self.createExportButton("Tekken 7: All", (7, "p([0-9]+)_addr"), exportAll)
             
         playerid = 1
         while playerid < 5:
-            key = "cemu_p%d_ptr" % (playerid)
+            key = "cemu_p%d_addr" % (playerid)
             if key not in game_addresses:
                 break
-            self.createExportButton("Tekken Tag2: Player %d" % (playerid), 2, game_addresses[key], exportCharacter)
+            self.createExportButton("Tekken Tag2: Player %d" % (playerid), (2, game_addresses[key]), exportCharacter)
             playerid += 1
-        self.createExportButton("Tekken Tag2: All", 2, "cemu_p", exportAll)
+        self.createExportButton("Tekken Tag2: All", (2, "cemu_(p[0-9]+)_addr"), exportAll)
         
-    def createExportButton(self, name, arg1, arg2, exportFunction): #use kwargs
+    def createExportButton(self, name, const_args, exportFunction):
         self.exportButton = Button(self)
         self.exportButton["text"] = "Export: " + name
-        self.exportButton["command"] = lambda: exportFunction(arg1, arg2)
+        self.exportButton["command"] = lambda: exportFunction(*const_args)
         self.exportButton.pack(side="top")
         
 
