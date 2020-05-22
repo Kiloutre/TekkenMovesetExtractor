@@ -10,10 +10,8 @@ charactersPath = "extracted_chars"
 game_addresses = GameAddresses.a
 
 def exportCharacter(tekkenVersion, playerAddr, name=''):
-        
-    exportLib.initGlobals(tekkenVersion)
-    exportLib.initGameInstance(TekkenInstance, tekkenVersion)
-    exportLib.exportMoveset(playerAddr, name)
+    TekkenExporter = exportLib.Exporter(tekkenVersion)
+    TekkenExporter.exportMoveset(playerAddr)
 
 class GUI_TekkenMovesetExtractor(Tk):
     def __init__(self):
