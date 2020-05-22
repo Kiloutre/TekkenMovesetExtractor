@@ -11,5 +11,5 @@ cemu_p3_addr  = 0x1088AF50
 cemu_p4_addr  = 0x1088D8B0
 
 
-# CEMU base address, needs to be updated with every CEMU restart
-cemu_base     = 0x020A19A80000
+# CEMU base address, DON'T CHANGE!!!
+cemu_base = 0x7FF79DE31650

@@ -1,7 +1,7 @@
 # --- Ton-Chan's Motbin export --- #
 # Python 3.6.5
 
-from Addresses import GameAddresses, GameClass
+from Addresses import game_addresses, GameClass
 from ByteSwap import SwapAnimBytes
 from datetime import datetime, timezone
 import json
@@ -53,7 +53,7 @@ class Exporter:
         self.T = GameClass("TekkenGame-Win64-Shipping.exe" if TekkenVersion == 7 else "Cemu.exe")
         self.TekkenVersion = TekkenVersion
         self.ptr_size = 8 if TekkenVersion == 7 else 4
-        self.base = 0x0 if TekkenVersion == 7 else GameAddresses.a['cemu_base']
+        self.base = 0x0 if TekkenVersion == 7 else self.T.readInt(game_addresses['cemu_base'], 8, endian='little')
         self.endian = 'little' if TekkenVersion == 7 else 'big'
         
     def readInt(self, addr, len):
@@ -988,10 +988,10 @@ if __name__ == "__main__":
         playerKey = key_prefix + str(playerId) + "_addr"
         playerId += 1
         
-        if playerKey not in GameAddresses.a:
+        if playerKey not in game_addresses:
             break
             
-        player_addr = GameAddresses.a[playerKey]
+        player_addr = game_addresses[playerKey]
         
         try:
             player_name = TekkenExporter.getPlayerMovesetName(player_addr)

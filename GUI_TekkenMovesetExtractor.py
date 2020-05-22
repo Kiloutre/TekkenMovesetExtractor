@@ -38,23 +38,19 @@ class GUI_TekkenMovesetExtractor(Tk):
         self.wm_title("TekkenMovesetExtractor 0.6") 
         self.iconbitmap('GUI_TekkenMovesetExtractor/natsumi.ico')
         
-        playerid = 1
-        while playerid < 3:
-            key = "p%d_addr" % (playerid)
-            if key not in game_addresses:
-                break
-            self.createExportButton("Tekken 7: Player %d" % (playerid), (7, game_addresses[key]), exportCharacter)
-            playerid += 1
-        self.createExportButton("Tekken 7: All", (7, "p([0-9]+)_addr"), exportAll)
-            
-        playerid = 1
-        while playerid < 5:
-            key = "cemu_p%d_addr" % (playerid)
-            if key not in game_addresses:
-                break
-            self.createExportButton("Tekken Tag2: Player %d" % (playerid), (2, game_addresses[key]), exportCharacter)
-            playerid += 1
-        self.createExportButton("Tekken Tag2: All", (2, "cemu_(p[0-9]+)_addr"), exportAll)
+        tekken7_addr_match = "p([0-9]+)_addr"
+        playerAddresses = [key for key in game_addresses if re.match(tekken7_addr_match, key)]
+        for playerid, player_key in enumerate(playerAddresses):
+            self.createExportButton("Tekken 7: Player %d" % (playerid + 1), (7, game_addresses[player_key]), exportCharacter)
+        
+        self.createExportButton("Tekken 7: All", (7, tekken7_addr_match), exportAll)
+        
+        tag2_addr_match = "p([0-9]+)_addr"
+        playerAddresses = [key for key in game_addresses if re.match(tag2_addr_match, key)]
+        for playerid, player_key in enumerate(playerAddresses):
+            self.createExportButton("Tekken Tag2: Player %d" % (playerid + 1), (2, game_addresses[player_key]), exportCharacter)
+        
+        self.createExportButton("Tekken Tag2: All", (2, tekken7_addr_match), exportAll)
         
     def createExportButton(self, name, const_args, exportFunction):
         self.exportButton = Button(self)
