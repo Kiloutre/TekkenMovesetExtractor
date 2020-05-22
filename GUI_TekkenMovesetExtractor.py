@@ -74,12 +74,12 @@ class GUI_TekkenMovesetExtractor(Tk):
         
         self.createExportButton("Tekken 7: All", (7, tekken7_addr_match), exportAll)
         
-        tag2_addr_match = "p([0-9]+)_addr"
+        tag2_addr_match = "cemu_p([0-9]+)_addr"
         playerAddresses = [key for key in game_addresses if match(tag2_addr_match, key)]
         for playerid, player_key in enumerate(playerAddresses):
             self.createExportButton("Tekken Tag2: Player %d" % (playerid + 1), (2, game_addresses[player_key]), exportCharacter)
         
-        self.createExportButton("Tekken Tag2: All", (2, tekken7_addr_match), exportAll)
+        self.createExportButton("Tekken Tag2: All", (2, tag2_addr_match), exportAll)
         
         self.left_frame.TextArea.grid(padx=10, pady=10, sticky="nsew")
         
