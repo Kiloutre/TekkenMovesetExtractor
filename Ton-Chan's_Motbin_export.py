@@ -8,17 +8,22 @@ import json
 import os
 import sys
    
-TekkenVersion = 7
 
 if len(sys.argv) > 1 and sys.argv[1].lower() == "tag2":
     TekkenVersion = 2
+else:
+    TekkenVersion = 7
 
 exportVersion = "0.6.0"
-T = GameClass("TekkenGame-Win64-Shipping.exe" if TekkenVersion == 7 else "Cemu.exe")
+T = None
 ptr_size = 8 if TekkenVersion == 7 else 4
 base = 0x0 if TekkenVersion == 7 else GameAddresses.a['cemu_base']
 endian = 'little' if TekkenVersion == 7 else 'big'
 
+def initGameInstance(GameInstance):
+    global T
+    T = GameInstance
+    
 def readInt(addr, len):
     return T.readInt(addr, len, endian=endian)
     
@@ -646,9 +651,10 @@ class Throw:
         self.unknown_idx = idx
         
 class Motbin:
-    def __init__(self, addr):
+    def __init__(self, addr, name=''):
         self.addr = addr
-        
+    
+        self.name = name
         self.version = "Tekken7" if TekkenVersion == 7 else "Tag2"
         self.extraction_date = datetime.now(timezone.utc).__str__()
         self.extraction_path = ''
@@ -660,7 +666,7 @@ class Motbin:
 
         try:
             self.character_name = readStringPtr(addr + character_name_addr)
-            self.name = self.character_name[1:-1]
+            self.name = self.character_name[1:-1] if name == '' else name
             self.creator_name = readStringPtr(addr + creator_name_addr)
             self.date = readStringPtr(addr + date_addr)
             self.fulldate = readStringPtr(addr + fulldate_addr)
@@ -749,13 +755,14 @@ class Motbin:
             test_size = test_ptr + ptr_size
             self.test_ptr = readInt(addr + test_ptr, ptr_size)
             self.test_size = readInt(addr + test_size, ptr_size)
-            
+           
             
             aliasCopySize = 0x2a
             aliasOffset = fulldate_addr + ptr_size
             aliasCount = 148
         
             self.aliases = [readInt(addr + aliasOffset + (offset * 2), 2) for offset in range(0, aliasCount)]
+            
         except Exception as e:
             print("Invalid character or moveset.")
             raise e
@@ -848,7 +855,7 @@ class Motbin:
             
         print("Saved at path %s/%s" % (os.getcwd().replace("\\", "/"), path[2:]))
         
-    def extractMoveset(self, output_path):
+    def extractMoveset(self, output_path=''):
         self.printBasicData()
         
         print("Reading input extradata...")
@@ -968,14 +975,20 @@ def getPlayerMovesetName(playerAddress):
     motbin_ptr = getMotbinPtr(base + playerAddress)
     return readStringPtr(base + motbin_ptr + 8)
         
-def exportMoveset(playerAddress, output_path=''):
+def exportMoveset(playerAddress, name=''):
     motbin_ptr = getMotbinPtr(base + playerAddress)
     
-    m = Motbin(base + motbin_ptr)
-    m.extractMoveset(output_path)
+    m = Motbin(base + motbin_ptr, name)
+    m.extractMoveset()
     return m
         
 if __name__ == "__main__":
+    try:
+        initGameInstance(GameClass("TekkenGame-Win64-Shipping.exe" if TekkenVersion == 7 else "Cemu.exe"))
+    except Exception as e:
+        print(e)
+        os._exit(0)
+    
     extractedMovesetNames = []
     extractedMovesets = []
     key_prefix = "p" if TekkenVersion == 7 else "cemu_p"
@@ -1001,7 +1014,6 @@ if __name__ == "__main__":
             print("%s: Player %s already extracted, skipping extraction." % (playerKey, player_name))
             continue
             
-        
         moveset = exportMoveset(player_addr)
         extractedMovesetNames.append(player_name)
         extractedMovesets.append(moveset)

@@ -12,4 +12,4 @@ cemu_p4_ptr  = 0x1088D8B0
 
 
 # CEMU base address, need to be updated with every CEMU restart
-cemu_base     = 0x2F52A270000
+cemu_base     = 0x001915D3F0000

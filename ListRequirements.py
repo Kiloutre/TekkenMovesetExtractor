@@ -96,8 +96,10 @@ class Requirement:
         self.param = bToInt(data, 4, 4)
        
     def print(self):
+        if self.req == 33483:
+            return
         reqData = getRequirement(self.req)
-        reqName = '' if reqData == None else ("(%s) " % (reqData['desc']))
+        reqName = '' #if reqData == None else ("(%s) " % (reqData['desc']))
         print("R: %d %s| P: %d" % (self.req, reqName, self.param))
         
     def __eq__(self, other):
@@ -201,7 +203,7 @@ class Cancel:
         if printOnlyIfRequirements and len(self.requirements) == 0:
             return
         moveName = getMoveName(self.move_id, movelist) if movelist != None else ''
-        print("Move: %d [%s] \t 0x%x" % (self.move_id, moveName, self.requirements_addr))
+        print("Move: %d [%s]" % (self.move_id, moveName))
         print("Command: %s | %d->%d:%d" % (getMoveStr(self.command), self.frame_window_start, self.frame_window_end, self.starting_frame))
         for req in self.requirements:
             req.print()
@@ -676,6 +678,45 @@ if __name__ == "__main__":
     
     P1 = Player(GameAddresses.a['p1_ptr'], '1')
     P2 = Player(GameAddresses.a['p2_ptr'], '2')
+
+    P1.getCurrmoveData()
+    P1.curr_move_class.loadCancels()
+    P1.curr_move_class.loadCancelNames(P1.movelist)
+    p1_cancels = P1.curr_move_class.cancels
+    
+    P2.getCurrmoveData()
+    P2.curr_move_class.loadCancels()
+    P2.curr_move_class.loadCancelNames(P2.movelist)
+    p2_cancels = P2.curr_move_class.cancels
+    
+    valueList = {
+        846: [],
+        859: [],
+        860: [],
+        863: [],
+        864: [],
+    }
+    
+    p1_cancels = [cancel for cancel in p1_cancels if len(cancel.requirements) != 0]
+    p2_cancels = [cancel for cancel in p2_cancels if len(cancel.requirements) != 0]
+    
+    for c1, c2 in zip(p1_cancels, p2_cancels):
+        tag2_req = c1.requirements[0].req
+        t7_req = c2.requirements[0].req
+        
+        tag2_param = c1.requirements[0].param
+        t7_param = c2.requirements[0].param
+        
+        valueList[tag2_req].append((tag2_param, t7_param))
+
+        
+    for key in valueList.keys():
+        print("        't7_id': %d," % (key))
+        print("        'param_alias': {")
+        for tag2_val, t7_val in valueList[key]:
+            print('            %d: %d,' % (tag2_val, t7_val))
+        print('        }')
+    os._exit(0)
     
     """
     P1.loadRawCancels()

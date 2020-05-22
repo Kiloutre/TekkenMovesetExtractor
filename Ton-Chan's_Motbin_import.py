@@ -7,7 +7,7 @@ import json
 import os
 import sys
    
-T = GameClass("TekkenGame-Win64-Shipping.exe")
+T = None
 importVersion = "0.6.0"
 
 requirement_size = 0x8
@@ -26,6 +26,10 @@ throw_extras_size = 0xC
 throws_size = 0x10
 
 forbiddenMoves = ['Co_DA_Ground', '___________']
+
+def initGameInstance(GameInstance):
+    global T
+    T = GameInstance
 
 def getTag2RequirementAlias(req, param):
     requirement_detail = getTag2Requirement(req)
@@ -775,6 +779,11 @@ def loadMoveset(folderName):
 if __name__ == "__main__":
     if len(sys.argv) == 1:
         print("Usage: [FOLDER_NAME]")
+        os._exit(1)
+        
+    try:
+        initGameInstance(GameClass("TekkenGame-Win64-Shipping.exe"))
+    except:
         os._exit(1)
     
     importMoveset(GameAddresses.a['p1_ptr'], sys.argv[1])

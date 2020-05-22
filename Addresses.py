@@ -1,6 +1,5 @@
 # Python 3.6.5
 
-from sys import exit
 import win32api, ctypes
 from ctypes import wintypes as w
 from win32com.client import GetObject
@@ -36,8 +35,7 @@ class GameClass:
                 self.PID = int(p.Properties_('ProcessId'))
             
         if self.PID == 0:
-            print("Couldn't find process \"%s\"" % (processName))
-            exit(1)
+            raise Exception("Couldn't find process \"%s\"" % (processName))
     
         self.PROCESS = win32api.OpenProcess(0x1F0FFF, 0, self.PID)
         self.handle = self.PROCESS.handle
