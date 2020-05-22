@@ -10,6 +10,44 @@ import sys
 
 exportVersion = "0.7.0"
 
+class TekkenStructure:
+    def __init__(self, parent, addr=0, size=0):
+        self.addr = addr
+        self.T = parent.T
+        self.TekkenVersion = parent.TekkenVersion
+        self.ptr_size = parent.ptr_size
+        self.base = parent.base
+        self.endian = parent.endian
+        
+        self.readInt = parent.readInt
+        self.readBytes = parent.readBytes
+        self.readString = parent.readString
+        self.readStringPtr = parent.readStringPtr
+        self.bToInt = parent.bToInt
+        
+        if addr != 0 and size != 0:
+            self.data = self.readBytes(self.base + addr, size)
+        else:
+            self.data = None
+        return self.data
+        
+    def setStructureSizes(self):
+        self.Pushback_size = 0x10 if self.TekkenVersion == 7 else 0xC
+        self.PushbackExtradata_size = 0x2
+        self.Requirement_size = 0x8
+        self.CancelExtradata_size = 0x4
+        self.Cancel_size = 0x28 if self.TekkenVersion == 7 else 0x20
+        self.ReactionList_size = 0x70 if self.TekkenVersion == 7 else 0x50
+        self.HitCondition_size = 0x18 if self.TekkenVersion == 7 else 0xC
+        self.ExtraMoveProperty_size = 0xC
+        self.Move_size = 0xB0 if self.TekkenVersion == 7 else 0x70
+        self.Voiceclip_size = 0x4
+        self.InputExtradata_size = 8
+        self.InputSequence_size = 0x10 if self.TekkenVersion == 7 else 0x8
+        self.Projectile_size = 0xa8 if self.TekkenVersion == 7 else 0x88
+        self.ThrowExtra_size = 0xC
+        self.Throw_size = 0x10 if self.TekkenVersion == 7 else 0x8
+            
 class Exporter:
     def __init__(self, TekkenVersion):
         self.T = GameClass("TekkenGame-Win64-Shipping.exe" if TekkenVersion == 7 else "Cemu.exe")
@@ -17,22 +55,6 @@ class Exporter:
         self.ptr_size = 8 if TekkenVersion == 7 else 4
         self.base = 0x0 if TekkenVersion == 7 else GameAddresses.a['cemu_base']
         self.endian = 'little' if TekkenVersion == 7 else 'big'
-        
-        self.Pushback_size = 0x10 if TekkenVersion == 7 else 0xC
-        self.PushbackExtradata_size = 0x2
-        self.Requirement_size = 0x8
-        self.CancelExtradata_size = 0x4
-        self.Cancel_size = 0x28 if TekkenVersion == 7 else 0x20
-        self.ReactionList_size = 0x70 if TekkenVersion == 7 else 0x50
-        self.HitCondition_size = 0x18 if TekkenVersion == 7 else 0xC
-        self.ExtraMoveProperty_size = 0xC
-        self.Move_size = 0xB0 if TekkenVersion == 7 else 0x70
-        self.Voiceclip_size = 0x4
-        self.InputExtradata_size = 8
-        self.InputSequence_size = 0x10 if TekkenVersion == 7 else 0x8
-        self.Projectile_size = 0xa8 if TekkenVersion == 7 else 0x88
-        self.ThrowExtra_size = 0xC
-        self.Throw_size = 0x10 if TekkenVersion == 7 else 0x8
         
     def readInt(self, addr, len):
         return self.T.readInt(addr, len, endian=self.endian)
@@ -90,13 +112,10 @@ def getAnimEndPos(TekkenVersion, data):
     pos = [p+1 for p in pos if p != -1]
     return -1 if len(pos) == 0 else min(pos)
     
-class AnimData:
-    def __init__(self, name, data_addr, exporterObject):
-        self.exporter = exporterObject
+class AnimData():
+    def __init__(self, name, data_addr, parent):
+        TekkenStructure.__init__(self, parent, data_addr, 0)
         self.name = name
-        self.data = None    
-        self.addr = data_addr
-        return None
                 
     def getData(self):
         if self.data == None:
@@ -107,7 +126,7 @@ class AnimData:
             
             while read_size >= 16:
                 try:
-                    curr_bytes = self.exporter.readBytes(self.addr + offset, read_size)
+                    curr_bytes = self.readBytes(self.addr + offset, read_size)
                 except Exception as e:
                     read_size //= 2
                 else:
@@ -115,7 +134,7 @@ class AnimData:
                     if prev_bytes != None:
                         curr_bytes = prev_bytes + curr_bytes
                     
-                    endPos = getAnimEndPos(self.exporter.TekkenVersion, curr_bytes)
+                    endPos = getAnimEndPos(self.TekkenVersion, curr_bytes)
                     if endPos != -1:
                         offset += endPos
                         break
@@ -125,8 +144,8 @@ class AnimData:
                         break
                     offset += read_size
                     
-            self.data = None if offset == 0 else self.exporter.readBytes(self.addr, offset)
-            if self.exporter.TekkenVersion != 7:
+            self.data = None if offset == 0 else self.readBytes(self.addr, offset)
+            if self.TekkenVersion != 7:
                 try:
                     self.data = SwapAnimBytes(self.data)
                 except:
@@ -136,16 +155,15 @@ class AnimData:
     def __eq__(self, other):
         return self.name == other.name
         
-class Pushback:
-    def __init__(self, addr, exporterObject):
-        self.exporter = exporterObject
-        data = self.exporter.readBytes(self.exporter.base + addr, self.exporter.Pushback_size)
+class Pushback(TekkenStructure):
+    def __init__(self, addr, parent):
+        data = TekkenStructure.__init__(self, parent, addr, parent.Pushback_size)
         
-        self.val1 = self.exporter.bToInt(data, 0, 2)
-        self.val2 = self.exporter.bToInt(data, 2, 2)
-        self.val3 = self.exporter.bToInt(data, 4, 4)
+        self.val1 = self.bToInt(data, 0, 2)
+        self.val2 = self.bToInt(data, 2, 2)
+        self.val3 = self.bToInt(data, 4, 4)
         self.extra_index = -1
-        self.extra_addr = self.exporter.bToInt(data, 8, self.exporter.ptr_size)
+        self.extra_addr = self.bToInt(data, 8, self.ptr_size)
         
     def dict(self):
         return {
@@ -158,24 +176,22 @@ class Pushback:
     def setExtraIndex(self, idx):
         self.extra_index = idx
         
-class PushbackExtradata:
-    def __init__(self, addr, exporterObject):
-        self.exporter = exporterObject
-        data = self.exporter.readBytes(self.exporter.base + addr, self.exporter.PushbackExtradata_size)
+class PushbackExtradata(TekkenStructure):
+    def __init__(self, addr, parent):
+        data = TekkenStructure.__init__(self, parent, addr, parent.PushbackExtradata_size)
         
-        self.value = self.exporter.bToInt(data, 0, 2)
+        self.value = self.bToInt(data, 0, 2)
         
     def dict(self):
         return self.value
         
-class Requirement:
-    def __init__(self, addr, exporterObject):
-        self.exporter = exporterObject
-        self.addr = addr
+class Requirement(TekkenStructure):
+    def __init__(self, addr, parent):
+        data = TekkenStructure.__init__(self, parent, addr, parent.Requirement_size)
         
-        data = self.exporter.readBytes(self.exporter.base + addr, 0x8)
-        self.req = self.exporter.bToInt(data, 0, 4)
-        self.param = self.exporter.bToInt(data, 4, 4)
+        data = self.readBytes(self.base + addr, 0x8)
+        self.req = self.bToInt(data, 0, 4)
+        self.param = self.bToInt(data, 4, 4)
         self.id = -1
         
     def dict(self):
@@ -189,37 +205,34 @@ class Requirement:
         self.id = id
         
 class CancelExtradata:
-    def __init__(self, addr, exporterObject):
-        self.exporter = exporterObject
-        self.addr = addr
-        data = self.exporter.readBytes(self.exporter.base + addr, self.exporter.CancelExtradata_size)
-        self.value = self.exporter.bToInt(data, 0x0, 4)
+    def __init__(self, addr, parent):
+        data = TekkenStructure.__init__(self, parent, addr, parent.CancelExtradata_size)
+        
+        self.value = self.bToInt(data, 0x0, 4)
         
     def dict(self):
         return self.value
         
         
 class Cancel:
-    def __init__(self, addr, exporterObject):
-        self.exporter = exporterObject
-        self.addr = addr
-        data = self.exporter.readBytes(self.exporter.base + addr, self.exporter.Cancel_size)
+    def __init__(self, addr, parent):
+        data = TekkenStructure.__init__(self, parent, addr, parent.Cancel_size)
         
         
-        after_ptr_offset = 0x18 if self.exporter.TekkenVersion == 7 else 0x10
+        after_ptr_offset = 0x18 if self.TekkenVersion == 7 else 0x10
         
-        self.command = self.exporter.bToInt(data, 0x0, 8)
-        self.requirement_addr = self.exporter.bToInt(data, 0x8, self.exporter.ptr_size)
-        self.extradata_addr = self.exporter.bToInt(data, 0x8 + self.exporter.ptr_size, self.exporter.ptr_size)
-        self.frame_window_start = self.exporter.bToInt(data, after_ptr_offset, 4)
-        self.frame_window_end = self.exporter.bToInt(data, after_ptr_offset + 4, 4)
-        self.starting_frame = self.exporter.bToInt(data,after_ptr_offset + 8, 4)
-        self.move_id = self.exporter.bToInt(data, after_ptr_offset + 12, 2)
-        self.unknown = self.exporter.bToInt(data, after_ptr_offset + 14, 2)
+        self.command = self.bToInt(data, 0x0, 8)
+        self.requirement_addr = self.bToInt(data, 0x8, self.ptr_size)
+        self.extradata_addr = self.bToInt(data, 0x8 + self.ptr_size, self.ptr_size)
+        self.frame_window_start = self.bToInt(data, after_ptr_offset, 4)
+        self.frame_window_end = self.bToInt(data, after_ptr_offset + 4, 4)
+        self.starting_frame = self.bToInt(data,after_ptr_offset + 8, 4)
+        self.move_id = self.bToInt(data, after_ptr_offset + 12, 2)
+        self.unknown = self.bToInt(data, after_ptr_offset + 14, 2)
         
-        if self.exporter.TekkenVersion != 7: #swapping first two ints
-            t = self.exporter.bToInt(data, 0, 4)
-            t2 = self.exporter.bToInt(data, 0x4, 4) 
+        if self.TekkenVersion != 7: #swapping first two ints
+            t = self.bToInt(data, 0, 4)
+            t2 = self.bToInt(data, 0x4, 4) 
             self.command = (t2 << 32) | t
         
         self.id = -1
@@ -248,34 +261,33 @@ class Cancel:
         self.id = id
         
 class ReactionList:
-    def __init__(self, addr, exporterObject):
-        self.exporter = exporterObject
-        data = self.exporter.readBytes(self.exporter.base + addr, self.exporter.ReactionList_size)
+    def __init__(self, addr, parent):
+        data = TekkenStructure.__init__(self, parent, addr, parent.ReactionList_size)
         
-        self.ptr_list = [self.exporter.bToInt(data, i * self.exporter.ptr_size, self.exporter.ptr_size) for i in range(7)]
+        self.ptr_list = [self.bToInt(data, i * self.ptr_size, self.ptr_size) for i in range(7)]
         self.pushback_indexes = [-1] * 7
         
-        self.u1list = [self.exporter.bToInt(data, (self.exporter.ptr_size * 7) + i * 2, 2) for i in range(6)]
+        self.u1list = [self.bToInt(data, (self.ptr_size * 7) + i * 2, 2) for i in range(6)]
         
-        list_starting_offset = 0x50 if self.exporter.TekkenVersion == 7 else 0x34
-        self.reaction_list = [self.exporter.bToInt(data, list_starting_offset + (offset * 2), 2) for offset in range(0, 14)]
+        list_starting_offset = 0x50 if self.TekkenVersion == 7 else 0x34
+        self.reaction_list = [self.bToInt(data, list_starting_offset + (offset * 2), 2) for offset in range(0, 14)]
         
         
-        self.vertical_pushback = self.exporter.bToInt(data, list_starting_offset - 4, 2)
-        self.standing = self.exporter.bToInt(data, list_starting_offset + 0x0, 2)
-        self.crouch = self.exporter.bToInt(data, list_starting_offset + 0x2, 2)
-        self.ch = self.exporter.bToInt(data, list_starting_offset + 0x4, 2)
-        self.crouch_ch = self.exporter.bToInt(data, list_starting_offset + 0x6, 2)
-        self.left_side = self.exporter.bToInt(data, list_starting_offset + 0x8, 2)
-        self.left_side_crouch = self.exporter.bToInt(data, list_starting_offset + 0xA, 2)
-        self.right_side = self.exporter.bToInt(data, list_starting_offset + 0xC, 2)
-        self.right_side_crouch = self.exporter.bToInt(data, list_starting_offset + 0xE, 2)
-        self.back = self.exporter.bToInt(data, list_starting_offset + 0x10, 2)
-        self.back_crouch = self.exporter.bToInt(data, list_starting_offset + 0x12, 2)
-        self.block = self.exporter.bToInt(data, list_starting_offset + 0x14, 2)
-        self.crouch_block = self.exporter.bToInt(data, list_starting_offset + 0x16, 2)
-        self.wallslump = self.exporter.bToInt(data, list_starting_offset + 0x18, 2)
-        self.downed = self.exporter.bToInt(data, list_starting_offset + 0x1A, 2)
+        self.vertical_pushback = self.bToInt(data, list_starting_offset - 4, 2)
+        self.standing = self.bToInt(data, list_starting_offset + 0x0, 2)
+        self.crouch = self.bToInt(data, list_starting_offset + 0x2, 2)
+        self.ch = self.bToInt(data, list_starting_offset + 0x4, 2)
+        self.crouch_ch = self.bToInt(data, list_starting_offset + 0x6, 2)
+        self.left_side = self.bToInt(data, list_starting_offset + 0x8, 2)
+        self.left_side_crouch = self.bToInt(data, list_starting_offset + 0xA, 2)
+        self.right_side = self.bToInt(data, list_starting_offset + 0xC, 2)
+        self.right_side_crouch = self.bToInt(data, list_starting_offset + 0xE, 2)
+        self.back = self.bToInt(data, list_starting_offset + 0x10, 2)
+        self.back_crouch = self.bToInt(data, list_starting_offset + 0x12, 2)
+        self.block = self.bToInt(data, list_starting_offset + 0x14, 2)
+        self.crouch_block = self.bToInt(data, list_starting_offset + 0x16, 2)
+        self.wallslump = self.bToInt(data, list_starting_offset + 0x18, 2)
+        self.downed = self.bToInt(data, list_starting_offset + 0x1A, 2)
         
     def setIndexes(self, pushback_ptr, pushback_size):
         for i, ptr in enumerate(self.ptr_list):
@@ -303,16 +315,15 @@ class ReactionList:
         }
     
 class HitCondition:
-    def __init__(self, addr, exporterObject):
-        self.exporter = exporterObject
-        data = self.exporter.readBytes(self.exporter.base + addr, self.exporter.HitCondition_size)
+    def __init__(self, addr, parent):
+        data = TekkenStructure.__init__(self, parent, addr, parent.HitCondition_size)
         
         self.reaction_list_idx = -1
         self.requirement_idx = -1
         
-        self.requirement_addr = self.exporter.bToInt(data, 0x0, self.exporter.ptr_size)
-        self.damage = self.exporter.bToInt(data, self.exporter.ptr_size, 4)
-        self.reaction_list_addr = self.exporter.bToInt(data, self.exporter.ptr_size * 2, self.exporter.ptr_size)
+        self.requirement_addr = self.bToInt(data, 0x0, self.ptr_size)
+        self.damage = self.bToInt(data, self.ptr_size, 4)
+        self.reaction_list_addr = self.bToInt(data, self.ptr_size * 2, self.ptr_size)
         
     def dict(self):
         return {
@@ -328,14 +339,12 @@ class HitCondition:
         self.reaction_list_idx = id
     
 class ExtraMoveProperty:
-    def __init__(self, addr, exporterObject):
-        self.exporter = exporterObject
-        self.addr = addr
-        data = self.exporter.readBytes(self.exporter.base + addr, self.exporter.ExtraMoveProperty_size)
+    def __init__(self, addr, parent):
+        data = TekkenStructure.__init__(self, parent, addr, parent.ExtraMoveProperty_size)
         
-        self.type = self.exporter.bToInt(data, 0, 4)
-        self.id = self.exporter.bToInt(data, 4, 4)
-        self.value = self.exporter.bToInt(data, 8, 4)
+        self.type = self.bToInt(data, 0, 4)
+        self.id = self.bToInt(data, 4, 4)
+        self.value = self.bToInt(data, 8, 4)
             
     def dict(self):
         return {
@@ -345,100 +354,99 @@ class ExtraMoveProperty:
         }
     
 class Move:
-    def __init__(self, addr, exporterObject):
-        self.exporter = exporterObject
-        move_bytes = self.exporter.readBytes(self.exporter.base + addr, self.exporter.Move_size)
+    def __init__(self, addr, parent):
+        data = TekkenStructure.__init__(self, parent, addr, parent.Move_size)
         
-        if self.exporter.TekkenVersion == 7:
-            move_name_addr = self.exporter.bToInt(move_bytes, 0x0, self.exporter.ptr_size)
-            anim_name_addr = self.exporter.bToInt(move_bytes, 0x8, self.exporter.ptr_size)
-            anim_data_addr = self.exporter.bToInt(move_bytes, 0x10, self.exporter.ptr_size)
-            vuln = self.exporter.bToInt(move_bytes, 0x18, 4)
-            hit_level = self.exporter.bToInt(move_bytes, 0x1c, 4)
-            cancel_ptr = self.exporter.bToInt(move_bytes, 0x20, self.exporter.ptr_size)
+        if self.TekkenVersion == 7:
+            move_name_addr = self.bToInt(data, 0x0, self.ptr_size)
+            anim_name_addr = self.bToInt(data, 0x8, self.ptr_size)
+            anim_data_addr = self.bToInt(data, 0x10, self.ptr_size)
+            vuln = self.bToInt(data, 0x18, 4)
+            hit_level = self.bToInt(data, 0x1c, 4)
+            cancel_ptr = self.bToInt(data, 0x20, self.ptr_size)
             
-            u1 = 0#bToInt(move_bytes, 0x28, self.exporter.ptr_size) #pointer!!!
-            u2 = self.exporter.bToInt(move_bytes, 0x30, self.exporter.ptr_size) #NOT pointer
-            u3 = self.exporter.bToInt(move_bytes, 0x38, self.exporter.ptr_size)
-            u4 = self.exporter.bToInt(move_bytes, 0x40, self.exporter.ptr_size)
-            u5 = 0#bToInt(move_bytes, 0x48, self.exporter.ptr_size)  #pointer!!!
-            u6 = self.exporter.bToInt(move_bytes, 0x50, 4)
+            u1 = 0#bToInt(data, 0x28, self.ptr_size) #pointer!!!
+            u2 = self.bToInt(data, 0x30, self.ptr_size) #NOT pointer
+            u3 = self.bToInt(data, 0x38, self.ptr_size)
+            u4 = self.bToInt(data, 0x40, self.ptr_size)
+            u5 = 0#bToInt(data, 0x48, self.ptr_size)  #pointer!!!
+            u6 = self.bToInt(data, 0x50, 4)
             
-            transition = self.exporter.bToInt(move_bytes, 0x54, 2)
+            transition = self.bToInt(data, 0x54, 2)
             
-            u7 = self.exporter.bToInt(move_bytes, 0x56, 2)
-            u8 = self.exporter.bToInt(move_bytes, 0x58, 2)
-            u8_2 = self.exporter.bToInt(move_bytes, 0x5A, 2)
-            u9 = self.exporter.bToInt(move_bytes, 0x5C, 4)
+            u7 = self.bToInt(data, 0x56, 2)
+            u8 = self.bToInt(data, 0x58, 2)
+            u8_2 = self.bToInt(data, 0x5A, 2)
+            u9 = self.bToInt(data, 0x5C, 4)
             
-            on_hit_ptr = self.exporter.bToInt(move_bytes, 0x60, self.exporter.ptr_size)
-            anim_max_length = self.exporter.bToInt(move_bytes, 0x68, 4)
+            on_hit_ptr = self.bToInt(data, 0x60, self.ptr_size)
+            anim_max_length = self.bToInt(data, 0x68, 4)
             
-            u10 = self.exporter.bToInt(move_bytes, 0x6c, 4)
-            u11 = self.exporter.bToInt(move_bytes, 0x70, 4)
-            u12 = self.exporter.bToInt(move_bytes, 0x74, 4)
+            u10 = self.bToInt(data, 0x6c, 4)
+            u11 = self.bToInt(data, 0x70, 4)
+            u12 = self.bToInt(data, 0x74, 4)
             
-            voiceclip_ptr = self.exporter.bToInt(move_bytes, 0x78, self.exporter.ptr_size) #can_be_null
-            extra_properties_ptr = self.exporter.bToInt(move_bytes, 0x80, self.exporter.ptr_size) #can_be_null
+            voiceclip_ptr = self.bToInt(data, 0x78, self.ptr_size) #can_be_null
+            extra_properties_ptr = self.bToInt(data, 0x80, self.ptr_size) #can_be_null
             
-            u13 = 0#bToInt(move_bytes, 0x88, 8) #pointer!!!
-            u14 = 0#bToInt(move_bytes, 0x90, 8) #pointer!!!
-            u15 = self.exporter.bToInt(move_bytes, 0x98, 4)
+            u13 = 0#bToInt(data, 0x88, 8) #pointer!!!
+            u14 = 0#bToInt(data, 0x90, 8) #pointer!!!
+            u15 = self.bToInt(data, 0x98, 4)
             
-            hitbox_location = self.exporter.bToInt(move_bytes, 0x9c, 4)
-            attack_startup = self.exporter.bToInt(move_bytes, 0xa0, 4)
-            attack_recovery = self.exporter.bToInt(move_bytes, 0xa4, 4)
+            hitbox_location = self.bToInt(data, 0x9c, 4)
+            attack_startup = self.bToInt(data, 0xa0, 4)
+            attack_recovery = self.bToInt(data, 0xa4, 4)
             
-            u16 = self.exporter.bToInt(move_bytes, 0xa8, 2)
-            u17 = self.exporter.bToInt(move_bytes, 0xaa, 2)
-            u18 = self.exporter.bToInt(move_bytes, 0xac, 4)
+            u16 = self.bToInt(data, 0xa8, 2)
+            u17 = self.bToInt(data, 0xaa, 2)
+            u18 = self.bToInt(data, 0xac, 4)
         else:
-            move_name_addr = self.exporter.bToInt(move_bytes, 0x0, self.exporter.ptr_size)
-            anim_name_addr = self.exporter.bToInt(move_bytes, 0x4, self.exporter.ptr_size)
-            anim_data_addr = self.exporter.bToInt(move_bytes, 0x8, self.exporter.ptr_size)
-            vuln = self.exporter.bToInt(move_bytes, 0xC, 4)
-            hit_level = self.exporter.bToInt(move_bytes, 0x10, 4)
-            cancel_ptr = self.exporter.bToInt(move_bytes, 0x14, self.exporter.ptr_size)
+            move_name_addr = self.bToInt(data, 0x0, self.ptr_size)
+            anim_name_addr = self.bToInt(data, 0x4, self.ptr_size)
+            anim_data_addr = self.bToInt(data, 0x8, self.ptr_size)
+            vuln = self.bToInt(data, 0xC, 4)
+            hit_level = self.bToInt(data, 0x10, 4)
+            cancel_ptr = self.bToInt(data, 0x14, self.ptr_size)
             
-            u1 = 0#bToInt(move_bytes, 0x18, self.exporter.ptr_size) #pointer!!!
-            u2 = self.exporter.bToInt(move_bytes, 0x1c, self.exporter.ptr_size) #NOT pointer
-            u3 = self.exporter.bToInt(move_bytes, 0x20, self.exporter.ptr_size)
-            u4 = self.exporter.bToInt(move_bytes, 0x24, self.exporter.ptr_size)
-            u5 = 0#bToInt(move_bytes, 0x28, self.exporter.ptr_size) #pointer!!!
-            u6 = self.exporter.bToInt(move_bytes, 0x2c, 4)
+            u1 = 0#bToInt(data, 0x18, self.ptr_size) #pointer!!!
+            u2 = self.bToInt(data, 0x1c, self.ptr_size) #NOT pointer
+            u3 = self.bToInt(data, 0x20, self.ptr_size)
+            u4 = self.bToInt(data, 0x24, self.ptr_size)
+            u5 = 0#bToInt(data, 0x28, self.ptr_size) #pointer!!!
+            u6 = self.bToInt(data, 0x2c, 4)
             
-            transition = self.exporter.bToInt(move_bytes, 0x30, 2)
+            transition = self.bToInt(data, 0x30, 2)
             
-            u7 = self.exporter.bToInt(move_bytes, 0x32, 2) 
-            u8 = self.exporter.bToInt(move_bytes, 0x36, 2)
-            u8_2 = self.exporter.bToInt(move_bytes, 0x34, 2) #inverted offsets for 0x36 & 0x34
+            u7 = self.bToInt(data, 0x32, 2) 
+            u8 = self.bToInt(data, 0x36, 2)
+            u8_2 = self.bToInt(data, 0x34, 2) #inverted offsets for 0x36 & 0x34
             u9 = 0 
             
-            on_hit_ptr = self.exporter.bToInt(move_bytes, 0x38, self.exporter.ptr_size)
-            anim_max_length = self.exporter.bToInt(move_bytes, 0x3c, 4)
+            on_hit_ptr = self.bToInt(data, 0x38, self.ptr_size)
+            anim_max_length = self.bToInt(data, 0x3c, 4)
             
-            u10 = self.exporter.bToInt(move_bytes, 0x40, 4)
-            u11 = self.exporter.bToInt(move_bytes, 0x44, 4)
-            u12 = self.exporter.bToInt(move_bytes, 0x48, 4)
+            u10 = self.bToInt(data, 0x40, 4)
+            u11 = self.bToInt(data, 0x44, 4)
+            u12 = self.bToInt(data, 0x48, 4)
             
-            voiceclip_ptr = self.exporter.bToInt(move_bytes, 0x4c, self.exporter.ptr_size) #can_be_null
-            extra_properties_ptr = self.exporter.bToInt(move_bytes, 0x50, self.exporter.ptr_size) #can_be_null
+            voiceclip_ptr = self.bToInt(data, 0x4c, self.ptr_size) #can_be_null
+            extra_properties_ptr = self.bToInt(data, 0x50, self.ptr_size) #can_be_null
             
-            u13 = 0#bToInt(move_bytes, 0x54, 4) #pointer!!!
-            u14 = 0#bToInt(move_bytes, 0x58, 4) #pointer!!!
-            u15 = self.exporter.bToInt(move_bytes, 0x5c, 4)
+            u13 = 0#bToInt(data, 0x54, 4) #pointer!!!
+            u14 = 0#bToInt(data, 0x58, 4) #pointer!!!
+            u15 = self.bToInt(data, 0x5c, 4)
             
-            hitbox_location = self.exporter.bToInt(move_bytes, 0x60, 4, ed='little')
-            attack_startup = self.exporter.bToInt(move_bytes, 0x64, 4)
-            attack_recovery = self.exporter.bToInt(move_bytes, 0x68, 4)
+            hitbox_location = self.bToInt(data, 0x60, 4, ed='little')
+            attack_startup = self.bToInt(data, 0x64, 4)
+            attack_recovery = self.bToInt(data, 0x68, 4)
             
-            u16 = self.exporter.bToInt(move_bytes, 0x6c, 2) 
-            u17 = self.exporter.bToInt(move_bytes, 0x6e, 2) 
+            u16 = self.bToInt(data, 0x6c, 2) 
+            u17 = self.bToInt(data, 0x6e, 2) 
             u18 = 0
             
         
-        self.name = self.exporter.readString(self.exporter.base + move_name_addr)
-        self.anim_name = self.exporter.readString(self.exporter.base + anim_name_addr)
+        self.name = self.readString(self.base + move_name_addr)
+        self.anim_name = self.readString(self.base + anim_name_addr)
         self.anim_addr = anim_data_addr
         self.vuln = vuln
         self.hitlevel = hit_level
@@ -472,7 +480,7 @@ class Move:
         self.u17 = u17
         self.u18 = u18
         
-        self.anim = AnimData(self.anim_name, self.exporter.base + self.anim_addr, self.exporter)
+        self.anim = AnimData(self.anim_name, self.base + self.anim_addr, self)
         self.cancel_idx = -1
         self.hit_condition_idx = -1
         self.extra_properties_idx = -1
@@ -534,23 +542,20 @@ class Move:
         self.id = id
     
 class Voiceclip:
-    def __init__(self, addr, exporterObject):
-        self.addr = addr
-        self.exporter = exporterObject
+    def __init__(self, addr, parent):
+        data = TekkenStructure.__init__(self, parent, addr, parent.Voiceclip_size)
         
-        self.id = self.exporter.readInt(self.exporter.base + addr, 4)
+        self.value = self.bToInt(data, 0, 4)
 
     def dict(self):
-        return self.id
+        return self.value
         
 class InputExtradata:
-    def __init__(self, addr, exporterObject):
-        self.exporter = exporterObject
-        self.addr = addr
-        data = self.exporter.readBytes(self.exporter.base + addr, self.exporter.InputExtradata_size)
+    def __init__(self, addr, parent):
+        data = TekkenStructure.__init__(self, parent, addr, parent.InputExtradata_size)
         
-        self.u1 = self.exporter.bToInt(data, 0, 4)
-        self.u2 = self.exporter.bToInt(data, 4, 4)
+        self.u1 = self.bToInt(data, 0, 4)
+        self.u2 = self.bToInt(data, 4, 4)
         
     def dict(self):
         return {
@@ -559,21 +564,19 @@ class InputExtradata:
         }
         
 class InputSequence:
-    def __init__(self, addr, exporterObject):
-        self.exporter = exporterObject
-        self.addr = addr
-        data = self.exporter.readBytes(self.exporter.base + addr, self.exporter.InputSequence_size)
+    def __init__(self, addr, parent):
+        data = TekkenStructure.__init__(self, parent, addr, parent.InputSequence_size)
         
-        if self.exporter.TekkenVersion == 7:
-            self.u1 = self.exporter.bToInt(data, 0, 2)
-            self.u2 = self.exporter.bToInt(data, 2, 2)
-            self.u3 = self.exporter.bToInt(data, 4, 4)
-            self.extradata_addr = self.exporter.bToInt(data, 8, self.exporter.ptr_size)
+        if self.TekkenVersion == 7:
+            self.u1 = self.bToInt(data, 0, 2)
+            self.u2 = self.bToInt(data, 2, 2)
+            self.u3 = self.bToInt(data, 4, 4)
+            self.extradata_addr = self.bToInt(data, 8, self.ptr_size)
         else:
-            self.u1 = self.exporter.bToInt(data, 1, 1)
-            self.u2 = self.exporter.bToInt(data, 2, 2)
-            self.u3 = self.exporter.bToInt(data, 0, 1)
-            self.extradata_addr = self.exporter.bToInt(data, 4, self.exporter.ptr_size)
+            self.u1 = self.bToInt(data, 1, 1)
+            self.u2 = self.bToInt(data, 2, 2)
+            self.u3 = self.bToInt(data, 0, 1)
+            self.extradata_addr = self.bToInt(data, 4, self.ptr_size)
         
         self.extradata_idx = -1
         
@@ -589,23 +592,21 @@ class InputSequence:
         }
         
 class Projectile:
-    def __init__(self, addr, exporterObject):
-        self.exporter = exporterObject
-        self.addr = addr
-        data = self.exporter.readBytes(self.exporter.base + addr, self.exporter.Projectile_size)
+    def __init__(self, addr, parent):
+        data = TekkenStructure.__init__(self, parent, addr, parent.Projectile_size)
         
-        if self.exporter.TekkenVersion == 7:
-            self.u1 = [self.exporter.bToInt(data, offset * 2, 2) for offset in range(48)]
+        if self.TekkenVersion == 7:
+            self.u1 = [self.bToInt(data, offset * 2, 2) for offset in range(48)]
             
-            self.hit_condition_addr = self.exporter.bToInt(data, 0x60, self.exporter.ptr_size)
-            self.cancel_addr = self.exporter.bToInt(data, 0x68, self.exporter.ptr_size)
+            self.hit_condition_addr = self.bToInt(data, 0x60, self.ptr_size)
+            self.cancel_addr = self.bToInt(data, 0x68, self.ptr_size)
             
-            self.u2 = [self.exporter.bToInt(data, 0x70 + (offset * 2), 2) for offset in range(28)]
+            self.u2 = [self.bToInt(data, 0x70 + (offset * 2), 2) for offset in range(28)]
         else:
             self.u1 = [0] * 48
             
-            self.hit_condition_addr = 0#bToInt(data, 0x60, self.exporter.ptr_size)
-            self.cancel_addr = 0#bToInt(data, 0x68, self.exporter.ptr_size)
+            self.hit_condition_addr = 0#bToInt(data, 0x60, self.ptr_size)
+            self.cancel_addr = 0#bToInt(data, 0x68, self.ptr_size)
             
             self.u2 = [0] * 28
         
@@ -627,13 +628,11 @@ class Projectile:
         self.cancel_idx = cancel_idx
         
 class ThrowExtra:
-    def __init__(self, addr, exporterObject):
-        self.exporter = exporterObject
-        self.addr = addr
-        data = self.exporter.readBytes(self.exporter.base + addr, self.exporter.ThrowExtra_size)
+    def __init__(self, addr, parent):
+        data = TekkenStructure.__init__(self, parent, addr, parent.ThrowExtra_size)
         
-        self.u1 = self.exporter.bToInt(data, 0x0, 4)
-        self.u2 = [self.exporter.bToInt(data, 4 + offset * 2, 2) for offset in range(4)]
+        self.u1 = self.bToInt(data, 0x0, 4)
+        self.u2 = [self.bToInt(data, 4 + offset * 2, 2) for offset in range(4)]
 
     def dict(self):
         return {
@@ -642,13 +641,11 @@ class ThrowExtra:
         }
         
 class Throw:
-    def __init__(self, addr, exporterObject):
-        self.exporter = exporterObject
-        self.addr = addr
-        data = self.exporter.readBytes(self.exporter.base + addr, self.exporter.Throw_size)
+    def __init__(self, addr, parent):
+        data = TekkenStructure.__init__(self, parent, addr, parent.Throw_size)
         
-        self.u1 = self.exporter.bToInt(data, 0, self.exporter.ptr_size)
-        self.unknown_addr = self.exporter.bToInt(data, self.exporter.ptr_size, self.exporter.ptr_size)
+        self.u1 = self.bToInt(data, 0, self.ptr_size)
+        self.unknown_addr = self.bToInt(data, self.ptr_size, self.ptr_size)
         
         self.unknown_idx = -1
         
@@ -661,113 +658,113 @@ class Throw:
     def setUnknownIdx(self, idx):
         self.unknown_idx = idx
         
-class Motbin:
+class Motbin(TekkenStructure):
     def __init__(self, addr, exporterObject, name=''):
-        self.addr = addr
-        self.exporter = exporterObject
+        TekkenStructure.__init__(self, exporterObject, addr, size=0)
+        TekkenStructure.setStructureSizes(self)
     
         self.name = name
-        self.version = "Tekken7" if self.exporter.TekkenVersion == 7 else "Tag2"
+        self.version = "Tekken7" if self.TekkenVersion == 7 else "Tag2"
         self.extraction_date = datetime.now(timezone.utc).__str__()
         self.extraction_path = ''
     
         character_name_addr = 0x8
-        creator_name_addr = character_name_addr + self.exporter.ptr_size
-        date_addr = creator_name_addr + self.exporter.ptr_size
-        fulldate_addr = date_addr + self.exporter.ptr_size
+        creator_name_addr = character_name_addr + self.ptr_size
+        date_addr = creator_name_addr + self.ptr_size
+        fulldate_addr = date_addr + self.ptr_size
 
         try:
-            self.character_name = self.exporter.readStringPtr(addr + character_name_addr)
+            self.character_name = self.readStringPtr(addr + character_name_addr)
             self.name = self.character_name[1:-1] if name == '' else name
-            self.creator_name = self.exporter.readStringPtr(addr + creator_name_addr)
-            self.date = self.exporter.readStringPtr(addr + date_addr)
-            self.fulldate = self.exporter.readStringPtr(addr + fulldate_addr)
+            self.creator_name = self.readStringPtr(addr + creator_name_addr)
+            self.date = self.readStringPtr(addr + date_addr)
+            self.fulldate = self.readStringPtr(addr + fulldate_addr)
         
-            reaction_list_ptr = 0x150 if self.exporter.TekkenVersion == 7 else 0x140
-            reaction_list_size = reaction_list_ptr + self.exporter.ptr_size
-            self.reaction_list_ptr = self.exporter.readInt(addr + reaction_list_ptr, self.exporter.ptr_size)
-            self.reaction_list_size = self.exporter.readInt(addr + reaction_list_size, self.exporter.ptr_size)
+            reaction_list_ptr = 0x150 if self.TekkenVersion == 7 else 0x140
+            reaction_list_size = reaction_list_ptr + self.ptr_size
+            self.reaction_list_ptr = self.readInt(addr + reaction_list_ptr, self.ptr_size)
+            self.reaction_list_size = self.readInt(addr + reaction_list_size, self.ptr_size)
             
-            requirements_ptr = 0x160 if self.exporter.TekkenVersion == 7 else 0x148
-            requirement_count = requirements_ptr + self.exporter.ptr_size
-            self.requirements_ptr = self.exporter.readInt(addr + requirements_ptr, self.exporter.ptr_size)
-            self.requirement_count = self.exporter.readInt(addr + requirement_count, self.exporter.ptr_size)
+            requirements_ptr = 0x160 if self.TekkenVersion == 7 else 0x148
+            requirement_count = requirements_ptr + self.ptr_size
+            self.requirements_ptr = self.readInt(addr + requirements_ptr, self.ptr_size)
+            self.requirement_count = self.readInt(addr + requirement_count, self.ptr_size)
             
-            hit_conditions_ptr = 0x170 if self.exporter.TekkenVersion == 7 else 0x150
-            hit_conditions_size = hit_conditions_ptr + self.exporter.ptr_size
-            self.hit_conditions_ptr = self.exporter.readInt(addr + hit_conditions_ptr, self.exporter.ptr_size)
-            self.hit_conditions_size = self.exporter.readInt(addr + hit_conditions_size, self.exporter.ptr_size)
+            hit_conditions_ptr = 0x170 if self.TekkenVersion == 7 else 0x150
+            hit_conditions_size = hit_conditions_ptr + self.ptr_size
+            self.hit_conditions_ptr = self.readInt(addr + hit_conditions_ptr, self.ptr_size)
+            self.hit_conditions_size = self.readInt(addr + hit_conditions_size, self.ptr_size)
             
-            projectile_ptr = 0x180 if self.exporter.TekkenVersion == 7 else 0x158
-            projectile_size = projectile_ptr + self.exporter.ptr_size
-            self.projectile_ptr = self.exporter.readInt(addr + projectile_ptr, self.exporter.ptr_size)
-            self.projectile_size = self.exporter.readInt(addr + projectile_size, self.exporter.ptr_size)
+            projectile_ptr = 0x180 if self.TekkenVersion == 7 else 0x158
+            projectile_size = projectile_ptr + self.ptr_size
+            self.projectile_ptr = self.readInt(addr + projectile_ptr, self.ptr_size)
+            self.projectile_size = self.readInt(addr + projectile_size, self.ptr_size)
             
-            pushback_ptr = 0x190 if self.exporter.TekkenVersion == 7 else 0x160
-            pushback_list_size = pushback_ptr + self.exporter.ptr_size
-            self.pushback_ptr = self.exporter.readInt(addr + pushback_ptr, self.exporter.ptr_size)
-            self.pushback_list_size = self.exporter.readInt(addr + pushback_list_size, self.exporter.ptr_size)
+            pushback_ptr = 0x190 if self.TekkenVersion == 7 else 0x160
+            pushback_list_size = pushback_ptr + self.ptr_size
+            self.pushback_ptr = self.readInt(addr + pushback_ptr, self.ptr_size)
+            self.pushback_list_size = self.readInt(addr + pushback_list_size, self.ptr_size)
 
-            pushback_extradata_ptr = 0x1A0 if self.exporter.TekkenVersion == 7 else 0x168
-            pushback_extradata_size = pushback_extradata_ptr + self.exporter.ptr_size
-            self.pushback_extradata_ptr = self.exporter.readInt(addr + pushback_extradata_ptr, self.exporter.ptr_size)
-            self.pushback_extradata_size = self.exporter.readInt(addr + pushback_extradata_size, self.exporter.ptr_size)
+            pushback_extradata_ptr = 0x1A0 if self.TekkenVersion == 7 else 0x168
+            pushback_extradata_size = pushback_extradata_ptr + self.ptr_size
+            self.pushback_extradata_ptr = self.readInt(addr + pushback_extradata_ptr, self.ptr_size)
+            self.pushback_extradata_size = self.readInt(addr + pushback_extradata_size, self.ptr_size)
 
-            cancel_head_ptr = 0x1b0 if self.exporter.TekkenVersion == 7 else 0x170
-            cancel_list_size = cancel_head_ptr + self.exporter.ptr_size
-            self.cancel_head_ptr = self.exporter.readInt(addr + cancel_head_ptr, self.exporter.ptr_size)
-            self.cancel_list_size = self.exporter.readInt(addr + cancel_list_size, self.exporter.ptr_size)
+            cancel_head_ptr = 0x1b0 if self.TekkenVersion == 7 else 0x170
+            cancel_list_size = cancel_head_ptr + self.ptr_size
+            self.cancel_head_ptr = self.readInt(addr + cancel_head_ptr, self.ptr_size)
+            self.cancel_list_size = self.readInt(addr + cancel_list_size, self.ptr_size)
 
-            group_cancel_head_ptr = 0x1c0 if self.exporter.TekkenVersion == 7 else 0x178
-            group_cancel_list_size = group_cancel_head_ptr + self.exporter.ptr_size
-            self.group_cancel_head_ptr = self.exporter.readInt(addr + group_cancel_head_ptr, self.exporter.ptr_size)
-            self.group_cancel_list_size = self.exporter.readInt(addr + group_cancel_list_size, self.exporter.ptr_size)
+            group_cancel_head_ptr = 0x1c0 if self.TekkenVersion == 7 else 0x178
+            group_cancel_list_size = group_cancel_head_ptr + self.ptr_size
+            self.group_cancel_head_ptr = self.readInt(addr + group_cancel_head_ptr, self.ptr_size)
+            self.group_cancel_list_size = self.readInt(addr + group_cancel_list_size, self.ptr_size)
 
-            cancel_extradata_head_ptr = 0x1d0 if self.exporter.TekkenVersion == 7 else 0x180
-            cancel_extradata_list_size = cancel_extradata_head_ptr + self.exporter.ptr_size
-            self.cancel_extradata_head_ptr = self.exporter.readInt(addr + cancel_extradata_head_ptr, self.exporter.ptr_size)
-            self.cancel_extradata_list_size = self.exporter.readInt(addr + cancel_extradata_list_size,self.exporter.ptr_size)
+            cancel_extradata_head_ptr = 0x1d0 if self.TekkenVersion == 7 else 0x180
+            cancel_extradata_list_size = cancel_extradata_head_ptr + self.ptr_size
+            self.cancel_extradata_head_ptr = self.readInt(addr + cancel_extradata_head_ptr, self.ptr_size)
+            self.cancel_extradata_list_size = self.readInt(addr + cancel_extradata_list_size, self.ptr_size)
 
-            extra_move_properties_ptr = 0x1e0 if self.exporter.TekkenVersion == 7 else 0x188
-            extra_move_properties_size = extra_move_properties_ptr + self.exporter.ptr_size
-            self.extra_move_properties_ptr = self.exporter.readInt(addr + extra_move_properties_ptr, self.exporter.ptr_size)
-            self.extra_move_properties_size = self.exporter.readInt(addr + extra_move_properties_size, self.exporter.ptr_size)
+            extra_move_properties_ptr = 0x1e0 if self.TekkenVersion == 7 else 0x188
+            extra_move_properties_size = extra_move_properties_ptr + self.ptr_size
+            self.extra_move_properties_ptr = self.readInt(addr + extra_move_properties_ptr, self.ptr_size)
+            self.extra_move_properties_size = self.readInt(addr + extra_move_properties_size, self.ptr_size)
 
-            movelist_head_ptr = 0x210 if self.exporter.TekkenVersion == 7 else 0x1a0
-            movelist_size = movelist_head_ptr + self.exporter.ptr_size
-            self.movelist_head_ptr = self.exporter.readInt(addr + movelist_head_ptr, self.exporter.ptr_size)
-            self.movelist_size = self.exporter.readInt(addr + movelist_size, self.exporter.ptr_size)
+            movelist_head_ptr = 0x210 if self.TekkenVersion == 7 else 0x1a0
+            movelist_size = movelist_head_ptr + self.ptr_size
+            self.movelist_head_ptr = self.readInt(addr + movelist_head_ptr, self.ptr_size)
+            self.movelist_size = self.readInt(addr + movelist_size, self.ptr_size)
 
-            voiceclip_list_ptr = 0x220 if self.exporter.TekkenVersion == 7 else 0x1a8
-            voiceclip_list_size = voiceclip_list_ptr + self.exporter.ptr_size
-            self.voiceclip_list_ptr = self.exporter.readInt(addr + voiceclip_list_ptr, self.exporter.ptr_size)
-            self.voiceclip_list_size = self.exporter.readInt(addr + voiceclip_list_size, self.exporter.ptr_size)
+            voiceclip_list_ptr = 0x220 if self.TekkenVersion == 7 else 0x1a8
+            voiceclip_list_size = voiceclip_list_ptr + self.ptr_size
+            self.voiceclip_list_ptr = self.readInt(addr + voiceclip_list_ptr, self.ptr_size)
+            self.voiceclip_list_size = self.readInt(addr + voiceclip_list_size, self.ptr_size)
 
-            input_sequence_ptr = 0x230 if self.exporter.TekkenVersion == 7 else 0x1b0
-            input_sequence_size = input_sequence_ptr + self.exporter.ptr_size
-            self.input_sequence_ptr = self.exporter.readInt(addr + input_sequence_ptr, self.exporter.ptr_size)
-            self.input_sequence_size = self.exporter.readInt(addr + input_sequence_size, self.exporter.ptr_size)
+            input_sequence_ptr = 0x230 if self.TekkenVersion == 7 else 0x1b0
+            input_sequence_size = input_sequence_ptr + self.ptr_size
+            self.input_sequence_ptr = self.readInt(addr + input_sequence_ptr, self.ptr_size)
+            self.input_sequence_size = self.readInt(addr + input_sequence_size, self.ptr_size)
 
-            input_extradata_ptr = 0x240 if self.exporter.TekkenVersion == 7 else 0x1b8
-            input_extradata_size = input_extradata_ptr + self.exporter.ptr_size
-            self.input_extradata_ptr = self.exporter.readInt(addr + input_extradata_ptr, self.exporter.ptr_size)
-            self.input_extradata_size = self.exporter.readInt(addr + input_extradata_size, self.exporter.ptr_size)
+            input_extradata_ptr = 0x240 if self.TekkenVersion == 7 else 0x1b8
+            input_extradata_size = input_extradata_ptr + self.ptr_size
+            self.input_extradata_ptr = self.readInt(addr + input_extradata_ptr, self.ptr_size)
+            self.input_extradata_size = self.readInt(addr + input_extradata_size, self.ptr_size)
 
-            throw_extras_ptr = 0x260 if self.exporter.TekkenVersion == 7 else 0x1c8
-            throw_extras_size = throw_extras_ptr + self.exporter.ptr_size
-            self.throw_extras_ptr = self.exporter.readInt(addr + throw_extras_ptr, self.exporter.ptr_size)
-            self.throw_extras_size = self.exporter.readInt(addr + throw_extras_size, self.exporter.ptr_size)
+            throw_extras_ptr = 0x260 if self.TekkenVersion == 7 else 0x1c8
+            throw_extras_size = throw_extras_ptr + self.ptr_size
+            self.throw_extras_ptr = self.readInt(addr + throw_extras_ptr, self.ptr_size)
+            self.throw_extras_size = self.readInt(addr + throw_extras_size, self.ptr_size)
 
-            throws_ptr = 0x270 if self.exporter.TekkenVersion == 7 else 0x1d0
-            throws_size = throws_ptr + self.exporter.ptr_size
-            self.throws_ptr = self.exporter.readInt(addr + throws_ptr, self.exporter.ptr_size)
-            self.throws_size = self.exporter.readInt(addr + throws_size, self.exporter.ptr_size)
+            throws_ptr = 0x270 if self.TekkenVersion == 7 else 0x1d0
+            throws_size = throws_ptr + self.ptr_size
+            self.throws_ptr = self.readInt(addr + throws_ptr, self.ptr_size)
+            self.throws_size = self.readInt(addr + throws_size, self.ptr_size)
             
             aliasCopySize = 0x2a
-            aliasOffset = fulldate_addr + self.exporter.ptr_size
+            aliasOffset = fulldate_addr + self.ptr_size
             aliasCount = 148
         
-            self.aliases = [self.exporter.readInt(addr + aliasOffset + (offset * 2), 2) for offset in range(0, aliasCount)]
+            self.aliases = [self.readInt(addr + aliasOffset + (offset * 2), 2) for offset in range(0, aliasCount)]
             
         except Exception as e:
             print("Invalid character or moveset.")
@@ -837,7 +834,7 @@ class Motbin:
         print("Saving data...")
         
         if path == '':
-            path = "./%d_%s" % (self.exporter.TekkenVersion, self.name)
+            path = "./%d_%s" % (self.TekkenVersion, self.name)
          
         self.extraction_path = path
            
@@ -866,105 +863,105 @@ class Motbin:
         
         print("Reading input extradata...")
         for i in range(self.input_extradata_size + 1):
-            input_extradata = InputExtradata(self.input_extradata_ptr + (i * self.exporter.InputExtradata_size), self.exporter)
+            input_extradata = InputExtradata(self.input_extradata_ptr + (i * self.InputExtradata_size), self)
             self.input_extradata.append(input_extradata.dict())
         
         print("Reading input sequences...")
         for i in range(self.input_sequence_size):
-            input_sequence = InputSequence(self.input_sequence_ptr + (i * self.exporter.InputSequence_size), self.exporter)
-            input_sequence.setExtradataId((input_sequence.extradata_addr - self.input_extradata_ptr) // self.exporter.InputExtradata_size)
+            input_sequence = InputSequence(self.input_sequence_ptr + (i * self.InputSequence_size), self)
+            input_sequence.setExtradataId((input_sequence.extradata_addr - self.input_extradata_ptr) // self.InputExtradata_size)
             self.input_sequences.append(input_sequence.dict())
             
         print("Reading requirements...")
         for i in range(self.requirement_count):
-            condition = Requirement(self.requirements_ptr + (i * self.exporter.Requirement_size), self.exporter)
+            condition = Requirement(self.requirements_ptr + (i * self.Requirement_size), self)
             condition.setId(i)
             self.requirements.append(condition.dict())
             
         print("Reading cancels extradatas...")
         for i in range(self.cancel_extradata_list_size):
-            extradata = CancelExtradata(self.cancel_extradata_head_ptr + (i * self.exporter.CancelExtradata_size), self.exporter)
+            extradata = CancelExtradata(self.cancel_extradata_head_ptr + (i * self.CancelExtradata_size), self)
             self.cancel_extradata.append(extradata.dict())
         
         print("Reading cancels...")
         for i in range(self.cancel_list_size):
-            cancel = Cancel(self.cancel_head_ptr + (i * self.exporter.Cancel_size), self.exporter)
-            cancel.setRequirementId((cancel.requirement_addr - self.requirements_ptr) // self.exporter.Requirement_size)
-            cancel.setExtradataId((cancel.extradata_addr - self.cancel_extradata_head_ptr) // self.exporter.CancelExtradata_size)
+            cancel = Cancel(self.cancel_head_ptr + (i * self.Cancel_size), self)
+            cancel.setRequirementId((cancel.requirement_addr - self.requirements_ptr) // self.Requirement_size)
+            cancel.setExtradataId((cancel.extradata_addr - self.cancel_extradata_head_ptr) // self.CancelExtradata_size)
             cancel.setId(i)
             self.cancels.append(cancel.dict())
         
         print("Reading grouped cancels...")
         for i in range(self.group_cancel_list_size):
-            cancel = Cancel(self.group_cancel_head_ptr + (i * self.exporter.Cancel_size), self.exporter)
-            cancel.setRequirementId((cancel.requirement_addr - self.requirements_ptr) // self.exporter.Requirement_size)
-            cancel.setExtradataId((cancel.extradata_addr - self.cancel_extradata_head_ptr) // self.exporter.CancelExtradata_size)
+            cancel = Cancel(self.group_cancel_head_ptr + (i * self.Cancel_size), self)
+            cancel.setRequirementId((cancel.requirement_addr - self.requirements_ptr) // self.Requirement_size)
+            cancel.setExtradataId((cancel.extradata_addr - self.cancel_extradata_head_ptr) // self.CancelExtradata_size)
             cancel.setId(i)
             self.group_cancels.append(cancel.dict())
         
         print("Reading pushbacks extradatas...")
         for i in range(self.pushback_extradata_size):
-            pushback_extra = PushbackExtradata(self.pushback_extradata_ptr + (i * self.exporter.PushbackExtradata_size), self.exporter)
+            pushback_extra = PushbackExtradata(self.pushback_extradata_ptr + (i * self.PushbackExtradata_size), self)
             self.pushback_extras.append(pushback_extra.dict())
 
         print("Reading pushbacks...")
         for i in range(self.pushback_list_size):
-            pushback = Pushback(self.pushback_ptr + (i * self.exporter.Pushback_size), self.exporter)
-            pushback.setExtraIndex((pushback.extra_addr - self.pushback_extradata_ptr) // self.exporter.PushbackExtradata_size)
+            pushback = Pushback(self.pushback_ptr + (i * self.Pushback_size), self)
+            pushback.setExtraIndex((pushback.extra_addr - self.pushback_extradata_ptr) // self.PushbackExtradata_size)
             self.pushbacks.append(pushback.dict())
         
         print("Reading reaction lists...")
         for i in range(self.reaction_list_size):
-            reaction_list = ReactionList(self.reaction_list_ptr + (i * self.exporter.ReactionList_size), self.exporter)
-            reaction_list.setIndexes(self.pushback_ptr, self.exporter.Pushback_size)
+            reaction_list = ReactionList(self.reaction_list_ptr + (i * self.ReactionList_size), self)
+            reaction_list.setIndexes(self.pushback_ptr, self.Pushback_size)
             self.reaction_list.append(reaction_list.dict())
         
         print("Reading on-hit condition lists...")
         for i in range(self.hit_conditions_size):
-            hit_conditions = HitCondition(self.hit_conditions_ptr + (i * self.exporter.HitCondition_size), self.exporter)
-            hit_conditions.setRequirementId((hit_conditions.requirement_addr - self.requirements_ptr) // self.exporter.Requirement_size)
-            hit_conditions.setReactionListId((hit_conditions.reaction_list_addr - self.reaction_list_ptr) // self.exporter.ReactionList_size)
+            hit_conditions = HitCondition(self.hit_conditions_ptr + (i * self.HitCondition_size), self)
+            hit_conditions.setRequirementId((hit_conditions.requirement_addr - self.requirements_ptr) // self.Requirement_size)
+            hit_conditions.setReactionListId((hit_conditions.reaction_list_addr - self.reaction_list_ptr) // self.ReactionList_size)
             self.hit_conditions.append(hit_conditions.dict())
         
         print("Reading extra move properties...")
         for i in range(self.extra_move_properties_size):
-            extra_move_property = ExtraMoveProperty(self.extra_move_properties_ptr + (i * self.exporter.ExtraMoveProperty_size), self.exporter)
+            extra_move_property = ExtraMoveProperty(self.extra_move_properties_ptr + (i * self.ExtraMoveProperty_size), self)
             self.extra_move_properties.append(extra_move_property.dict())
         
         print("Reading voiceclips...")
         for i in range(self.voiceclip_list_size):
-            voiceclip = Voiceclip(self.voiceclip_list_ptr + (i * self.exporter.Voiceclip_size), self.exporter)
+            voiceclip = Voiceclip(self.voiceclip_list_ptr + (i * self.Voiceclip_size), self)
             self.voiceclips.append(voiceclip.dict())
             
         print("Reading projectiles...")
         for i in range(self.projectile_size):
-            projectile = Projectile(self.projectile_ptr + (i * self.exporter.Projectile_size), self.exporter)
+            projectile = Projectile(self.projectile_ptr + (i * self.Projectile_size), self)
             if projectile.cancel_addr != 0:
-                projectile.setCancelIdx((projectile.cancel_addr - self.cancel_head_ptr) // self.exporter.Cancel_size)
+                projectile.setCancelIdx((projectile.cancel_addr - self.cancel_head_ptr) // self.Cancel_size)
             if projectile.hit_condition_addr != 0:
-                projectile.setHitConditionIdx((projectile.hit_condition_addr - self.hit_conditions_ptr) // self.exporter.HitCondition_size)
+                projectile.setHitConditionIdx((projectile.hit_condition_addr - self.hit_conditions_ptr) // self.HitCondition_size)
             self.projectiles.append(projectile.dict())
             
         print("Reading throw extras...")
         for i in range(self.throw_extras_size):
-            throw_extra = ThrowExtra(self.throw_extras_ptr + (i * self.exporter.ThrowExtra_size), self.exporter)
+            throw_extra = ThrowExtra(self.throw_extras_ptr + (i * self.ThrowExtra_size), self)
             self.throw_extras.append(throw_extra.dict())
             
         print("Reading throws...")
         for i in range(self.throws_size):
-            throw = Throw(self.throws_ptr + (i * self.exporter.Throw_size), self.exporter)
-            throw.setUnknownIdx((throw.unknown_addr - self.throw_extras_ptr) // self.exporter.ThrowExtra_size)
+            throw = Throw(self.throws_ptr + (i * self.Throw_size), self)
+            throw.setUnknownIdx((throw.unknown_addr - self.throw_extras_ptr) // self.ThrowExtra_size)
             self.throws.append(throw.dict())
         
         print("Reading movelist...")
         for i in range(self.movelist_size):
-            move = Move(self.movelist_head_ptr + (i * self.exporter.Move_size), self.exporter)
-            move.setCancelIdx((move.cancel_addr - self.cancel_head_ptr) // self.exporter.Cancel_size)
-            move.setHitConditionIdx((move.hit_condition_addr - self.hit_conditions_ptr) // self.exporter.HitCondition_size)
+            move = Move(self.movelist_head_ptr + (i * self.Move_size), self)
+            move.setCancelIdx((move.cancel_addr - self.cancel_head_ptr) // self.Cancel_size)
+            move.setHitConditionIdx((move.hit_condition_addr - self.hit_conditions_ptr) // self.HitCondition_size)
             if move.extra_properties_ptr != 0:
-                move.setExtraPropertiesIdx((move.extra_properties_ptr - self.extra_move_properties_ptr) // self.exporter.ExtraMoveProperty_size)
+                move.setExtraPropertiesIdx((move.extra_properties_ptr - self.extra_move_properties_ptr) // self.ExtraMoveProperty_size)
             if move.voiceclip_ptr != 0:
-                move.setVoiceclipId((move.voiceclip_ptr - self.voiceclip_list_ptr) // self.exporter.Voiceclip_size)
+                move.setVoiceclipId((move.voiceclip_ptr - self.voiceclip_list_ptr) // self.Voiceclip_size)
             move.setId(i)
             self.moves.append(move.dict())
             
