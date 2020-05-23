@@ -8,8 +8,6 @@ from re import findall
 kernel32 = ctypes.windll.kernel32
 psapi = ctypes.windll.psapi
 
-import os
-
 class AddressFile:
     def __init__(self, path):
         self.addresses = {}

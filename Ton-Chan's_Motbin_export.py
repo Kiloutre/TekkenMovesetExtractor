@@ -61,8 +61,6 @@ class Exporter:
         self.endian = 'little' if TekkenVersion == 7 else 'big'
         self.folder_destination = folder_destination
         
-        print("Base is %x" % (self.base))
-        
         if not os.path.isdir(folder_destination):
             os.mkdir(folder_destination)
         
@@ -126,6 +124,7 @@ class AnimData:
     def __init__(self, name, data_addr, parent):
         initTekkenStructure(self, parent, data_addr, 0)
         self.name = name
+        self.data = None
                 
     def getData(self):
         if self.data == None:
@@ -155,11 +154,13 @@ class AnimData:
                     offset += read_size
                     
             self.data = None if offset == 0 else self.readBytes(self.addr, offset)
+            oldData = self.data
             if self.TekkenVersion != 7:
                 try:
                     self.data = SwapAnimBytes(self.data)
                 except:
-                    self.data = None
+                    self.data = oldData
+                    print("Error byteswapping animation " + self.name + ", game might crash with this moveset.", file=sys.stderr)
         return self.data
         
     def __eq__(self, other):
@@ -865,7 +866,7 @@ class Motbin:
                 animdata = anim.getData()
                 f.write(animdata if animdata != None else bytes([0]))
                 if animdata == None:
-                    print("Error extracting animation %s" % (anim.name))
+                    print("Error extracting animation %s" % (anim.name), file=sys.stderr)
             
         print("Saved at path %s" % (path.replace("\\", "/")))
         
