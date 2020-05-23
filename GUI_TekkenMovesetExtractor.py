@@ -19,9 +19,9 @@ runningMonitors = [None, None]
 creatingMonitor = [False, False]
 
 def monitoringFunc(playerAddr, playerId, Tekken, moveset):
+    monitorId = playerId - 1
     try:
         prevMoveset = Tekken.readInt(playerAddr + 0x14a0, 8)
-        monitorId = playerId - 1
         while runningMonitors[monitorId] != None:
             currMoveset = Tekken.readInt(playerAddr + 0x14a0, 8)
             if currMoveset != prevMoveset:
@@ -33,6 +33,7 @@ def monitoringFunc(playerAddr, playerId, Tekken, moveset):
     except Exception as e:
         print(e)
         print("Monitor %d closing because of error" % (playerId))
+        runningMonitors[monitorId] = None
         sys.exit(1)
     
 def startMonitor(parent, playerId):
@@ -77,6 +78,7 @@ def exportAll(parent, tekkenVersion, key_match):
             print("Requesting export for %s..." % (moveset_name))
             moveset = TekkenExporter.exportMoveset(playerAddr)
             exportedMovesets.append(moveset_name)
+            print()
         else:
             print('Player', moveset_name, 'already exported, not exporting again.')
             
