@@ -8,7 +8,7 @@ import json
 import os
 import sys
 
-exportVersion = "0.7.0"
+exportVersion = "0.8.0"
 
 def getMovesetName(TekkenVersion, character_name):
     if character_name.startswith('['):
