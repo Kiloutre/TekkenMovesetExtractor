@@ -48,12 +48,13 @@ def setStructureSizes(self):
     self.Throw_size = 0x10 if self.TekkenVersion == 7 else 0x8
             
 class Exporter:
-    def __init__(self, TekkenVersion):
+    def __init__(self, TekkenVersion, folder_destination=''):
         self.T = GameClass("TekkenGame-Win64-Shipping.exe" if TekkenVersion == 7 else "Cemu.exe")
         self.TekkenVersion = TekkenVersion
         self.ptr_size = 8 if TekkenVersion == 7 else 4
         self.base = 0x0 if TekkenVersion == 7 else self.T.readInt(game_addresses['cemu_base'], 8, endian='little')
         self.endian = 'little' if TekkenVersion == 7 else 'big'
+        self.folder_destination = folder_destination
         
     def readInt(self, addr, len):
         return self.T.readInt(addr, len, endian=self.endian)
@@ -661,8 +662,9 @@ class Motbin:
     def __init__(self, addr, exporterObject, name=''):
         initTekkenStructure(self, exporterObject, addr, size=0)
         setStructureSizes(self)
+        self.folder_destination= exporterObject.folder_destination
     
-        self.name = name
+        self.name = ''
         self.version = "Tekken7" if self.TekkenVersion == 7 else "Tag2"
         self.extraction_date = datetime.now(timezone.utc).__str__()
         self.extraction_path = ''
@@ -674,7 +676,6 @@ class Motbin:
 
         try:
             self.character_name = self.readStringPtr(addr + character_name_addr)
-            self.name = self.character_name[1:-1] if name == '' else name
             self.creator_name = self.readStringPtr(addr + creator_name_addr)
             self.date = self.readStringPtr(addr + date_addr)
             self.fulldate = self.readStringPtr(addr + fulldate_addr)
@@ -765,6 +766,9 @@ class Motbin:
         
             self.aliases = [self.readInt(addr + aliasOffset + (offset * 2), 2) for offset in range(0, aliasCount)]
             
+            self.name = self.character_name[1:-1] if name == '' else name
+            self.export_folder = '%d_%s' % (self.TekkenVersion, self.name)
+            
         except Exception as e:
             print("Invalid character or moveset.")
             raise e
@@ -829,14 +833,11 @@ class Motbin:
             'throws': self.throws
         }
         
-    def save(self, path=''):
+    def save(self):
         print("Saving data...")
         
-        if path == '':
-            path = "./%d_%s" % (self.TekkenVersion, self.name)
-         
+        path = self.folder_destination + self.export_folder
         self.extraction_path = path
-           
         anim_path = "%s/anim" % (path)
         
         if not os.path.isdir(path):
@@ -855,9 +856,9 @@ class Motbin:
                 if animdata == None:
                     print("Error extracting animation %s" % (anim.name))
             
-        print("Saved at path %s/%s" % (os.getcwd().replace("\\", "/"), path[2:]))
+        print("Saved at path %s" % (path.replace("\\", "/")))
         
-    def extractMoveset(self, output_path=''):
+    def extractMoveset(self):
         self.printBasicData()
         
         print("Reading input extradata...")
@@ -967,7 +968,7 @@ class Motbin:
             if move.anim not in self.anims:
                 self.anims.append(move.anim)
 
-        self.save(output_path)
+        self.save()
         
 if __name__ == "__main__":
     
