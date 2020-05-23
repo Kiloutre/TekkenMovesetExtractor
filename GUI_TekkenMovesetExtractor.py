@@ -18,24 +18,29 @@ monitorVerificationFrequency = 0.25
 runningMonitors = [None, None]
 creatingMonitor = [False, False]
 
-def monitoringFunc(playerAddr, playerId, Tekken, moveset):
+def monitoringFunc(playerAddr, playerId, Tekken, moveset, parent):
     monitorId = playerId - 1
     try:
-        prevMoveset = Tekken.readInt(playerAddr + 0x14a0, 8)
         print("Monitering successfully started for player %d. Moveset: %s" % (playerId, moveset.m['character_name']))
         while runningMonitors[monitorId] != None:
             currMoveset = Tekken.readInt(playerAddr + 0x14a0, 8)
             if currMoveset != moveset.motbin_ptr:
-                print("Player %d: Wrong moveset, applying %s" % (playerId, moveset.m['character_name']))
                 moveset.copyUnknownOffsets(currMoveset)
                 Tekken.writeInt(playerAddr + 0x14a0, moveset.motbin_ptr, 8)
+                print("Player %d: Wrong moveset, applying %s" % (playerId, moveset.m['character_name']))
             time.sleep(monitorVerificationFrequency)
         print("Monitor %d closing" % (playerId))
+        parent.setMonitorButton(monitorId, False)
     except Exception as e:
-        print(e)
-        print("Monitor %d closing because of error" % (playerId))
-        runningMonitors[monitorId] = None
-        sys.exit(1)
+        try:
+            Tekken.readInt(moveset.motbin_ptr, 8)
+            time.sleep(5)
+        except:
+            print(e)
+            print("Monitor %d closing because process can't be read" % (playerId))
+            runningMonitors[monitorId] = None
+            parent.setMonitorButton(monitorId, False)
+            sys.exit(1)
     
 def startMonitor(parent, playerId):
     if parent.selected_char == None:
@@ -52,7 +57,7 @@ def startMonitor(parent, playerId):
     playerAddr = game_addresses['p%d_addr' % (playerId)]
     moveset = TekkenImporter.loadMoveset(folderPath)
         
-    monitor = threading.Thread(target=monitoringFunc, args=(playerAddr, playerId, Tekken, moveset))
+    monitor = threading.Thread(target=monitoringFunc, args=(playerAddr, playerId, Tekken, moveset, parent))
     monitor.start()
     runningMonitors[monitorId] = monitor
     creatingMonitor[monitorId] = False
