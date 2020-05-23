@@ -22,9 +22,10 @@ def monitoringFunc(playerAddr, playerId, Tekken, moveset):
     monitorId = playerId - 1
     try:
         prevMoveset = Tekken.readInt(playerAddr + 0x14a0, 8)
+        print("Monitering successfully started for player %d. Moveset: %s" % (playerId, moveset.m['character_name']))
         while runningMonitors[monitorId] != None:
             currMoveset = Tekken.readInt(playerAddr + 0x14a0, 8)
-            if currMoveset != prevMoveset:
+            if currMoveset != moveset.motbin_ptr:
                 print("Player %d: Moveset change noticed, cancelling change" % (playerId))
                 moveset.copyUnknownOffsets(currMoveset)
                 Tekken.writeInt(playerAddr + 0x14a0, moveset.motbin_ptr, 8)
@@ -49,7 +50,7 @@ def startMonitor(parent, playerId):
     
     TekkenImporter = importLib.Importer()
     playerAddr = game_addresses['p%d_addr' % (playerId)]
-    moveset = TekkenImporter.importMoveset(playerAddr, folderPath)
+    moveset = TekkenImporter.loadMoveset(folderPath)
         
     monitor = threading.Thread(target=monitoringFunc, args=(playerAddr, playerId, Tekken, moveset))
     monitor.start()
