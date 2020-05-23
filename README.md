@@ -64,3 +64,4 @@ Administrator rights may be required to import the moveset into memory.
 - Remove reliance on Python 3.6.5
 - Fix tag2 armor king D/B+2 excessive pushback
 - Add export naming option
+- Fix WangvsWang crescent moon into wallbreak
