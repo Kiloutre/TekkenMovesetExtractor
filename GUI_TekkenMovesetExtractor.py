@@ -130,7 +130,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         self.geometry("960x540")
         
         self.consoleFrame = Frame(self, bg='#CCC')
-        self.toolFrame = Frame(self, bg='pink')
+        self.toolFrame = Frame(self, bg='#aaaaaa')
         
         self.consoleFrame.grid(row=0, column=0, sticky="nsew")
         self.toolFrame.grid(row=0, column=1, sticky="nsew")
@@ -161,8 +161,8 @@ class GUI_TekkenMovesetExtractor(Tk):
             self.monitorButtons[button]['text'] = 'Monitor P%d' % (button + 1)
         
     def initImportArea(self):
-        self.charalistFrame = Frame(self.importFrame, bg='purple')
-        self.charalistActions = Frame(self.importFrame, bg='green')
+        self.charalistFrame = Frame(self.importFrame)
+        self.charalistActions = Frame(self.importFrame)
         
         self.charalistFrame.grid(row=0, column=0, sticky="nsew")
         self.charalistActions.grid(padx=15, row=0, column=1, sticky="nsew")
@@ -173,8 +173,8 @@ class GUI_TekkenMovesetExtractor(Tk):
         self.importFrame.grid_rowconfigure(0, weight=1)
         
     def initImportActionsArea(self):
-        self.charaInfoFrame = Frame(self.charalistActions, bg='purple')
-        self.importButtonFrame = Frame(self.charalistActions, bg='green')
+        self.charaInfoFrame = Frame(self.charalistActions, bg='#999999')
+        self.importButtonFrame = Frame(self.charalistActions, bg='#999999')
         
         self.charaInfoFrame.grid(row=0, column=0, sticky="nsew")
         self.importButtonFrame.grid(row=1, column=0, sticky="nsew")
@@ -190,8 +190,8 @@ class GUI_TekkenMovesetExtractor(Tk):
         button = self.createButton(self.charaInfoFrame, "Update list", (), GUI_TekkenMovesetExtractor.updateCharacterlist, side='bottom', expand='0')
         
     def initExportArea(self):
-        self.t7_exportFrame = Frame(self.exportFrame, bg='red')
-        self.tag2_exportFrame = Frame(self.exportFrame, bg='red')
+        self.t7_exportFrame = Frame(self.exportFrame, bg='#aaaaaa')
+        self.tag2_exportFrame = Frame(self.exportFrame, bg='#aaaaaa')
         
         self.t7_exportFrame.grid(padx=18, pady=5, row=0, column=0, sticky="nsew")
         self.tag2_exportFrame.grid(padx=18, pady=5, row=0, column=1, sticky="nsew")
@@ -202,8 +202,8 @@ class GUI_TekkenMovesetExtractor(Tk):
         self.exportFrame.grid_rowconfigure(0, weight=1)
         
     def initToolArea(self):
-        self.exportFrame = Frame(self.toolFrame, bg='red')
-        self.importFrame = Frame(self.toolFrame, bg='blue')
+        self.exportFrame = Frame(self.toolFrame, bg='#aaaaaa')
+        self.importFrame = Frame(self.toolFrame, bg='#999999')
         
         self.exportFrame.grid(padx=10, pady=5, row=0, column=0, sticky="nsew")
         self.importFrame.grid(padx=10, pady=5, row=1, column=0, sticky="nsew")

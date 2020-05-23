@@ -1,5 +1,3 @@
-TekkenMovesetExtractor v0.8.0
-
 Export a moveset by loading up the target characters, then clicking the wanted export button.
 Select a moveset in the movelist by clicking on it, then press an import button to import it.
 
