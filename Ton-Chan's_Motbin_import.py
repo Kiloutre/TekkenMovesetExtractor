@@ -7,7 +7,7 @@ import json
 import os
 import sys
 
-importVersion = "0.7.0"
+importVersion = "0.8.0"
 
 requirement_size = 0x8
 cancel_size = 0x28
@@ -69,7 +69,7 @@ class Importer:
     def loadMoveset(self, folderName):
         m = None
         
-        jsonFilename = "%s.json" % (folderName[2:])
+        jsonFilename = next(file for file in os.listdir(folderName) if file.endswith(".json"))
         print("Reading %s..." % (jsonFilename))
         with open("%s/%s" % (folderName, jsonFilename), "r") as f:
             m = json.load(f)
@@ -78,8 +78,8 @@ class Importer:
         if 'export_version' not in m or not versionMatches(m['export_version']):
             print("Error: trying to import outdated moveset, please extract again.")
             if 'export_version' in m:
-                print("Moveset version: %s. Importer version: %s." % (m['export_version'], importVersion))
-            os._exit(1)
+                raise Exception("Moveset version: %s. Importer version: %s." % (m['export_version'], importVersion))
+            
 
         if m['version'] == "Tag2":
             fillAliasesDictonnaries()

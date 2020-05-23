@@ -10,6 +10,11 @@ import sys
 
 exportVersion = "0.7.0"
 
+def getMovesetName(TekkenVersion, character_name):
+    if character_name.startswith('['):
+        character_name = character_name[1:-1]
+    return '%d_%s' % (TekkenVersion, character_name.upper())
+
 def initTekkenStructure(self, parent, addr=0, size=0):
     self.addr = addr
     self.T = parent.T
@@ -766,8 +771,8 @@ class Motbin:
         
             self.aliases = [self.readInt(addr + aliasOffset + (offset * 2), 2) for offset in range(0, aliasCount)]
             
-            self.name = self.character_name[1:-1] if name == '' else name
-            self.export_folder = '%d_%s' % (self.TekkenVersion, self.name)
+            self.name = getMovesetName(self.TekkenVersion, self.character_name) if name == '' else name
+            self.export_folder = self.name
             
         except Exception as e:
             print("Invalid character or moveset.")
@@ -809,7 +814,8 @@ class Motbin:
             'export_version': exportVersion,
             'version': self.version,
             'extraction_date': self.extraction_date,
-            'character_name': self.character_name,
+            'character_name': self.name,
+            'tekken_character_name': self.character_name,
             'creator_name': self.creator_name,
             'date': self.date,
             'fulldate': self.fulldate,

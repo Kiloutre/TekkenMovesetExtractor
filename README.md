@@ -43,3 +43,5 @@ Administrator rights may be required to import the moveset into memory.
 - Look at tag2 intro, especially mokujin & combot
 - Rename 'unknown' of cancel into 'camera_position' on next update
 - Remove reliance on Python 3.6.5
+- Fix armor king D/B+2 excessive pushback
+- Add export folder option
