@@ -20,27 +20,29 @@ creatingMonitor = [False, False]
 
 def monitoringFunc(playerAddr, playerId, Tekken, moveset, parent):
     monitorId = playerId - 1
-    try:
-        print("Monitering successfully started for player %d. Moveset: %s" % (playerId, moveset.m['character_name']))
-        while runningMonitors[monitorId] != None:
+    print("Monitering successfully started for player %d. Moveset: %s" % (playerId, moveset.m['character_name']))
+    
+    while runningMonitors[monitorId] != None:
+        try:
             currMoveset = Tekken.readInt(playerAddr + 0x14a0, 8)
             if currMoveset != moveset.motbin_ptr:
                 moveset.copyUnknownOffsets(currMoveset)
                 Tekken.writeInt(playerAddr + 0x14a0, moveset.motbin_ptr, 8)
                 print("Player %d: Wrong moveset, applying %s" % (playerId, moveset.m['character_name']))
             time.sleep(monitorVerificationFrequency)
-        print("Monitor %d closing" % (playerId))
-        parent.setMonitorButton(monitorId, False)
-    except Exception as e:
-        try:
-            Tekken.readInt(moveset.motbin_ptr, 8)
-            time.sleep(5)
-        except:
-            print(e)
-            print("Monitor %d closing because process can't be read" % (playerId))
-            runningMonitors[monitorId] = None
-            parent.setMonitorButton(monitorId, False)
-            sys.exit(1)
+        except Exception as e:
+            try:
+                Tekken.readInt(moveset.motbin_ptr, 8)
+                time.sleep(5)
+            except:
+                print(e)
+                print("Monitor %d closing because process can't be read" % (playerId))
+                runningMonitors[monitorId] = None
+                parent.setMonitorButton(monitorId, False)
+                break
+    print("Monitor %d closing" % (playerId))
+    parent.setMonitorButton(monitorId, False)
+    sys.exit(1)
     
 def startMonitor(parent, playerId):
     if parent.selected_char == None:
