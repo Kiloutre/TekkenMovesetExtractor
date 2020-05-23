@@ -1,4 +1,4 @@
-# Pre-requisites
+# Pre-requisites for running the sources (not the .exe):
 
 - Python 3.6.5 specifically.
 
