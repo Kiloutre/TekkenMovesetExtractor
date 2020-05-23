@@ -34,7 +34,9 @@ Every moveset extracted from Tekken7 will be prefixed with `7_`
 
 ## Exporting from Tag2 (CEMU, Wii U emulator)
 In order to work with Tag2, you need to first get the base address of the game in Cemu, and feed it to the variable `cemu_base` in `game_addresses.txt`	It used to be that you needed to get a new address everytime you restart CEMU to extract moveset, but that isn't the case anymore.
-This address changes everytime CEMU is started. You can find it by finding any game-related value (an easy one is 32770 for crouching and 32769 for standing, in big endian), then looking at what accesses the value and dumping the r13 register from there. The r13 register will contain the `cemu_base` address.	Simply run the extractor with the argument `tag2` to extract tag2 characters. Example:
+This address changes everytime CEMU is started. You can find it by first finding any game-related value using Cheat Engine.
+An easy one is `32770` for crouching and `32769` for standing, in `4 bytes big endian`. Or `41943040` for crouching and `25165824` for standing, in regular `4 bytes` value type.
+, then looking at what accesses the value and dumping the r13 register from there. The r13 register will contain the `cemu_base` address.	Simply run the extractor with the argument `tag2` to extract tag2 characters. Example:
 Then, you need to run the extractor with the argument `tag2`. Example:	
 
 
