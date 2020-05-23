@@ -97,6 +97,12 @@ class GUI_TekkenMovesetExtractor(Tk):
         self.createExportButtons()
         self.createCharacterList()
         
+        try:
+            with open("GUI_TekkenMovesetExtractor/readme.txt") as f:
+                for line in f: print(line)
+        except:
+            pass
+        
     def initImportArea(self):
         self.charalistFrame = Frame(self.importFrame, bg='purple')
         self.charalistActions = Frame(self.importFrame, bg='green')

@@ -61,6 +61,9 @@ class Exporter:
         self.endian = 'little' if TekkenVersion == 7 else 'big'
         self.folder_destination = folder_destination
         
+        if not os.path.isdir(folder_destination):
+            os.mkdir(folder_destination)
+        
     def readInt(self, addr, len):
         return self.T.readInt(addr, len, endian=self.endian)
         
