@@ -41,3 +41,5 @@ Administrator rights may be required to import the moveset into memory.
 - Fix Kunimitsu backturned 4 that doesn't turn around
 - Fix bound floorbreak that doesn't bound
 - Look at tag2 intro, especially mokujin & combot
+- Rename 'unknown' of cancel into 'camera_position' on next update
+- Remove reliance on Python 3.6.5

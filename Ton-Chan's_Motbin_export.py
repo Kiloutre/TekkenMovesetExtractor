@@ -48,7 +48,7 @@ def setStructureSizes(self):
     self.Throw_size = 0x10 if self.TekkenVersion == 7 else 0x8
             
 class Exporter:
-    def __init__(self, TekkenVersion, folder_destination=''):
+    def __init__(self, TekkenVersion, folder_destination='./extracted_chars/'):
         self.T = GameClass("TekkenGame-Win64-Shipping.exe" if TekkenVersion == 7 else "Cemu.exe")
         self.TekkenVersion = TekkenVersion
         self.ptr_size = 8 if TekkenVersion == 7 else 4
