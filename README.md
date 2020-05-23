@@ -1,9 +1,26 @@
 # Pre-requisites
 
-- Python 3.6.5 specifically
-- Pywin32: `python -m pip install pywin32 --user`
+- Python 3.6.5 specifically.
 
-# Exporting movesets
+Make sure that the python version is correct by running the following command in the command line:
+
+`python --version`
+
+
+- Pywin32
+
+Install Pywin32 after python, by running this in the command line:
+
+`python -m pip install pywin32 --user`
+
+# Importing movesets: GUI tool (very pretty)
+
+Simply run the GUI tool by double-clicking the file `GUI_TekkenMovesetExtractor.py`. The following interface will appear:
+
+![alt text](https://i.imgur.com/OmQzpHB.png)
+
+
+# Exporting movesets : Console Tool
 
 This tool exports movesets from memory, you therefore need the game running with the target moveset loaded up already.
 The extractor works with both Tekken 7 and Tag 2, as there is little differences between their moveset formats.
