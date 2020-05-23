@@ -99,6 +99,7 @@ def importPlayer(parent, playerId):
     
     TekkenImporter = importLib.Importer()
     TekkenImporter.importMoveset(playerAddr, folderPath)
+    print("\nSuccessfully imported %s !" % (parent.selected_char))
         
 class TextRedirector(object):
     def __init__(self, TextArea, tag=''):
