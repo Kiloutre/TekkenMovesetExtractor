@@ -9,8 +9,8 @@ import os
 import json
 import time
 import threading
-exportLib = __import__("Ton-Chan's_Motbin_export")
-importLib = __import__("Ton-Chan's_Motbin_import")
+import motbinExport as exportLib
+import motbinImport as importLib
 
 charactersPath = "./extracted_chars/"
 
@@ -57,6 +57,8 @@ def startMonitor(parent, playerId):
     creatingMonitor[monitorId] = False
     
 def getCharacterList():
+    if not os.path.isdir(charactersPath):
+        os.mkdir(charactersPath)
     folders = [folder for folder in os.listdir(charactersPath)]
     
     return sorted(folders)
