@@ -26,7 +26,7 @@ def monitoringFunc(playerAddr, playerId, Tekken, moveset):
         while runningMonitors[monitorId] != None:
             currMoveset = Tekken.readInt(playerAddr + 0x14a0, 8)
             if currMoveset != moveset.motbin_ptr:
-                print("Player %d: Moveset change noticed, cancelling change" % (playerId))
+                print("Player %d: Wrong moveset, applying %s" % (playerId, moveset.m['character_name']))
                 moveset.copyUnknownOffsets(currMoveset)
                 Tekken.writeInt(playerAddr + 0x14a0, moveset.motbin_ptr, 8)
             time.sleep(monitorVerificationFrequency)
