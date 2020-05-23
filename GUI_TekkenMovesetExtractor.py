@@ -67,7 +67,7 @@ def startMonitor(parent, playerId):
 def getCharacterList():
     if not os.path.isdir(charactersPath):
         os.mkdir(charactersPath)
-    folders = [folder for folder in os.listdir(charactersPath)]
+    folders = [folder for folder in os.listdir(charactersPath) if os.path.isdir(charactersPath + folder)]
     
     return sorted(folders)
     
@@ -251,6 +251,7 @@ class GUI_TekkenMovesetExtractor(Tk):
                     "Character: %s" % (m['tekken_character_name']),
                     "Tekken Version: %s" % (m['version']),
                     "Exporter version: %s" % (m['export_version']),
+                    "%s\n%s" % (m['date'], m['fulldate']),
                 ]
         except Exception as e:
             self.chara_data = [ "Invalid moveset" ]
