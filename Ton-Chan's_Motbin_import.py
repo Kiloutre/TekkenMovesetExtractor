@@ -65,6 +65,7 @@ class Importer:
         print("\nOLD moveset pointer: 0x%x (%s)" % (current_motbin_ptr, old_character_name))
         print("NEW moveset pointer: 0x%x (%s)" % (moveset.motbin_ptr, moveset.m['character_name']))
         self.writeInt(motbin_ptr_addr, moveset.motbin_ptr, 8)
+        return moveset
         
     def loadMoveset(self, folderName):
         m = None

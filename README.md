@@ -15,8 +15,10 @@ You have to then start a game with the targeted moveset loaded up, and simply ru
 Every moveset extracted from Tekken7 will be prefixed with `7_`
 
 ## Exporting from Tag2 (CEMU, Wii U emulator)
-It used to be that you needed to get a new address everytime you restart CEMU to extract moveset, but that isn't the case anymore.
-Simply run the extractor with the argument `tag2` to extract tag2 characters. Example:
+In order to work with Tag2, you need to first get the base address of the game in Cemu, and feed it to the variable `cemu_base` in `game_addresses.txt`	It used to be that you needed to get a new address everytime you restart CEMU to extract moveset, but that isn't the case anymore.
+This address changes everytime CEMU is started. You can find it by finding any game-related value (an easy one is 32770 for crouching and 32769 for standing, in big endian), then looking at what accesses the value and dumping the r13 register from there. The r13 register will contain the `cemu_base` address.	Simply run the extractor with the argument `tag2` to extract tag2 characters. Example:
+Then, you need to run the extractor with the argument `tag2`. Example:	
+
 
 `python Ton-Chan's_Motbin_export.py tag2`
 

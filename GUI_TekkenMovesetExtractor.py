@@ -3,16 +3,60 @@
 from tkinter import *
 from tkinter.ttk import Button
 from re import match
-from Addresses import game_addresses
+from Addresses import game_addresses, GameClass
 import sys
 import os
+import json
+import time
+import threading
 exportLib = __import__("Ton-Chan's_Motbin_export")
 importLib = __import__("Ton-Chan's_Motbin_import")
 
 charactersPath = "./extracted_chars/"
 
+monitorVerificationFrequency = 0.25
+runningMonitors = [None, None]
+creatingMonitor = [False, False]
+
+def monitoringFunc(playerAddr, playerId, Tekken, moveset):
+    try:
+        prevMoveset = Tekken.readInt(playerAddr + 0x14a0, 8)
+        monitorId = playerId - 1
+        while runningMonitors[monitorId] != None:
+            currMoveset = Tekken.readInt(playerAddr + 0x14a0, 8)
+            if currMoveset != prevMoveset:
+                print("Player %d: Moveset change noticed, cancelling change" % (playerId))
+                moveset.copyUnknownOffsets(currMoveset)
+                Tekken.writeInt(playerAddr + 0x14a0, moveset.motbin_ptr, 8)
+            time.sleep(monitorVerificationFrequency)
+        print("Monitor %d closing" % (playerId))
+    except Exception as e:
+        print(e)
+        print("Monitor %d closing because of error" % (playerId))
+        sys.exit(1)
+    
+def startMonitor(parent, playerId):
+    if parent.selected_char == None:
+        print("No character selected")
+        return
+    print("Starting monitor for p%d..." % (playerId))
+    monitorId = playerId - 1
+    creatingMonitor[monitorId] = True
+    
+    Tekken = GameClass("TekkenGame-Win64-Shipping.exe")
+    folderPath = charactersPath + parent.selected_char 
+    
+    TekkenImporter = importLib.Importer()
+    playerAddr = game_addresses['p%d_addr' % (playerId)]
+    moveset = TekkenImporter.importMoveset(playerAddr, folderPath)
+        
+    monitor = threading.Thread(target=monitoringFunc, args=(playerAddr, playerId, Tekken, moveset))
+    monitor.start()
+    runningMonitors[monitorId] = monitor
+    creatingMonitor[monitorId] = False
+    
 def getCharacterList():
-    folders = [folder for folder in os.listdir(charactersPath) if os.path.isdir(charactersPath + folder) and folder.startswith("2_") or folder.startswith("7_")]
+    folders = [folder for folder in os.listdir(charactersPath)]
     
     return sorted(folders)
     
@@ -44,6 +88,7 @@ def exportAll(parent, tekkenVersion, key_match):
         
 def importPlayer(parent, playerId):
     if parent.selected_char == None:
+        print("No character selected")
         return
     folderPath = charactersPath + parent.selected_char 
     playerAddr = game_addresses['p%d_addr' % (playerId)]
@@ -72,6 +117,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         
         self.characterList = getCharacterList()
         self.selected_char = None
+        self.chara_data = None
         
         self.wm_title("TekkenMovesetExtractor 0.7") 
         self.iconbitmap('GUI_TekkenMovesetExtractor/natsumi.ico')
@@ -102,6 +148,12 @@ class GUI_TekkenMovesetExtractor(Tk):
                 for line in f: print(line)
         except:
             pass
+            
+    def setMonitorButton(self, button, active):
+        if active:
+            self.monitorButtons[button]['text'] = 'Kill P%d Monitor' % (button + 1)
+        else:
+            self.monitorButtons[button]['text'] = 'Monitor P%d' % (button + 1)
         
     def initImportArea(self):
         self.charalistFrame = Frame(self.importFrame, bg='purple')
@@ -126,6 +178,11 @@ class GUI_TekkenMovesetExtractor(Tk):
         self.charalistActions.grid_columnconfigure(0, weight=1)
         self.charalistActions.grid_rowconfigure(0, weight=1, uniform="group1")
         self.charalistActions.grid_rowconfigure(1, weight=1, uniform="group1")
+        
+        
+        self.selectionInfo = Label(self.charaInfoFrame, text="")
+        self.selectionInfo.pack(side='top')
+        button = self.createButton(self.charaInfoFrame, "Update list", (), GUI_TekkenMovesetExtractor.updateCharacterlist, side='bottom', expand='0')
         
     def initExportArea(self):
         self.t7_exportFrame = Frame(self.exportFrame, bg='red')
@@ -168,6 +225,23 @@ class GUI_TekkenMovesetExtractor(Tk):
             self.charaList.insert(0, "No moveset extracted yet...")
         else:
             self.charaList.insert(0, *self.characterList)
+            
+    def loadCharaInfo(self):
+        path = charactersPath + self.selected_char
+        try:
+            json_file = next(file for file in os.listdir(path) if file.endswith(".json"))
+            with open(path + '/' + json_file, "r") as f:
+                m = json.load(f)
+                f.close
+                self.chara_data = [
+                    "Moveset name: %s" % (m['character_name']),
+                    "Character: %s" % (m['tekken_character_name']),
+                    "Tekken Version: %s" % (m['version']),
+                    "Exporter version: %s" % (m['export_version']),
+                ]
+        except Exception as e:
+            self.chara_data = [ "Invalid moveset" ]
+        self.selectionInfo['text'] = '\n'.join(self.chara_data)
         
     def onCharaSelectionChange(self, event):
         if len(self.characterList) == 0:
@@ -177,8 +251,27 @@ class GUI_TekkenMovesetExtractor(Tk):
             index = int(w.curselection()[0])
             self.selected_char = w.get(index)
             print("Selected", self.selected_char)
+            self.loadCharaInfo()
         except:
             self.selected_char = None
+            
+    def toggleMonitor(self, parent, playerId):
+        monitorId = playerId - 1 
+        if creatingMonitor[monitorId] == True:
+            print("!!! Can't start the same monitor twice !!!")
+            return
+        if runningMonitors[monitorId] != None:
+            runningMonitors[monitorId] = None
+            self.setMonitorButton(monitorId, False)
+            print("Killed monitor for player %d" % (playerId))
+        else:
+            self.setMonitorButton(monitorId, True)
+            try:
+                startMonitor(self, playerId)
+            except Exception as e:
+                print(e, file=sys.stderr)
+                self.setMonitorButton(monitorId, False)
+                creatingMonitor[monitorId] = False
       
     def createCharacterList(self):
         self.charaList = Listbox(self.charalistFrame)
@@ -188,7 +281,10 @@ class GUI_TekkenMovesetExtractor(Tk):
         
         self.createButton(self.importButtonFrame, "Import to P1", (1,), importPlayer)
         self.createButton(self.importButtonFrame, "Import to P2", (2,), importPlayer)
-        self.createButton(self.importButtonFrame, "Update list", (), GUI_TekkenMovesetExtractor.updateCharacterlist)
+        self.monitorButtons = [
+            self.createButton(self.importButtonFrame, "Monitor P1", (1,), self.toggleMonitor),
+            self.createButton(self.importButtonFrame, "Monitor P2", (2,), self.toggleMonitor)
+        ]
         
     def createExportButtons(self):
         tekken7_addr_match = "p([0-9]+)_addr"
@@ -205,12 +301,12 @@ class GUI_TekkenMovesetExtractor(Tk):
         
         self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: All", (2, tag2_addr_match), exportAll)
         
-    def createButton(self, frame, text, const_args, callback):
-        self.exportButton = Button(frame)
-        self.exportButton["text"] = text
-        self.exportButton["command"] = lambda: callback(self, *const_args)
-        self.exportButton.pack(side="top", fill=X, expand=1)
-        
+    def createButton(self, frame, text, const_args, callback, side='top', expand=1):
+        exportButton = Button(frame)
+        exportButton["text"] = text
+        exportButton["command"] = lambda: callback(self, *const_args)
+        exportButton.pack(side=side, fill=X, expand=expand)
+        return exportButton
 
 if __name__ == "__main__":
     app = GUI_TekkenMovesetExtractor()

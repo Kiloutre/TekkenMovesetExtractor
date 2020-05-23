@@ -57,9 +57,11 @@ class Exporter:
         self.T = GameClass("TekkenGame-Win64-Shipping.exe" if TekkenVersion == 7 else "Cemu.exe")
         self.TekkenVersion = TekkenVersion
         self.ptr_size = 8 if TekkenVersion == 7 else 4
-        self.base = 0x0 if TekkenVersion == 7 else self.T.readInt(game_addresses['cemu_base'], 8, endian='little')
+        self.base = 0x0 if TekkenVersion == 7 else game_addresses['cemu_base']
         self.endian = 'little' if TekkenVersion == 7 else 'big'
         self.folder_destination = folder_destination
+        
+        print("Base is %x" % (self.base))
         
         if not os.path.isdir(folder_destination):
             os.mkdir(folder_destination)

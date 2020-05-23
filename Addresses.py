@@ -5,6 +5,11 @@ from ctypes import wintypes as w
 from win32com.client import GetObject
 from re import findall
 
+kernel32 = ctypes.windll.kernel32
+psapi = ctypes.windll.psapi
+
+import os
+
 class AddressFile:
     def __init__(self, path):
         self.addresses = {}
@@ -36,6 +41,7 @@ class GameClass:
     
         self.PROCESS = win32api.OpenProcess(0x1F0FFF, 0, self.PID)
         self.handle = self.PROCESS.handle
+        
 
     def readBytes(self, addr, bytes_length):
         buff = ctypes.create_string_buffer(bytes_length)
@@ -58,30 +64,30 @@ class GameClass:
             bytes_length = value.bit_length() + 7 // 8
         return self.writeBytes(addr, value.to_bytes(bytes_length, 'little'))
  
-ReadProcessMemory = ctypes.windll.kernel32.ReadProcessMemory
+ReadProcessMemory = kernel32.ReadProcessMemory
 ReadProcessMemory.argtypes = [w.HANDLE, w.LPCVOID, w.LPVOID, ctypes.c_size_t, ctypes.POINTER(ctypes.c_size_t)]
 ReadProcessMemory.restype = w.BOOL
         
-WriteProcessMemory = ctypes.windll.kernel32.WriteProcessMemory
+WriteProcessMemory = kernel32.WriteProcessMemory
 WriteProcessMemory.restype = w.BOOL
 WriteProcessMemory.argtypes = [w.HANDLE, w.LPVOID, w.LPCVOID, ctypes.c_size_t, ctypes.POINTER(ctypes.c_size_t) ]
 
-VirtualAllocEx = ctypes.windll.kernel32.VirtualAllocEx
+VirtualAllocEx = kernel32.VirtualAllocEx
 VirtualAllocEx.restype = w.LPVOID
 VirtualAllocEx.argtypes = (w.HANDLE, w.LPVOID, w.DWORD, w.DWORD, w.DWORD)
 
-VirtualFreeEx  = ctypes.windll.kernel32.VirtualFreeEx 
+VirtualFreeEx  = kernel32.VirtualFreeEx 
 VirtualFreeEx.restype = w.LPVOID
 VirtualFreeEx.argtypes = (w.HANDLE, w.LPVOID, w.DWORD, w.DWORD)
+
+GetLastError = kernel32.GetLastError
+GetLastError.restype = ctypes.wintypes.DWORD
+GetLastError.argtypes = ()
 
 MEM_RESERVE = 0x00002000
 MEM_COMMIT = 0x00001000
 MEM_DECOMMIT = 0x4000
 MEM_RELEASE = 0x8000
 PAGE_EXECUTE_READWRITE = 0x40
-
-GetLastError = ctypes.windll.kernel32.GetLastError
-GetLastError.restype = ctypes.wintypes.DWORD
-GetLastError.argtypes = ()
 
 game_addresses = AddressFile("game_addresses.txt").addresses
