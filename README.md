@@ -27,7 +27,7 @@ The extractor works with both Tekken 7 and Tag 2, as there is little differences
 
 ## Exporting from Tekken 7
 In order to work with Tekken 7, the extractor only needs the player's base addresses, to be indicated at the entry `p1_addr` of the file `game_addresses.txt`.
-You have to then start a game with the targeted moveset loaded up, and simply running the tool `Ton-Chan's_Motbin_export.py` without any arguments will do the job.
+You have to then start a game with the targeted moveset loaded up, and simply running the tool `motbinExport.py` without any arguments will do the job.
 
 Every moveset extracted from Tekken7 will be prefixed with `7_`
 
@@ -37,7 +37,7 @@ This address changes everytime CEMU is started. You can find it by finding any g
 Then, you need to run the extractor with the argument `tag2`. Example:	
 
 
-`python Ton-Chan's_Motbin_export.py tag2`
+`python motbinExport.py tag2`
 
 Every moveset extracted from Tag2 will be prefixed with `2_`
 
@@ -46,7 +46,7 @@ Every moveset extracted from Tag2 will be prefixed with `2_`
 Movesets are imported directly in memory, requiring the game to be loaded up and being only temporary.
 After having extracted a moveset, you can import it like such:
 
-`Ton-Chan's_Motbin_import.py CHARACTER` 
+`python motbinImport.py CHARACTER` 
 
 **CHARACTER** is to be replaced with the folder name of the target character, containing the .json and animation data.
 Administrator rights may be required to import the moveset into memory.
