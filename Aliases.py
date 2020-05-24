@@ -620,6 +620,17 @@ tag2CharacterSpecificFixes = {
             }
         ]
     },
+    "[Jinpachi]": {
+        'extraproperty': [
+            {
+                'type': 1,
+                'id': 0x82ea,
+                'value_alias': {
+                    0x31: 0x4 #fixes fly 1 1 2 2 camera
+                }
+            }
+        ]
+    },
 }
 
 oddHitboxBytesAliases = {
