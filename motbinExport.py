@@ -63,6 +63,9 @@ class Exporter:
         self.endian = 'little' if TekkenVersion == 7 else 'big'
         self.folder_destination = folder_destination
         
+        if self.base == 0x9999999999999999:
+            raise Exception("Cemu base address has not been modified yet, please insert the correct cemu_base address in game_address.txt")
+        
         if not os.path.isdir(folder_destination):
             os.mkdir(folder_destination)
         
