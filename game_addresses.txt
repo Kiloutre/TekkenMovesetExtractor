@@ -6,7 +6,7 @@ p2_addr        = 0x1434D63C0
 #p4_addr       = 0x1434E3A80 #works but seems useless
 
 # CEMU base address, changes at every CEMU restart
-cemu_base      = 0x1695F7F0000
+cemu_base      = 0x00001A65E2D0000
 
 # CEMU player addr
 # r11d,[r13+r12+000000B8] << r12 here is the p1 address, assuming you're playing p1

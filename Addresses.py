@@ -10,15 +10,20 @@ psapi = ctypes.windll.psapi
 
 class AddressFile:
     def __init__(self, path):
-        self.addresses = {}
-        with open(path, "r") as f:
+        self.addr = {}
+        self.path = path
+        
+        self.reloadValues()
+        
+    def reloadValues(self):
+        with open(self.path, "r") as f:
             try:
                 for line in f:
                     line = line.strip()
                     if len(line) == 0 or line[0] == "#":
                         continue
                     name, addr, _ = findall('([a-z0-9\_\-]+) += +((0x)?[a-fA-F0-9]+)', line)[0]
-                    self.addresses[name] = int(addr, 16)
+                    self.addr[name] = int(addr, 16)
             except Exception as e:
                 print(e)
                 print("Invalid game_addresses.txt format at line.")
@@ -88,4 +93,4 @@ MEM_DECOMMIT = 0x4000
 MEM_RELEASE = 0x8000
 PAGE_EXECUTE_READWRITE = 0x40
 
-game_addresses = AddressFile("game_addresses.txt").addresses
+game_addresses = AddressFile("game_addresses.txt")

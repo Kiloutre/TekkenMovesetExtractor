@@ -54,10 +54,12 @@ def setStructureSizes(self):
             
 class Exporter:
     def __init__(self, TekkenVersion, folder_destination='./extracted_chars/'):
+        game_addresses.reloadValues()
+        
         self.T = GameClass("TekkenGame-Win64-Shipping.exe" if TekkenVersion == 7 else "Cemu.exe")
         self.TekkenVersion = TekkenVersion
         self.ptr_size = 8 if TekkenVersion == 7 else 4
-        self.base = 0x0 if TekkenVersion == 7 else game_addresses['cemu_base']
+        self.base = 0x0 if TekkenVersion == 7 else game_addresses.addr['cemu_base']
         self.endian = 'little' if TekkenVersion == 7 else 'big'
         self.folder_destination = folder_destination
         
@@ -994,8 +996,8 @@ if __name__ == "__main__":
     extractedMovesetNames = []
     extractedMovesets = []
     
-    playerAddr = game_addresses["cemu_p1_addr"]
-    playerOffset = game_addresses["cemu_playerstruct_size"]
+    playerAddr = game_addresses.addr["cemu_p1_addr"]
+    playerOffset = game_addresses.addr["cemu_playerstruct_size"]
     for i in range(4):
         try:
             player_name = TekkenExporter.getPlayerMovesetName(playerAddr)

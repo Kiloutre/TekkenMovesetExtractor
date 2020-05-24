@@ -782,8 +782,8 @@ if __name__ == "__main__":
         os._exit(1)
         
     TekkenImporter = Importer()
-    TekkenImporter.importMoveset(game_addresses['p1_addr'], sys.argv[1])
+    TekkenImporter.importMoveset(game_addresses.addr['p1_addr'], sys.argv[1])
     
     if len(sys.argv) > 2:
-        TekkenImporter.importMoveset(game_addresses['p2_addr'], sys.argv[2])
+        TekkenImporter.importMoveset(game_addresses.addr['p2_addr'], sys.argv[2])
     

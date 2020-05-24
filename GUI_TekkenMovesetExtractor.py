@@ -20,7 +20,7 @@ creatingMonitor = [False, False]
 
 def monitoringFunc(playerId, TekkenImporter, parent):
     monitorId = playerId - 1
-    playerAddr = game_addresses['p%d_addr' % (playerId)]
+    playerAddr = game_addresses.addr['p%d_addr' % (playerId)]
     
     try:
         moveset = TekkenImporter.loadMoveset(charactersPath + parent.selected_char)
@@ -75,11 +75,14 @@ def getCharacterList():
     return sorted(folders)
     
 def exportCharacter(parent, tekkenVersion, playerAddr, name=''):
+    game_addresses.reloadValues()
     TekkenExporter = exportLib.Exporter(tekkenVersion, folder_destination=charactersPath)
     TekkenExporter.exportMoveset(playerAddr, name)
     parent.updateCharacterlist()
     
 def exportAllTag2(parent, tekkenVersion, playerAddr, playerSize):
+    game_addresses.reloadValues()
+    
     TekkenExporter = exportLib.Exporter(tekkenVersion)
     
     exportedMovesets = []
@@ -102,7 +105,8 @@ def exportAllTag2(parent, tekkenVersion, playerAddr, playerSize):
     parent.updateCharacterlist()
     
 def exportAll(parent, tekkenVersion, key_match):
-    player_addresses = [game_addresses[key] for key in game_addresses if match(key_match, key)]
+    game_addresses.reloadValues()
+    player_addresses = [game_addresses.addr[key] for key in game_addresses.addr if match(key_match, key)]
     TekkenExporter = exportLib.Exporter(tekkenVersion)
     
     exportedMovesets = []
@@ -128,7 +132,7 @@ def importPlayer(parent, playerId):
         print("No character selected")
         return
     folderPath = charactersPath + parent.selected_char 
-    playerAddr = game_addresses['p%d_addr' % (playerId)]
+    playerAddr = game_addresses.addr['p%d_addr' % (playerId)]
     
     TekkenImporter = importLib.Importer()
     TekkenImporter.importMoveset(playerAddr, folderPath)
@@ -333,14 +337,14 @@ class GUI_TekkenMovesetExtractor(Tk):
         
     def createExportButtons(self):
         tekken7_addr_match = "p([1-9]+)_addr"
-        playerAddresses = [key for key in game_addresses if match(tekken7_addr_match, key)]
+        playerAddresses = [key for key in game_addresses.addr if match(tekken7_addr_match, key)]
         for playerid, player_key in enumerate(playerAddresses):
-            self.createButton(self.t7_exportFrame, "Export: Tekken 7: Player %d" % (playerid + 1), (7, game_addresses[player_key]), exportCharacter)
+            self.createButton(self.t7_exportFrame, "Export: Tekken 7: Player %d" % (playerid + 1), (7, game_addresses.addr[player_key]), exportCharacter)
         
         self.createButton(self.t7_exportFrame, "Export: Tekken 7: All", (7, tekken7_addr_match), exportAll)
         
-        playerAddr = game_addresses["cemu_p1_addr"]
-        playerOffset = game_addresses["cemu_playerstruct_size"]
+        playerAddr = game_addresses.addr["cemu_p1_addr"]
+        playerOffset = game_addresses.addr["cemu_playerstruct_size"]
 
         for playerid in range(4):
             self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: Player %d" % (playerid), (2, playerAddr + (playerid * playerOffset)), exportCharacter)
