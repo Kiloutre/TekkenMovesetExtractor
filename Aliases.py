@@ -480,7 +480,6 @@ extra_move_properties = {
     0x815c: { 't7_id': 0x8209, 'desc': '(ALISA) wDm_AirF_00' },
     0x8183: { 't7_id': 0x8245, 'desc': '(FENG) Ta_atemi_lp_y' },
     0x8184: { 't7_id': 0x8246, 'desc': '(ALISA) sDw_UP_huri' },
-    0x8249: { 't7_id': 0x83c2, 'desc': 'Change other player floor level' },
     0x8188: { 't7_id': 0x824a, 'desc': '(ALISA) dwKAM_FFD' },
     0x8189: { 't7_id': 0x824b, 'desc': 'MAPPING' },
     0x818a: { 't7_id': 0x824c, 'desc': '(ALISA) sDw_AIR00_' },
@@ -555,6 +554,7 @@ extra_move_properties = {
     0x8239: { 't7_id': 0x8390, 'desc': '(ALISA) Aa_wpbreak' },
     0x823a: { 't7_id': 0x8391, 'desc': '(ALISA) Aa_kubimissileP_n' },
     0x823b: { 't7_id': 0x8392, 'desc': '(ALISA) Co_Change_Kam' },
+    0x8249: { 't7_id': 0x83c2, 'desc': 'Change other player floor level' },
     0x824d: { 't7_id': 0x83a2, 'desc': 'MAPPING' },
     0x8257: { 't7_id': 0x83ac, 'desc': '(NINA) Ni_dwkiA' },
     0x8258: { 't7_id': 0x83ad, 'desc': 'MAPPING' },
@@ -568,6 +568,13 @@ extra_move_properties = {
     0x8265: { 't7_id': 0x83ba, 'desc': '(DEVIL_JIN) Dj_IHorn' },
     0x8266: { 't7_id': 0x83bb, 'desc': '(DEVIL_JIN) Dj_IHorn' },
     0x8269: { 't7_id': 0x83be, 'desc': '(LIN_XIAOYU) Fu_xiao01yE' },
+    0x826e: {
+        't7_id': 0x83c3,
+        'desc': 'Change other player floor level',
+        'force_type': 0x21,
+        'force_value': 0x37,
+        'nofill': True
+    },
     0x8271: { 't7_id': 0x8408, 'desc': '(ALISA) sJUMP_00_' },
     0x82d5: { 't7_id': 0x8428, 'desc': '(ALISA) sRUN__00F' },
     0x82d6: { 't7_id': 0x8429, 'desc': '(ALISA) Co_sJP_RP' },
@@ -690,6 +697,8 @@ def fillDict(dictionnary):
         nextkey = keylist[i + 1]
         key_diff = nextkey - (key + 1)
         
+        if 'nofill' in dictionnary[key] or 'nofill' in dictionnary[nextkey]:
+            continue
         
         alias_offset = dictionnary[key]['t7_id'] - key
         alias_offset2 = dictionnary[nextkey]['t7_id'] - nextkey
@@ -701,6 +710,7 @@ def fillDict(dictionnary):
                     'desc': 'FILLED'
                 }
                 generatedKeys += 1
+                
     dictionnary[0xFFFF] = 'FILLED_DICT'
     print("Generated %d keys" % (generatedKeys))
     return dictionnary
