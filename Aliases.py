@@ -480,6 +480,7 @@ extra_move_properties = {
     0x815c: { 't7_id': 0x8209, 'desc': '(ALISA) wDm_AirF_00' },
     0x8183: { 't7_id': 0x8245, 'desc': '(FENG) Ta_atemi_lp_y' },
     0x8184: { 't7_id': 0x8246, 'desc': '(ALISA) sDw_UP_huri' },
+    0x8249: { 't7_id': 0x83c2, 'desc': 'Change other player floor level' },
     0x8188: { 't7_id': 0x824a, 'desc': '(ALISA) dwKAM_FFD' },
     0x8189: { 't7_id': 0x824b, 'desc': 'MAPPING' },
     0x818a: { 't7_id': 0x824c, 'desc': '(ALISA) sDw_AIR00_' },
