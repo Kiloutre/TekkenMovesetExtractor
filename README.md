@@ -1,3 +1,7 @@
+Download link:
+
+https://github.com/Kiloutre/TekkenMovesetExtractor/releases
+
 # GUI tool (very pretty)
 
 Simply run the GUI tool by double-clicking the file `GUI_TekkenMovesetExtractor.py`. The following interface will appear:
@@ -94,3 +98,4 @@ Administrator rights may be required to import the moveset into memory.
 - Add export naming option
 - Fix Wang vs Wang crescent moon into wallbreak
 - Detect Tag2 version & choose the right address
+- Check requirements of '___________' for tag2 & t7
