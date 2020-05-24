@@ -6,14 +6,14 @@ p2_addr        = 0x1434D63C0
 #p4_addr       = 0x1434E3A80 #works but seems useless
 
 # CEMU base address, needs to be changed at every CEMU restart
-cemu_base      = 0x9999999999999999
+cemu_base      = 0x999999999999999
 
 # CEMU player addr
 # r11d,[r13+r12+000000B8] << r12 here is the p1 address, assuming you're playing p1
 # p2, p3 & p4 are automatically found from p1
 
 cemu_p1_addr           = 0x10885C90 #Game ID: 00050000-1010f800 [EU v32]
-cemu_p1_addr_v2        = 0x10884C70 #Game ID: 00050000-10110000 [US v16]
+#cemu_p1_addr           = 0x10884C70 #Game ID: 00050000-10110000 [US v16]
 
 # Player struct size, does not change
 cemu_playerstruct_size = 0x2960
