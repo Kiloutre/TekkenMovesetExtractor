@@ -1,4 +1,4 @@
-Download link:
+Download link, with executable:
 
 https://github.com/Kiloutre/TekkenMovesetExtractor/releases
 
@@ -99,3 +99,7 @@ Administrator rights may be required to import the moveset into memory.
 - Fix Wang vs Wang crescent moon into wallbreak
 - Detect Tag2 version & choose the right address
 - Check requirements of '___________' for tag2 & t7
+- Fix Jinpachi broken camera for some specific move using his flying stance
+- Fix Unknown's double throw, that crashes (df12)
+- Fix Kazuya's devil transformation
+- Fix Angel (as Kazumi) crash during outro, if Angel victory
