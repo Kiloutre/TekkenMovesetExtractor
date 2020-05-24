@@ -200,11 +200,17 @@ def getTag2RequirementAlias(req, param):
             
     return requirement_detail['t7_id'], param
 
-def getTag2ExtramovePropertyAlias(type, id):
+def getTag2ExtramovePropertyAlias(type, id, value):
     new_extra_property = getTag2ExtraMoveProperty(id)
     if new_extra_property == None:
-        return type, id
-    return type, new_extra_property['t7_id']
+        return type, id, value
+        
+    if 'force_type' in new_extra_property:
+        type = new_extra_property['force_type']
+    if 'force_value' in new_extra_property:
+        value = new_extra_property['force_value']
+        
+    return type, new_extra_property['t7_id'], value
         
 def align8Bytes(value):
     return value + (8 - (value % 8))
@@ -663,7 +669,7 @@ class MotbinStruct:
         for extra_property in self.m['extra_move_properties']:
             type, id, value = extra_property.values()
             if self.m['version'] == "Tag2":
-                type, id = getTag2ExtramovePropertyAlias(type, id)
+                type, id, value = getTag2ExtramovePropertyAlias(type, id, value)
             self.writeInt(type, 4)
             self.writeInt(id, 4)
             self.writeInt(value, 4)

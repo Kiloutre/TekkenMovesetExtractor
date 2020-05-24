@@ -570,9 +570,8 @@ extra_move_properties = {
     0x8269: { 't7_id': 0x83be, 'desc': '(LIN_XIAOYU) Fu_xiao01yE' },
     0x826e: {
         't7_id': 0x83c3,
-        'desc': 'Change other player floor level',
+        'desc': 'Balconybreak victim / set opponent player move ID',
         'force_type': 0x21,
-        'force_value': 0x37,
         'nofill': True
     },
     0x8271: { 't7_id': 0x8408, 'desc': '(ALISA) sJUMP_00_' },

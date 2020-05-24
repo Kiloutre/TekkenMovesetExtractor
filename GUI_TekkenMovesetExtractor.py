@@ -167,7 +167,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         self.selected_char = None
         self.chara_data = None
         
-        self.wm_title("TekkenMovesetExtractor 0.8.2") 
+        self.wm_title("TekkenMovesetExtractor 0.8.3") 
         self.iconbitmap('GUI_TekkenMovesetExtractor/natsumi.ico')
         self.minsize(960, 540)
         self.geometry("960x540")
