@@ -14,7 +14,7 @@ import motbinImport as importLib
 
 charactersPath = "./extracted_chars/"
 
-monitorVerificationFrequency = 0.1
+monitorVerificationFrequency = (0.001) #check very frequently, increase this value if performance problems happen
 runningMonitors = [None, None]
 creatingMonitor = [False, False]
 
@@ -25,7 +25,8 @@ def monitoringFunc(playerId, TekkenImporter, parent):
     try:
         moveset = TekkenImporter.loadMoveset(charactersPath + parent.selected_char)
         print("\nMonitoring successfully started for player %d. Moveset: %s" % (playerId, moveset.m['character_name']))
-        
+
+
         while runningMonitors[monitorId] != None:
             try:
                 currMoveset = TekkenImporter.readInt(playerAddr + 0x14a0, 8)
@@ -47,6 +48,7 @@ def monitoringFunc(playerId, TekkenImporter, parent):
                     runningMonitors[monitorId] = None
                     parent.setMonitorButton(monitorId, False)
                     break
+            
     except Exception as e:
         print(e, file=sys.stderr)
     print("Monitor %d closing" % (playerId))
