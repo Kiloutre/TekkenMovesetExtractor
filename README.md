@@ -12,21 +12,38 @@ Simply load the characters through any mean (practice mode, versus mode, etc), t
 The characters will be extracted by default in the `extracted_chars/` folder.
 
 
-# Exporting from Tag2
+# Exporting from Tag2  (CEMU, Wii U emulator)
 
 In order to work with Tag2, you need to first get the base address of the game in Cemu, and feed it to the variable `cemu_base` in `game_addresses.txt`
-This address changes everytime CEMU is started. You can find it by first finding any game-related value using Cheat Engine's scans.
+This address changes everytime CEMU is started.
+
+You can find it by first finding any game-related value using Cheat Engine's scans.
+
 An easy value is `32770` for crouching and `32769` for standing, in `4 bytes big endian`.
 Or `41943040` for crouching and `25165824` for standing, in regular `4 bytes` value type.
+
 Once you've singled out a game-related value, right click on it and click "Find out what accesses this address". Unpause the game and look at the list:
 R13 in these list is always cemu_base, and cemu_p1_addr will always be the second argument (ex: `r12` in `[r13 + r12 + 000000B8`
-![Finding cemu_base and cemu_p1_addr]https://i.imgur.com/jsgYLm2.png
 
-cemu_base will change with every cemu restart, so you will have to do this again.
+![Finding cemu_base and cemu_p1_addr](https://i.imgur.com/jsgYLm2.png)
+
 Once both cemu_base and cemu_p1_addr are at the right value in `game_addresses.txt`, export characters by clicking the Export buttons in the interface.
 
+# Importing through the GUI
 
-# Running the sources
+Movesets are imported in memory, so you should have the game running if you want to import a moveset.
+Two options are available to you:
+
+- Loading the moveset in a simple way, which means it will go away at the next loading screen. Those are the `Import to` buttons.
+- Using "Monitors", which will also load the moveset in memory, but force that moveset on a specific player **constantly**. Those are the `Monitor` buttons.
+
+Both buttons work the same: Select a moveset by clicking on it in the moveset list to the left of the import buttons, then click Import OR Monitor.
+Import requires the game to be already loaded, which is usually what you'd want to use to mess around in practice mode.
+Monitors can be started even from the main menu, and will work fine no matter how long you play;
+If you wish to play online with a friend, both players should use monitors so that they can force movesets before the game is loaded.
+
+
+# Export/Import by running the source code (not necessary)
 
 ## Pre-requisites for running the sources:
 
@@ -34,14 +51,11 @@ Once both cemu_base and cemu_p1_addr are at the right value in `game_addresses.t
 
 - Pywin32 : `python -m pip install pywin32 --user`
 
-
-# Exporting movesets : From source code (console tool)
-
-This tool exports movesets from memory, you therefore need the game running with the target moveset loaded up already.
-The extractor works with both Tekken 7 and Tag 2, as there is little differences between their moveset formats.
-
 ## Exporting from Tekken 7
+This tool exports movesets from memory, you therefore need the game running with the target moveset loaded up already.
+
 In order to work with Tekken 7, the extractor only needs the player's base addresses, to be indicated at the entry `p1_addr` of the file `game_addresses.txt`.
+This address should only change with patches, so you should never have to find it yourself.
 You have to then start a game with the targeted moveset loaded up, and simply running the tool `motbinExport.py` without any arguments will do the job.
 
 Every moveset extracted from Tekken7 will be prefixed with `7_`
