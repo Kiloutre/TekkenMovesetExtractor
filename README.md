@@ -28,6 +28,7 @@ R13 in these list is always cemu_base, and cemu_p1_addr will always be the secon
 ![Finding cemu_base and cemu_p1_addr](https://i.imgur.com/jsgYLm2.png)
 
 Once both cemu_base and cemu_p1_addr are at the right value in `game_addresses.txt`, export characters by clicking the Export buttons in the interface.
+cemu_p1_addr only needs to be found once, unless you change the Tag2 version you're using (different region, etc)
 
 # Importing through the GUI
 
