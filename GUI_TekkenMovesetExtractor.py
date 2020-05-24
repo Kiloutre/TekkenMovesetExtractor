@@ -14,7 +14,7 @@ import motbinImport as importLib
 
 charactersPath = "./extracted_chars/"
 
-monitorVerificationFrequency = 0.25
+monitorVerificationFrequency = 0.1
 runningMonitors = [None, None]
 creatingMonitor = [False, False]
 
@@ -74,6 +74,28 @@ def getCharacterList():
 def exportCharacter(parent, tekkenVersion, playerAddr, name=''):
     TekkenExporter = exportLib.Exporter(tekkenVersion, folder_destination=charactersPath)
     TekkenExporter.exportMoveset(playerAddr, name)
+    parent.updateCharacterlist()
+    
+def exportAllTag2(parent, tekkenVersion, playerAddr, playerSize):
+    TekkenExporter = exportLib.Exporter(tekkenVersion)
+    
+    exportedMovesets = []
+    
+    for i in range(4):
+        addr = playerAddr + (i * playerSize) 
+        moveset_name = TekkenExporter.getPlayerMovesetName(addr)
+        if moveset_name not in exportedMovesets:
+            print("Requesting export for %s..." % (moveset_name))
+            moveset = TekkenExporter.exportMoveset(addr)
+            exportedMovesets.append(moveset_name)
+            print()
+        else:
+            print('Player', moveset_name, 'already exported, not exporting again.')
+            
+    print('\nSuccessfully exported:')
+    for name in exportedMovesets:
+        print(name)
+        
     parent.updateCharacterlist()
     
 def exportAll(parent, tekkenVersion, key_match):
@@ -301,19 +323,20 @@ class GUI_TekkenMovesetExtractor(Tk):
         ]
         
     def createExportButtons(self):
-        tekken7_addr_match = "p([0-9]+)_addr"
+        tekken7_addr_match = "p([1-9]+)_addr"
         playerAddresses = [key for key in game_addresses if match(tekken7_addr_match, key)]
         for playerid, player_key in enumerate(playerAddresses):
             self.createButton(self.t7_exportFrame, "Export: Tekken 7: Player %d" % (playerid + 1), (7, game_addresses[player_key]), exportCharacter)
         
         self.createButton(self.t7_exportFrame, "Export: Tekken 7: All", (7, tekken7_addr_match), exportAll)
         
-        tag2_addr_match = "cemu_p([0-9]+)_addr"
-        playerAddresses = [key for key in game_addresses if match(tag2_addr_match, key)]
-        for playerid, player_key in enumerate(playerAddresses):
-            self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: Player %d" % (playerid + 1), (2, game_addresses[player_key]), exportCharacter)
+        playerAddr = game_addresses["cemu_p1_addr"]
+        playerOffset = game_addresses["cemu_playerstruct_size"]
+
+        for playerid in range(4):
+            self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: Player %d" % (playerid), (2, playerAddr + (playerid * playerOffset)), exportCharacter)
         
-        self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: All", (2, tag2_addr_match), exportAll)
+        self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: All", (2, playerAddr, playerOffset), exportAllTag2)
         
     def createButton(self, frame, text, const_args, callback, side='top', expand=1):
         exportButton = Button(frame)

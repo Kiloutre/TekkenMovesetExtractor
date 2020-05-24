@@ -993,32 +993,26 @@ if __name__ == "__main__":
     
     extractedMovesetNames = []
     extractedMovesets = []
-    key_prefix = "p" if TekkenVersion == 7 else "cemu_p"
     
-    playerId = 1
-    while True:
-        playerKey = key_prefix + str(playerId) + "_addr"
-        playerId += 1
-        
-        if playerKey not in game_addresses:
-            break
-            
-        player_addr = game_addresses[playerKey]
-        
+    playerAddr = game_addresses["cemu_p1_addr"]
+    playerOffset = game_addresses["cemu_playerstruct_size"]
+    for i in range(4):
         try:
-            player_name = TekkenExporter.getPlayerMovesetName(player_addr)
+            player_name = TekkenExporter.getPlayerMovesetName(playerAddr)
         except Exception as e:
             print(e)
             print("%s: Invalid character or moveset." % (playerKey))
-            continue
+            break
         
         if player_name in extractedMovesetNames:
             print("%s: Player %s already extracted, skipping extraction." % (playerKey, player_name))
+            playerAddr += playerOffset
             continue
             
-        moveset = TekkenExporter.exportMoveset(player_addr)
+        moveset = TekkenExporter.exportMoveset(playerAddr)
         extractedMovesetNames.append(player_name)
         extractedMovesets.append(moveset)
+        playerAddr += playerOffset
     
     if len(extractedMovesets) > 0:
         print("\nSuccessfully extracted:")

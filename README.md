@@ -1,18 +1,3 @@
-# Pre-requisites for running the sources (not the .exe):
-
-- Python 3.6.5 specifically.
-
-Make sure that the python version is correct by running the following command in the command line:
-
-`python --version`
-
-
-- Pywin32
-
-Install Pywin32 after python, by running this in the command line:
-
-`python -m pip install pywin32 --user`
-
 # GUI tool (very pretty)
 
 Simply run the GUI tool by double-clicking the file `GUI_TekkenMovesetExtractor.py`. The following interface will appear:
@@ -20,6 +5,35 @@ Simply run the GUI tool by double-clicking the file `GUI_TekkenMovesetExtractor.
 ![Interface](https://pbs.twimg.com/media/EYt5eqXWoAEXQtI.png:large)
 
 The GUI tools allows you to export or import moveset simply by clicking buttons.
+
+# GUI tool: Exporting from T7
+
+Simply load the characters through any mean (practice mode, versus mode, etc), then click any "Export: Tekken 7:" button.
+The characters will be extracted by default in the `extracted_chars/` folder.
+
+
+# Exporting from Tag2
+
+In order to work with Tag2, you need to first get the base address of the game in Cemu, and feed it to the variable `cemu_base` in `game_addresses.txt`
+This address changes everytime CEMU is started. You can find it by first finding any game-related value using Cheat Engine's scans.
+An easy value is `32770` for crouching and `32769` for standing, in `4 bytes big endian`.
+Or `41943040` for crouching and `25165824` for standing, in regular `4 bytes` value type.
+Once you've singled out a game-related value, right click on it and click "Find out what accesses this address". Unpause the game and look at the list:
+R13 in these list is always cemu_base, and cemu_p1_addr will always be the second argument (ex: `r12` in `[r13 + r12 + 000000B8`
+![Finding cemu_base and cemu_p1_addr]https://i.imgur.com/jsgYLm2.png
+
+cemu_base will change with every cemu restart, so you will have to do this again.
+Once both cemu_base and cemu_p1_addr are at the right value in `game_addresses.txt`, export characters by clicking the Export buttons in the interface.
+
+
+# Running the sources
+
+## Pre-requisites for running the sources:
+
+- Python 3.6.5 specifically, newever version don't work with the current code.
+
+- Pywin32 : `python -m pip install pywin32 --user`
+
 
 # Exporting movesets : From source code (console tool)
 
@@ -33,12 +47,9 @@ You have to then start a game with the targeted moveset loaded up, and simply ru
 Every moveset extracted from Tekken7 will be prefixed with `7_`
 
 ## Exporting from Tag2 (CEMU, Wii U emulator)
-In order to work with Tag2, you need to first get the base address of the game in Cemu, and feed it to the variable `cemu_base` in `game_addresses.txt`	It used to be that you needed to get a new address everytime you restart CEMU to extract moveset, but that isn't the case anymore.
-This address changes everytime CEMU is started. You can find it by first finding any game-related value using Cheat Engine.
-An easy one is `32770` for crouching and `32769` for standing, in `4 bytes big endian`. Or `41943040` for crouching and `25165824` for standing, in regular `4 bytes` value type.
-, then looking at what accesses the value and dumping the r13 register from there. The r13 register will contain the `cemu_base` address.	Simply run the extractor with the argument `tag2` to extract tag2 characters. Example:
-Then, you need to run the extractor with the argument `tag2`. Example:	
 
+Refer to the previous Tag2 instructions in the GUI section to see how are CEMU addresses obtained.
+Once the game_addresses.txt file is correct, simply run the following command to export Tag2 movesets:
 
 `python motbinExport.py tag2`
 
@@ -67,4 +78,5 @@ Administrator rights may be required to import the moveset into memory.
 - Remove reliance on Python 3.6.5
 - Fix tag2 armor king D/B+2 excessive pushback
 - Add export naming option
-- Fix WangvsWang crescent moon into wallbreak
+- Fix Wang vs Wang crescent moon into wallbreak
+- Detect Tag2 version & choose the right address
