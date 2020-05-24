@@ -90,7 +90,6 @@ Administrator rights may be required to import the moveset into memory.
 - Look at tag2 intro, especially mokujin & combot
 - Rename 'unknown' of cancel into 'cancel_option' on next update
 - Remove reliance on Python 3.6.5
-- Fix tag2 armor king D/B+2 excessive pushback
 - Add export naming option
 - Fix Wang vs Wang crescent moon into wallbreak
 - Detect Tag2 version & choose the right address

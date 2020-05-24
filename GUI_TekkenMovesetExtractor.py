@@ -18,50 +18,53 @@ monitorVerificationFrequency = 0.1
 runningMonitors = [None, None]
 creatingMonitor = [False, False]
 
-def monitoringFunc(playerAddr, playerId, Tekken, moveset, parent):
+def monitoringFunc(playerId, TekkenImporter, parent):
     monitorId = playerId - 1
-    print("Monitering successfully started for player %d. Moveset: %s" % (playerId, moveset.m['character_name']))
+    playerAddr = game_addresses['p%d_addr' % (playerId)]
     
-    while runningMonitors[monitorId] != None:
-        try:
-            currMoveset = Tekken.readInt(playerAddr + 0x14a0, 8)
-            if currMoveset != moveset.motbin_ptr:
-                moveset.copyUnknownOffsets(currMoveset)
-                Tekken.writeInt(playerAddr + 0x14a0, moveset.motbin_ptr, 8)
-                print("Player %d: Wrong moveset, applying %s" % (playerId, moveset.m['character_name']))
-            time.sleep(monitorVerificationFrequency)
-        except Exception as e:
+    try:
+        moveset = TekkenImporter.loadMoveset(charactersPath + parent.selected_char)
+        print("\nMonitoring successfully started for player %d. Moveset: %s" % (playerId, moveset.m['character_name']))
+        
+        while runningMonitors[monitorId] != None:
             try:
-                Tekken.readInt(moveset.motbin_ptr, 8)
-                time.sleep(5)
-            except:
-                print(e)
-                print("Monitor %d closing because process can't be read" % (playerId))
-                runningMonitors[monitorId] = None
-                parent.setMonitorButton(monitorId, False)
-                break
+                currMoveset = TekkenImporter.readInt(playerAddr + 0x14a0, 8)
+                
+                if currMoveset != moveset.motbin_ptr:
+                    moveset.copyUnknownOffsets(currMoveset)
+                    TekkenImporter.writeInt(playerAddr + 0x14a0, moveset.motbin_ptr, 8)
+                    print("Player %d: Wrong moveset, applying %s" % (playerId, moveset.m['character_name']))
+                    
+                time.sleep(monitorVerificationFrequency)
+                
+            except Exception as e:
+                try:
+                    TekkenImporter.readInt(moveset.motbin_ptr, 8)
+                    time.sleep(5)
+                except:
+                    print(e)
+                    print("Monitor %d closing because process can't be read" % (playerId), file=sys.stderr)
+                    runningMonitors[monitorId] = None
+                    parent.setMonitorButton(monitorId, False)
+                    break
+    except Exception as e:
+        print(e, file=sys.stderr)
     print("Monitor %d closing" % (playerId))
     parent.setMonitorButton(monitorId, False)
-    sys.exit(1)
+    sys.exit(0)
     
 def startMonitor(parent, playerId):
     if parent.selected_char == None:
-        print("No character selected")
-        return
+        raise Exception("No character selected")
     print("Starting monitor for p%d..." % (playerId))
     monitorId = playerId - 1
     creatingMonitor[monitorId] = True
     
-    Tekken = GameClass("TekkenGame-Win64-Shipping.exe")
-    folderPath = charactersPath + parent.selected_char 
-    
     TekkenImporter = importLib.Importer()
-    playerAddr = game_addresses['p%d_addr' % (playerId)]
-    moveset = TekkenImporter.loadMoveset(folderPath)
         
-    monitor = threading.Thread(target=monitoringFunc, args=(playerAddr, playerId, Tekken, moveset, parent))
-    monitor.start()
+    monitor = threading.Thread(target=monitoringFunc, args=(playerId, TekkenImporter, parent))
     runningMonitors[monitorId] = monitor
+    monitor.start()
     creatingMonitor[monitorId] = False
     
 def getCharacterList():
@@ -146,6 +149,10 @@ class TextRedirector(object):
     def flush(self):
         pass
         
+def on_close():
+    runningMonitors = [None, None]
+    os._exit(0)
+        
 class GUI_TekkenMovesetExtractor(Tk):
     def __init__(self):
         Tk.__init__(self)
@@ -154,7 +161,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         self.selected_char = None
         self.chara_data = None
         
-        self.wm_title("TekkenMovesetExtractor 0.8") 
+        self.wm_title("TekkenMovesetExtractor 0.8.1") 
         self.iconbitmap('GUI_TekkenMovesetExtractor/natsumi.ico')
         self.minsize(960, 540)
         self.geometry("960x540")
@@ -177,6 +184,8 @@ class GUI_TekkenMovesetExtractor(Tk):
         
         self.createExportButtons()
         self.createCharacterList()
+        
+        self.protocol("WM_DELETE_WINDOW", on_close)
         
         try:
             with open("GUI_TekkenMovesetExtractor/readme.txt") as f:
@@ -301,9 +310,9 @@ class GUI_TekkenMovesetExtractor(Tk):
             self.setMonitorButton(monitorId, False)
             print("Killed monitor for player %d" % (playerId))
         else:
-            self.setMonitorButton(monitorId, True)
             try:
                 startMonitor(self, playerId)
+                self.setMonitorButton(monitorId, True)
             except Exception as e:
                 print(e, file=sys.stderr)
                 self.setMonitorButton(monitorId, False)
