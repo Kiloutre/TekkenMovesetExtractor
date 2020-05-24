@@ -20,7 +20,7 @@ creatingMonitor = [False, False]
 
 def monitoringFunc(playerId, TekkenImporter, parent):
     monitorId = playerId - 1
-    playerAddr = game_addresses.addr['p%d_addr' % (playerId)]
+    playerMotbinAddr = game_addresses.addr['p%d_addr' % (playerId)] + 0x14a0
     
     try:
         moveset = TekkenImporter.loadMoveset(charactersPath + parent.selected_char)
@@ -29,11 +29,11 @@ def monitoringFunc(playerId, TekkenImporter, parent):
 
         while runningMonitors[monitorId] != None:
             try:
-                currMoveset = TekkenImporter.readInt(playerAddr + 0x14a0, 8)
+                currMovesetPtr = TekkenImporter.readInt(playerMotbinAddr, 8)
                 
-                if currMoveset != moveset.motbin_ptr:
-                    moveset.copyUnknownOffsets(currMoveset)
-                    TekkenImporter.writeInt(playerAddr + 0x14a0, moveset.motbin_ptr, 8)
+                if currMovesetPtr != moveset.motbin_ptr:
+                    moveset.copyUnknownOffsets(currMovesetPtr)
+                    TekkenImporter.writeInt(playerMotbinAddr, moveset.motbin_ptr, 8)
                     print("Player %d: Wrong moveset, applying %s" % (playerId, moveset.m['character_name']))
                     
                 time.sleep(monitorVerificationFrequency)

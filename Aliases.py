@@ -5,8 +5,8 @@ requirements = {
     468: { 't7_id': 615, 'desc': 'Juggle' },
     65: { 't7_id': 68, 'desc': 'Incoming high' },
     133: { 't7_id': 135, 'desc': 'Death' },
-    3: { 't7_id': 3, 'desc': '1536: Enemy standing (checking vuln?)' },
-    27: { 't7_id': 27, 'desc': '2536: Enemy airborne (checking vuln?)' },
+    3: { 't7_id': 3, 'desc': '1536: Enemy standing, throw (checking vuln?)' },
+    27: { 't7_id': 27, 'desc': '2536: Enemy airborne, throw (checking vuln?)' },
     46: { 't7_id': 44, 'desc': 'MAPPING' },
     49: { 't7_id': 47, 'desc': 'MAPPING' },
     51: { 't7_id': 48, 'desc': 'MAPPING' },
@@ -638,7 +638,7 @@ evenHitboxBytesAliases = {
 
 
 def applyCharacterSpecificFixes(m):
-    character_name = m['character_name']
+    character_name = m['tekken_character_name']
     if character_name not in tag2CharacterSpecificFixes:
         return
     for alias in tag2CharacterSpecificFixes[character_name]['extraproperty']:
@@ -649,7 +649,6 @@ def applyCharacterSpecificFixes(m):
                 continue
             if 'id' in alias and alias['id'] != id:
                 continue
-            print('o')
             m['extra_move_properties'][i]['value'] = alias['value_alias'].get(value, value)
 
 def replaceRequirement(req, param):
