@@ -1,101 +1,158 @@
-Download link:
+# Tekken Moveset Extractor By [kiloutre](https://twitter.com/kiloutre) 
 
-https://github.com/Kiloutre/TekkenMovesetExtractor/releases
+This tool's main purpose is to port over move lists and mechanics from Tekken Tag 2 into Tekken 7.
 
-# GUI tool (very pretty)
+It also allows you to change the move set of characters already in Tekken 7 to other characters in the 7 roster.
 
-Simply run the GUI tool by double-clicking the file `GUI_TekkenMovesetExtractor.py`. The following interface will appear:
+## Getting Started
 
-![Interface](https://pbs.twimg.com/media/EYt5eqXWoAEXQtI.png:large)
-
-The GUI tools allows you to export or import moveset simply by clicking buttons.
-
-# GUI tool: Exporting from T7
-
-Simply load the characters through any mean (practice mode, versus mode, etc), then click any "Export: Tekken 7:" button.
-The characters will be extracted by default in the `extracted_chars/` folder.
+This is quite an involved process in this early stage but we are working towards making it more accessible for players in the future.
 
 
-# Exporting from Tag2  (CEMU, Wii U emulator)
+### Prerequisites
 
-In order to work with Tag2, you need to first get the base address of the game in Cemu, and feed it to the variable `cemu_base` in `game_addresses.txt`
-This address changes everytime CEMU is started.
+There will be a few programs you will have to download before being able to use this tool with Tekken 7.
 
-You can find it by first finding any game-related value using Cheat Engine's scans.
+* [Tekken Moveset Extractor](https://github.com/Kiloutre/TekkenMovesetExtractor/releases/) - The tool that does all the magic.
+* [Cemu](https://cemu.info/) - A emulator used to run the Wii U port of Tekken Tag 2.
+* [Python 3.6.5](https://www.python.org/downloads/release/python-365/) - Packages from Python are needed for this tool to run.
+* [PYWIN32 using PIP](http://www.qarevolution.com/5-step-install-pywin32-using-pip/) - Much needed Python extensions.
+* [Cheat Engine](https://www.cheatengine.org/) - Used to look into the opcodes in Cemu.
+* Wii U Games Files For Tekken Tag 2 - You will have to acquire this yourself
 
-An easy value is `32770` for crouching and `32769` for standing, in `4 bytes big endian`.
-Or `41943040` for crouching and `25165824` for standing, in regular `4 bytes` value type.
+### Installing & Walkthrough
 
-Once you've singled out a game-related value, right click on it and click "Find out what accesses this address". Unpause the game and look at the list:
-R13 in these list is always cemu_base, and cemu_p1_addr will always be the second argument (ex: `r12` in `[r13 + r12 + 000000B8`
+### Python 3.6.5
 
-![Finding cemu_base and cemu_p1_addr](https://i.imgur.com/jsgYLm2.png)
+1. Download version 3.6.5 of Python from the link provided. Making sure to pick the "Windows x86-64 executable installer" under files, if you're running windows that is.
 
-Once both cemu_base and cemu_p1_addr are at the right value in `game_addresses.txt`, export characters by clicking the Export buttons in the interface.
-cemu_p1_addr only needs to be found once, unless you change the Tag2 version you're using (different region, etc)
+2. Make sure during installation you've checked the "Add Python 3.6 to PATH" option
 
-# Importing through the GUI
+3. Go Through the normal steps of the installation and take note of where you've installed it as that will come in handy in the future.
 
-Movesets are imported in memory, so you should have the game running if you want to import a moveset.
-Two options are available to you:
+4. Once the setup has completed, hit close.
 
-- Loading the moveset in a simple way, which means it will go away at the next loading screen. Those are the `Import to` buttons.
-- Using "Monitors", which will also load the moveset in memory, but force that moveset on a specific player **constantly**. Those are the `Monitor` buttons.
+### PYWIN32 using PIP
 
-Both buttons work the same: Select a moveset by clicking on it in the moveset list to the left of the import buttons, then click Import OR Monitor.
-Import requires the game to be already loaded, which is usually what you'd want to use to mess around in practice mode.
-Monitors can be started even from the main menu, and will work fine no matter how long you play;
-If you wish to play online with a friend, both players should use monitors so that they can force movesets before the game is loaded.
+1. Make sure this is done after installing Python 3.6.5
+
+2. Follow the instructions on the link provided in Prerequisites
+
+3. If you get a warning saying " WARNING: You are using pip version 19.2.3, however version 20.1.1 is available. You should consider upgrading via the 'python -m pip install --upgrade pip' command." Ignore it as the version provided is fine
+
+### Cemu
+
+1. To install Cemu, head to their main website located [here](https://cemu.info/), and download the latest version.
+
+2. The only settings you will need to change in Cemu are the input controls as you will have to navigate the menus.
+
+Note: Wii U game files will come packaged as such:
+
+![alt text](https://i.imgur.com/4D9BFBQ.png)
+
+4. Click File -> Load and navigate to the code folder shown in the image above.
+
+5. This folder contains the file we will use to run Tag 2: **Tekken.rpx**
+
+6. Tag 2 should now launch and if you've set your input settings up correctly you should be able to navigate the menus.
+
+7. Select offline mode and then practice.
+
+Note: Picking solo or tag here does not matter as you can select in the Extractor which player you want to export.
+
+8. Now you can pick the character you wish to transfer over to Tekken 7
+
+Note: Your opponent does not matter
+
+9. Now pick any stage and sit idle in it as we continue installing the rest of the needed programs.
+
+Note: Take note of what version of Tekken Tag 2 you have as there will be 2: US & EU. The US version requires an extra step I will detail later.
+
+### Tekken Moveset Extractor Install
+
+1. Go to the link provided in prerequisites and download **TekkenMovesetExtractor.zip** from the latest release.
+
+2. You can place this anywhere. It does not need to be in the same directory as Tekken.
+
+3. Do not run this as we have to configure our most important program first.
+
+### Cheat Engine
+
+This part will be the most complex part of this guide so read carefully
+
+1. Make sure you downloaded the latest version of Cheat Engine from the link provided
+
+2. The install is quite straightforward, at the end of the installation launch Cheat Engine (you can try out the tutorial if you want)
+
+Note: We are going to use Cheat Engine to find our Cemu_Base code
+
+4. In Cheat Engine there will be an icon that is glowing different colors, you will want to click that button and select Cemu from the list provided.
+
+5. Now that the Cemu process has been selected, right-click on the box where it says Value Type and select the top option which should say **"Define new custom type (Auto Assembler)"**
+
+6. A box will appear with some code in it, delete all the code in this box and replace it with the code provided in this [Paste Bin](https://pastebin.com/U3xSNvVE) and hit OK.
+
+Note: Now the Value Type box should state **"4 Byte Big Endian"** 
+
+7. In the blank Value box put in the value **"32770"** and while doing your first scan (by hitting New Scan) make sure in Cemu you are crouching in the game during the whole scan process.
+
+8. Once the scan has completed, you can let your character stance. Now in the left address list you will notice that one of the addresses has the value of **"32769"** this is the address we need to double click.
+
+Note: The value **"32770"** is used to identify when the character is crouching and the value **"32769"** is used to identify when the character is standing.
+
+9. Now that you've double-clicked the address, it should appear in the bottom box below. right-click it and select **"Find out what accesses this address"** 
+
+10. Hit yes to the confirmation. You will see a list of instructions, you will need to select the instruction that holds both **“R13+R12”**. See below:
+
+![alt text](https://i.imgur.com/cQaoq3c.png)
+
+11. Once selected and highlighted look down to the lower box and find **“R13=”** this is that cemu_base we require before converting with TME.
+
+12. Speaking of TME, you will now want to navigate to where you placed TME and open the game_addresses.txt file.
+
+13. Grab the value after “R13=” and format it like this example number: **“0x12F4EF70000”** (Remove 0’s from the front and retain the back) paste that formatted value into the text file we just opened right after the cemu_base = 
+
+```
+# CEMU base address, changes at every CEMU restart
+cemu_base = 0x12F4EF70000 (This is a example value yours will differ)
+```
+**IF YOU HAVE THE EU VERSION OF TEKKEN TAG 2 YOU DO NOT NEED TO FOLLOW THE NEXT STEP**
+
+14. In the text file you will find **“cemu_p1_addr = “** you will want to place the value **“0x10884C70”** if you are using the American version of Tekken Tag 2
+
+```
+# CEMU player addresses, constant
+cemu_p1_addr  = 0x10884C70
+```
+15. Now save the text file and open **“TekkenMovesetExtractor.exe”**
+
+Note: Be aware that every time you need to import new characters you haven’t imported before, you will have to follow these steps again (besides No. 14)
+
+## Using Tekken Moveset Extractor
+
+16. After running the program (you should still have Cemu open in practice mode with the character you want to import in player 1 slot) Hit the button **“Export: Tekken Tag2: Player 1”** (Give some time for this to export, the program may freeze during this process, do not worry as this is normal)
+
+17. The program will now convert the chosen character’s move list into one that can be imported into Tekken 7 (You can see your exported characters in the list on the right side of the application. (2_ means Tag 2 and 7_ mean Tekken 7)
+
+![alt text](https://i.imgur.com/8Z67Rc9.png)
+
+18. If you are happy with the list of characters you have imported, you can now close Cemu but make sure you do not close down **”TekkenMovesetExtractor.exe”** (Do take note that if you are wanting to import more characters after closing Cemu, you will have to follow the cheat engine section again)
+
+### Importing into Tekken 7
+
+1. Launch Tekken 7 and jump into practice with whatever Tekken 7 character you want
+
+2. Once in practice mode head over to the Extractor, select one character from the list of imported characters and hit **”Monitor P1”**
+
+3. You should now have the movelist of the character you chose to import!
+
+And you’re done!
+
+A few notes to end with:
+
+* You can export Tekken 7 characters using the **”Export: Tekken7: Player 1”** option. This will add them to the list to be imported.
+* This can be used online as long as the other person is running the tool also and has setup P2 as the character you have imported for yourself (if you don’t follow those rules, you will be desyncing a lot)
+* A lot of rage arts and intro/outros are broken when using this tool
 
 
-# Export/Import by running the source code (not necessary)
-
-## Pre-requisites for running the sources:
-
-- Python 3.6.5 specifically, newever version don't work with the current code.
-
-- Pywin32 : `python -m pip install pywin32 --user`
-
-## Exporting from Tekken 7
-This tool exports movesets from memory, you therefore need the game running with the target moveset loaded up already.
-
-In order to work with Tekken 7, the extractor only needs the player's base addresses, to be indicated at the entry `p1_addr` of the file `game_addresses.txt`.
-This address should only change with patches, so you should never have to find it yourself.
-You have to then start a game with the targeted moveset loaded up, and simply running the tool `motbinExport.py` without any arguments will do the job.
-
-Every moveset extracted from Tekken7 will be prefixed with `7_`
-
-## Exporting from Tag2 (CEMU, Wii U emulator)
-
-Refer to the previous Tag2 instructions in the GUI section to see how are CEMU addresses obtained.
-Once the game_addresses.txt file is correct, simply run the following command to export Tag2 movesets:
-
-`python motbinExport.py tag2`
-
-Every moveset extracted from Tag2 will be prefixed with `2_`
-
-# Importing moveset into Tekken 7
-
-Movesets are imported directly in memory, requiring the game to be loaded up and being only temporary.
-After having extracted a moveset, you can import it like such:
-
-`python motbinImport.py CHARACTER` 
-
-**CHARACTER** is to be replaced with the folder name of the target character, containing the .json and animation data.
-Administrator rights may be required to import the moveset into memory.
-
-# TODO:
-
-- Fix Tag2 projectiles (doesn't seem possible at all)
-- Fix missing TAG2 commands that use command buffer. Placeholder?
-- Make bound use screw ressource?
-- Fix wallsplat grabs that just act as regular airborne grabs
-- Fix Kunimitsu backturned 4 that doesn't turn around
-- Fix bound floorbreak that doesn't bound
-- Look at tag2 intro, especially mokujin & combot
-- Rename 'unknown' of cancel into 'cancel_option' on next update
-- Remove reliance on Python 3.6.5
-- Add export naming option
-- Fix Wang vs Wang crescent moon into wallbreak
-- Detect Tag2 version & choose the right address
-- Check requirements of '___________' for tag2 & t7
+This guide was created by [LpeX](https://twitter.com/mrlpex)
