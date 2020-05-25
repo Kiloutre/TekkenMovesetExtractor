@@ -14,9 +14,18 @@ import motbinImport as importLib
 
 charactersPath = "./extracted_chars/"
 
-monitorVerificationFrequency = (0.001) #check very frequently, increase this value if performance problems happen
+monitorVerificationFrequency   = (0.0001) #check very frequently, increase this value if performance problems happen
+waitFrameVerificationFrequency = (0.0001)
 runningMonitors = [None, None]
 creatingMonitor = [False, False]
+            
+def waitFrame(TekkenImporter, amount):
+    frame_counter_addr = game_addresses.addr['frame_counter']
+    prevFrame = TekkenImporter.readInt(frame_counter_addr, 4)
+    currFrame = prevFrame
+    while currFrame == prevFrame:
+        time.sleep(waitFrameVerificationFrequency)
+        currFrame = TekkenImporter.readInt(frame_counter_addr, 4)
 
 def monitoringFunc(playerId, TekkenImporter, parent):
     monitorId = playerId - 1
@@ -32,6 +41,7 @@ def monitoringFunc(playerId, TekkenImporter, parent):
                 currMovesetPtr = TekkenImporter.readInt(playerMotbinAddr, 8)
                 
                 if currMovesetPtr != moveset.motbin_ptr:
+                    waitFrame(TekkenImporter, 1)
                     moveset.copyUnknownOffsets(currMovesetPtr)
                     TekkenImporter.writeInt(playerMotbinAddr, moveset.motbin_ptr, 8)
                     print("Player %d: Wrong moveset, applying %s" % (playerId, moveset.m['character_name']))
@@ -41,7 +51,7 @@ def monitoringFunc(playerId, TekkenImporter, parent):
             except Exception as e:
                 try:
                     TekkenImporter.readInt(moveset.motbin_ptr, 8)
-                    time.sleep(5)
+                    time.sleep(monitorVerificationFrequency)
                 except:
                     print(e)
                     print("Monitor %d closing because process can't be read" % (playerId), file=sys.stderr)
@@ -167,7 +177,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         self.selected_char = None
         self.chara_data = None
         
-        self.wm_title("TekkenMovesetExtractor 0.8.5") 
+        self.wm_title("TekkenMovesetExtractor 0.8.6") 
         self.iconbitmap('GUI_TekkenMovesetExtractor/natsumi.ico')
         self.minsize(960, 540)
         self.geometry("960x540")
@@ -232,7 +242,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         
         self.selectionInfo = Label(self.charaInfoFrame, text="")
         self.selectionInfo.pack(side='top', fill=BOTH, expand=1)
-        button = self.createButton(self.charaInfoFrame, "Update list", (), GUI_TekkenMovesetExtractor.updateCharacterlist, side='bottom', expand='0')
+        button = self.createButton(self.charaInfoFrame, "Update character list", (), GUI_TekkenMovesetExtractor.updateCharacterlist, side='bottom', expand='0')
         
     def initExportArea(self):
         self.t7_exportFrame = Frame(self.exportFrame, bg='#aaaaaa')
@@ -265,7 +275,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         TextArea.pack(padx=10, pady=5, fill=BOTH, expand=1)
         
         sys.stdout = TextRedirector(TextArea)
-        #sys.stderr = TextRedirector(TextArea, "err")
+        sys.stderr = TextRedirector(TextArea, "err")
         
     def updateCharacterlist(self):
         self.characterList = getCharacterList()
@@ -287,9 +297,9 @@ class GUI_TekkenMovesetExtractor(Tk):
                     "Moveset name: %s" % (m['character_name']),
                     "Character: %s" % (m['tekken_character_name']),
                     "Tekken Version: %s" % (m['version']),
-                    "Exporter version: %s" % (m['export_version']),
+                    "Exporter version: %s\n" % (m['export_version']),
                 ]
-                self.chara_data.append(m['original_hash'] if 'original_hash' in m else 'No hash')
+                self.chara_data.append('Hash: %s' % (m['original_hash']) if 'original_hash' in m else 'No hash')
         except Exception as e:
             self.chara_data = [ "Invalid moveset" ]
         self.selectionInfo['text'] = '\n'.join(self.chara_data)
@@ -349,7 +359,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         playerOffset = game_addresses.addr["cemu_playerstruct_size"]
 
         for playerid in range(4):
-            self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: Player %d" % (playerid), (2, playerAddr + (playerid * playerOffset)), exportCharacter)
+            self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: Player %d" % (playerid + 1), (2, playerAddr + (playerid * playerOffset)), exportCharacter)
         
         self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: All", (2, playerAddr, playerOffset), exportAllTag2)
         
