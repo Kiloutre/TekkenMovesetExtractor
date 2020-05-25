@@ -1,8 +1,8 @@
 # Tekken Moveset Extractor By [kiloutre](https://twitter.com/kiloutre) 
 
-This tool's main purpose is to  port over move lists and mechanics from Tekken Tag 2 into Tekken 7.
+This tool's main purpose is to  port over move lists and mechanics from Tekken Tag 2 into Tekken 7 and also allows you to change the move set of characters already in Tekken 7 to other characters in the 7 roster.
 
-It also allows you to change the move set of characters already in Tekken 7 to other characters in the 7 roster.
+It also 
 
 ## Getting Started
 
@@ -10,7 +10,7 @@ This is quite an involved process in this early stage but we are working towards
 
 ### Prerequisites
 
-There will be a few programs you will have to download before being able to use this tool with Tekken 7.
+There will be a few programs you will have to download before being able to use this tool to export Tag 2 movelists and mechanics 
 
 * [Tekken Moveset Extractor](https://github.com/Kiloutre/TekkenMovesetExtractor/releases/) - The tool that does all the magic.
 * [Cemu](https://cemu.info/) - A emulator used to run the Wii U port of Tekken Tag 2.
