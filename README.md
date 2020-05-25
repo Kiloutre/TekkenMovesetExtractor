@@ -22,7 +22,10 @@ There will be a few programs you will have to download before being able to use 
 
 ### Installing & Walkthrough
 
+
 ### Python 3.6.5
+
+Note: Python 3.6.5 and PIP aren't required if you run the .exe, only if you want to run the source code.
 
 1. Download version 3.6.5 of Python from the link provided. Making sure to pick the "Windows x86-64 executable installer" under files, if you're running windows that is.
 
