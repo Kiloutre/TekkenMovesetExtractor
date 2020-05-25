@@ -90,7 +90,6 @@ Administrator rights may be required to import the moveset into memory.
 - Fix missing TAG2 commands that use command buffer. Placeholder?
 - Fix wallsplat grabs that just act as regular airborne grabs
 - Fix backturned moves that don't always turn around
-- Fix bound floorbreak that doesn't bound
 - Look at tag2 intro, especially mokujin & combot
 - Rename 'unknown' of cancel into 'cancel_option' on next update
 - Remove reliance on Python 3.6.5
@@ -100,3 +99,4 @@ Administrator rights may be required to import the moveset into memory.
 - Fix Unknown's double throw, that crashes (df12)
 - Fix Kazuya's devil transformation
 - Fix Angel (as Kazumi) crash during outro, if Angel victory
+- Check tag2 wallcombo length
