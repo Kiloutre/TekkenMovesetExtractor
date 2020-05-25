@@ -1,3 +1,9 @@
+Special thanks to:
+
+Dantarion, tk.zen, Robi0990, DennisStanistan
+
+Who heavily helped in the reverse engineering part of this project!
+
 Download link, with executable:
 
 https://github.com/Kiloutre/TekkenMovesetExtractor/releases
