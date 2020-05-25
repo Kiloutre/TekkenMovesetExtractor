@@ -188,7 +188,7 @@ def versionMatches(version):
     importUpperVersion = importVersion[:pos]
     
     if importUpperVersion == exportUpperVersion and version != importVersion:
-        print("\nVersion mismatch: consider exporting the moveset again.")
+        print("\nVersion mismatch: consider exporting the moveset again (not obligated).")
         print("Moveset version: %s. Importer version: %s.\n" % (version, importVersion))
     
     return importUpperVersion == exportUpperVersion
