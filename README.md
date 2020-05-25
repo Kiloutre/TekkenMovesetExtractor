@@ -8,20 +8,26 @@ It also allows you to change the move set of characters already in Tekken 7 to o
 
 This is quite an involved process in this early stage but we are working towards making it more accessible for players in the future.
 
-
 ### Prerequisites
 
 There will be a few programs you will have to download before being able to use this tool with Tekken 7.
 
 * [Tekken Moveset Extractor](https://github.com/Kiloutre/TekkenMovesetExtractor/releases/) - The tool that does all the magic.
 * [Cemu](https://cemu.info/) - A emulator used to run the Wii U port of Tekken Tag 2.
-* [Python 3.6.5](https://www.python.org/downloads/release/python-365/) - Packages from Python are needed for this tool to run.
-* [PYWIN32 using PIP](http://www.qarevolution.com/5-step-install-pywin32-using-pip/) - Much needed Python extensions.
 * [Cheat Engine](https://www.cheatengine.org/) - Used to look into the opcodes in Cemu.
 * Wii U Games Files For Tekken Tag 2 - You will have to acquire this yourself
 
 ### Installing & Walkthrough
 
+### Tekken Moveset Extractor Install
+
+1. Go to the link provided in prerequisites and download **TekkenMovesetExtractor.zip** from the latest release.
+
+2. You can place this anywhere. It does not need to be in the same directory as Tekken.
+
+3. You can not run this and start importing Tekken 7 movelists.
+
+Note: If you wish to transfer movelists from Tekken Tag 2 continue following the guide from here.
 
 ### Cemu
 
@@ -50,14 +56,6 @@ Note: Your opponent does not matter
 9. Now pick any stage and sit idle in it as we continue installing the rest of the needed programs.
 
 Note: Take note of what version of Tekken Tag 2 you have as there will be 2: US & EU. The US version requires an extra step I will detail later.
-
-### Tekken Moveset Extractor Install
-
-1. Go to the link provided in prerequisites and download **TekkenMovesetExtractor.zip** from the latest release.
-
-2. You can place this anywhere. It does not need to be in the same directory as Tekken.
-
-3. Do not run this as we have to configure our most important program first.
 
 ### Cheat Engine
 
@@ -133,13 +131,15 @@ And you’re done!
 
 A few notes to end with:
 
-* You can export Tekken 7 characters using the **”Export: Tekken7: Player 1”** option. This will add them to the list to be imported.
 * This can be used online as long as the other person is running the tool also and has setup P2 as the character you have imported for yourself (if you don’t follow those rules, you will be desyncing a lot)
 * A lot of rage arts and intro/outros are broken when using this tool
 
 ### Want to run the source code?
 
 If you are wanting to run the source code you will need to install Python:
+
+* [Python 3.6.5](https://www.python.org/downloads/release/python-365/) - Packages from Python are needed for this tool to run.
+* [PYWIN32 using PIP](http://www.qarevolution.com/5-step-install-pywin32-using-pip/) - Much needed Python extensions.
 
 ### Python 3.6.5
 
