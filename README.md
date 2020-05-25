@@ -1,4 +1,4 @@
-Special thanks to: **Dantarion, Zen, Robi0990, DennisStanistan**, who heavily helped in the reverse engineering part of this project!
+Special thanks to: **Dantarion, Zen, Robi0990 and DennisStanistan**, who heavily helped in the reverse engineering part of this project!
 
 # Download
 
@@ -92,8 +92,7 @@ Administrator rights may be required to import the moveset into memory.
 
 - Fix Tag2 projectiles (doesn't seem possible at all)
 - Fix missing TAG2 commands that use command buffer. Placeholder?
-- Fix wallsplat grabs that just act as regular airborne grabs
-- Fix backturned moves that don't always turn around
+- Fix backturned moves that don't always turn around / Fix wallsplat grabs that just act as regular airborne grabs
 - Look at tag2 intro, especially mokujin & combot
 - Rename 'unknown' of cancel into 'cancel_option' on next update
 - Remove reliance on Python 3.6.5
@@ -101,4 +100,4 @@ Administrator rights may be required to import the moveset into memory.
 - Detect Tag2 version & choose the right address
 - Check requirements of 'Co_DA_Ground' for tag2 & t7
 - Fix Kazuya's devil transformation
--  armorking shining throw and sidestep move not work
+-  armorking sidestep move not work

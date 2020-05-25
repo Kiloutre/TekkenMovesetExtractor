@@ -1,8 +1,8 @@
 
 requirements = {
     690: { 't7_id': 881, 'desc': 'Requirements end' },
-    #467: { 't7_id': 615, 'desc': 'Screw/Bound' },
-    #468: { 't7_id': 614, 'desc': 'Juggle' },
+    467: { 't7_id': 614, 'desc': 'Screw/Bound' },
+    468: { 't7_id': 615, 'desc': 'Juggle' },
     65: { 't7_id': 68, 'desc': 'Incoming high' },
     133: { 't7_id': 135, 'desc': 'Death' },
     3: { 't7_id': 3, 'desc': '1536: Enemy standing, throw (checking vuln?)' },
@@ -704,7 +704,7 @@ class ExtraPropertyFix:
         
     def applyFix(self, property_list, index):
         if not self.matchProperty(property_list[index]):
-            return
+            return False
     
         if 'force_type' in self.alias:
             property_list[index]['type'] = self.alias['force_type']
@@ -714,28 +714,58 @@ class ExtraPropertyFix:
         if 'copy_nearby' in self.alias:
             matching_property = self.searchPropertyByMatch(property_list, index) 
             property_list[index] = matching_property
+        return True
 
 def applyCharacterSpecificFixes(m):
     character_name = m['tekken_character_name']
     if character_name not in tag2CharacterSpecificFixes:
         return
-    for alias in tag2CharacterSpecificFixes[character_name]['extraproperty']:
-        propertyFix = ExtraPropertyFix(alias)
-        for i in range(len(m['extra_move_properties'])):
-            propertyFix.applyFix(m['extra_move_properties'], i)
-
-def replaceRequirement(req, param, prev_req, next_req):
-    requirementDetails = globalRequirementsReplace.get(req, None)
-    if requirementDetails == None:
-        return req, param
+        
+    propertyFixList = [ExtraPropertyFix(alias) for alias in tag2CharacterSpecificFixes[character_name]['extraproperty']]
+    for i in range(len(m['extra_move_properties'])):
+        for propertyFix in propertyFixList:
+            if propertyFix.applyFix(m['extra_move_properties'], i):
+                break
+            
+class GlobalRequirementFix:
+    def __init__(self, req, ptr):
+        self.req = req
+        self.value = globalRequirementsReplace[req]
+        self.ptr = ptr
     
-    if requirementDetails == 'copy_nearby':
-        req = prev_req if (prev_req != None and prev_req['req'] != 881) else next_req
-        if req == None:
-            return 881, 0
-        return req['req'], req['param']
+    def searchReq(self, requirement_list, starting_index):
     
-    return requirementDetails['id'], requirementDetails['value']
+        for backward_index in range(starting_index, -1, -1):
+            if requirement_list[backward_index]['req'] == 881:
+                break
+            if requirement_list[backward_index]['req'] != self.req:
+                return requirement_list[backward_index]
+                
+        index = starting_index
+        while index < len(requirement_list):
+            if requirement_list[index]['req'] != self.req:
+                return requirement_list[index]
+            index += 1
+            
+        return { 'req': 881, 'param': 0 }
+        
+    def applyFix(self, requirement_list, index):
+        if requirement_list[index]['req'] != self.req:
+            return False
+            
+        if self.value == 'copy_nearby':
+            matching_requirement = self.searchReq(requirement_list, index) 
+            requirement_list[index] = matching_requirement
+    
+        return True
+        
+def applyGlobalRequirementAliases(requirement_list, ptr):
+    requirementAliasList = [GlobalRequirementFix(key, ptr) for key in globalRequirementsReplace]
+    
+    for i in range(len(requirement_list)):
+        for requirementAlias in requirementAliasList:
+            if requirementAlias.applyFix(requirement_list, i):
+                break
 
 def getTag2HitboxAliasedValue(value):
     byteList = [int(b) for b in value.to_bytes(4, 'big')]

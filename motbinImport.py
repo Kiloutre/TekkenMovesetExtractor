@@ -2,7 +2,7 @@
 # Python 3.6.5
 
 from Addresses import game_addresses, GameClass, VirtualAllocEx, VirtualFreeEx, GetLastError, MEM_RESERVE, MEM_COMMIT, MEM_DECOMMIT, MEM_RELEASE, PAGE_EXECUTE_READWRITE
-from Aliases import getTag2Requirement, getTag2ExtraMoveProperty, fillAliasesDictonnaries, getTag2HitboxAliasedValue, replaceRequirement, applyCharacterSpecificFixes
+from Aliases import getTag2Requirement, getTag2ExtraMoveProperty, fillAliasesDictonnaries, applyGlobalRequirementAliases, getTag2HitboxAliasedValue, applyCharacterSpecificFixes
 import json
 import os
 import sys
@@ -485,15 +485,16 @@ class MotbinStruct:
         requirements = self.m['requirements']
         requirement_count = len(requirements)
         
+        if self.m['version'] == "Tag2":
+            for i, requirement in enumerate(requirements):
+                req, param = getTag2RequirementAlias(requirement['req'], requirement['param'])
+                requirements[i]['req'] = req
+                requirements[i]['param'] = param
+                
+        applyGlobalRequirementAliases(requirements, self.requirements_ptr)
+        
         for i, requirement in enumerate(requirements):
-            prev_req = requirements[i - 1] if i != 0 else None 
-            next_req = requirements[i + 1] if ((i + 1) < len(requirements)) else None 
-            
-            req = requirement['req']
-            param = requirement['param']
-            if self.m['version'] == "Tag2":
-                req, param = getTag2RequirementAlias(req, param)
-            req, param = replaceRequirement(req, param, prev_req, next_req)
+            req, param = requirement['req'], requirement['param']
             
             self.writeInt(req, 4)
             self.writeInt(param, 4)
