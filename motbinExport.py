@@ -9,7 +9,7 @@ import os
 import sys
 from zlib import crc32
 
-exportVersion = "0.8.0"
+exportVersion = "0.8.1"
 
 def getMovesetName(TekkenVersion, character_name):
     if character_name.startswith('['):
@@ -103,27 +103,31 @@ class Exporter:
         m.extractMoveset()
         return m
         
-def GetTT2AnimEndPos(data):
+def GetTT2AnimEndPos(data, searchStart):
     return [
-        data[1:].find(b'\x00\x64\x00\x17\x00'),
-        data[1:].find(b'\x00\x64\x00\x1B\x00'),
-        data[1:].find(b'\x00\xC8\x00\x17'),
-        data[1:].find(b'motOrigin'),
-        data[1:].find(bytes([0] * 100))
+        data[searchStart:].find(b'\x00\x64\x00\x17\x00'),
+        data[searchStart:].find(b'\x00\x64\x00\x1B\x00'),
+        data[searchStart:].find(b'\x00\xC8\x00\x17'),
+        data[searchStart:].find(b'motOrigin'),
+        data[searchStart:].find(bytes([0] * 100))
     ]
     
 def GetT7AnimEndPos(data):
     return [
-        data[1:].find(b'\x64\x00\x17\x00'),
-        data[1:].find(b'\x64\x00\x1B\x00'),
-        data[1:].find(b'\xC8\x00\x17'),
-        data[1:].find(b'motOrigin'),
-        data[1:].find(bytes([0] * 100))
+        data[searchStart:].find(b'\x64\x00\x17\x00'),
+        data[searchStart:].find(b'\x64\x00\x1B\x00'),
+        data[searchStart:].find(b'\xC8\x00\x17'),
+        data[searchStart:].find(b'motOrigin'),
+        data[searchStart:].find(bytes([0] * 100))
     ]
     
 def getAnimEndPos(TekkenVersion, data):
-    pos = GetT7AnimEndPos(data) if TekkenVersion == 7 else GetTT2AnimEndPos(data)
-    pos = [p+1 for p in pos if p != -1]
+    minSize = 1000
+    if len(data) < minSize:
+        return -1
+    searchStart = minSize - 100
+    pos = GetT7AnimEndPos(data, searchStart) if TekkenVersion == 7 else GetTT2AnimEndPos(data, searchStart)
+    pos = [p+searchStart for p in pos if p != -1]
     return -1 if len(pos) == 0 else min(pos)
     
 class AnimData:
@@ -878,7 +882,6 @@ class Motbin:
         with open("%s/%s.json" % (path, self.name), "w") as f:
             selfData = self.dict()
             selfData['original_hash'] = self.calculateHash(selfData)
-            print(selfData['original_hash'])
             json.dump(selfData, f, indent=4)
             
         print("Saving animations...")
@@ -889,7 +892,7 @@ class Motbin:
                 if animdata == None:
                     print("Error extracting animation %s" % (anim.name), file=sys.stderr)
             
-        print("Saved at path %s" % (path.replace("\\", "/")))
+        print("Saved at path %s.\nHash: %s" % (path.replace("\\", "/"), selfData['original_hash']))
         
     def extractMoveset(self):
         self.printBasicData()

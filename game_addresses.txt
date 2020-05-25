@@ -1,6 +1,10 @@
+# Required to get consistent timings
+frame_counter = 0x1434B6060
+
 # Player addresses, required for import and export. Might change with updates
-p1_addr        = 0x1434D2E10
-p2_addr        = 0x1434D63C0
+p1_addr            = 0x1434D2E10
+p2_addr            = 0x1434D63C0
+playerstruct_size  = 0x35B0 #Distance between 2 players addresses
 
 #p3_addr       = 0x1434E04D0 #works but seems useless
 #p4_addr       = 0x1434E3A80 #works but seems useless
@@ -16,4 +20,4 @@ cemu_p1_addr           = 0x10885C90 #Game ID: 00050000-1010f800 [EU v32]
 #cemu_p1_addr           = 0x10884C70 #Game ID: 00050000-10110000 [US v16]
 
 # Player struct size, does not change
-cemu_playerstruct_size = 0x2960
+cemu_playerstruct_size = 0x2960  #Distance between 2 players addresses

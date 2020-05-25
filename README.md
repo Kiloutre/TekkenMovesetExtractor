@@ -101,3 +101,5 @@ Administrator rights may be required to import the moveset into memory.
 - Fix Angel (as Kazumi) crash during outro, if Angel victory
 - Check tag2 wallcombo length
 - calculate hash of moveset upon extraction
+- Slow down monitors to 1 second
+-  armorking shining throw and sidestep move not work
