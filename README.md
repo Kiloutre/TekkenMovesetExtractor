@@ -88,18 +88,15 @@ Administrator rights may be required to import the moveset into memory.
 
 - Fix Tag2 projectiles (doesn't seem possible at all)
 - Fix missing TAG2 commands that use command buffer. Placeholder?
-- Make bound use screw ressource?
 - Fix wallsplat grabs that just act as regular airborne grabs
-- Fix Kunimitsu backturned 4 that doesn't turn around
+- Fix backturned moves that don't always turn around
 - Fix bound floorbreak that doesn't bound
 - Look at tag2 intro, especially mokujin & combot
 - Rename 'unknown' of cancel into 'cancel_option' on next update
 - Remove reliance on Python 3.6.5
 - Add export naming option
-- Fix Wang vs Wang crescent moon into wallbreak
 - Detect Tag2 version & choose the right address
 - Check requirements of '___________' for tag2 & t7
-- Fix Jinpachi broken camera for some specific move using his flying stance
 - Fix Unknown's double throw, that crashes (df12)
 - Fix Kazuya's devil transformation
 - Fix Angel (as Kazumi) crash during outro, if Angel victory
