@@ -649,6 +649,14 @@ tag2CharacterSpecificFixes = {
             }
         ]
     },
+    "[Unknown]": {
+        'extraproperty': [
+            {
+                'id': 0x8036, #Fix D/F+1+2 throw crash
+                'copy_nearby': True
+            }
+        ]
+    },
 }
 
 oddHitboxBytesAliases = {
@@ -667,6 +675,28 @@ evenHitboxBytesAliases = {
     0x1e: 0x16 #kunimitsu fire breath
 }
 
+def matchPropertyFix(property, alias):
+    for key in ['type', 'id', 'value']:
+        if key in alias and alias[key] != property[key]:
+            return False
+    return True
+    
+def searchPropertyByMatch(index, property_list, alias):
+
+    for backward_index in range(index - 1, -1, -1):
+        if property_list[backward_index]['type'] == 0:
+            break
+        if not matchPropertyFix(property_list[backward_index], alias) :
+            return property_list[backward_index]
+            
+    while index < len(property_list):
+        if property_list[index]['type'] == 0:
+            break
+        if not matchPropertyFix(property_list[index], alias):
+            return property_list[index]
+        index += 1
+            
+    return { 'type': 0, 'id': 0, 'value': 0, }
 
 def applyCharacterSpecificFixes(m):
     character_name = m['tekken_character_name']
@@ -676,11 +706,20 @@ def applyCharacterSpecificFixes(m):
         for i, property in enumerate(m['extra_move_properties']):
             type, id, value = property.values()
             
-            if 'type' in alias and alias['type'] != type:
+            if not matchPropertyFix(property, alias):
                 continue
-            if 'id' in alias and alias['id'] != id:
-                continue
-            m['extra_move_properties'][i]['value'] = alias['value_alias'].get(value, value)
+                
+            if 'force_type' in alias:
+                m['extra_move_properties'][i]['type'] = alias['force_type']
+            if 'value_alias' in alias:
+                m['extra_move_properties'][i]['value'] = alias['value_alias'].get(value, value)
+            
+            if 'copy_nearby' in alias:
+                print("o")
+                matching_property = searchPropertyByMatch(i, m['extra_move_properties'], alias) 
+                print("Old:", m['extra_move_properties'][i])
+                m['extra_move_properties'][i] = matching_property
+                print("New:", matching_property)
 
 def replaceRequirement(req, param, prev_req, next_req):
     requirementDetails = globalRequirementsReplace.get(req, None)
