@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 import json
 import os
 import sys
-import hashlib
+from zlib import crc32
 
 exportVersion = "0.8.0"
 
@@ -852,14 +852,16 @@ class Motbin:
             'throws': self.throws
         }
         
-    def calculateMd5(self, selfData):
-        movesetHash = hashlib.md5()
+    def calculateHash(self, selfData):
         exclude_keys = ['character_name', 'extraction_date']
+        data = ""
         
         for k in (key for key in selfData.keys() if key not in exclude_keys):
-            movesetHash.update(str(selfData[k]).encode('utf-8'))
+           data += str(selfData[k])
         
-        return movesetHash.hexdigest()
+        data = bytes(str.encode(data))
+        
+        return "%x" % (crc32(data))
         
     def save(self):
         print("Saving data...")
@@ -875,7 +877,8 @@ class Motbin:
             
         with open("%s/%s.json" % (path, self.name), "w") as f:
             selfData = self.dict()
-            selfData['original_hash'] = self.calculateMd5(selfData)
+            selfData['original_hash'] = self.calculateHash(selfData)
+            print(selfData['original_hash'])
             json.dump(selfData, f, indent=4)
             
         print("Saving animations...")

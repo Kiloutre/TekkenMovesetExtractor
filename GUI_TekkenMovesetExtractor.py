@@ -231,7 +231,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         
         
         self.selectionInfo = Label(self.charaInfoFrame, text="")
-        self.selectionInfo.pack(side='top')
+        self.selectionInfo.pack(side='top', fill=BOTH, expand=1)
         button = self.createButton(self.charaInfoFrame, "Update list", (), GUI_TekkenMovesetExtractor.updateCharacterlist, side='bottom', expand='0')
         
     def initExportArea(self):
@@ -265,7 +265,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         TextArea.pack(padx=10, pady=5, fill=BOTH, expand=1)
         
         sys.stdout = TextRedirector(TextArea)
-        sys.stderr = TextRedirector(TextArea, "err")
+        #sys.stderr = TextRedirector(TextArea, "err")
         
     def updateCharacterlist(self):
         self.characterList = getCharacterList()
@@ -288,8 +288,8 @@ class GUI_TekkenMovesetExtractor(Tk):
                     "Character: %s" % (m['tekken_character_name']),
                     "Tekken Version: %s" % (m['version']),
                     "Exporter version: %s" % (m['export_version']),
-                    "%s\n%s" % (m['date'], m['fulldate']),
                 ]
+                self.chara_data.append(m['original_hash'] if 'original_hash' in m else 'No hash')
         except Exception as e:
             self.chara_data = [ "Invalid moveset" ]
         self.selectionInfo['text'] = '\n'.join(self.chara_data)
