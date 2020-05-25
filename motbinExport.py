@@ -112,7 +112,7 @@ def GetTT2AnimEndPos(data, searchStart):
         data[searchStart:].find(bytes([0] * 100))
     ]
     
-def GetT7AnimEndPos(data):
+def GetT7AnimEndPos(data, searchStart):
     return [
         data[searchStart:].find(b'\x64\x00\x17\x00'),
         data[searchStart:].find(b'\x64\x00\x1B\x00'),
