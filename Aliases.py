@@ -174,6 +174,7 @@ requirements = {
     33537: { 't7_id': 33996, 'desc': '(KUMA) Km_zenring -> Standing' },
     33539: { 't7_id': 33998, 'desc': 'MAPPING' },
     33546: { 't7_id': 34108, 'desc': '(HEIHACHI) sDm_2K3_Fy -> wDm_GndF_00' },
+    32938: { 't7_id': 32957, 'desc': 'Kazuya devil mode' },
     665: {
         't7_id': 846,
         'desc': 'Jin parry',

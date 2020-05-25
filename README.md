@@ -99,5 +99,4 @@ Administrator rights may be required to import the moveset into memory.
 - Add export naming option
 - Detect Tag2 version & choose the right address
 - Check requirements of 'Co_DA_Ground' for tag2 & t7
-- Fix Kazuya's devil transformation
 -  armorking sidestep move not work
