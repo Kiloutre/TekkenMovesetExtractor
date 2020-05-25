@@ -494,6 +494,7 @@ class MotbinStruct:
             if self.m['version'] == "Tag2":
                 req, param = getTag2RequirementAlias(req, param)
             req, param = replaceRequirement(req, param, prev_req, next_req)
+            
             self.writeInt(req, 4)
             self.writeInt(param, 4)
         

@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 import json
 import os
 import sys
+import hashlib
 
 exportVersion = "0.8.0"
 
@@ -822,6 +823,7 @@ class Motbin:
         anim_names = [anim.name for anim in self.anims]
         
         return {
+            'original_hash': '',
             'export_version': exportVersion,
             'version': self.version,
             'extraction_date': self.extraction_date,
@@ -850,6 +852,15 @@ class Motbin:
             'throws': self.throws
         }
         
+    def calculateMd5(self, selfData):
+        movesetHash = hashlib.md5()
+        exclude_keys = ['character_name', 'extraction_date']
+        
+        for k in (key for key in selfData.keys() if key not in exclude_keys):
+            movesetHash.update(str(selfData[k]).encode('utf-8'))
+        
+        return movesetHash.hexdigest()
+        
     def save(self):
         print("Saving data...")
         
@@ -863,7 +874,9 @@ class Motbin:
             os.mkdir(anim_path)
             
         with open("%s/%s.json" % (path, self.name), "w") as f:
-            json.dump(self.dict(), f, indent=4)
+            selfData = self.dict()
+            selfData['original_hash'] = self.calculateMd5(selfData)
+            json.dump(selfData, f, indent=4)
             
         print("Saving animations...")
         for anim in self.anims:

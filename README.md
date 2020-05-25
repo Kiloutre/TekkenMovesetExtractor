@@ -95,8 +95,9 @@ Administrator rights may be required to import the moveset into memory.
 - Remove reliance on Python 3.6.5
 - Add export naming option
 - Detect Tag2 version & choose the right address
-- Check requirements of '___________' for tag2 & t7
+- Check requirements of 'Co_DA_Ground' for tag2 & t7
 - Fix Unknown's double throw, that crashes (df12)
 - Fix Kazuya's devil transformation
 - Fix Angel (as Kazumi) crash during outro, if Angel victory
 - Check tag2 wallcombo length
+- calculate hash of moveset upon extraction
