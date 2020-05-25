@@ -96,7 +96,7 @@ Note: Now the Value Type box should state **"4 Byte Big Endian"**
 
 7. In the blank Value box put in the value **"32770"** and while doing your first scan (by hitting New Scan) make sure in Cemu you are crouching in the game during the whole scan process.
 
-8. Once the scan has completed, you can let your character stance. Now in the left address list you will notice that one of the addresses has the value of **"32769"** this is the address we need to double click.
+8. Once the scan has completed, you can let your character stand. Now in the left address list you will notice that one of the addresses has the value of **"32769"** this is the address we need to double click.
 
 Note: The value **"32770"** is used to identify when the character is crouching and the value **"32769"** is used to identify when the character is standing.
 
