@@ -857,7 +857,7 @@ class Motbin:
         }
         
     def calculateHash(self, selfData):
-        exclude_keys = ['character_name', 'extraction_date']
+        exclude_keys = ['character_name', 'extraction_date', 'original_hash']
         data = ""
         
         for k in (key for key in selfData.keys() if key not in exclude_keys):
