@@ -1,8 +1,6 @@
-Special thanks to:
+Special thanks to: **Dantarion, tk.zen, Robi0990, DennisStanistan**, who heavily helped in the reverse engineering part of this project!
 
-Dantarion, tk.zen, Robi0990, DennisStanistan
-
-Who heavily helped in the reverse engineering part of this project!
+# Download
 
 Download link, with executable:
 
