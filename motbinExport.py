@@ -224,7 +224,7 @@ class CancelExtradata:
     def __init__(self, addr, parent):
         data = initTekkenStructure(self, parent, addr, parent.CancelExtradata_size)
         
-        self.value = self.bToInt(data, 0x0, 4)
+        self.value = self.bToInt(data, 0x0, parent.CancelExtradata_size)
         
     def dict(self):
         return self.value

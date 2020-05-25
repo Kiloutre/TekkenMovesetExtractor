@@ -96,6 +96,8 @@ class Importer:
         cancel_extradata_ptr, cancel_extradata_size = p.allocateCancelExtradata()
         cancel_ptr, cancel_count = p.allocateCancels(m['cancels'])
         group_cancel_ptr, group_cancel_count = p.allocateCancels(m['group_cancels'], grouped=True)
+        
+        
         pushback_extras_ptr, pushback_extras_count = p.allocatePushbackExtras()
         pushback_ptr, pushback_list_count = p.allocatePushbacks()
         reaction_list_ptr, reaction_list_count = p.allocateReactionList()
@@ -483,12 +485,15 @@ class MotbinStruct:
         requirements = self.m['requirements']
         requirement_count = len(requirements)
         
-        for requirement in requirements:
+        for i, requirement in enumerate(requirements):
+            prev_req = requirements[i - 1] if i != 0 else None 
+            next_req = requirements[i + 1] if ((i + 1) < len(requirements)) else None 
+            
             req = requirement['req']
             param = requirement['param']
             if self.m['version'] == "Tag2":
                 req, param = getTag2RequirementAlias(req, param)
-            req, param = replaceRequirement(req, param)
+            req, param = replaceRequirement(req, param, prev_req, next_req)
             self.writeInt(req, 4)
             self.writeInt(param, 4)
         

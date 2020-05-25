@@ -1,8 +1,8 @@
 
 requirements = {
     690: { 't7_id': 881, 'desc': 'Requirements end' },
-    467: { 't7_id': 614, 'desc': 'Screw/Bound' },
-    468: { 't7_id': 615, 'desc': 'Juggle' },
+    467: { 't7_id': 615, 'desc': 'Screw/Bound' },
+    #468: { 't7_id': 614, 'desc': 'Juggle' },
     65: { 't7_id': 68, 'desc': 'Incoming high' },
     133: { 't7_id': 135, 'desc': 'Death' },
     3: { 't7_id': 3, 'desc': '1536: Enemy standing, throw (checking vuln?)' },
@@ -378,11 +378,11 @@ extra_move_properties = {
     0x8193: { 't7_id': 0x8255, 'desc': 'Screw' },
     0x8001: { 't7_id': 0x800b, 'desc': 'MAPPING' },
     0x8002: { 't7_id': 0x800b, 'desc': 'MAPPING' },
-    0x8003: { 't7_id': 0x800b, 'desc': 'MAPPING' },
+    0x8003: { 't7_id': 0x8003, 'desc': 'MAPPING' },
     0x8004: { 't7_id': 0x800b, 'desc': 'MAPPING' },
     0x8006: { 't7_id': 0x800b, 'desc': '(ELEONOR) Un_lp00B' },
     0x8007: { 't7_id': 0x800b, 'desc': '(ELEONOR) Un_tukiSP' },
-    0x800b: { 't7_id': 0x8003, 'desc': 'MAPPING' },
+    0x800b: { 't7_id': 0x800b, 'desc': 'MAPPING' },
     0x800e: { 't7_id': 0x824d, 'desc': 'MAPPING' },
     0x800f: { 't7_id': 0x8003, 'desc': '(ALISA) Fall_dwKAM' },
     0x8011: { 't7_id': 0x81a7, 'desc': '(ARMOR_KING) sDm_LmixerFire' },
@@ -408,6 +408,7 @@ extra_move_properties = {
     0x8042: { 't7_id': 0x805a, 'desc': '(BOB_SATSUMA) Ft_SUPER_4' },
     0x8043: { 't7_id': 0x805b, 'desc': '(DRAGUNOV) 5hit_n' },
     0x804f: { 't7_id': 0x8061, 'desc': '(BOB_SATSUMA) Ft_SUPER_4' },
+    0x8051: { 't7_id': 0x8063, 'desc': 'Alisa DES stuff' },
     0x8058: { 't7_id': 0x806a, 'desc': 'MAPPING' },
     0x8059: { 't7_id': 0x806b, 'desc': 'MAPPING' },
     0x805a: { 't7_id': 0x806c, 'desc': '(NINA) sDm_Kin01CBr' },
@@ -600,8 +601,8 @@ extra_move_properties = {
 }
 
 globalRequirementsReplace = {
-    217: { 'id': 0, 'value': 0 }, #Player is specific character
-    219: { 'id': 0, 'value': 0 }, #Opponent is specific character
+    217: 'copy_nearby', #Player is specific character
+    219: 'copy_nearby'  #Opponent is specific character
 }
 
 tag2CharacterSpecificFixes = {
@@ -638,12 +639,23 @@ tag2CharacterSpecificFixes = {
             }
         ]
     },
+    "[Alisa]": {
+        'extraproperty': [
+            {
+                'id': 0x8051,
+                'value_alias': {
+                    0x42: 0x52 #fixes DES 2 crash
+                }
+            }
+        ]
+    },
 }
 
 oddHitboxBytesAliases = {
     0x26: 0x2f, #leg hitbox
     0x25: 0x2e, #leg
     0x24: 0x2c, #leg
+    0x42: 0x52, #alisa DES2
     0x44: 0x09, #kunimitsu b+2 right arm, tofix properly
     0x45: 0x09, #kunimitsu doton 2 right arm, tofix properly,
     0x40: 0x50, #DJ laser
@@ -669,10 +681,17 @@ def applyCharacterSpecificFixes(m):
                 continue
             m['extra_move_properties'][i]['value'] = alias['value_alias'].get(value, value)
 
-def replaceRequirement(req, param):
+def replaceRequirement(req, param, prev_req, next_req):
     requirementDetails = globalRequirementsReplace.get(req, None)
     if requirementDetails == None:
         return req, param
+    
+    if requirementDetails == 'copy_nearby':
+        req = prev_req if (prev_req != None and prev_req['req'] != 881) else next_req
+        if req == None:
+            return 881, 0
+        return req['req'], req['param']
+    
     return requirementDetails['id'], requirementDetails['value']
 
 def getTag2HitboxAliasedValue(value):
