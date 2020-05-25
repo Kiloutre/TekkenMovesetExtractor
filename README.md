@@ -1,6 +1,6 @@
 # Tekken Moveset Extractor By [kiloutre](https://twitter.com/kiloutre) 
 
-This tool's main purpose is to port over move lists and mechanics from Tekken Tag 2 into Tekken 7.
+This tool's main purpose is to  port over move lists and mechanics from Tekken Tag 2 into Tekken 7.
 
 It also allows you to change the move set of characters already in Tekken 7 to other characters in the 7 roster.
 
@@ -22,26 +22,6 @@ There will be a few programs you will have to download before being able to use 
 
 ### Installing & Walkthrough
 
-
-### Python 3.6.5
-
-Note: Python 3.6.5 and PIP aren't required if you run the .exe, only if you want to run the source code.
-
-1. Download version 3.6.5 of Python from the link provided. Making sure to pick the "Windows x86-64 executable installer" under files, if you're running windows that is.
-
-2. Make sure during installation you've checked the "Add Python 3.6 to PATH" option
-
-3. Go Through the normal steps of the installation and take note of where you've installed it as that will come in handy in the future.
-
-4. Once the setup has completed, hit close.
-
-### PYWIN32 using PIP
-
-1. Make sure this is done after installing Python 3.6.5
-
-2. Follow the instructions on the link provided in Prerequisites
-
-3. If you get a warning saying " WARNING: You are using pip version 19.2.3, however version 20.1.1 is available. You should consider upgrading via the 'python -m pip install --upgrade pip' command." Ignore it as the version provided is fine
 
 ### Cemu
 
@@ -157,5 +137,27 @@ A few notes to end with:
 * This can be used online as long as the other person is running the tool also and has setup P2 as the character you have imported for yourself (if you don’t follow those rules, you will be desyncing a lot)
 * A lot of rage arts and intro/outros are broken when using this tool
 
+### Want to run the source code?
 
-This guide was created by [LpeX](https://twitter.com/mrlpex)
+If you are wanting to run the source code you will need to install Python:
+
+### Python 3.6.5
+
+1. Download version 3.6.5 of Python from the link provided. Making sure to pick the "Windows x86-64 executable installer" under files, if you're running windows that is.
+
+2. Make sure during installation you've checked the "Add Python 3.6 to PATH" option
+
+3. Go Through the normal steps of the installation and take note of where you've installed it as that will come in handy in the future.
+
+4. Once the setup has completed, hit close.
+
+### PYWIN32 using PIP
+
+1. Make sure this is done after installing Python 3.6.5
+
+2. Follow the instructions on the link provided in Prerequisites
+
+3. If you get a warning saying " WARNING: You are using pip version 19.2.3, however version 20.1.1 is available. You should consider upgrading via the 'python -m pip install --upgrade pip' command." Ignore it as the version provided is fine
+
+
+# This guide was created by [LpeX](https://twitter.com/mrlpex)
