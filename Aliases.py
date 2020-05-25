@@ -1,7 +1,7 @@
 
 requirements = {
     690: { 't7_id': 881, 'desc': 'Requirements end' },
-    467: { 't7_id': 615, 'desc': 'Screw/Bound' },
+    #467: { 't7_id': 615, 'desc': 'Screw/Bound' },
     #468: { 't7_id': 614, 'desc': 'Juggle' },
     65: { 't7_id': 68, 'desc': 'Incoming high' },
     133: { 't7_id': 135, 'desc': 'Death' },
@@ -675,51 +675,54 @@ evenHitboxBytesAliases = {
     0x1e: 0x16 #kunimitsu fire breath
 }
 
-def matchPropertyFix(property, alias):
-    for key in ['type', 'id', 'value']:
-        if key in alias and alias[key] != property[key]:
-            return False
-    return True
+class ExtraPropertyFix:
+    def __init__(self, alias):
+        self.alias = alias
+        
+    def matchProperty(self, property):
+        for key in ['type', 'id', 'value']:
+            if key in self.alias and self.alias[key] != property[key]:
+                return False
+        return True
     
-def searchPropertyByMatch(index, property_list, alias):
-
-    for backward_index in range(index - 1, -1, -1):
-        if property_list[backward_index]['type'] == 0:
-            break
-        if not matchPropertyFix(property_list[backward_index], alias) :
-            return property_list[backward_index]
+    def searchPropertyByMatch(self, property_list, starting_index):
+        for backward_index in range(starting_index - 1, -1, -1):
+            if property_list[backward_index]['type'] == 0:
+                break
+            if not self.matchProperty(property_list[backward_index]) :
+                return property_list[backward_index]
+                
+        index = starting_index + 1
+        while index < len(property_list):
+            if property_list[index]['type'] == 0:
+                break
+            if not self.matchProperty(property_list[index]):
+                return property_list[index]
+            index += 1
             
-    while index < len(property_list):
-        if property_list[index]['type'] == 0:
-            break
-        if not matchPropertyFix(property_list[index], alias):
-            return property_list[index]
-        index += 1
-            
-    return { 'type': 0, 'id': 0, 'value': 0, }
+        return { 'type': 0, 'id': 0, 'value': 0, }
+        
+    def applyFix(self, property_list, index):
+        if not self.matchProperty(property_list[index]):
+            return
+    
+        if 'force_type' in self.alias:
+            property_list[index]['type'] = self.alias['force_type']
+        if 'value_alias' in self.alias:
+            property_list[index]['value'] = self.alias['value_alias'].get(value, value)
+        
+        if 'copy_nearby' in self.alias:
+            matching_property = self.searchPropertyByMatch(property_list, index) 
+            property_list[index] = matching_property
 
 def applyCharacterSpecificFixes(m):
     character_name = m['tekken_character_name']
     if character_name not in tag2CharacterSpecificFixes:
         return
     for alias in tag2CharacterSpecificFixes[character_name]['extraproperty']:
-        for i, property in enumerate(m['extra_move_properties']):
-            type, id, value = property.values()
-            
-            if not matchPropertyFix(property, alias):
-                continue
-                
-            if 'force_type' in alias:
-                m['extra_move_properties'][i]['type'] = alias['force_type']
-            if 'value_alias' in alias:
-                m['extra_move_properties'][i]['value'] = alias['value_alias'].get(value, value)
-            
-            if 'copy_nearby' in alias:
-                print("o")
-                matching_property = searchPropertyByMatch(i, m['extra_move_properties'], alias) 
-                print("Old:", m['extra_move_properties'][i])
-                m['extra_move_properties'][i] = matching_property
-                print("New:", matching_property)
+        propertyFix = ExtraPropertyFix(alias)
+        for i in range(len(m['extra_move_properties'])):
+            propertyFix.applyFix(m['extra_move_properties'], i)
 
 def replaceRequirement(req, param, prev_req, next_req):
     requirementDetails = globalRequirementsReplace.get(req, None)
