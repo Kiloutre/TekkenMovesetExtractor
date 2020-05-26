@@ -9,7 +9,7 @@ import os
 import sys
 from zlib import crc32
 
-exportVersion = "0.8.1"
+exportVersion = "0.9.0"
 
 def getMovesetName(TekkenVersion, character_name):
     if character_name.startswith('['):
@@ -100,6 +100,7 @@ class Exporter:
         motbin_ptr = self.getMotbinPtr(self.base + playerAddress)
         
         m = Motbin(self.base + motbin_ptr, self, name)
+        m.getCharacterId(playerAddress)
         m.extractMoveset()
         return m
         
@@ -249,7 +250,7 @@ class Cancel:
         self.frame_window_end = self.bToInt(data, after_ptr_offset + 4, 4)
         self.starting_frame = self.bToInt(data,after_ptr_offset + 8, 4)
         self.move_id = self.bToInt(data, after_ptr_offset + 12, 2)
-        self.unknown = self.bToInt(data, after_ptr_offset + 14, 2)
+        self.cancel_option = self.bToInt(data, after_ptr_offset + 14, 2)
         
         if self.TekkenVersion != 7: #swapping first two ints
             t = self.bToInt(data, 0, 4)
@@ -269,7 +270,7 @@ class Cancel:
             'frame_window_end': self.frame_window_end,
             'starting_frame': self.starting_frame,
             'move_id': self.move_id,
-            'unknown': self.unknown
+            'cancel_option': self.cancel_option
         }
     
     def setRequirementId(self, requirement_idx):
@@ -794,6 +795,7 @@ class Motbin:
             print("Invalid character or moveset.")
             raise e
         
+        self.chara_id = -1
         self.requirements = []
         self.cancels = []
         self.moves = []
@@ -818,6 +820,11 @@ class Motbin:
             and self.date == other.date \
             and self.fulldate == other.fulldate
         
+    def getCharacterId(self, playerAddress):
+        key = 'chara_id_offset' if self.TekkenVersion == 7 else 'cemu_chara_id_offset'
+        self.chara_id = (self.readInt(self.base + playerAddress + game_addresses.addr[key], 4))
+        print(self.chara_id)
+        
     def printBasicData(self):
         print("Character: %s" % (self.character_name))
         print("Creator: %s" % (self.creator_name))
@@ -830,6 +837,7 @@ class Motbin:
             'original_hash': '',
             'export_version': exportVersion,
             'version': self.version,
+            'character_id': self.chara_id,
             'extraction_date': self.extraction_date,
             'character_name': self.name,
             'tekken_character_name': self.character_name,
@@ -1018,18 +1026,20 @@ if __name__ == "__main__":
     extractedMovesetNames = []
     extractedMovesets = []
     
-    playerAddr = game_addresses.addr["cemu_p1_addr"]
-    playerOffset = game_addresses.addr["cemu_playerstruct_size"]
-    for i in range(4):
+    prefix = '' if TekkenVersion == 7 else 'cemu_'
+    
+    playerAddr = game_addresses.addr[prefix + "p1_addr"] 
+    playerOffset = game_addresses.addr[prefix + "playerstruct_size"]
+    for i in range(2 if TekkenVersion == 7 else 4):
         try:
             player_name = TekkenExporter.getPlayerMovesetName(playerAddr)
         except Exception as e:
             print(e)
-            print("%s: Invalid character or moveset." % (playerKey))
+            print("%x: Invalid character or moveset." % (playerAddr))
             break
         
         if player_name in extractedMovesetNames:
-            print("%s: Player %s already extracted, skipping extraction." % (playerKey, player_name))
+            print("%x: Character %s already just extracted, not extracting twice." % (playerAddr, player_name))
             playerAddr += playerOffset
             continue
             
