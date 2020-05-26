@@ -583,7 +583,7 @@ extra_move_properties = {
     0x82d9: { 't7_id': 0x842c, 'desc': '(ALISA) Aa_runchop' },
     0x82db: { 't7_id': 0x842e, 'desc': 'MAPPING' },
     0x82dc: { 't7_id': 0x842f, 'desc': 'MAPPING' },
-    0x82e9: { 't7_id': 0x843c, 'desc': 'MAPPING' },
+    0x82e9: { 't7_id': 0x843c, 'desc': 'Throw camera2' },
     0x82ea: { 't7_id': 0x843d, 'desc': 'Throw camera' },
     0x82ec: { 't7_id': 0x843f, 'desc': '(LARS) La_rk00B_n' },
     0x82ed: { 't7_id': 0x84d1, 'desc': 'MAPPING' },
@@ -655,7 +655,13 @@ tag2CharacterSpecificFixes = {
             {
                 'id': 0x8036, #Fix D/F+1+2 throw crash
                 'copy_nearby': True
-            }
+            },
+            {
+                'id': 0x82e9, #Fix D/F+1+2 camera
+                'value_alias': {
+                    0x3b: 0x10
+                }
+            },
         ]
     },
 }
@@ -687,16 +693,12 @@ class ExtraPropertyFix:
         return True
     
     def searchPropertyByMatch(self, property_list, starting_index):
-        for backward_index in range(starting_index - 1, -1, -1):
-            if property_list[backward_index]['type'] == 0:
-                break
-            if not self.matchProperty(property_list[backward_index]) :
-                return property_list[backward_index]
+    
+        if starting_index > 0 and property_list[starting_index - 1]['type'] != 0:
+            return property_list[starting_index - 1]
                 
         index = starting_index + 1
-        while index < len(property_list):
-            if property_list[index]['type'] == 0:
-                break
+        while index < len(property_list) and property_list[index]['type'] != 0:
             if not self.matchProperty(property_list[index]):
                 return property_list[index]
             index += 1
@@ -710,6 +712,7 @@ class ExtraPropertyFix:
         if 'force_type' in self.alias:
             property_list[index]['type'] = self.alias['force_type']
         if 'value_alias' in self.alias:
+            value = property_list[index]['value']
             property_list[index]['value'] = self.alias['value_alias'].get(value, value)
         
         if 'copy_nearby' in self.alias:
@@ -736,11 +739,8 @@ class GlobalRequirementFix:
     
     def searchReq(self, requirement_list, starting_index):
     
-        for backward_index in range(starting_index, -1, -1):
-            if requirement_list[backward_index]['req'] == 881:
-                break
-            if requirement_list[backward_index]['req'] != self.req:
-                return requirement_list[backward_index]
+        if starting_index > 0 and requirement_list[starting_index - 1]['req'] != 881:
+            return requirement_list[starting_index - 1]
                 
         index = starting_index
         while index < len(requirement_list):
