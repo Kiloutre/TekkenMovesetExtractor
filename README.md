@@ -100,3 +100,4 @@ Administrator rights may be required to import the moveset into memory.
 - Check requirements of 'Co_DA_Ground' for tag2 & t7
 -  armorking sidestep move not work
 - Import anim & move names like tekken 7 does
+- Fix Kunimitsu's broken hand
