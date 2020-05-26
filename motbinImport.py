@@ -24,7 +24,7 @@ projectile_size = 0xa8
 throw_extras_size = 0xC
 throws_size = 0x10
 
-forbiddenMoves = ['Co_DA_Ground', '___________']
+forbiddenMoves = ['___________']
     
 class Importer:
     def __init__(self):
