@@ -602,7 +602,6 @@ extra_move_properties = {
 }
 
 globalRequirementsReplace = {
-    217: 'copy_nearby', #Player is specific character
     219: 'copy_nearby'  #Opponent is specific character
 }
 
