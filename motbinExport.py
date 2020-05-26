@@ -11,7 +11,7 @@ import sys
 import re
 from zlib import crc32
 
-exportVersion = "0.9.0"
+exportVersion = "0.9.1"
 
 def getMovesetName(TekkenVersion, character_name):
     if character_name.startswith('['):
