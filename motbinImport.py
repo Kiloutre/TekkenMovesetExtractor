@@ -7,7 +7,7 @@ import json
 import os
 import sys
 
-importVersion = "0.9.1"
+importVersion = "0.9.0"
 
 requirement_size = 0x8
 cancel_size = 0x28
