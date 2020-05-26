@@ -97,7 +97,7 @@ def exportCharacter(parent, tekkenVersion, playerAddr, name=''):
 def exportAllTag2(parent, tekkenVersion, playerAddr, playerSize):
     game_addresses.reloadValues()
     
-    TekkenExporter = exportLib.Exporter(tekkenVersion)
+    TekkenExporter = exportLib.Exporter(tekkenVersion, folder_destination=charactersPath)
     
     exportedMovesets = []
     

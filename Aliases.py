@@ -601,6 +601,10 @@ extra_move_properties = {
     0x824e: { 't7_id': 0x83a3, 'desc': 'Tag out (assumption, filled)' },
 }
 
+tag2CharAliases = {
+    30: 29 #Armor King
+}
+
 globalRequirementsReplace = {
     219: 'copy_nearby'  #Opponent is specific character
 }

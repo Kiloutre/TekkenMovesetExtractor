@@ -7,13 +7,11 @@ p2_addr            = 0x1434D63C0
 playerstruct_size  = 0x35B0 #Distance between 2 players addresses
 
 # CEMU base address, needs to be changed at every CEMU restart. See CEMU log file to get this address.
-cemu_base      = 0x1b6c8cc0000
+cemu_base      = 0x9999999999999999
 
 # CEMU player addr
-# r11d,[r13+r12+000000B8] << r12 here is the p1 address, assuming you're playing p1
-# Pick the right one depending on your game version, indicated in CEMU's title bar
-
 # Player addresses automatically fetched for those two versions, DO NOT CHANGE!!!
+
 00050000-1010f800_p1_addr = 0x10885C90 #Game ID: 00050000-1010f800 [EU v32]
 00050000-10110000_p1_addr = 0x10884C70 #Game ID: 00050000-10110000 [US v16]
 
