@@ -797,11 +797,9 @@ class MotbinStruct:
         for i, requirement in enumerate(self.m['requirements']):
             req, param = requirement['req'], requirement['param']
             
-            if req == 217:
-                if param == self.m['character_id']:
-                    self.importer.writeInt(self.requirements_ptr + (i * 8) + 4, currentChar, 4) #force valid
-                else:
-                    self.importer.writeInt(self.requirements_ptr + (i * 8) + 4, currentChar + 1, 4) #force invalid    
+            if req == 217: #Is current char specific ID
+                charId = currentChar if param == self.m['character_id'] else currentChar + 10
+                self.importer.writeInt(self.requirements_ptr + (i * 8) + 4, charId, 4) #force valid
                 
     
     def copyUnknownOffsets(self, motbin_ptr):

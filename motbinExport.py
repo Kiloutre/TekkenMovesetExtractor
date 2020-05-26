@@ -823,7 +823,6 @@ class Motbin:
     def getCharacterId(self, playerAddress):
         key = 'chara_id_offset' if self.TekkenVersion == 7 else 'cemu_chara_id_offset'
         self.chara_id = (self.readInt(self.base + playerAddress + game_addresses.addr[key], 4))
-        print(self.chara_id)
         
     def printBasicData(self):
         print("Character: %s" % (self.character_name))

@@ -42,7 +42,7 @@ def monitoringFunc(playerId, TekkenImporter, parent):
                 currMovesetPtr = TekkenImporter.readInt(playerMotbinAddr, 8)
                 
                 if currMovesetPtr != moveset.motbin_ptr:
-                    waitFrame(TekkenImporter, 1)
+                    waitFrame(TekkenImporter, 6)
                     moveset.copyUnknownOffsets(currMovesetPtr)
                     TekkenImporter.writeInt(playerMotbinAddr, moveset.motbin_ptr, 8)
                     moveset.applyCharacterIDAliases(playerAddr)
@@ -355,15 +355,15 @@ class GUI_TekkenMovesetExtractor(Tk):
         for playerid, player_key in enumerate(playerAddresses):
             self.createButton(self.t7_exportFrame, "Export: Tekken 7: Player %d" % (playerid + 1), (7, game_addresses.addr[player_key]), exportCharacter)
         
-        self.createButton(self.t7_exportFrame, "Export: Tekken 7: All", (7, tekken7_addr_match), exportAll)
-        
+        self.createButton(self.t7_exportFrame, "Export: Tekken 7: All Players", (7, tekken7_addr_match), exportAll)
+
         playerAddr = game_addresses.addr["cemu_p1_addr"]
         playerOffset = game_addresses.addr["cemu_playerstruct_size"]
 
         for playerid in range(4):
             self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: Player %d" % (playerid + 1), (2, playerAddr + (playerid * playerOffset)), exportCharacter)
         
-        self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: All", (2, playerAddr, playerOffset), exportAllTag2)
+        self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: All players", (2, playerAddr, playerOffset), exportAllTag2)
         
     def createButton(self, frame, text, const_args, callback, side='top', expand=1):
         exportButton = Button(frame)
