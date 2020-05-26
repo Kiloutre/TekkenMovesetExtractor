@@ -1,6 +1,9 @@
 # Python 3.6.5
 
 import win32api, ctypes
+import win32gui
+import win32process
+import win32con
 from ctypes import wintypes as w
 from win32com.client import GetObject
 from re import findall
@@ -28,7 +31,7 @@ class AddressFile:
                 print(e)
                 print("Invalid game_addresses.txt format at line.")
                 print("Last line: ", line)
-
+    
 class GameClass:
     def __init__(self, processName):
         self.PID = 0
@@ -45,6 +48,19 @@ class GameClass:
         self.PROCESS = win32api.OpenProcess(0x1F0FFF, 0, self.PID)
         self.handle = self.PROCESS.handle
         
+        self.getWindowTitle()
+
+
+    def enumWindowsProc(self, hwnd, lParam):
+        if win32process.GetWindowThreadProcessId(hwnd)[1] == lParam:
+            text = win32gui.GetWindowText(hwnd)
+            if text and (win32api.GetWindowLong(hwnd, win32con.GWL_STYLE) & win32con.WS_VISIBLE):
+                self.windowTitle = text
+                return
+        
+    def getWindowTitle(self):
+        win32gui.EnumWindows(self.enumWindowsProc, self.PID)
+        return self.windowTitle
 
     def readBytes(self, addr, bytes_length):
         buff = ctypes.create_string_buffer(bytes_length)
