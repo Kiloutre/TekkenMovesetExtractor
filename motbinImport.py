@@ -7,7 +7,7 @@ import json
 import os
 import sys
 
-importVersion = "0.8.1"
+importVersion = "0.9.0"
 
 requirement_size = 0x8
 cancel_size = 0x28
@@ -61,6 +61,7 @@ class Importer:
         current_motbin_ptr = self.readInt(motbin_ptr_addr, 8)
         old_character_name = self.readString(self.readInt(current_motbin_ptr + 0x8, 8))
         moveset.copyUnknownOffsets(current_motbin_ptr) #Required because we aren't self sufficient yet
+        moveset.applyCharacterIDAliases(playerAddr)
         
         print("\nOLD moveset pointer: 0x%x (%s)" % (current_motbin_ptr, old_character_name))
         print("NEW moveset pointer: 0x%x (%s)" % (moveset.motbin_ptr, moveset.m['character_name']))
@@ -151,6 +152,12 @@ class Importer:
         self.writeInt(p.motbin_ptr + 0x1e0, extra_move_properties_ptr, 8)
         self.writeInt(p.motbin_ptr + 0x1e8, extra_move_properties_count, 8)
         
+        self.writeInt(p.motbin_ptr + 0x1f0, 0, 8)
+        self.writeInt(p.motbin_ptr + 0x1f8, 0, 8)
+        
+        self.writeInt(p.motbin_ptr + 0x200, 0, 8)
+        self.writeInt(p.motbin_ptr + 0x208, 0, 8)
+        
         self.writeInt(p.motbin_ptr + 0x210, moves_ptr, 8)
         self.writeInt(p.motbin_ptr + 0x218, move_count, 8)
         
@@ -163,11 +170,21 @@ class Importer:
         self.writeInt(p.motbin_ptr + 0x240, input_extradata_ptr, 8)
         self.writeInt(p.motbin_ptr + 0x248, input_extradata_count, 8)
         
+        self.writeInt(p.motbin_ptr + 0x250, 0, 8)
+        self.writeInt(p.motbin_ptr + 0x258, 0, 8)
+        
         self.writeInt(p.motbin_ptr + 0x260, throw_extras_ptr, 8)
         self.writeInt(p.motbin_ptr + 0x268, throw_extras_count, 8)
         
         self.writeInt(p.motbin_ptr + 0x270, throws_ptr, 8)
         self.writeInt(p.motbin_ptr + 0x278, throws_count, 8)
+        
+        self.writeInt(p.motbin_ptr + 0x280, 0, 8)
+        self.writeInt(p.motbin_ptr + 0x288, 0, 8)
+        self.writeInt(p.motbin_ptr + 0x2c0, 0, 8)
+        self.writeInt(p.motbin_ptr + 0x2c8, 0, 8)
+        self.writeInt(p.motbin_ptr + 0x2d0, 0, 8)
+        self.writeInt(p.motbin_ptr + 0x2d8, 0, 8)
         
         print("%s successfully imported in memory at 0x%x." % (jsonFilename, p.motbin_ptr))
         print("%d/%d bytes left." % (p.size - (p.curr_ptr - p.head_ptr), p.size))
@@ -546,7 +563,7 @@ class MotbinStruct:
             self.writeInt(cancel['frame_window_end'], 4)
             self.writeInt(cancel['starting_frame'], 4)
             self.writeInt(cancel['move_id'], 2)
-            self.writeInt(cancel['unknown'], 2)
+            self.writeInt(cancel['cancel_option'], 2)
                 
         return self.cancel_ptr if not grouped else self.grouped_cancel_ptr, cancel_count
         
@@ -773,6 +790,19 @@ class MotbinStruct:
             self.forbidCancel(move_id, groupedCancels = False)
             
         return self.movelist_ptr, moveCount
+        
+    def applyCharacterIDAliases(self, playerAddr):
+        currentChar = self.importer.readInt(playerAddr + game_addresses.addr['chara_id_offset'])
+        
+        for i, requirement in enumerate(self.m['requirements']):
+            req, param = requirement['req'], requirement['param']
+            
+            if req == 217:
+                if param == self.m['character_id']:
+                    self.importer.writeInt(self.requirements_ptr + (i * 8) + 4, currentChar, 4) #force valid
+                else:
+                    self.importer.writeInt(self.requirements_ptr + (i * 8) + 4, currentChar + 1, 4) #force invalid    
+                
     
     def copyUnknownOffsets(self, motbin_ptr):
         offsets = [
