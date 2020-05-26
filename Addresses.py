@@ -22,7 +22,7 @@ class AddressFile:
                     line = line.strip()
                     if len(line) == 0 or line[0] == "#":
                         continue
-                    name, addr, _ = findall('([a-z0-9\_\-]+) += +((0x)?[a-fA-F0-9]+)', line)[0]
+                    name, addr, _ = findall('([a-z0-9\_\-]+) += +(-?(0x)?[a-fA-F0-9]+)', line)[0]
                     self.addr[name] = int(addr, 16)
             except Exception as e:
                 print(e)

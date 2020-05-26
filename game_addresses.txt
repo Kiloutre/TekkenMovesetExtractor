@@ -21,3 +21,7 @@ cemu_p1_addr           = 0x10885C90 #Game ID: 00050000-1010f800 [EU v32]
 
 # Player struct size, does not change
 cemu_playerstruct_size = 0x2960  #Distance between 2 players addresses
+
+# miscellaneous
+chara_id_offset = 0xd8
+cemu_chara_id_offset = -0xCC
