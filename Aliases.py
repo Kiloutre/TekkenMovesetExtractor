@@ -615,6 +615,9 @@ tag2CharacterSpecificFixes = {
                     0x31: 0x12 #fixes f4, 4 camera
                 }
             }
+        ],
+        'moves': [
+            { 'name': 'Kt_6lklprp', 'hitbox_location': 0x08091009 } 
         ]
     },
     "[ANGEL]": {
@@ -729,6 +732,14 @@ def applyCharacterSpecificFixes(m):
         for propertyFix in propertyFixList:
             if propertyFix.applyFix(m['extra_move_properties'], i):
                 break
+                
+    if 'moves' in tag2CharacterSpecificFixes[character_name]:
+        for i, move in enumerate(m['moves']):
+            for moveFix in tag2CharacterSpecificFixes[character_name]['moves']:
+                if moveFix['name'] == move['name']:
+                    for key in moveFix:
+                        move[key] = moveFix[key]
+            
             
 class GlobalRequirementFix:
     def __init__(self, req, ptr):
