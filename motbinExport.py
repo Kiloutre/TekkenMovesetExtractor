@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 import json
 import os
 import sys
+import re
 from zlib import crc32
 
 exportVersion = "0.9.0"
@@ -62,13 +63,22 @@ class Exporter:
         self.ptr_size = 8 if TekkenVersion == 7 else 4
         self.base = 0x0 if TekkenVersion == 7 else game_addresses.addr['cemu_base']
         self.endian = 'little' if TekkenVersion == 7 else 'big'
-        self.folder_destination = folder_destination
-        
+            
         if self.base == 0x9999999999999999:
             raise Exception("Cemu base address has not been modified yet, please insert the correct cemu_base address in game_address.txt")
         
+        
         if not os.path.isdir(folder_destination):
             os.mkdir(folder_destination)
+        
+    def getCemuP1Addr(self):
+        windowTitle = self.T.getWindowTitle()
+        p = re.compile("TitleId: ([0-9a-fA-F]{8}\-[0-9a-fA-F]{8})")
+        match = p.search(windowTitle)
+        if match == None:
+            return None
+        key = match.group(1) + '_p1_addr'
+        return None if key not in game_addresses.addr else game_addresses.addr[key]
         
     def readInt(self, addr, len):
         return self.T.readInt(addr, len, endian=self.endian)
