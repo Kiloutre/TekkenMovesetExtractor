@@ -602,7 +602,9 @@ extra_move_properties = {
 }
 
 tag2CharAliases = {
-    30: 29 #Armor King
+    30: 29, #Armor King
+    22: 22, #Wang
+    52: 50, #P.Jack
 }
 
 globalRequirementsReplace = {

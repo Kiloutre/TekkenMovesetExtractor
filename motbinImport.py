@@ -2,7 +2,7 @@
 # Python 3.6.5
 
 from Addresses import game_addresses, GameClass, VirtualAllocEx, VirtualFreeEx, GetLastError, MEM_RESERVE, MEM_COMMIT, MEM_DECOMMIT, MEM_RELEASE, PAGE_EXECUTE_READWRITE
-from Aliases import getTag2Requirement, getTag2ExtraMoveProperty, fillAliasesDictonnaries, applyGlobalRequirementAliases, getTag2HitboxAliasedValue, applyCharacterSpecificFixes
+from Aliases import getTag2Requirement, getTag2ExtraMoveProperty, tag2CharAliases,fillAliasesDictonnaries, applyGlobalRequirementAliases, getTag2HitboxAliasedValue, applyCharacterSpecificFixes
 import json
 import os
 import sys
@@ -794,11 +794,15 @@ class MotbinStruct:
     def applyCharacterIDAliases(self, playerAddr):
         currentChar = self.importer.readInt(playerAddr + game_addresses.addr['chara_id_offset'])
         
+        movesetCharId = self.m['character_id']
+        if self.m['version'] == "Tag2":
+            movesetCharId = tag2CharAliases.get(movesetCharId, movesetCharId)
+        
         for i, requirement in enumerate(self.m['requirements']):
             req, param = requirement['req'], requirement['param']
             
             if req == 217: #Is current char specific ID
-                charId = currentChar if param == self.m['character_id'] else currentChar + 10
+                charId = currentChar if param == movesetCharId else currentChar + 10
                 self.importer.writeInt(self.requirements_ptr + (i * 8) + 4, charId, 4) #force valid
                 
     

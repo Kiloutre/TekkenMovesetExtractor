@@ -4,7 +4,6 @@
 from Addresses import game_addresses, GameClass
 from ByteSwap import SwapAnimBytes
 from datetime import datetime, timezone
-from Aliases import tag2CharAliases
 import json
 import os
 import sys
@@ -835,8 +834,6 @@ class Motbin:
     def getCharacterId(self, playerAddress):
         key = 'chara_id_offset' if self.TekkenVersion == 7 else 'cemu_chara_id_offset'
         self.chara_id = (self.readInt(self.base + playerAddress + game_addresses.addr[key], 4))
-        if self.TekkenVersion != 7:
-            self.chara_id = tag2CharAliases.get(self.chara_id, self.chara_id)
         
     def printBasicData(self):
         print("Character: %s" % (self.character_name))
