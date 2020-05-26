@@ -94,10 +94,19 @@ def exportCharacter(parent, tekkenVersion, playerAddr, name=''):
     TekkenExporter.exportMoveset(playerAddr, name)
     parent.updateCharacterlist()
     
-def exportAllTag2(parent, tekkenVersion, playerAddr, playerSize):
+def exportTag2Character(parent, tekkenVersion, playerAddr, name=''):
+    game_addresses.reloadValues()
+    TekkenExporter = exportLib.Exporter(tekkenVersion, folder_destination=charactersPath)
+    playerAddr += TekkenExporter.getCemuP1Addr()
+    TekkenExporter.exportMoveset(playerAddr, name)
+    
+    parent.updateCharacterlist()
+    
+def exportAllTag2(parent, tekkenVersion, playerSize):
     game_addresses.reloadValues()
     
     TekkenExporter = exportLib.Exporter(tekkenVersion, folder_destination=charactersPath)
+    playerAddr = TekkenExporter.getCemuP1Addr()
     
     exportedMovesets = []
     
@@ -179,7 +188,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         self.selected_char = None
         self.chara_data = None
         
-        self.wm_title("TekkenMovesetExtractor 0.9.0") 
+        self.wm_title("TekkenMovesetExtractor 0.9.1") 
         self.iconbitmap('GUI_TekkenMovesetExtractor/natsumi.ico')
         self.minsize(960, 540)
         self.geometry("960x540")
@@ -357,13 +366,12 @@ class GUI_TekkenMovesetExtractor(Tk):
         
         self.createButton(self.t7_exportFrame, "Export: Tekken 7: All Players", (7, tekken7_addr_match), exportAll)
 
-        playerAddr = game_addresses.addr["cemu_p1_addr"]
         playerOffset = game_addresses.addr["cemu_playerstruct_size"]
 
         for playerid in range(4):
-            self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: Player %d" % (playerid + 1), (2, playerAddr + (playerid * playerOffset)), exportCharacter)
+            self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: Player %d" % (playerid + 1), (2, playerid * playerOffset), exportTag2Character)
         
-        self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: All players", (2, playerAddr, playerOffset), exportAllTag2)
+        self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: All players", (2, playerOffset), exportAllTag2)
         
     def createButton(self, frame, text, const_args, callback, side='top', expand=1):
         exportButton = Button(frame)
