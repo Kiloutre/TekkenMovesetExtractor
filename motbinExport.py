@@ -836,7 +836,10 @@ class Motbin:
         self.chara_id = (self.readInt(self.base + playerAddress + game_addresses.addr[key], 4))
         
     def printBasicData(self):
-        print("Character: %s" % (self.character_name))
+        if self.chara_id == -1:
+            print("Character: %s" % (self.character_name))
+        else:
+            print("Character: %s (ID %d)" % (self.character_name, self.chara_id))
         print("Creator: %s" % (self.creator_name))
         print("Date: %s %s\n" % (self.date, self.fulldate))
         
@@ -875,7 +878,18 @@ class Motbin:
         }
         
     def calculateHash(self, selfData):
-        exclude_keys = ['character_name', 'extraction_date', 'original_hash']
+        exclude_keys =  [
+            'original_hash',
+            'export_version',
+            'character_name',
+            'extraction_date',
+            'character_name',
+            'tekken_character_name',
+            'creator_name',
+            'date',
+            'fulldate'
+        ]    
+        
         data = ""
         
         for k in (key for key in selfData.keys() if key not in exclude_keys):

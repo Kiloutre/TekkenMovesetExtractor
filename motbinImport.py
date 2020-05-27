@@ -2,7 +2,7 @@
 # Python 3.6.5
 
 from Addresses import game_addresses, GameClass, VirtualAllocEx, VirtualFreeEx, GetLastError, MEM_RESERVE, MEM_COMMIT, MEM_DECOMMIT, MEM_RELEASE, PAGE_EXECUTE_READWRITE
-from Aliases import getTag2Requirement, getTag2ExtraMoveProperty, tag2CharAliases,fillAliasesDictonnaries, applyGlobalRequirementAliases, getTag2HitboxAliasedValue, applyCharacterSpecificFixes
+from Aliases import getTag2Requirement, getTag2ExtraMoveProperty, getTag2CharIDAliases,fillAliasesDictonnaries, applyGlobalRequirementAliases, getTag2HitboxAliasedValue, applyCharacterSpecificFixes
 import json
 import os
 import sys
@@ -24,7 +24,7 @@ projectile_size = 0xa8
 throw_extras_size = 0xC
 throws_size = 0x10
 
-forbiddenMoves = ['___________']
+forbiddenMoves = ['Co_DA_Ground']
     
 class Importer:
     def __init__(self):
@@ -186,7 +186,7 @@ class Importer:
         self.writeInt(p.motbin_ptr + 0x2d0, 0, 8)
         self.writeInt(p.motbin_ptr + 0x2d8, 0, 8)
         
-        print("%s successfully imported in memory at 0x%x." % (jsonFilename, p.motbin_ptr))
+        print("%s (ID: %d) successfully imported in memory at 0x%x." % (jsonFilename, m['character_id'], p.motbin_ptr))
         print("%d/%d bytes left." % (p.size - (p.curr_ptr - p.head_ptr), p.size))
         
         return p
@@ -796,7 +796,7 @@ class MotbinStruct:
         
         movesetCharId = self.m['character_id']
         if self.m['version'] == "Tag2":
-            movesetCharId = tag2CharAliases.get(movesetCharId, movesetCharId)
+            movesetCharId = getTag2CharIDAliases(movesetCharId)
         
         for i, requirement in enumerate(self.m['requirements']):
             req, param = requirement['req'], requirement['param']

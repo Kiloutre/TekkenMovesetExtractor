@@ -601,11 +601,17 @@ extra_move_properties = {
     0x824e: { 't7_id': 0x83a3, 'desc': 'Tag out (assumption, filled)' },
 }
 
-tag2CharAliases = {
-    30: 29, #Armor King
-    22: 21, #Wang
-    52: 50, #P.Jack
-}
+def getTag2CharIDAliases(charid):
+    if charid <= 18:
+        return charid
+    if 19 <= charid <= 22:
+        return charid - 1
+    if charid <= 42:
+        return charid
+    if 43 <= charid <= 51:
+        return charid - 1
+    return charid - 2
+
 
 globalRequirementsReplace = {
     219: 'copy_nearby'  #Opponent is specific character
