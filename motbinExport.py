@@ -100,7 +100,7 @@ class Exporter:
         return int.from_bytes(data[offset:offset + length], ed if ed != None else self.endian)
         
     def getMotbinPtr(self, playerAddress):
-        motbin_ptr_addr = (playerAddress + 0x14a0) if self.TekkenVersion == 7 else playerAddress - 0x98
+        motbin_ptr_addr = (playerAddress + game_addresses.addr['motbin_offset']) if self.TekkenVersion == 7 else playerAddress - 0x98
         return self.readInt(motbin_ptr_addr, self.ptr_size)
             
     def getPlayerMovesetName(self, playerAddress):

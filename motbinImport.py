@@ -57,7 +57,7 @@ class Importer:
     def importMoveset(self, playerAddr, folderName):
         moveset = self.loadMoveset(folderName)
         
-        motbin_ptr_addr = playerAddr + 0x14a0
+        motbin_ptr_addr = playerAddr + game_addresses.addr['motbin_offset']
         current_motbin_ptr = self.readInt(motbin_ptr_addr, 8)
         old_character_name = self.readString(self.readInt(current_motbin_ptr + 0x8, 8))
         moveset.copyUnknownOffsets(current_motbin_ptr) #Required because we aren't self sufficient yet

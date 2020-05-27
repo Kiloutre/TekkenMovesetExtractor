@@ -30,7 +30,7 @@ def waitFrame(TekkenImporter, amount):
 def monitoringFunc(playerId, TekkenImporter, parent):
     monitorId = playerId - 1
     playerAddr = game_addresses.addr['p%d_addr' % (playerId)]
-    playerMotbinAddr = playerAddr + 0x14a0
+    playerMotbinAddr = playerAddr + game_addresses.addr['motbin_offset']
     
     try:
         moveset = TekkenImporter.loadMoveset(charactersPath + parent.selected_char)
