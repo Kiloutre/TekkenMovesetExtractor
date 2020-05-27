@@ -604,7 +604,7 @@ extra_move_properties = {
 def getTag2CharIDAliases(charid):
     if charid <= 18:
         return charid
-    if 19 <= charid <= 22:
+    if 19 <= charid <= 28:
         return charid - 1
     if charid <= 42:
         return charid
