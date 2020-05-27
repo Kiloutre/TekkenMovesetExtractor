@@ -599,6 +599,7 @@ extra_move_properties = {
     0x81d6: { 't7_id': 0x81f3, 'desc': 'Tag2 projectiles fix timestop (tochange)' },
     0x823c: { 't7_id': 0x8393, 'desc': '(ALISA) Aa_spiral' },
     0x824e: { 't7_id': 0x83a3, 'desc': 'Tag out (assumption, filled)' },
+    #0x82cd: { 't7_id': 0, 'desc': 'Raven clone' }, #Unknown t7 ID
 }
 
 def getTag2CharIDAliases(charid):
