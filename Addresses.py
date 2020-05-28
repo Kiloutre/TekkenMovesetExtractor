@@ -36,6 +36,7 @@ class GameClass:
     def __init__(self, processName):
         self.PID = 0
         self.PROCESS = None
+        self.windowTitle = None
         
         wmi = GetObject('winmgmts:')
         for p in wmi.InstancesOf('win32_process'):
