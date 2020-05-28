@@ -103,3 +103,7 @@ Administrator rights may be required to import the moveset into memory.
 - Import camera and projectiles for Tekken 7. Lee crashes with Lili or Leo RA.
 - Look into making ttt2 intro and outro end automatically
 - Use opponent for tag2 outros (might not be viable)
+- Remove all requirement & property aliased to 0 and use 'copy_nearby' instead -> also rename to copy_nearest
+- Delete files before exporting moveset
+- Tekken ball imitation using Akuma fireball, greenscreend on tekken 3 beach
+- Rename indexes in the file to _idx
