@@ -287,7 +287,10 @@ def getTotalSize(m, folderName):
     
     size = align8Bytes(size)
     for anim in m['anims']:
-        size += os.path.getsize("%s/anim/%s.bin" % (folderName, anim))
+        try:
+            size += os.path.getsize("%s/anim/%s.bin" % (folderName, anim))
+        except:
+            pass
 
     size = align8Bytes(size)
     for move in m['moves']:
@@ -707,8 +710,12 @@ class MotbinStruct:
         
         self.animation_ptr = self.align()
         for name in self.m['anims']:
-            with open("%s/anim/%s.bin" % (self.folderName, name), "rb") as f:
-                self.animation_table[name]['data_ptr'] = self.writeBytes(f.read())
+            try:
+                with open("%s/anim/%s.bin" % (self.folderName, name), "rb") as f:
+                    self.animation_table[name]['data_ptr'] = self.writeBytes(f.read())
+            except:
+                self.animation_table[name]['data_ptr'] = 0
+                print("Warning: animation %s.bin missing from the animation folder, this moveset might crash" % (name), file=sys.stderr)
         
     def allocateMoves(self):
         self.allocateAnimations()

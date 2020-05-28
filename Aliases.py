@@ -376,7 +376,7 @@ requirements = {
 }
 
 extra_move_properties = {
-    0x8193: { 't7_id': 0x8255, 'desc': 'Screw' },
+    0x8193: { 't7_id': 0x8255, 'desc': 'Use up screw/bound' },
     0x8001: { 't7_id': 0x800b, 'desc': 'MAPPING' },
     0x8002: { 't7_id': 0x800b, 'desc': 'MAPPING' },
     0x8003: { 't7_id': 0x8003, 'desc': 'MAPPING' },
@@ -572,7 +572,7 @@ extra_move_properties = {
     0x8269: { 't7_id': 0x83be, 'desc': '(LIN_XIAOYU) Fu_xiao01yE' },
     0x826e: {
         't7_id': 0x83c3,
-        'desc': 'Balconybreak victim / set opponent player move ID',
+        'desc': 'Balconybreak victim: set opponent move ID',
         'force_type': 0x21,
         'nofill': True
     },

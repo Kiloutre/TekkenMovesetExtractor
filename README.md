@@ -100,3 +100,6 @@ Administrator rights may be required to import the moveset into memory.
 - Import anim & move names like tekken 7 does
 - Fix Kunimitsu's broken hand
 - Search for Raven clone leftovers in T7
+- Import camera and projectiles for Tekken 7. Lee crashes with Lili or Leo RA.
+- Look into making ttt2 intro and outro end automatically
+- Use opponent for tag2 outros (might not be viable)

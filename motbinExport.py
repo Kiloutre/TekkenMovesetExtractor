@@ -175,7 +175,12 @@ class AnimData:
                         break
                     offset += read_size
                     
-            self.data = None if offset == 0 else self.readBytes(self.addr, offset)
+            try:
+                self.data = None if offset == 0 else self.readBytes(self.addr, offset)
+            except:
+                print("Error extracting animation " + self.name + ", game might crash with this moveset.", file=sys.stderr)
+                return None
+                
             oldData = self.data
             if self.TekkenVersion != 7:
                 try:
@@ -918,11 +923,14 @@ class Motbin:
             
         print("Saving animations...")
         for anim in self.anims:
-            with open ("%s/%s.bin" % (anim_path, anim.name), "wb") as f:
-                animdata = anim.getData()
-                f.write(animdata if animdata != None else bytes([0]))
-                if animdata == None:
-                    print("Error extracting animation %s" % (anim.name), file=sys.stderr)
+            try:
+                with open ("%s/%s.bin" % (anim_path, anim.name), "wb") as f:
+                    animdata = anim.getData()
+                    f.write(animdata if animdata != None else bytes([0]))
+                    if animdata == None:
+                        raise
+            except:
+                print("Error extracting animation %s, file will not be created" % (anim.name), file=sys.stderr)
             
         print("Saved at path %s.\nHash: %s" % (path.replace("\\", "/"), selfData['original_hash']))
         
