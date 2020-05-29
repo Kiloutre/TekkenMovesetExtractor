@@ -493,7 +493,7 @@ class MotbinStruct:
             self.writeInt(input_sequence['u1'], 2)
             self.writeInt(input_sequence['u2'], 2)
             self.writeInt(input_sequence['u3'], 4)
-            extradata_addr = self.getInputExtradataFromId(input_sequence['extradata_id'])
+            extradata_addr = self.getInputExtradataFromId(input_sequence['extradata_idx'])
             self.writeInt(extradata_addr, 8)
         
         return self.input_sequences_ptr, len(self.m['input_sequences'])
@@ -557,10 +557,10 @@ class MotbinStruct:
         for cancel in cancels:
             self.writeInt(cancel['command'], 8)
             
-            requirements_addr = self.getRequirementFromId(cancel['requirement'])
+            requirements_addr = self.getRequirementFromId(cancel['requirement_idx'])
             self.writeInt(requirements_addr, 8)
             
-            extraDataAddr = self.getCancelExtradataFromId(cancel['extradata'])
+            extraDataAddr = self.getCancelExtradataFromId(cancel['extradata_idx'])
             self.writeInt(extraDataAddr, 8)
             
             self.writeInt(cancel['frame_window_start'], 4)
@@ -588,7 +588,7 @@ class MotbinStruct:
             self.writeInt(pushback['val1'], 2)
             self.writeInt(pushback['val2'], 2)
             self.writeInt(pushback['val3'], 4)
-            self.writeInt(self.getPushbackExtraFromId(pushback['extra_index']), 8)
+            self.writeInt(self.getPushbackExtraFromId(pushback['pushbackextra_idx']), 8)
         
         return self.pushback_ptr, len(self.m['pushbacks'])
                 
@@ -629,8 +629,8 @@ class MotbinStruct:
         self.hit_conditions_ptr = self.align()
         
         for hit_condition in self.m['hit_conditions']:
-            requirement_addr = self.getRequirementFromId(hit_condition['requirement'])
-            reaction_list_addr = self.getReactionListFromId(hit_condition['reaction_list'])
+            requirement_addr = self.getRequirementFromId(hit_condition['requirement_idx'])
+            reaction_list_addr = self.getReactionListFromId(hit_condition['reaction_list_idx'])
             self.writeInt(requirement_addr, 8)
             self.writeInt(hit_condition['damage'], 4) 
             self.writeInt(0, 4) 
@@ -651,10 +651,10 @@ class MotbinStruct:
             
             on_hit_addr = 0
             cancel_addr = 0
-            if p['hit_condition'] != -1:
-                on_hit_addr = self.getHitConditionFromId(p['hit_condition'])
-            if p['hit_condition'] != -1:
-                cancel_addr = self.getCancelFromId(p['cancel'])
+            if p['hit_condition_idx'] != -1:
+                on_hit_addr = self.getHitConditionFromId(p['hit_condition_idx'])
+            if p['cancel_idx'] != -1:
+                cancel_addr = self.getCancelFromId(p['cancel_idx'])
             self.writeInt(on_hit_addr, 8)
             self.writeInt(cancel_addr, 8)
             
@@ -685,7 +685,7 @@ class MotbinStruct:
         
         for t in self.m['throws']:
             self.writeInt(t['u1'], 8)
-            extra_addr = self.getThrowExtraFromId(t['unknown_idx'])
+            extra_addr = self.getThrowExtraFromId(t['throwextra_idx'])
             self.writeInt(extra_addr, 8)
         
         return self.throws_ptr, len(self.m['throws'])
@@ -756,7 +756,7 @@ class MotbinStruct:
             self.writeInt(anim_ptr, 8)
             self.writeInt(move['vuln'], 4)
             self.writeInt(move['hitlevel'], 4)
-            self.writeInt(self.getCancelFromId(move['cancel']), 8)
+            self.writeInt(self.getCancelFromId(move['cancel_idx']), 8)
             
             self.writeInt(0, 8) #['u1'], ptr
             self.writeInt(move['u2'], 8)
@@ -772,7 +772,7 @@ class MotbinStruct:
             self.writeInt(move['u8_2'], 2)
             self.writeInt(move['u9'], 4)
             
-            on_hit_addr = self.getHitConditionFromId(move['hit_condition'])
+            on_hit_addr = self.getHitConditionFromId(move['hit_condition_idx'])
             self.writeInt(on_hit_addr, 8)
             self.writeInt(move['anim_max_len'], 4)
             
@@ -783,8 +783,8 @@ class MotbinStruct:
             self.writeInt(move['u11'], 4)
             self.writeInt(move['u12'], 4)
             
-            voiceclip_addr = self.getVoiceclipFromId(move['voiceclip'])
-            extra_properties_addr = self.getExtraMovePropertiesFromId(move['extra_properties_id'])
+            voiceclip_addr = self.getVoiceclipFromId(move['voiceclip_idx'])
+            extra_properties_addr = self.getExtraMovePropertiesFromId(move['extra_properties_idx'])
             
             self.writeInt(voiceclip_addr, 8)
             self.writeInt(extra_properties_addr, 8)

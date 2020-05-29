@@ -208,7 +208,7 @@ class Pushback:
             'val1': self.val1,
             'val2': self.val2,
             'val3': self.val3,
-            'extra_index': self.extra_index
+            'pushbackextra_idx': self.extra_index
         }
         
     def setExtraIndex(self, idx):
@@ -280,8 +280,8 @@ class Cancel:
         return {
             'id': self.id,
             'command': self.command,
-            'extradata': self.extradata_id,
-            'requirement': self.requirement_idx,
+            'extradata_idx': self.extradata_id,
+            'requirement_idx': self.requirement_idx,
             'frame_window_start': self.frame_window_start,
             'frame_window_end': self.frame_window_end,
             'starting_frame': self.starting_frame,
@@ -365,9 +365,9 @@ class HitCondition:
         
     def dict(self):
         return {
-            'requirement': self.requirement_idx,
+            'requirement_idx': self.requirement_idx,
             'damage': self.damage,
-            'reaction_list': self.reaction_list_idx
+            'reaction_list_idx': self.reaction_list_idx
         }
 
     def setRequirementId(self, id):
@@ -533,12 +533,12 @@ class Move:
             'anim_name': self.anim_name,
             'vuln': self.vuln,
             'hitlevel': self.hitlevel,
-            'cancel': self.cancel_idx,
+            'cancel_idx': self.cancel_idx,
             'transition': self.transition,
             'anim_max_len': self.anim_max_len,
-            'hit_condition': self.hit_condition_idx,
-            'voiceclip': self.voiceclip_idx,
-            'extra_properties_id': self.extra_properties_idx,
+            'hit_condition_idx': self.hit_condition_idx,
+            'voiceclip_idx': self.voiceclip_idx,
+            'extra_properties_idx': self.extra_properties_idx,
             'hitbox_location': self.hitbox_location,
             'startup': self.startup,
             'recovery': self.recovery,
@@ -626,7 +626,7 @@ class InputSequence:
             'u1': self.u1,
             'u2': self.u2,
             'u3': self.u3,
-            'extradata_id': self.extradata_idx
+            'extradata_idx': self.extradata_idx
         }
         
 class Projectile:
@@ -655,8 +655,8 @@ class Projectile:
         return {
             'u1': self.u1,
             'u2': self.u2,
-            'hit_condition': self.hit_condition,
-            'cancel': self.cancel_idx
+            'hit_condition_idx': self.hit_condition,
+            'cancel_idx': self.cancel_idx
         }
         
     def setHitConditionIdx(self, idx):
@@ -685,16 +685,16 @@ class Throw:
         self.u1 = self.bToInt(data, 0, self.ptr_size)
         self.unknown_addr = self.bToInt(data, self.ptr_size, self.ptr_size)
         
-        self.unknown_idx = -1
+        self.throwextra_idx = -1
         
     def dict(self):
         return {
             'u1': self.u1,
-            'unknown_idx': self.unknown_idx
+            'throwextra_idx': self.throwextra_idx
         }
         
-    def setUnknownIdx(self, idx):
-        self.unknown_idx = idx
+    def setThrowExtraIdx(self, idx):
+        self.throwextra_idx = idx
         
 class Motbin:
     def __init__(self, addr, exporterObject, name=''):
@@ -1040,7 +1040,7 @@ class Motbin:
         print("Reading throws...")
         for i in range(self.throws_size):
             throw = Throw(self.throws_ptr + (i * self.Throw_size), self)
-            throw.setUnknownIdx((throw.unknown_addr - self.throw_extras_ptr) // self.ThrowExtra_size)
+            throw.setThrowExtraIdx((throw.unknown_addr - self.throw_extras_ptr) // self.ThrowExtra_size)
             self.throws.append(throw.dict())
         
         print("Reading movelist...")
