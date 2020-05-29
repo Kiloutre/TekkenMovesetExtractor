@@ -815,14 +815,21 @@ class MotbinStruct:
     
     def copyUnknownOffsets(self, motbin_ptr):
         offsets = [
-            (0x1f0, 8),
-            (0x1f8, 8),
-            (0x200, 8),
-            (0x208, 8),
-            (0x250, 8),
-            (0x258, 8),
-            (0x280, 0x60)
+            (0x280, 8),
+            (0x288, 8),
+            (0x290, 8), #Hand
+            (0x298, 8), #Hand
+            (0x2a0, 8), #Face
+            (0x2a8, 8),
+            (0x2b0, 8),
+            (0x2b8, 8),
+            (0x2c0, 8),
+            (0x2c8, 8),
+            (0x2d0, 8),
+            (0x2d8, 8)
         ]
+        
+        
         
         for offset, read_size in offsets:
             offsetBytes = self.importer.readBytes(motbin_ptr + offset, read_size)
