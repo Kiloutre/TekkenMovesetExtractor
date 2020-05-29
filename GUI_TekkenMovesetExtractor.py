@@ -43,8 +43,8 @@ def monitoringFunc(playerId, TekkenImporter, parent):
                 
                 if currMovesetPtr != moveset.motbin_ptr:
                     waitFrame(TekkenImporter, 6)
-                    moveset.copyUnknownOffsets(currMovesetPtr)
                     TekkenImporter.writeInt(playerMotbinAddr, moveset.motbin_ptr, 8)
+                    moveset.copyMotaOffsets(currMovesetPtr)
                     moveset.applyCharacterIDAliases(playerAddr)
                     print("Player %d: Wrong moveset, applying %s" % (playerId, moveset.m['character_name']))
                     
@@ -188,7 +188,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         self.selected_char = None
         self.chara_data = None
         
-        self.wm_title("TekkenMovesetExtractor 0.9.4") 
+        self.wm_title("TekkenMovesetExtractor 1.0.0") 
         self.iconbitmap('GUI_TekkenMovesetExtractor/natsumi.ico')
         self.minsize(960, 540)
         self.geometry("960x540")
