@@ -798,7 +798,7 @@ class Motbin:
             self.throws_ptr = self.readInt(addr + throws_ptr, self.ptr_size)
             self.throws_size = self.readInt(addr + throws_size, self.ptr_size)
             
-            mota_start = 0x280 if TekkenVersion == 7 else 0x1e0
+            mota_start = 0x280 if TekkenVersion == 7 else 0x1d8
             self.mota_list = []
             
             for i in range(0, 11):

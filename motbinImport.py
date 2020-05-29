@@ -829,7 +829,13 @@ class MotbinStruct:
         for i, motaAddr in enumerate(self.mota_list):
             self.importer.writeInt(self.motbin_ptr + 0x280 + (i * 8), motaAddr, 8)
     
-    def copyMotaOffsets(self, motbin_ptr):
+    def copyMotaOffsets(self, motbin_ptr=None, playerAddr=None):
+        if motbin_ptr == None and playerAddr == None:
+            raise Exception("copyMotaOffsets: No valid addres provided")
+        
+        if motbin_ptr == None:
+            motbin_ptr = self.importer.readInt(playerAddr + game_addresses.addr['motbin_offset'], 8)
+    
         offsets = [
             #(0x280, 8),
             #(0x288, 8),

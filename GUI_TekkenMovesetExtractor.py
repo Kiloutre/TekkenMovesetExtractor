@@ -14,71 +14,202 @@ import motbinImport as importLib
 
 charactersPath = "./extracted_chars/"
 
-monitorVerificationFrequency   = (0.0001) #check very frequently, increase this value if performance problems happen
-waitFrameVerificationFrequency = (0.0001)
+monitorVerificationFrequency   = (5)
 runningMonitors = [None, None]
 creatingMonitor = [False, False]
-            
-def waitFrame(TekkenImporter, amount):
-    frame_counter_addr = game_addresses.addr['frame_counter']
-    prevFrame = TekkenImporter.readInt(frame_counter_addr, 4)
-    currFrame = prevFrame
-    while currFrame == prevFrame:
-        time.sleep(waitFrameVerificationFrequency)
-        currFrame = TekkenImporter.readInt(frame_counter_addr, 4)
 
-def monitoringFunc(playerId, TekkenImporter, parent):
-    monitorId = playerId - 1
-    playerAddr = game_addresses.addr['p%d_addr' % (playerId)]
-    playerMotbinAddr = playerAddr + game_addresses.addr['motbin_offset']
+newCodeAddr = None
+
+def hexToTuple(value, bytes_count):
+    return tuple([((value >> (b * 8)) & 0xFF) for b in range(bytes_count)])
     
-    try:
-        moveset = TekkenImporter.loadMoveset(charactersPath + parent.selected_char)
-        print("\nMonitoring successfully started for player %d. Moveset: %s" % (playerId, moveset.m['character_name']))
+def getSinglePlayerInjection(player, moveset, importer):
+    player = hexToTuple(player, 4)
+    moveset = hexToTuple(moveset, 8)
 
+    singlePlayerBytecode = [
+        0x81, 0xF9, *player, #cmp ecx, (player1, 4b)
+        0x75, 0x0A, #jne p2_set
+        0x48, 0xba, *moveset, #mov rdx, (moveset_addr2, 8 bytes)
+        0x48, 0x89, 0x91, 0xa0, 0x14, 0x00, 0x00, #mov [rcx+14a0, rdx]
+        0x48, 0x89, 0x91, 0xa8, 0x14, 0x00, 0x00, #mov [rcx+14a8, rdx]
+        0xFF, 0x25, 0x00, 0x00, 0x00, 0x00 , 0xEd, 0x8C, 0x73, 0x40, 0x01, 0x00, 0x00, 0x00 #jmp 140738CDF
+    ]
+    
+    addr = importer.allocateMem(256)
+    importer.writeBytes(addr, bytes(singlePlayerBytecode))
+    
+    newCodeAddr = addr
+    return addr
 
-        while runningMonitors[monitorId] != None:
-            try:
-                currMovesetPtr = TekkenImporter.readInt(playerMotbinAddr, 8)
-                
-                if currMovesetPtr != moveset.motbin_ptr:
-                    waitFrame(TekkenImporter, 6)
-                    TekkenImporter.writeInt(playerMotbinAddr, moveset.motbin_ptr, 8)
-                    moveset.copyMotaOffsets(currMovesetPtr)
-                    moveset.applyCharacterIDAliases(playerAddr)
-                    print("Player %d: Wrong moveset, applying %s" % (playerId, moveset.m['character_name']))
-                    
-                time.sleep(monitorVerificationFrequency)
-                
-            except Exception as e:
-                try:
-                    TekkenImporter.readInt(moveset.motbin_ptr, 8)
-                    time.sleep(monitorVerificationFrequency)
-                except:
-                    print(e)
-                    print("Monitor %d closing because process can't be read" % (playerId), file=sys.stderr)
-                    runningMonitors[monitorId] = None
-                    parent.setMonitorButton(monitorId, False)
-                    break
+def getBothPlayersInjection(player1, moveset1, player2, moveset2, importer):
+    player1 = hexToTuple(player1, 4)
+    player2 = hexToTuple(player2, 4)
+    
+    moveset1 = hexToTuple(moveset1, 8)
+    moveset2 = hexToTuple(moveset2, 8)
+
+    bothPlayersBytecode = [
+        0x81, 0xF9, *player1, #cmp ecx, (player1, 4b)
+        0x75, 0x0c, #jne p2_set
+        0x48, 0xba, *moveset1, #mov rdx, (moveset_addr1, 8b)
+        0xeb, 0x13, #jmp end
+        0x90, #nop for cmp ecx
+        0x81, 0xf9, *player2, #cmp ecx, (player2, 4 bytes)
+        0x75, 0x0a, #jne end
+        0x48, 0xba, *moveset2, #mov rdx, (moveset_addr2, 8 bytes)
+        0x48, 0x89, 0x91, 0xa0, 0x14, 0x00, 0x00, #mov [rcx+14a0, rdx]
+        0x48, 0x89, 0x91, 0xa8, 0x14, 0x00, 0x00, #mov [rcx+14a8, rdx]
+        0xFF, 0x25, 0x00, 0x00, 0x00, 0x00 , 0xEd, 0x8C, 0x73, 0x40, 0x01, 0x00, 0x00, 0x00 #jmp 140738CDF
+    ]
+    
+    addr = importer.allocateMem(256)
+    importer.writeBytes(addr, bytes(bothPlayersBytecode))
+    
+    newCodeAddr = addr
+    return addr
+        
+class Monitor:
+    def __init__(self, playerId, TekkenImporter, parent):
+        self.id = playerId - 1
+        self.otherMonitorId = int(not self.id)
+        self.playerId = playerId
+        self.getPlayerAddresses()
+        
+        self.Importer = TekkenImporter
+        self.parent = parent
+        self.selected_char = parent.selected_char
             
-    except Exception as e:
-        print(e, file=sys.stderr)
-    print("Monitor %d closing" % (playerId))
-    parent.setMonitorButton(monitorId, False)
-    sys.exit(0)
+    def start(self):
+        try:
+            self.moveset = self.Importer.loadMoveset(charactersPath + self.selected_char)
+        except Exception as e:
+            print(e, file=sys.stderr)
+            self.exit()
+            return
+            
+        print("\nMonitoring successfully started for player %d. Moveset: %s" % (self.playerId, self.moveset.m['character_name']))
+        
+        self.injectPermanentMovesetCode()
+        
+        try:
+            self.monitor()
+        except Exception as e:
+            print(e, file=sys.stderr)
+        
+            
+    def injectPermanentMovesetCode(self):
+        print("Injecting")
+        if runningMonitors[self.otherMonitorId] != None:
+            otherMonitor = runningMonitors[self.otherMonitorId]
+            otherPlayer, otherMoveset = otherMonitor.playerAddr, otherMonitor.moveset.motbin_ptr
+            currentPlayer, currentMoveset = self.playerAddr, self.moveset.motbin_ptr
+            
+            codeAddr = getBothPlayersInjection(self.playerAddr, self.moveset.motbin_ptr, otherPlayer, otherMoveset, self.Importer)
+        else:
+            codeAddr = getSinglePlayerInjection(self.playerAddr, self.moveset.motbin_ptr, self.Importer)
+            
+        jmpInstruction = [
+            0xFF, 0x25, 0, 0, 0, 0, *hexToTuple(codeAddr, 8)
+        ]
+            
+        self.Importer.writeBytes(game_addresses.addr['code_injection_addr'], bytes(jmpInstruction))
+            
+        print("code = %x" % (codeAddr))
+        
+    def resetCodeInjection(self, forceReset=False):
+        print("Resetting")
+        if runningMonitors[self.otherMonitorId] == None or forceReset:
+            
+            originalInstructions = [
+                0x48, 0x89, 0x91, 0xa0, 0x14, 0, 0,
+                0x48, 0x89, 0x91, 0xa8, 0x14, 0, 0,
+            ]
+            self.Importer.writeBytes(game_addresses.addr['code_injection_addr'], bytes(originalInstructions))
+        else:
+            runningMonitors[self.otherMonitorId].injectPermanentMovesetCode()
+        
+    def getPlayerAddresses(self):
+        currentPlayerId = self.playerId
+        self.playerAddr = game_addresses.addr['p%d_addr' % (currentPlayerId)]
+        self.watchedPlayer = self.playerAddr + (game_addresses.addr['playerstruct_size'] * 4)
+        
+    def getWatchedCharaInfo(self):
+        charaId = self.Importer.readInt(self.playerAddr + game_addresses.addr['chara_id_offset'], 8)
+        motbinPtr = self.Importer.readInt(self.watchedPlayer + game_addresses.addr['motbin_offset'], 8)
+        return charaId, motbinPtr
+        
+    def copyMotaOffsets(self):
+        self.getPlayerAddresses()
+        print("Copying MOTA")
+        self.moveset.copyMotaOffsets(playerAddr=self.watchedPlayer)
+        print("Copied MOTA")
+        
+    def applyCharacterAliases(self):
+        self.getPlayerAddresses()
+        self.moveset.applyCharacterIDAliases(self.playerAddr)
+        self.moveset.applyMotaOffsets()
+        
+    def monitor(self):
+        self.getPlayerAddresses()
+        self.Importer.writeInt(self.playerAddr + game_addresses.addr['motbin_offset'], self.moveset.motbin_ptr, 8)
+        
+        self.applyCharacterAliases()
+        prev_charaId = self.getWatchedCharaInfo()[0]
+        
+        print("Watching: %x" % (self.watchedPlayer))
+        
+        while runningMonitors[self.id] != None:
+            try:
+                self.getPlayerAddresses()
+                charaId, motbinPtr = self.getWatchedCharaInfo()
+                
+                if charaId != prev_charaId:
+                    print("CharaID not the same")
+                    self.applyCharacterAliases()
+                    prev_charaId = charaId
+
+                elif motbinPtr != self.moveset.motbin_ptr:
+                    print("Moveset not the same")
+                    #self.copyMotaOffsets()
+                    #self.Importer.writeInt(self.watchedPlayer + game_addresses.addr['motbin_offset'], self.moveset.motbin_ptr, 8)
+
+                
+                time.sleep(monitorVerificationFrequency)
+            except:
+                try:
+                    self.Importer.readInt(self.moveset.motbin_ptr, 8) # Read on self to see if process still exists
+                    time.sleep(monitorVerificationFrequency)
+                except Exception as e:
+                    print(e, file=sys.stderr)
+                    print("Monitor %d closing because process can't be read" % (self.playerId), file=sys.stderr)
+                    self.exit(showMessage=False, errcode=1)
+                    
+        self.exit()
+        
+    def exit(self, showMessage=True, errcode=1):
+        if showMessage:
+            print("Monitor %d closed." % (self.playerId))
+        runningMonitors[self.id] = None
+        creatingMonitor[self.id] = None
+        self.resetCodeInjection()
+        self.parent.setMonitorButton(self.id, False)
+        sys.exit(errcode)
     
 def startMonitor(parent, playerId):
     if parent.selected_char == None:
         raise Exception("No character selected")
     print("Starting monitor for p%d..." % (playerId))
     monitorId = playerId - 1
-    creatingMonitor[monitorId] = True
     
+    creatingMonitor[monitorId] = True
     TekkenImporter = importLib.Importer()
         
-    monitor = threading.Thread(target=monitoringFunc, args=(playerId, TekkenImporter, parent))
-    runningMonitors[monitorId] = monitor
-    monitor.start()
+    newMonitor = Monitor(playerId, TekkenImporter, parent)
+    newThread = threading.Thread(target=newMonitor.start)
+    
+    newThread.start()
+    runningMonitors[monitorId] = newMonitor
     creatingMonitor[monitorId] = False
     
 def getCharacterList():
@@ -177,6 +308,13 @@ class TextRedirector(object):
         pass
         
 def on_close():
+    global runningMonitors
+    existingMonitor = next((r for r in runningMonitors if r != None), None)
+    if existingMonitor:
+        try:
+            existingMonitor.resetCodeInjection(forceReset=True)
+        except:
+            pass
     runningMonitors = [None, None]
     os._exit(0)
         
@@ -329,13 +467,14 @@ class GUI_TekkenMovesetExtractor(Tk):
             
     def toggleMonitor(self, parent, playerId):
         monitorId = playerId - 1 
+        
         if creatingMonitor[monitorId] == True:
-            print("!!! Can't start the same monitor twice !!!")
             return
+            
         if runningMonitors[monitorId] != None:
             runningMonitors[monitorId] = None
-            self.setMonitorButton(monitorId, False)
-            print("Killed monitor for player %d" % (playerId))
+            creatingMonitor[monitorId] = True
+            print("Killing monitor for player %d..." % (playerId))
         else:
             try:
                 startMonitor(self, playerId)

@@ -23,5 +23,6 @@ cemu_playerstruct_size = 0x2960  #Distance between 2 players addresses
 # miscellaneous
 chara_id_offset = 0xd8
 cemu_chara_id_offset = -0xCC
+code_injection_addr = 0x140738CDF # Address that writes on player+motbin_offset
 
 #raven_clone_addr = 0x1089A790 # EU v32
