@@ -7,7 +7,7 @@ import json
 import os
 import sys
 
-importVersion = "0.9.0"
+importVersion = "1.0.0"
 
 requirement_size = 0x8
 cancel_size = 0x28
@@ -60,7 +60,7 @@ class Importer:
         motbin_ptr_addr = playerAddr + game_addresses.addr['motbin_offset']
         current_motbin_ptr = self.readInt(motbin_ptr_addr, 8)
         old_character_name = self.readString(self.readInt(current_motbin_ptr + 0x8, 8))
-        moveset.copyUnknownOffsets(current_motbin_ptr) #Required because we aren't self sufficient yet
+        moveset.copyMotaOffsets(current_motbin_ptr)
         moveset.applyCharacterIDAliases(playerAddr)
         
         print("\nOLD moveset pointer: 0x%x (%s)" % (current_motbin_ptr, old_character_name))
@@ -111,6 +111,7 @@ class Importer:
         projectiles_ptr, projectiles_count = p.allocateProjectiles()
         throw_extras_ptr, throw_extras_count = p.allocateThrowExtras()
         throws_ptr, throws_count = p.allocateThrows()
+        p.allocateMota()
         
         self.writeInt(p.motbin_ptr + 0x0, 65536, 4)
         self.writeInt(p.motbin_ptr + 0x4, 4475208, 4)
@@ -179,12 +180,7 @@ class Importer:
         self.writeInt(p.motbin_ptr + 0x270, throws_ptr, 8)
         self.writeInt(p.motbin_ptr + 0x278, throws_count, 8)
         
-        self.writeInt(p.motbin_ptr + 0x280, 0, 8)
-        self.writeInt(p.motbin_ptr + 0x288, 0, 8)
-        self.writeInt(p.motbin_ptr + 0x2c0, 0, 8)
-        self.writeInt(p.motbin_ptr + 0x2c8, 0, 8)
-        self.writeInt(p.motbin_ptr + 0x2d0, 0, 8)
-        self.writeInt(p.motbin_ptr + 0x2d8, 0, 8)
+        p.applyMotaOffsets()
         
         print("%s (ID: %d) successfully imported in memory at 0x%x." % (jsonFilename, m['character_id'], p.motbin_ptr))
         print("%d/%d bytes left." % (p.size - (p.curr_ptr - p.head_ptr), p.size))
@@ -314,6 +310,10 @@ def getTotalSize(m, folderName):
     size = align8Bytes(size)
     size += len(m['throws']) * throws_size
     
+    size = align8Bytes(size)
+    for i in range(11):
+        size += os.path.getsize("%s/mota_%d.bin" % (folderName, i))
+    
     return size
     
 class MotbinStruct:
@@ -352,6 +352,7 @@ class MotbinStruct:
         self.throw_extras_ptr = 0
         self.throws_ptr = 0
         
+        self.mota_list = []
         self.move_names_table = {}
         self.animation_table = {}
     
@@ -716,7 +717,19 @@ class MotbinStruct:
             except:
                 self.animation_table[name]['data_ptr'] = 0
                 print("Warning: animation %s.bin missing from the animation folder, this moveset might crash" % (name), file=sys.stderr)
+                
+    def allocateMota(self):
+        if len(self.mota_list) != 0:
+            return
+        self.align()
         
+        for i in range(11):
+            with open("%s/mota_%d.bin" % (self.folderName, i), "rb") as f:
+                motaBytes = f.read()
+                motaAddr = self.curr_ptr
+                self.writeBytes(motaBytes)
+                self.mota_list.append(motaAddr)
+                
     def allocateMoves(self):
         self.allocateAnimations()
     
@@ -812,24 +825,25 @@ class MotbinStruct:
                 charId = currentChar if param == movesetCharId else currentChar + 10
                 self.importer.writeInt(self.requirements_ptr + (i * 8) + 4, charId, 4) #force valid
                 
+    def applyMotaOffsets(self):
+        for i, motaAddr in enumerate(self.mota_list):
+            self.importer.writeInt(self.motbin_ptr + 0x280 + (i * 8), motaAddr, 8)
     
-    def copyUnknownOffsets(self, motbin_ptr):
+    def copyMotaOffsets(self, motbin_ptr):
         offsets = [
-            (0x280, 8),
-            (0x288, 8),
-            (0x290, 8), #Hand
-            (0x298, 8), #Hand
+            #(0x280, 8),
+            #(0x288, 8),
+            #(0x290, 8), #Hand
+            #(0x298, 8), #Hand
             (0x2a0, 8), #Face
-            (0x2a8, 8),
-            (0x2b0, 8),
-            (0x2b8, 8),
-            (0x2c0, 8),
-            (0x2c8, 8),
-            (0x2d0, 8),
-            (0x2d8, 8)
+            #(0x2a8, 8),
+            #(0x2b0, 8),
+            #(0x2b8, 8),
+            #(0x2c0, 8),
+            #(0x2c8, 8),
+            #(0x2d0, 8),
+            #(0x2d8, 8)
         ]
-        
-        
         
         for offset, read_size in offsets:
             offsetBytes = self.importer.readBytes(motbin_ptr + offset, read_size)

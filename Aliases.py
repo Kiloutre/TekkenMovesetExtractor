@@ -1,8 +1,8 @@
 
 requirements = {
     690: { 't7_id': 881, 'desc': 'Requirements end' },
-    467: { 't7_id': 614, 'desc': 'Screw/Bound' },
-    468: { 't7_id': 615, 'desc': 'Juggle' },
+    467: { 't7_id': 615, 'desc': 'Screw/Bound' },
+    468: { 't7_id': 614, 'desc': 'Juggle' },
     65: { 't7_id': 68, 'desc': 'Incoming high' },
     133: { 't7_id': 135, 'desc': 'Death' },
     3: { 't7_id': 3, 'desc': '1536: Enemy standing, throw (checking vuln?)' },

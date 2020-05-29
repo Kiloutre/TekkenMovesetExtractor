@@ -10,7 +10,7 @@ import sys
 import re
 from zlib import crc32
 
-exportVersion = "0.9.0"
+exportVersion = "1.0.0"
 
 def getMovesetName(TekkenVersion, character_name):
     if character_name.startswith('['):
@@ -798,6 +798,14 @@ class Motbin:
             self.throws_ptr = self.readInt(addr + throws_ptr, self.ptr_size)
             self.throws_size = self.readInt(addr + throws_size, self.ptr_size)
             
+            mota_start = 0x280 if TekkenVersion == 7 else 0x1e0
+            self.mota_list = []
+            
+            for i in range(0, 11):
+                mota_addr = self.readInt(addr + mota_start + (i * self.ptr_size), self.ptr_size)
+                mota_end_addr = self.readInt(addr + mota_start + ((i + 2) * self.ptr_size), self.ptr_size) if i < 9 else mota_addr + 20
+                self.mota_list.append((mota_addr, mota_end_addr - mota_addr))
+            
             aliasCopySize = 0x2a
             aliasOffset = fulldate_addr + self.ptr_size
             aliasCount = 148
@@ -921,14 +929,20 @@ class Motbin:
             selfData['original_hash'] = self.calculateHash(selfData)
             json.dump(selfData, f, indent=4)
             
+        for i, mota in enumerate(self.mota_list):
+            mota_addr, len = mota
+            with open("%s/mota_%d.bin" % (path, i), "wb") as f:
+                mota_data = self.readBytes(self.base + mota_addr, len)
+                f.write(mota_data)
+            
         print("Saving animations...")
         for anim in self.anims:
             try:
                 with open ("%s/%s.bin" % (anim_path, anim.name), "wb") as f:
                     animdata = anim.getData()
-                    f.write(animdata if animdata != None else bytes([0]))
                     if animdata == None:
-                        raise
+                        raise 
+                    f.write(animdata)
             except:
                 print("Error extracting animation %s, file will not be created" % (anim.name), file=sys.stderr)
             
