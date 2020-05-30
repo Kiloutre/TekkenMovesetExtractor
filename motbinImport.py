@@ -7,7 +7,7 @@ import json
 import os
 import sys
 
-importVersion = "0.9.0"
+importVersion = "1.0.0"
 
 requirement_size = 0x8
 cancel_size = 0x28
@@ -60,7 +60,7 @@ class Importer:
         motbin_ptr_addr = playerAddr + game_addresses.addr['motbin_offset']
         current_motbin_ptr = self.readInt(motbin_ptr_addr, 8)
         old_character_name = self.readString(self.readInt(current_motbin_ptr + 0x8, 8))
-        moveset.copyUnknownOffsets(current_motbin_ptr) #Required because we aren't self sufficient yet
+        moveset.copyMotaOffsets(current_motbin_ptr)
         moveset.applyCharacterIDAliases(playerAddr)
         
         print("\nOLD moveset pointer: 0x%x (%s)" % (current_motbin_ptr, old_character_name))
@@ -111,6 +111,8 @@ class Importer:
         projectiles_ptr, projectiles_count = p.allocateProjectiles()
         throw_extras_ptr, throw_extras_count = p.allocateThrowExtras()
         throws_ptr, throws_count = p.allocateThrows()
+        parry_related_ptr, parry_related_count = p.allocateParryRelated()
+        p.allocateMota()
         
         self.writeInt(p.motbin_ptr + 0x0, 65536, 4)
         self.writeInt(p.motbin_ptr + 0x4, 4475208, 4)
@@ -170,8 +172,8 @@ class Importer:
         self.writeInt(p.motbin_ptr + 0x240, input_extradata_ptr, 8)
         self.writeInt(p.motbin_ptr + 0x248, input_extradata_count, 8)
         
-        self.writeInt(p.motbin_ptr + 0x250, 0, 8)
-        self.writeInt(p.motbin_ptr + 0x258, 0, 8)
+        self.writeInt(p.motbin_ptr + 0x250, parry_related_ptr, 8)
+        self.writeInt(p.motbin_ptr + 0x258, parry_related_count, 8)
         
         self.writeInt(p.motbin_ptr + 0x260, throw_extras_ptr, 8)
         self.writeInt(p.motbin_ptr + 0x268, throw_extras_count, 8)
@@ -179,12 +181,7 @@ class Importer:
         self.writeInt(p.motbin_ptr + 0x270, throws_ptr, 8)
         self.writeInt(p.motbin_ptr + 0x278, throws_count, 8)
         
-        self.writeInt(p.motbin_ptr + 0x280, 0, 8)
-        self.writeInt(p.motbin_ptr + 0x288, 0, 8)
-        self.writeInt(p.motbin_ptr + 0x2c0, 0, 8)
-        self.writeInt(p.motbin_ptr + 0x2c8, 0, 8)
-        self.writeInt(p.motbin_ptr + 0x2d0, 0, 8)
-        self.writeInt(p.motbin_ptr + 0x2d8, 0, 8)
+        p.applyMotaOffsets()
         
         print("%s (ID: %d) successfully imported in memory at 0x%x." % (jsonFilename, m['character_id'], p.motbin_ptr))
         print("%d/%d bytes left." % (p.size - (p.curr_ptr - p.head_ptr), p.size))
@@ -244,7 +241,7 @@ def reverseBitOrder(number):
 def convertU15(number):
     return (number >> 7) | ((reverseBitOrder(number)) << 24)
     
-def getTotalSize(m, folderName):
+def getMovesetTotalSize(m, folderName):
     size = 0
     size += len(m['character_name']) + 1
     size += len(m['creator_name']) + 1
@@ -314,12 +311,19 @@ def getTotalSize(m, folderName):
     size = align8Bytes(size)
     size += len(m['throws']) * throws_size
     
+    size = align8Bytes(size)
+    size += len(m['parry_related']) * 4
+    
+    size = align8Bytes(size)
+    for i in range(12):
+        size += os.path.getsize("%s/mota_%d.bin" % (folderName, i))
+    
     return size
     
 class MotbinStruct:
     def __init__(self, motbin, folderName, importerObject):
         self.importer = importerObject
-        allocSize = getTotalSize(motbin, folderName)
+        allocSize = getMovesetTotalSize(motbin, folderName)
         head_ptr = self.importer.allocateMem(allocSize)
         
         self.motbin_ptr = self.importer.allocateMem(0x2e0)
@@ -352,6 +356,7 @@ class MotbinStruct:
         self.throw_extras_ptr = 0
         self.throws_ptr = 0
         
+        self.mota_list = []
         self.move_names_table = {}
         self.animation_table = {}
     
@@ -492,7 +497,7 @@ class MotbinStruct:
             self.writeInt(input_sequence['u1'], 2)
             self.writeInt(input_sequence['u2'], 2)
             self.writeInt(input_sequence['u3'], 4)
-            extradata_addr = self.getInputExtradataFromId(input_sequence['extradata_id'])
+            extradata_addr = self.getInputExtradataFromId(input_sequence['extradata_idx'])
             self.writeInt(extradata_addr, 8)
         
         return self.input_sequences_ptr, len(self.m['input_sequences'])
@@ -556,10 +561,10 @@ class MotbinStruct:
         for cancel in cancels:
             self.writeInt(cancel['command'], 8)
             
-            requirements_addr = self.getRequirementFromId(cancel['requirement'])
+            requirements_addr = self.getRequirementFromId(cancel['requirement_idx'])
             self.writeInt(requirements_addr, 8)
             
-            extraDataAddr = self.getCancelExtradataFromId(cancel['extradata'])
+            extraDataAddr = self.getCancelExtradataFromId(cancel['extradata_idx'])
             self.writeInt(extraDataAddr, 8)
             
             self.writeInt(cancel['frame_window_start'], 4)
@@ -587,7 +592,7 @@ class MotbinStruct:
             self.writeInt(pushback['val1'], 2)
             self.writeInt(pushback['val2'], 2)
             self.writeInt(pushback['val3'], 4)
-            self.writeInt(self.getPushbackExtraFromId(pushback['extra_index']), 8)
+            self.writeInt(self.getPushbackExtraFromId(pushback['pushbackextra_idx']), 8)
         
         return self.pushback_ptr, len(self.m['pushbacks'])
                 
@@ -628,8 +633,8 @@ class MotbinStruct:
         self.hit_conditions_ptr = self.align()
         
         for hit_condition in self.m['hit_conditions']:
-            requirement_addr = self.getRequirementFromId(hit_condition['requirement'])
-            reaction_list_addr = self.getReactionListFromId(hit_condition['reaction_list'])
+            requirement_addr = self.getRequirementFromId(hit_condition['requirement_idx'])
+            reaction_list_addr = self.getReactionListFromId(hit_condition['reaction_list_idx'])
             self.writeInt(requirement_addr, 8)
             self.writeInt(hit_condition['damage'], 4) 
             self.writeInt(0, 4) 
@@ -650,10 +655,10 @@ class MotbinStruct:
             
             on_hit_addr = 0
             cancel_addr = 0
-            if p['hit_condition'] != -1:
-                on_hit_addr = self.getHitConditionFromId(p['hit_condition'])
-            if p['hit_condition'] != -1:
-                cancel_addr = self.getCancelFromId(p['cancel'])
+            if p['hit_condition_idx'] != -1:
+                on_hit_addr = self.getHitConditionFromId(p['hit_condition_idx'])
+            if p['cancel_idx'] != -1:
+                cancel_addr = self.getCancelFromId(p['cancel_idx'])
             self.writeInt(on_hit_addr, 8)
             self.writeInt(cancel_addr, 8)
             
@@ -684,10 +689,19 @@ class MotbinStruct:
         
         for t in self.m['throws']:
             self.writeInt(t['u1'], 8)
-            extra_addr = self.getThrowExtraFromId(t['unknown_idx'])
+            extra_addr = self.getThrowExtraFromId(t['throwextra_idx'])
             self.writeInt(extra_addr, 8)
         
         return self.throws_ptr, len(self.m['throws'])
+        
+    def allocateParryRelated(self):
+        print("Allocating parry-related...")
+        self.parry_related_ptr = self.align()
+        
+        for value in self.m['parry_related']:
+            self.writeInt(value, 4)
+        
+        return self.parry_related_ptr, len(self.m['parry_related'])
         
     def allocateExtraMoveProperties(self):
         print("Allocating extra move properties...")
@@ -716,7 +730,19 @@ class MotbinStruct:
             except:
                 self.animation_table[name]['data_ptr'] = 0
                 print("Warning: animation %s.bin missing from the animation folder, this moveset might crash" % (name), file=sys.stderr)
+                
+    def allocateMota(self):
+        if len(self.mota_list) != 0:
+            return
+        self.align()
         
+        for i in range(12):
+            with open("%s/mota_%d.bin" % (self.folderName, i), "rb") as f:
+                motaBytes = f.read()
+                motaAddr = self.curr_ptr
+                self.writeBytes(motaBytes)
+                self.mota_list.append(motaAddr)
+                
     def allocateMoves(self):
         self.allocateAnimations()
     
@@ -743,7 +769,7 @@ class MotbinStruct:
             self.writeInt(anim_ptr, 8)
             self.writeInt(move['vuln'], 4)
             self.writeInt(move['hitlevel'], 4)
-            self.writeInt(self.getCancelFromId(move['cancel']), 8)
+            self.writeInt(self.getCancelFromId(move['cancel_idx']), 8)
             
             self.writeInt(0, 8) #['u1'], ptr
             self.writeInt(move['u2'], 8)
@@ -759,7 +785,7 @@ class MotbinStruct:
             self.writeInt(move['u8_2'], 2)
             self.writeInt(move['u9'], 4)
             
-            on_hit_addr = self.getHitConditionFromId(move['hit_condition'])
+            on_hit_addr = self.getHitConditionFromId(move['hit_condition_idx'])
             self.writeInt(on_hit_addr, 8)
             self.writeInt(move['anim_max_len'], 4)
             
@@ -770,8 +796,8 @@ class MotbinStruct:
             self.writeInt(move['u11'], 4)
             self.writeInt(move['u12'], 4)
             
-            voiceclip_addr = self.getVoiceclipFromId(move['voiceclip'])
-            extra_properties_addr = self.getExtraMovePropertiesFromId(move['extra_properties_id'])
+            voiceclip_addr = self.getVoiceclipFromId(move['voiceclip_idx'])
+            extra_properties_addr = self.getExtraMovePropertiesFromId(move['extra_properties_idx'])
             
             self.writeInt(voiceclip_addr, 8)
             self.writeInt(extra_properties_addr, 8)
@@ -785,8 +811,8 @@ class MotbinStruct:
                 hitbox = getTag2HitboxAliasedValue(hitbox)
             
             self.writeInt(hitbox, 4)
-            self.writeInt(move['startup'], 4)
-            self.writeInt(move['recovery'], 4)
+            self.writeInt(move['first_active_frame'], 4)
+            self.writeInt(move['last_active_frame'], 4)
             
             self.writeInt(move['u16'], 2)
             self.writeInt(move['u17'], 2)
@@ -812,16 +838,30 @@ class MotbinStruct:
                 charId = currentChar if param == movesetCharId else currentChar + 10
                 self.importer.writeInt(self.requirements_ptr + (i * 8) + 4, charId, 4) #force valid
                 
+    def applyMotaOffsets(self):
+        for i, motaAddr in enumerate(self.mota_list):
+            self.importer.writeInt(self.motbin_ptr + 0x280 + (i * 8), motaAddr, 8)
     
-    def copyUnknownOffsets(self, motbin_ptr):
+    def copyMotaOffsets(self, motbin_ptr=None, playerAddr=None):
+        if motbin_ptr == None and playerAddr == None:
+            raise Exception("copyMotaOffsets: No valid addres provided")
+        
+        if motbin_ptr == None:
+            motbin_ptr = self.importer.readInt(playerAddr + game_addresses.addr['motbin_offset'], 8)
+    
         offsets = [
-            (0x1f0, 8),
-            (0x1f8, 8),
-            (0x200, 8),
-            (0x208, 8),
-            (0x250, 8),
-            (0x258, 8),
-            (0x280, 0x60)
+            (0x280, 8),
+            (0x288, 8),
+            (0x290, 8), #Hand
+            (0x298, 8), #Hand
+            (0x2a0, 8), #Face
+            (0x2a8, 8), #Face
+            (0x2b0, 8),
+            (0x2b8, 8),
+            (0x2c0, 8),
+            (0x2c8, 8),
+            (0x2d0, 8),
+            (0x2d8, 8)
         ]
         
         for offset, read_size in offsets:

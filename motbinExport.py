@@ -10,7 +10,7 @@ import sys
 import re
 from zlib import crc32
 
-exportVersion = "0.9.0"
+exportVersion = "1.0.0"
 
 def getMovesetName(TekkenVersion, character_name):
     if character_name.startswith('['):
@@ -48,11 +48,12 @@ def setStructureSizes(self):
     self.ExtraMoveProperty_size = 0xC
     self.Move_size = 0xB0 if self.TekkenVersion == 7 else 0x70
     self.Voiceclip_size = 0x4
-    self.InputExtradata_size = 8
+    self.InputExtradata_size = 0x8
     self.InputSequence_size = 0x10 if self.TekkenVersion == 7 else 0x8
     self.Projectile_size = 0xa8 if self.TekkenVersion == 7 else 0x88
     self.ThrowExtra_size = 0xC
     self.Throw_size = 0x10 if self.TekkenVersion == 7 else 0x8
+    self.UnknownParryRelated_size = 0x4
             
 class Exporter:
     def __init__(self, TekkenVersion, folder_destination='./extracted_chars/'):
@@ -208,7 +209,7 @@ class Pushback:
             'val1': self.val1,
             'val2': self.val2,
             'val3': self.val3,
-            'extra_index': self.extra_index
+            'pushbackextra_idx': self.extra_index
         }
         
     def setExtraIndex(self, idx):
@@ -280,8 +281,8 @@ class Cancel:
         return {
             'id': self.id,
             'command': self.command,
-            'extradata': self.extradata_id,
-            'requirement': self.requirement_idx,
+            'extradata_idx': self.extradata_id,
+            'requirement_idx': self.requirement_idx,
             'frame_window_start': self.frame_window_start,
             'frame_window_end': self.frame_window_end,
             'starting_frame': self.starting_frame,
@@ -365,9 +366,9 @@ class HitCondition:
         
     def dict(self):
         return {
-            'requirement': self.requirement_idx,
+            'requirement_idx': self.requirement_idx,
             'damage': self.damage,
-            'reaction_list': self.reaction_list_idx
+            'reaction_list_idx': self.reaction_list_idx
         }
 
     def setRequirementId(self, id):
@@ -533,15 +534,15 @@ class Move:
             'anim_name': self.anim_name,
             'vuln': self.vuln,
             'hitlevel': self.hitlevel,
-            'cancel': self.cancel_idx,
+            'cancel_idx': self.cancel_idx,
             'transition': self.transition,
             'anim_max_len': self.anim_max_len,
-            'hit_condition': self.hit_condition_idx,
-            'voiceclip': self.voiceclip_idx,
-            'extra_properties_id': self.extra_properties_idx,
+            'hit_condition_idx': self.hit_condition_idx,
+            'voiceclip_idx': self.voiceclip_idx,
+            'extra_properties_idx': self.extra_properties_idx,
             'hitbox_location': self.hitbox_location,
-            'startup': self.startup,
-            'recovery': self.recovery,
+            'first_active_frame': self.startup,
+            'last_active_frame': self.recovery,
             
             #'u1': self.u1, #pointer
             'u2': self.u2,
@@ -626,7 +627,7 @@ class InputSequence:
             'u1': self.u1,
             'u2': self.u2,
             'u3': self.u3,
-            'extradata_id': self.extradata_idx
+            'extradata_idx': self.extradata_idx
         }
         
 class Projectile:
@@ -655,8 +656,8 @@ class Projectile:
         return {
             'u1': self.u1,
             'u2': self.u2,
-            'hit_condition': self.hit_condition,
-            'cancel': self.cancel_idx
+            'hit_condition_idx': self.hit_condition,
+            'cancel_idx': self.cancel_idx
         }
         
     def setHitConditionIdx(self, idx):
@@ -685,16 +686,26 @@ class Throw:
         self.u1 = self.bToInt(data, 0, self.ptr_size)
         self.unknown_addr = self.bToInt(data, self.ptr_size, self.ptr_size)
         
-        self.unknown_idx = -1
+        self.throwextra_idx = -1
         
     def dict(self):
         return {
             'u1': self.u1,
-            'unknown_idx': self.unknown_idx
+            'throwextra_idx': self.throwextra_idx
         }
         
-    def setUnknownIdx(self, idx):
-        self.unknown_idx = idx
+    def setThrowExtraIdx(self, idx):
+        self.throwextra_idx = idx
+        
+class UnknownParryRelated:
+    def __init__(self, addr, parent):
+        data = initTekkenStructure(self, parent, addr, parent.UnknownParryRelated_size)
+        
+        self.value = self.bToInt(data, 0, 4)
+        
+    def dict(self):
+        return self.value
+ 
         
 class Motbin:
     def __init__(self, addr, exporterObject, name=''):
@@ -788,6 +799,11 @@ class Motbin:
             self.input_extradata_ptr = self.readInt(addr + input_extradata_ptr, self.ptr_size)
             self.input_extradata_size = self.readInt(addr + input_extradata_size, self.ptr_size)
 
+            unknown_parryrelated_list_ptr = 0x250 if self.TekkenVersion == 7 else 0x1c0
+            unknown_parryrelated_list_size = unknown_parryrelated_list_ptr + self.ptr_size
+            self.unknown_parryrelated_list_ptr = self.readInt(addr + unknown_parryrelated_list_ptr, self.ptr_size)
+            self.unknown_parryrelated_list_size = self.readInt(addr + unknown_parryrelated_list_size, self.ptr_size)
+
             throw_extras_ptr = 0x260 if self.TekkenVersion == 7 else 0x1c8
             throw_extras_size = throw_extras_ptr + self.ptr_size
             self.throw_extras_ptr = self.readInt(addr + throw_extras_ptr, self.ptr_size)
@@ -797,6 +813,14 @@ class Motbin:
             throws_size = throws_ptr + self.ptr_size
             self.throws_ptr = self.readInt(addr + throws_ptr, self.ptr_size)
             self.throws_size = self.readInt(addr + throws_size, self.ptr_size)
+            
+            mota_start = 0x280 if self.TekkenVersion == 7 else 0x1d8
+            self.mota_list = []
+            
+            for i in range(12):
+                mota_addr = self.readInt(addr + mota_start + (i * self.ptr_size), self.ptr_size)
+                mota_end_addr = self.readInt(addr + mota_start + ((i + 2) * self.ptr_size), self.ptr_size) if i < 9 else mota_addr + 20
+                self.mota_list.append((mota_addr, mota_end_addr - mota_addr))
             
             aliasCopySize = 0x2a
             aliasOffset = fulldate_addr + self.ptr_size
@@ -829,6 +853,7 @@ class Motbin:
         self.projectiles = []
         self.throw_extras = []
         self.throws = []
+        self.parry_related = []
         
     def __eq__(self, other):
         return self.character_name == other.character_name \
@@ -879,7 +904,8 @@ class Motbin:
             'cancel_extradata': self.cancel_extradata,
             'projectiles': self.projectiles,
             'throw_extras': self.throw_extras,
-            'throws': self.throws
+            'throws': self.throws,
+            'parry_related': self.parry_related
         }
         
     def calculateHash(self, selfData):
@@ -921,14 +947,20 @@ class Motbin:
             selfData['original_hash'] = self.calculateHash(selfData)
             json.dump(selfData, f, indent=4)
             
+        for i, mota in enumerate(self.mota_list):
+            mota_addr, len = mota
+            with open("%s/mota_%d.bin" % (path, i), "wb") as f:
+                mota_data = self.readBytes(self.base + mota_addr, len)
+                f.write(mota_data)
+            
         print("Saving animations...")
         for anim in self.anims:
             try:
                 with open ("%s/%s.bin" % (anim_path, anim.name), "wb") as f:
                     animdata = anim.getData()
-                    f.write(animdata if animdata != None else bytes([0]))
                     if animdata == None:
-                        raise
+                        raise 
+                    f.write(animdata)
             except:
                 print("Error extracting animation %s, file will not be created" % (anim.name), file=sys.stderr)
             
@@ -937,6 +969,11 @@ class Motbin:
     def extractMoveset(self):
         self.printBasicData()
         
+        print("Reading parry-related...")
+        for i in range(self.unknown_parryrelated_list_size):
+            unknown = UnknownParryRelated(self.unknown_parryrelated_list_ptr + (i * self.UnknownParryRelated_size), self)
+            self.parry_related.append(unknown.dict())
+            
         print("Reading input extradata...")
         for i in range(self.input_extradata_size + 1):
             input_extradata = InputExtradata(self.input_extradata_ptr + (i * self.InputExtradata_size), self)
@@ -1026,7 +1063,7 @@ class Motbin:
         print("Reading throws...")
         for i in range(self.throws_size):
             throw = Throw(self.throws_ptr + (i * self.Throw_size), self)
-            throw.setUnknownIdx((throw.unknown_addr - self.throw_extras_ptr) // self.ThrowExtra_size)
+            throw.setThrowExtraIdx((throw.unknown_addr - self.throw_extras_ptr) // self.ThrowExtra_size)
             self.throws.append(throw.dict())
         
         print("Reading movelist...")

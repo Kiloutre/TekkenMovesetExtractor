@@ -107,3 +107,4 @@ Administrator rights may be required to import the moveset into memory.
 - Delete files before exporting moveset
 - Tekken ball imitation using Akuma fireball, greenscreend on tekken 3 beach
 - Rename indexes in the file to _idx
+- Allow specific item moves
