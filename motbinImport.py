@@ -111,6 +111,7 @@ class Importer:
         projectiles_ptr, projectiles_count = p.allocateProjectiles()
         throw_extras_ptr, throw_extras_count = p.allocateThrowExtras()
         throws_ptr, throws_count = p.allocateThrows()
+        parry_related_ptr, parry_related_count = p.allocateParryRelated()
         p.allocateMota()
         
         self.writeInt(p.motbin_ptr + 0x0, 65536, 4)
@@ -171,8 +172,8 @@ class Importer:
         self.writeInt(p.motbin_ptr + 0x240, input_extradata_ptr, 8)
         self.writeInt(p.motbin_ptr + 0x248, input_extradata_count, 8)
         
-        self.writeInt(p.motbin_ptr + 0x250, 0, 8)
-        self.writeInt(p.motbin_ptr + 0x258, 0, 8)
+        self.writeInt(p.motbin_ptr + 0x250, parry_related_ptr, 8)
+        self.writeInt(p.motbin_ptr + 0x258, parry_related_count, 8)
         
         self.writeInt(p.motbin_ptr + 0x260, throw_extras_ptr, 8)
         self.writeInt(p.motbin_ptr + 0x268, throw_extras_count, 8)
@@ -240,7 +241,7 @@ def reverseBitOrder(number):
 def convertU15(number):
     return (number >> 7) | ((reverseBitOrder(number)) << 24)
     
-def getTotalSize(m, folderName):
+def getMovesetTotalSize(m, folderName):
     size = 0
     size += len(m['character_name']) + 1
     size += len(m['creator_name']) + 1
@@ -311,6 +312,9 @@ def getTotalSize(m, folderName):
     size += len(m['throws']) * throws_size
     
     size = align8Bytes(size)
+    size += len(m['parry_related']) * 4
+    
+    size = align8Bytes(size)
     for i in range(12):
         size += os.path.getsize("%s/mota_%d.bin" % (folderName, i))
     
@@ -319,7 +323,7 @@ def getTotalSize(m, folderName):
 class MotbinStruct:
     def __init__(self, motbin, folderName, importerObject):
         self.importer = importerObject
-        allocSize = getTotalSize(motbin, folderName)
+        allocSize = getMovesetTotalSize(motbin, folderName)
         head_ptr = self.importer.allocateMem(allocSize)
         
         self.motbin_ptr = self.importer.allocateMem(0x2e0)
@@ -689,6 +693,15 @@ class MotbinStruct:
             self.writeInt(extra_addr, 8)
         
         return self.throws_ptr, len(self.m['throws'])
+        
+    def allocateParryRelated(self):
+        print("Allocating parry-related...")
+        self.parry_related_ptr = self.align()
+        
+        for value in self.m['parry_related']:
+            self.writeInt(value, 4)
+        
+        return self.parry_related_ptr, len(self.m['parry_related'])
         
     def allocateExtraMoveProperties(self):
         print("Allocating extra move properties...")

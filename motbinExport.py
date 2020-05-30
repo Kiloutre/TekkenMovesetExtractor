@@ -48,11 +48,12 @@ def setStructureSizes(self):
     self.ExtraMoveProperty_size = 0xC
     self.Move_size = 0xB0 if self.TekkenVersion == 7 else 0x70
     self.Voiceclip_size = 0x4
-    self.InputExtradata_size = 8
+    self.InputExtradata_size = 0x8
     self.InputSequence_size = 0x10 if self.TekkenVersion == 7 else 0x8
     self.Projectile_size = 0xa8 if self.TekkenVersion == 7 else 0x88
     self.ThrowExtra_size = 0xC
     self.Throw_size = 0x10 if self.TekkenVersion == 7 else 0x8
+    self.UnknownParryRelated_size = 0x4
             
 class Exporter:
     def __init__(self, TekkenVersion, folder_destination='./extracted_chars/'):
@@ -696,6 +697,16 @@ class Throw:
     def setThrowExtraIdx(self, idx):
         self.throwextra_idx = idx
         
+class UnknownParryRelated:
+    def __init__(self, addr, parent):
+        data = initTekkenStructure(self, parent, addr, parent.UnknownParryRelated_size)
+        
+        self.value = self.bToInt(data, 0, 4)
+        
+    def dict(self):
+        return self.value
+ 
+        
 class Motbin:
     def __init__(self, addr, exporterObject, name=''):
         initTekkenStructure(self, exporterObject, addr, size=0)
@@ -788,6 +799,11 @@ class Motbin:
             self.input_extradata_ptr = self.readInt(addr + input_extradata_ptr, self.ptr_size)
             self.input_extradata_size = self.readInt(addr + input_extradata_size, self.ptr_size)
 
+            unknown_parryrelated_list_ptr = 0x250 if self.TekkenVersion == 7 else 0x1c0
+            unknown_parryrelated_list_size = unknown_parryrelated_list_ptr + self.ptr_size
+            self.unknown_parryrelated_list_ptr = self.readInt(addr + unknown_parryrelated_list_ptr, self.ptr_size)
+            self.unknown_parryrelated_list_size = self.readInt(addr + unknown_parryrelated_list_size, self.ptr_size)
+
             throw_extras_ptr = 0x260 if self.TekkenVersion == 7 else 0x1c8
             throw_extras_size = throw_extras_ptr + self.ptr_size
             self.throw_extras_ptr = self.readInt(addr + throw_extras_ptr, self.ptr_size)
@@ -837,6 +853,7 @@ class Motbin:
         self.projectiles = []
         self.throw_extras = []
         self.throws = []
+        self.parry_related = []
         
     def __eq__(self, other):
         return self.character_name == other.character_name \
@@ -887,7 +904,8 @@ class Motbin:
             'cancel_extradata': self.cancel_extradata,
             'projectiles': self.projectiles,
             'throw_extras': self.throw_extras,
-            'throws': self.throws
+            'throws': self.throws,
+            'parry_related': self.parry_related
         }
         
     def calculateHash(self, selfData):
@@ -951,6 +969,11 @@ class Motbin:
     def extractMoveset(self):
         self.printBasicData()
         
+        print("Reading parry-related...")
+        for i in range(self.unknown_parryrelated_list_size):
+            unknown = UnknownParryRelated(self.unknown_parryrelated_list_ptr + (i * self.UnknownParryRelated_size), self)
+            self.parry_related.append(unknown.dict())
+            
         print("Reading input extradata...")
         for i in range(self.input_extradata_size + 1):
             input_extradata = InputExtradata(self.input_extradata_ptr + (i * self.InputExtradata_size), self)
