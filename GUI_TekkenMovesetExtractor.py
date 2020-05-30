@@ -133,6 +133,10 @@ def getBothPlayersInjection(movesetAddr, movesetAddr2, importer):
     
     importer.writeBytes(codeAddr, bytes(twoPlayersBytecode))
     
+    if codeInjection != None:
+        movesetAddresses = importer.readBytes(codeInjection + codeInjectionSize - 0x20, 0x20)
+        importer.writeBytes(codeAddr + codeInjectionSize - 0x20, movesetAddresses)
+    
     importer.writeInt(playerLocation, game_addresses.addr['p1_addr'], 8)
     importer.writeInt(playerLocation + 8, game_addresses.addr['p1_addr'] + game_addresses.addr['playerstruct_size'], 8)
     
@@ -150,7 +154,7 @@ class Monitor:
         self.id = playerId - 1
         self.otherMonitorId = int(not self.id)
         self.playerId = playerId
-        self.currentPlayerId = playerId
+        self.moveset = None
         
         self.Importer = TekkenImporter
         self.parent = parent
@@ -177,6 +181,7 @@ class Monitor:
         
             
     def injectPermanentMovesetCode(self):
+        otherMonitor = None
         if runningMonitors[self.otherMonitorId] != None:
             otherMonitor = runningMonitors[self.otherMonitorId]
             otherPlayer, otherMoveset = otherMonitor.playerAddr, otherMonitor.moveset.motbin_ptr
@@ -192,6 +197,9 @@ class Monitor:
         
         self.Importer.writeBytes(game_addresses.addr['code_injection_addr'], bytes(jmpInstruction))
         
+        if otherMonitor != None:
+            otherMonitor.getPlayerAddress(forceWriting = True)
+        
     def resetCodeInjection(self, forceReset=False):
         if runningMonitors[self.otherMonitorId] == None or forceReset:
             
@@ -202,26 +210,32 @@ class Monitor:
             self.Importer.writeBytes(game_addresses.addr['code_injection_addr'], bytes(originalInstructions))
         else:
             runningMonitors[self.otherMonitorId].injectPermanentMovesetCode()
+            
+    def writeMovesetToCode(self, playerId):
+        global codeInjection
         
-    def getPlayerAddress(self):
+        if codeInjection == None or self.moveset == None:
+            return
+        
+        offset = ((playerId - 1) * 8)
+        self.Importer.writeInt(codeInjection + codeInjectionSize - 0x10 + offset, self.moveset.motbin_ptr, 8)
+        self.Importer.writeInt(codeInjection + codeInjectionSize - 0x20 + offset, self.moveset.motbin_ptr, 8)
+        print("Writng local %d to %x" % (self.playerId, codeInjection + codeInjectionSize - 0x20 + offset))
+        
+    def getPlayerAddress(self, forceWriting = False):
         startingAddr = game_addresses.addr['playerid_starting_ptr']
         for i in range(3):
             startingAddr = self.Importer.readInt(startingAddr, 8)
             
         invertPlayers = self.Importer.readInt(startingAddr + 0x60, 4)
-        if self.invertedPlayers == -1:
-            self.invertedPlayers = invertPlayers
-            print("Inverted: %d" % (invertPlayers))
         
         playerId = self.playerId + invertPlayers
         if playerId == 3:
             playerId = 1
         self.playerAddr = game_addresses.addr['p%d_addr' % (playerId)]
             
-        if self.invertedPlayers != invertPlayers:
-            offset = ((playerId - 1) * 8)
-            self.Importer.writeInt(codeInjection + codeInjectionSize - 0x10 + offset, self.moveset.motbin_ptr, 8)
-            self.Importer.writeInt(codeInjection + codeInjectionSize - 0x20 + offset, self.moveset.motbin_ptr, 8)
+        if self.invertedPlayers != invertPlayers or forceWriting:
+            self.writeMovesetToCode(playerId)
             self.invertedPlayers = invertPlayers
         
     def getCharacterId(self):
@@ -231,7 +245,7 @@ class Monitor:
         self.moveset.applyCharacterIDAliases(self.playerAddr)
         
     def monitor(self):
-        self.getPlayerAddress()
+        self.getPlayerAddress(forceWriting = True)
         
         self.Importer.writeInt(self.playerAddr + game_addresses.addr['motbin_offset'], self.moveset.motbin_ptr, 8)
         
@@ -437,9 +451,9 @@ class GUI_TekkenMovesetExtractor(Tk):
     def setMonitorButton(self, button, active):
         text = 'Local' if button == 0 else 'Remote'
         if active:
-            self.monitorButtons[button]['text'] = 'Kill %s monitor' % (text)
+            self.monitorButtons[button]['text'] = 'Kill %s player monitor' % (text)
         else:
-            self.monitorButtons[button]['text'] = 'Online %s player' % (text)
+            self.monitorButtons[button]['text'] = 'Set Online %s player' % (text)
         
     def initImportArea(self):
         self.charalistFrame = Frame(self.importFrame)
@@ -570,8 +584,8 @@ class GUI_TekkenMovesetExtractor(Tk):
         self.createButton(self.importButtonFrame, "Import to P1", (1,), importPlayer)
         self.createButton(self.importButtonFrame, "Import to P2", (2,), importPlayer)
         self.monitorButtons = [
-            self.createButton(self.importButtonFrame, "Online Local Player", (1,), self.toggleMonitor),
-            self.createButton(self.importButtonFrame, "Online Remote Player", (2,), self.toggleMonitor)
+            self.createButton(self.importButtonFrame, "Set Online Local Player", (1,), self.toggleMonitor),
+            self.createButton(self.importButtonFrame, "Set Online Remote Player", (2,), self.toggleMonitor)
         ]
         
     def createExportButtons(self):
