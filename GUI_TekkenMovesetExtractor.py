@@ -70,10 +70,8 @@ def getSinglePlayerInjection(playerAddr, movesetAddr, importer):
     codeInjection = codeAddr
     return codeAddr
 
-def getBothPlayersInjection(playerAddr, movesetAddr, playerAddr2, movesetAddr2, importer):
+def getBothPlayersInjection(movesetAddr, movesetAddr2, importer):
     global codeInjection
-    player = hexToList(playerAddr, 4)
-    player2 = hexToList(playerAddr2, 4)
     moveset = hexToList(movesetAddr, 8)
     moveset2 = hexToList(movesetAddr2, 8)
     
@@ -91,7 +89,7 @@ def getBothPlayersInjection(playerAddr, movesetAddr, playerAddr2, movesetAddr2, 
     importedMovesetLocation_bytes = hexToList(importedMovesetLocation, 4)
     importedMovesetLocation2_bytes = hexToList(importedMovesetLocation + 8, 4)
 
-    singlePlayerBytecode = [
+    twoPlayersBytecode = [
         0x3B, 0x0c, 0x25, *playerLocation_bytes, #cmp ecx,[location]
         0x75, 0x3a, #jne p2_check
         0x48, 0x89, 0x14, 0x25, *loadedMovesetLocation_bytes, # mov [location], rdx
@@ -111,7 +109,7 @@ def getBothPlayersInjection(playerAddr, movesetAddr, playerAddr2, movesetAddr2, 
         0x48, 0x8b, 0x14, 0x25, *importedMovesetLocation_bytes, #mov rdx,[3f180066]
         
         0x3B, 0x0c, 0x25, *playerLocation2_bytes, #cmp ecx,[location]
-        0x75, 0x3a, #jne p2_check
+        0x75, 0x3a, #jne end
         0x48, 0x89, 0x14, 0x25, *loadedMovesetLocation2_bytes, # mov [location], rdx
         0x51, #push rcx
         0x50, #push rax
@@ -133,7 +131,7 @@ def getBothPlayersInjection(playerAddr, movesetAddr, playerAddr2, movesetAddr2, 
         0xFF, 0x25, 0x00, 0x00, 0x00, 0x00 , 0xEd, 0x8C, 0x73, 0x40, 0x01, 0x00, 0x00, 0x00 #jmp 140738Ced
     ]
     
-    importer.writeBytes(codeAddr, bytes(singlePlayerBytecode))
+    importer.writeBytes(codeAddr, bytes(twoPlayersBytecode))
     
     importer.writeInt(playerLocation, game_addresses.addr['p1_addr'], 8)
     importer.writeInt(playerLocation + 8, game_addresses.addr['p1_addr'] + game_addresses.addr['playerstruct_size'], 8)
@@ -143,8 +141,6 @@ def getBothPlayersInjection(playerAddr, movesetAddr, playerAddr2, movesetAddr2, 
     
     importer.writeInt(importedMovesetLocation, movesetAddr, 8)
     importer.writeInt(importedMovesetLocation + 8, movesetAddr2, 8)
-    
-    print("supacode = %x" % (codeAddr))
     
     codeInjection = codeAddr
     return codeAddr
@@ -186,7 +182,7 @@ class Monitor:
             otherPlayer, otherMoveset = otherMonitor.playerAddr, otherMonitor.moveset.motbin_ptr
             currentPlayer, currentMoveset = self.playerAddr, self.moveset.motbin_ptr
             
-            codeAddr = getBothPlayersInjection(self.playerAddr, self.moveset.motbin_ptr, otherPlayer, otherMoveset, self.Importer)
+            codeAddr = getBothPlayersInjection(self.moveset.motbin_ptr, otherMoveset, self.Importer)
         else:
             codeAddr = getSinglePlayerInjection(self.playerAddr, self.moveset.motbin_ptr, self.Importer)
             
@@ -215,6 +211,7 @@ class Monitor:
         invertPlayers = self.Importer.readInt(startingAddr + 0x60, 4)
         if self.invertedPlayers == -1:
             self.invertedPlayers = invertPlayers
+            print("Inverted: %d" % (invertPlayers))
         
         playerId = self.playerId + invertPlayers
         if playerId == 3:
@@ -223,7 +220,6 @@ class Monitor:
             
         if self.invertedPlayers != invertPlayers:
             offset = ((playerId - 1) * 8)
-            offset2 = ((self.playerId - 1) * 8)
             self.Importer.writeInt(codeInjection + codeInjectionSize - 0x10 + offset, self.moveset.motbin_ptr, 8)
             self.Importer.writeInt(codeInjection + codeInjectionSize - 0x20 + offset, self.moveset.motbin_ptr, 8)
             self.invertedPlayers = invertPlayers
@@ -255,7 +251,8 @@ class Monitor:
                     prev_charaId = charaId
                 
                 time.sleep(monitorVerificationFrequency)
-            except:
+            except Exception as e:
+                print(e)
                 try:
                     self.Importer.readInt(self.moveset.motbin_ptr, 8) # Read on self to see if process still exists
                     time.sleep(monitorVerificationFrequency)
