@@ -14,7 +14,7 @@ import motbinImport as importLib
 
 charactersPath = "./extracted_chars/"
 
-monitorVerificationFrequency   = (5)
+monitorVerificationFrequency   = (2)
 runningMonitors = [None, None]
 creatingMonitor = [False, False]
 
@@ -77,8 +77,7 @@ class Monitor:
         self.Importer = TekkenImporter
         self.parent = parent
         self.selected_char = parent.selected_char
-            
-    def start(self):
+        
         try:
             self.moveset = self.Importer.loadMoveset(charactersPath + self.selected_char)
         except Exception as e:
@@ -86,8 +85,8 @@ class Monitor:
             self.exit()
             return
             
+    def start(self):
         print("\nMonitoring successfully started for player %d. Moveset: %s" % (self.playerId, self.moveset.m['character_name']))
-        
         self.injectPermanentMovesetCode()
         
         try:
@@ -155,14 +154,13 @@ class Monitor:
         self.applyCharacterAliases()
         prev_charaId = self.getWatchedCharaInfo()[0]
         
-        print("Watching: %x" % (self.watchedPlayer))
-        
         while runningMonitors[self.id] != None:
             try:
                 self.getPlayerAddresses()
                 charaId, motbinPtr = self.getWatchedCharaInfo()
                 
                 if charaId != prev_charaId:
+                    print("Applying chara aliases")
                     self.applyCharacterAliases()
                     prev_charaId = charaId
 
@@ -172,7 +170,6 @@ class Monitor:
                     #self.copyMotaOffsets()
                     #self.Importer.writeInt(self.watchedPlayer + game_addresses.addr['motbin_offset'], self.moveset.motbin_ptr, 8)
 
-                
                 time.sleep(monitorVerificationFrequency)
             except:
                 try:
@@ -181,16 +178,17 @@ class Monitor:
                 except Exception as e:
                     print(e, file=sys.stderr)
                     print("Monitor %d closing because process can't be read" % (self.playerId), file=sys.stderr)
-                    self.exit(showMessage=False, errcode=1)
+                    self.exit(errcode=1)
                     
         self.exit()
         
-    def exit(self, showMessage=True, errcode=1):
-        if showMessage:
+    def exit(self, errcode=1):
+        if errcode != 1:
             print("Monitor %d closed." % (self.playerId))
+        else:
+            self.resetCodeInjection()
         runningMonitors[self.id] = None
         creatingMonitor[self.id] = None
-        self.resetCodeInjection()
         self.parent.setMonitorButton(self.id, False)
         sys.exit(errcode)
     

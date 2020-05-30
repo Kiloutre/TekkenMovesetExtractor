@@ -311,7 +311,7 @@ def getTotalSize(m, folderName):
     size += len(m['throws']) * throws_size
     
     size = align8Bytes(size)
-    for i in range(11):
+    for i in range(12):
         size += os.path.getsize("%s/mota_%d.bin" % (folderName, i))
     
     return size
@@ -723,7 +723,7 @@ class MotbinStruct:
             return
         self.align()
         
-        for i in range(11):
+        for i in range(12):
             with open("%s/mota_%d.bin" % (self.folderName, i), "rb") as f:
                 motaBytes = f.read()
                 motaAddr = self.curr_ptr

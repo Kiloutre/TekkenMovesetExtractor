@@ -801,7 +801,7 @@ class Motbin:
             mota_start = 0x280 if self.TekkenVersion == 7 else 0x1d8
             self.mota_list = []
             
-            for i in range(0, 11):
+            for i in range(12):
                 mota_addr = self.readInt(addr + mota_start + (i * self.ptr_size), self.ptr_size)
                 mota_end_addr = self.readInt(addr + mota_start + ((i + 2) * self.ptr_size), self.ptr_size) if i < 9 else mota_addr + 20
                 self.mota_list.append((mota_addr, mota_end_addr - mota_addr))
