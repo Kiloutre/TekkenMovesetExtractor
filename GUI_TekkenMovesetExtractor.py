@@ -438,10 +438,11 @@ class GUI_TekkenMovesetExtractor(Tk):
             pass
             
     def setMonitorButton(self, button, active):
+        text = 'Local' if button == 0 else 'Remote'
         if active:
-            self.monitorButtons[button]['text'] = 'Kill P%d Monitor' % (button + 1)
+            self.monitorButtons[button]['text'] = 'Kill %s monitor' % (text)
         else:
-            self.monitorButtons[button]['text'] = 'Monitor P%d' % (button + 1)
+            self.monitorButtons[button]['text'] = 'Online %s player' % (text)
         
     def initImportArea(self):
         self.charalistFrame = Frame(self.importFrame)
