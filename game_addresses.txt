@@ -8,7 +8,7 @@ playerstruct_size  = 0x35B0 #Distance between 2 players addresses
 motbin_offset      = 0x14a0
 
 # CEMU base address, needs to be changed at every CEMU restart. See CEMU log file to get this address.
-cemu_base      =  0x9999999999999999
+cemu_base      =   0x9999999999999999
 
 # CEMU player addr
 # Player addresses automatically fetched for those two versions, DO NOT CHANGE!!!
@@ -24,5 +24,6 @@ cemu_playerstruct_size = 0x2960  #Distance between 2 players addresses
 chara_id_offset = 0xd8
 cemu_chara_id_offset = -0xCC
 code_injection_addr = 0x140738CDF # Address that writes on player+motbin_offset
+playerid_starting_ptr = 0x1434BE100
 
 #raven_clone_addr = 0x1089A790 # EU v32

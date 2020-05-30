@@ -45,18 +45,23 @@ def getSinglePlayerInjection(playerAddr, movesetAddr, importer):
     importer.writeBytes(codeAddr, bytes(singlePlayerBytecode))
     importer.writeInt(codeAddr + playerAreaOffset, movesetAddr, 8)
     
-    print("code= %x" % (codeAddr))
+    print("%x" % (codeAddr))
     
     codeInjection = codeAddr
     return codeAddr
 
-def getBothPlayersInjection(player1, moveset1, player2, moveset2, importer):
+def getBothPlayersInjection(player1, movesetAddr1, player2, movesetAddr2, importer):
     global codeInjection
     player1 = hexToList(player1, 4)
     player2 = hexToList(player2, 4)
     
-    moveset1 = hexToList(moveset1, 8)
-    moveset2 = hexToList(moveset2, 8)
+    moveset1 = hexToList(movesetAddr1, 8)
+    moveset2 = hexToList(movesetAddr2, 8)
+    
+    codeSize = 128
+    codeAddr = importer.allocateMem(codeSize)
+    playerAreaOffset = codeSize - 16
+    codeEnd = hexToList(codeAddr + playerAreaOffset, 4)
 
     bothPlayersBytecode = [
         0x81, 0xF9, *player1, #cmp ecx, (player1, 4b)
@@ -72,22 +77,27 @@ def getBothPlayersInjection(player1, moveset1, player2, moveset2, importer):
         0xFF, 0x25, 0x00, 0x00, 0x00, 0x00 , 0xEd, 0x8C, 0x73, 0x40, 0x01, 0x00, 0x00, 0x00 #jmp 140738CDF
     ]
     
-    addr = importer.allocateMem(256)
-    importer.writeBytes(addr, bytes(bothPlayersBytecode))
+    importer.writeBytes(codeAddr, bytes(bothPlayersBytecode))
+    importer.writeInt(codeAddr + playerAreaOffset, movesetAddr1, 8)
+    importer.writeInt(codeAddr + playerAreaOffset + 8, movesetAddr2, 8)
     
-    codeInjection = addr
-    return addr
+    print("code = %x" % (codeAddr))
+    
+    codeInjection = codeAddr
+    return codeAddr
         
 class Monitor:
     def __init__(self, playerId, TekkenImporter, parent):
         self.id = playerId - 1
         self.otherMonitorId = int(not self.id)
         self.playerId = playerId
-        self.getPlayerAddresses()
+        self.currentPlayerId = playerId
         
         self.Importer = TekkenImporter
         self.parent = parent
         self.selected_char = parent.selected_char
+        
+        self.getPlayerAddresses()
         
         try:
             self.moveset = self.Importer.loadMoveset(charactersPath + self.selected_char)
@@ -134,8 +144,16 @@ class Monitor:
             runningMonitors[self.otherMonitorId].injectPermanentMovesetCode()
         
     def getPlayerAddresses(self):
-        currentPlayerId = self.playerId
-        self.playerAddr = game_addresses.addr['p%d_addr' % (currentPlayerId)]
+        startingAddr = game_addresses.addr['playerid_starting_ptr']
+        for i in range(3):
+            startingAddr = self.Importer.readInt(startingAddr, 8)
+            
+        currentPlayerId = (self.playerId + self.Importer.readInt(startingAddr + 0x50, 4)) % 2
+        
+        if currentPlayerId != self.currentPlayerId:
+            self.currentPlayerId = currentPlayerId
+        
+        self.playerAddr = game_addresses.addr['p%d_addr' % (self.currentPlayerId + 1)]
         self.watchedPlayer = self.playerAddr + (game_addresses.addr['playerstruct_size'] * 4)
         
     def getWatchedCharaInfo(self):
@@ -173,7 +191,6 @@ class Monitor:
         
         while runningMonitors[self.id] != None:
             try:
-                self.getPlayerAddresses()
                 charaId, motbinPtr = self.getWatchedCharaInfo()
                 frameCounter = self.getFrameCounter()
                 
@@ -189,6 +206,7 @@ class Monitor:
                 elif prevFrameCounter == frameCounter:
                     self.moveset.applyMotaOffsets()
                     usingMotaOffsets = False
+                    self.getPlayerAddresses()
                 elif not usingMotaOffsets:
                     self.copyMotaOffsets(lastMotbinPtr)
                     usingMotaOffsets = True
@@ -209,9 +227,8 @@ class Monitor:
         self.exit()
         
     def exit(self, errcode=1):
-        if errcode != 1:
-            print("Monitor %d closed." % (self.playerId))
-        else:
+        print("Monitor %d closed." % (self.playerId))
+        if errcode == 1:
             self.resetCodeInjection()
         runningMonitors[self.id] = None
         creatingMonitor[self.id] = None

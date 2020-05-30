@@ -852,8 +852,8 @@ class MotbinStruct:
         offsets = [
             #(0x280, 8),
             #(0x288, 8),
-            #(0x290, 8), #Hand
-            #(0x298, 8), #Hand
+            (0x290, 8), #Hand
+            (0x298, 8), #Hand
             (0x2a0, 8), #Face
             (0x2a8, 8), #Face
             #(0x2b0, 8),
