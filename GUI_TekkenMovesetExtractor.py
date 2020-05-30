@@ -17,30 +17,41 @@ charactersPath = "./extracted_chars/"
 monitorVerificationFrequency   = (2)
 runningMonitors = [None, None]
 creatingMonitor = [False, False]
+codeInjection = None
 
 def hexToList(value, bytes_count):
     return [((value >> (b * 8)) & 0xFF) for b in range(bytes_count)]
     
-def getSinglePlayerInjection(player, moveset, importer):
-    player = hexToList(player, 4)
-    moveset = hexToList(moveset, 8)
+def getSinglePlayerInjection(playerAddr, movesetAddr, importer):
+    global codeInjection
+    player = hexToList(playerAddr, 4)
+    moveset = hexToList(movesetAddr, 8)
+    
+    codeSize = 128
+    codeAddr = importer.allocateMem(codeSize)
+    playerAreaOffset = codeSize - 16
+    codeEnd = hexToList(codeAddr + playerAreaOffset, 4)
 
     singlePlayerBytecode = [
         0x81, 0xF9, *player, #cmp ecx, (player1, 4b)
-        0x75, 0x0A, #jne p2_set
+        0x75, 0x12, #jne end
+        0x48, 0x89, 0x14, 0x25, *codeEnd,
         0x48, 0xba, *moveset, #mov rdx, (moveset_addr2, 8 bytes)
         0x48, 0x89, 0x91, 0xa0, 0x14, 0x00, 0x00, #mov [rcx+14a0, rdx]
         0x48, 0x89, 0x91, 0xa8, 0x14, 0x00, 0x00, #mov [rcx+14a8, rdx]
         0xFF, 0x25, 0x00, 0x00, 0x00, 0x00 , 0xEd, 0x8C, 0x73, 0x40, 0x01, 0x00, 0x00, 0x00 #jmp 140738CDF
     ]
     
-    addr = importer.allocateMem(256)
-    importer.writeBytes(addr, bytes(singlePlayerBytecode))
+    importer.writeBytes(codeAddr, bytes(singlePlayerBytecode))
+    importer.writeInt(codeAddr + playerAreaOffset, movesetAddr, 8)
     
-    newCodeAddr = addr
-    return addr
+    print("code= %x" % (codeAddr))
+    
+    codeInjection = codeAddr
+    return codeAddr
 
 def getBothPlayersInjection(player1, moveset1, player2, moveset2, importer):
+    global codeInjection
     player1 = hexToList(player1, 4)
     player2 = hexToList(player2, 4)
     
@@ -64,7 +75,7 @@ def getBothPlayersInjection(player1, moveset1, player2, moveset2, importer):
     addr = importer.allocateMem(256)
     importer.writeBytes(addr, bytes(bothPlayersBytecode))
     
-    newCodeAddr = addr
+    codeInjection = addr
     return addr
         
 class Monitor:
@@ -96,7 +107,6 @@ class Monitor:
         
             
     def injectPermanentMovesetCode(self):
-        print("Injecting")
         if runningMonitors[self.otherMonitorId] != None:
             otherMonitor = runningMonitors[self.otherMonitorId]
             otherPlayer, otherMoveset = otherMonitor.playerAddr, otherMonitor.moveset.motbin_ptr
@@ -109,13 +119,10 @@ class Monitor:
         jmpInstruction = [
             0xFF, 0x25, 0, 0, 0, 0, *hexToList(codeAddr, 8)
         ]
-            
+        
         self.Importer.writeBytes(game_addresses.addr['code_injection_addr'], bytes(jmpInstruction))
-            
-        print("code = %x" % (codeAddr))
         
     def resetCodeInjection(self, forceReset=False):
-        print("Resetting")
         if runningMonitors[self.otherMonitorId] == None or forceReset:
             
             originalInstructions = [
@@ -133,19 +140,25 @@ class Monitor:
         
     def getWatchedCharaInfo(self):
         charaId = self.Importer.readInt(self.playerAddr + game_addresses.addr['chara_id_offset'], 8)
-        motbinPtr = self.Importer.readInt(self.watchedPlayer + game_addresses.addr['motbin_offset'], 8)
+        motbinPtr = self.Importer.readInt(self.getPlayerMemArea(), 8)
         return charaId, motbinPtr
         
-    def copyMotaOffsets(self):
+    def getPlayerMemArea(self):
+        global codeInjection
+        if codeInjection == None:
+            return None
+        return codeInjection + 128 - 16 + ((self.playerId - 1) * 8)
+        
+    def copyMotaOffsets(self, motbinPtr):
         self.getPlayerAddresses()
-        print("Copying MOTA")
-        self.moveset.copyMotaOffsets(playerAddr=self.watchedPlayer)
-        print("Copied MOTA")
+        self.moveset.copyMotaOffsets(motbin_ptr=motbinPtr)
         
     def applyCharacterAliases(self):
         self.getPlayerAddresses()
         self.moveset.applyCharacterIDAliases(self.playerAddr)
-        self.moveset.applyMotaOffsets()
+        
+    def getFrameCounter(self):
+        return self.Importer.readInt(game_addresses.addr['frame_counter'])
         
     def monitor(self):
         self.getPlayerAddresses()
@@ -153,23 +166,36 @@ class Monitor:
         
         self.applyCharacterAliases()
         prev_charaId = self.getWatchedCharaInfo()[0]
+        prevFrameCounter = self.getFrameCounter() - 10
+        
+        lastMotbinPtr = None
+        usingMotaOffsets = False
         
         while runningMonitors[self.id] != None:
             try:
                 self.getPlayerAddresses()
                 charaId, motbinPtr = self.getWatchedCharaInfo()
+                frameCounter = self.getFrameCounter()
+                
+                if motbinPtr != self.moveset.motbin_ptr:
+                    self.copyMotaOffsets(motbinPtr)
+                    self.Importer.writeInt(self.getPlayerMemArea(), self.moveset.motbin_ptr, 8)
+                    usingMotaOffsets = True
+                    lastMotbinPtr = motbinPtr
                 
                 if charaId != prev_charaId:
-                    print("Applying chara aliases")
                     self.applyCharacterAliases()
                     prev_charaId = charaId
-
-                elif motbinPtr != self.moveset.motbin_ptr:
-                    pass
-                    #print("Moveset not the same")
-                    #self.copyMotaOffsets()
-                    #self.Importer.writeInt(self.watchedPlayer + game_addresses.addr['motbin_offset'], self.moveset.motbin_ptr, 8)
-
+                elif prevFrameCounter == frameCounter:
+                    self.moveset.applyMotaOffsets()
+                    usingMotaOffsets = False
+                elif not usingMotaOffsets:
+                    self.copyMotaOffsets(lastMotbinPtr)
+                    usingMotaOffsets = True
+                    
+                
+                    
+                prevFrameCounter = frameCounter
                 time.sleep(monitorVerificationFrequency)
             except:
                 try:
