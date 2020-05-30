@@ -13,6 +13,7 @@ import motbinExport as exportLib
 import motbinImport as importLib
 
 charactersPath = "./extracted_chars/"
+codeInjectionSize = 256
 
 monitorVerificationFrequency   = (2)
 runningMonitors = [None, None]
@@ -27,61 +28,123 @@ def getSinglePlayerInjection(playerAddr, movesetAddr, importer):
     player = hexToList(playerAddr, 4)
     moveset = hexToList(movesetAddr, 8)
     
-    codeSize = 128
+    codeSize = codeInjectionSize
     codeAddr = importer.allocateMem(codeSize)
-    playerAreaOffset = codeSize - 16
-    codeEnd = hexToList(codeAddr + playerAreaOffset, 4)
+    
+    playerLocation = codeAddr + codeInjectionSize - 0x30
+    loadedMovesetLocation = codeAddr + codeInjectionSize - 0x20
+    importedMovesetLocation = codeAddr + codeInjectionSize - 0x10
+    
+    playerLocation_bytes = hexToList(playerLocation, 4)
+    loadedMovesetLocation_bytes = hexToList(loadedMovesetLocation, 4)
+    importedMovesetLocation_bytes = hexToList(importedMovesetLocation, 4)
 
     singlePlayerBytecode = [
-        0x81, 0xF9, *player, #cmp ecx, (player1, 4b)
-        0x75, 0x12, #jne end
-        0x48, 0x89, 0x14, 0x25, *codeEnd,
-        0x48, 0xba, *moveset, #mov rdx, (moveset_addr2, 8 bytes)
+        0x3B, 0x0c, 0x25, *playerLocation_bytes, #cmp ecx,[location]
+        0x75, 0x3a, #jne end
+        0x48, 0x89, 0x14, 0x25, *loadedMovesetLocation_bytes, # mov [location], rdx
+        0x51, #push rcx
+        0x50, #push rax
+        0x53, #push rbx
+        0x48, 0x31, 0xDB, #xor rbx, rbx
+        0x48, 0x8b, 0x0c, 0x25, *importedMovesetLocation_bytes, #mov rcx, [location]
+        0x48, 0x8b, 0x84, 0xda, 0x80, 0x02, 0x00, 0x00, #mov rax,[rdx+rbx*8+00000290]
+        0x48, 0x89, 0x84, 0xd9, 0x80, 0x02, 0x00, 0x00, #mov [rcx+rbx*8+00000290], rax
+        0x48, 0xff, 0xc3, #inc rbx
+        0x48, 0x83, 0xfb, 0x0B, #cmp rbx, 11
+        0x75, 0xe7, #jne -e7
+        0x5b, #pop rbx
+        0x58, #pop rax
+        0x59, #pop rcx
+        0x48, 0x8b, 0x14, 0x25, *importedMovesetLocation_bytes, #mov rdx,[3f180066]
         0x48, 0x89, 0x91, 0xa0, 0x14, 0x00, 0x00, #mov [rcx+14a0, rdx]
         0x48, 0x89, 0x91, 0xa8, 0x14, 0x00, 0x00, #mov [rcx+14a8, rdx]
-        0xFF, 0x25, 0x00, 0x00, 0x00, 0x00 , 0xEd, 0x8C, 0x73, 0x40, 0x01, 0x00, 0x00, 0x00 #jmp 140738CDF
+        0xFF, 0x25, 0x00, 0x00, 0x00, 0x00 , 0xEd, 0x8C, 0x73, 0x40, 0x01, 0x00, 0x00, 0x00 #jmp 140738Ced
     ]
     
     importer.writeBytes(codeAddr, bytes(singlePlayerBytecode))
-    importer.writeInt(codeAddr + playerAreaOffset, movesetAddr, 8)
-    
-    print("%x" % (codeAddr))
+    importer.writeInt(playerLocation, playerAddr, 8)
+    importer.writeInt(loadedMovesetLocation, movesetAddr, 8)
+    importer.writeInt(importedMovesetLocation, movesetAddr, 8)
     
     codeInjection = codeAddr
     return codeAddr
 
-def getBothPlayersInjection(player1, movesetAddr1, player2, movesetAddr2, importer):
+def getBothPlayersInjection(playerAddr, movesetAddr, playerAddr2, movesetAddr2, importer):
     global codeInjection
-    player1 = hexToList(player1, 4)
-    player2 = hexToList(player2, 4)
-    
-    moveset1 = hexToList(movesetAddr1, 8)
+    player = hexToList(playerAddr, 4)
+    player2 = hexToList(playerAddr2, 4)
+    moveset = hexToList(movesetAddr, 8)
     moveset2 = hexToList(movesetAddr2, 8)
     
-    codeSize = 128
+    codeSize = codeInjectionSize
     codeAddr = importer.allocateMem(codeSize)
-    playerAreaOffset = codeSize - 16
-    codeEnd = hexToList(codeAddr + playerAreaOffset, 4)
+    
+    playerLocation = codeAddr + codeInjectionSize - 0x30
+    loadedMovesetLocation = codeAddr + codeInjectionSize - 0x20
+    importedMovesetLocation = codeAddr + codeInjectionSize - 0x10
+    
+    playerLocation_bytes = hexToList(playerLocation, 4)
+    playerLocation2_bytes = hexToList(playerLocation + 8, 4)
+    loadedMovesetLocation_bytes = hexToList(loadedMovesetLocation, 4)
+    loadedMovesetLocation2_bytes = hexToList(loadedMovesetLocation + 8, 4)
+    importedMovesetLocation_bytes = hexToList(importedMovesetLocation, 4)
+    importedMovesetLocation2_bytes = hexToList(importedMovesetLocation + 8, 4)
 
-    bothPlayersBytecode = [
-        0x81, 0xF9, *player1, #cmp ecx, (player1, 4b)
-        0x75, 0x0c, #jne p2_set
-        0x48, 0xba, *moveset1, #mov rdx, (moveset_addr1, 8b)
-        0xeb, 0x13, #jmp end
-        0x90, #nop for cmp ecx
-        0x81, 0xf9, *player2, #cmp ecx, (player2, 4 bytes)
-        0x75, 0x0a, #jne end
-        0x48, 0xba, *moveset2, #mov rdx, (moveset_addr2, 8 bytes)
+    singlePlayerBytecode = [
+        0x3B, 0x0c, 0x25, *playerLocation_bytes, #cmp ecx,[location]
+        0x75, 0x3a, #jne p2_check
+        0x48, 0x89, 0x14, 0x25, *loadedMovesetLocation_bytes, # mov [location], rdx
+        0x51, #push rcx
+        0x50, #push rax
+        0x53, #push rbx
+        0x48, 0x31, 0xDB, #xor rbx, rbx
+        0x48, 0x8b, 0x0c, 0x25, *importedMovesetLocation_bytes, #mov rcx, [location]
+        0x48, 0x8b, 0x84, 0xda, 0x80, 0x02, 0x00, 0x00, #mov rax,[rdx+rbx*8+00000290]
+        0x48, 0x89, 0x84, 0xd9, 0x80, 0x02, 0x00, 0x00, #mov [rcx+rbx*8+00000290], rax
+        0x48, 0xff, 0xc3, #inc rbx
+        0x48, 0x83, 0xfb, 0x0B, #cmp rbx, 11
+        0x75, 0xe7, #jne -e7
+        0x5b, #pop rbx
+        0x58, #pop rax
+        0x59, #pop rcx
+        0x48, 0x8b, 0x14, 0x25, *importedMovesetLocation_bytes, #mov rdx,[3f180066]
+        
+        0x3B, 0x0c, 0x25, *playerLocation2_bytes, #cmp ecx,[location]
+        0x75, 0x3a, #jne p2_check
+        0x48, 0x89, 0x14, 0x25, *loadedMovesetLocation2_bytes, # mov [location], rdx
+        0x51, #push rcx
+        0x50, #push rax
+        0x53, #push rbx
+        0x48, 0x31, 0xDB, #xor rbx, rbx
+        0x48, 0x8b, 0x0c, 0x25, *importedMovesetLocation2_bytes, #mov rcx, [location]
+        0x48, 0x8b, 0x84, 0xda, 0x80, 0x02, 0x00, 0x00, #mov rax,[rdx+rbx*8+00000290]
+        0x48, 0x89, 0x84, 0xd9, 0x80, 0x02, 0x00, 0x00, #mov [rcx+rbx*8+00000290], rax
+        0x48, 0xff, 0xc3, #inc rbx
+        0x48, 0x83, 0xfb, 0x0B, #cmp rbx, 11
+        0x75, 0xe7, #jne -e7
+        0x5b, #pop rbx
+        0x58, #pop rax
+        0x59, #pop rcx
+        0x48, 0x8b, 0x14, 0x25, *importedMovesetLocation2_bytes, #mov rdx,[3f180066]
+
         0x48, 0x89, 0x91, 0xa0, 0x14, 0x00, 0x00, #mov [rcx+14a0, rdx]
         0x48, 0x89, 0x91, 0xa8, 0x14, 0x00, 0x00, #mov [rcx+14a8, rdx]
-        0xFF, 0x25, 0x00, 0x00, 0x00, 0x00 , 0xEd, 0x8C, 0x73, 0x40, 0x01, 0x00, 0x00, 0x00 #jmp 140738CDF
+        0xFF, 0x25, 0x00, 0x00, 0x00, 0x00 , 0xEd, 0x8C, 0x73, 0x40, 0x01, 0x00, 0x00, 0x00 #jmp 140738Ced
     ]
     
-    importer.writeBytes(codeAddr, bytes(bothPlayersBytecode))
-    importer.writeInt(codeAddr + playerAreaOffset, movesetAddr1, 8)
-    importer.writeInt(codeAddr + playerAreaOffset + 8, movesetAddr2, 8)
+    importer.writeBytes(codeAddr, bytes(singlePlayerBytecode))
     
-    print("code = %x" % (codeAddr))
+    importer.writeInt(playerLocation, game_addresses.addr['p1_addr'], 8)
+    importer.writeInt(playerLocation + 8, game_addresses.addr['p1_addr'] + game_addresses.addr['playerstruct_size'], 8)
+    
+    importer.writeInt(loadedMovesetLocation, movesetAddr, 8)
+    importer.writeInt(loadedMovesetLocation + 8, movesetAddr2, 8)
+    
+    importer.writeInt(importedMovesetLocation, movesetAddr, 8)
+    importer.writeInt(importedMovesetLocation + 8, movesetAddr2, 8)
+    
+    print("supacode = %x" % (codeAddr))
     
     codeInjection = codeAddr
     return codeAddr
@@ -96,8 +159,9 @@ class Monitor:
         self.Importer = TekkenImporter
         self.parent = parent
         self.selected_char = parent.selected_char
+        self.invertedPlayers = -1
         
-        self.getPlayerAddresses()
+        self.getPlayerAddress()
         
         try:
             self.moveset = self.Importer.loadMoveset(charactersPath + self.selected_char)
@@ -143,77 +207,53 @@ class Monitor:
         else:
             runningMonitors[self.otherMonitorId].injectPermanentMovesetCode()
         
-    def getPlayerAddresses(self):
+    def getPlayerAddress(self):
         startingAddr = game_addresses.addr['playerid_starting_ptr']
         for i in range(3):
             startingAddr = self.Importer.readInt(startingAddr, 8)
             
-        currentPlayerId = (self.playerId + self.Importer.readInt(startingAddr + 0x50, 4)) % 2
+        invertPlayers = self.Importer.readInt(startingAddr + 0x60, 4)
+        if self.invertedPlayers == -1:
+            self.invertedPlayers = invertPlayers
         
-        if currentPlayerId != self.currentPlayerId:
-            self.currentPlayerId = currentPlayerId
+        playerId = self.playerId + invertPlayers
+        if playerId == 3:
+            playerId = 1
+        self.playerAddr = game_addresses.addr['p%d_addr' % (playerId)]
+            
+        if self.invertedPlayers != invertPlayers:
+            offset = ((playerId - 1) * 8)
+            offset2 = ((self.playerId - 1) * 8)
+            self.Importer.writeInt(codeInjection + codeInjectionSize - 0x10 + offset, self.moveset.motbin_ptr, 8)
+            self.Importer.writeInt(codeInjection + codeInjectionSize - 0x20 + offset, self.moveset.motbin_ptr, 8)
+            self.invertedPlayers = invertPlayers
         
-        self.playerAddr = game_addresses.addr['p%d_addr' % (self.currentPlayerId + 1)]
-        self.watchedPlayer = self.playerAddr + (game_addresses.addr['playerstruct_size'] * 4)
-        
-    def getWatchedCharaInfo(self):
-        charaId = self.Importer.readInt(self.playerAddr + game_addresses.addr['chara_id_offset'], 8)
-        motbinPtr = self.Importer.readInt(self.getPlayerMemArea(), 8)
-        return charaId, motbinPtr
-        
-    def getPlayerMemArea(self):
-        global codeInjection
-        if codeInjection == None:
-            return None
-        return codeInjection + 128 - 16 + ((self.playerId - 1) * 8)
-        
-    def copyMotaOffsets(self, motbinPtr):
-        self.getPlayerAddresses()
-        self.moveset.copyMotaOffsets(motbin_ptr=motbinPtr)
+    def getCharacterId(self):
+        return self.Importer.readInt(self.playerAddr + game_addresses.addr['chara_id_offset'], 8)
         
     def applyCharacterAliases(self):
-        self.getPlayerAddresses()
         self.moveset.applyCharacterIDAliases(self.playerAddr)
         
-    def getFrameCounter(self):
-        return self.Importer.readInt(game_addresses.addr['frame_counter'])
-        
     def monitor(self):
-        self.getPlayerAddresses()
+        self.getPlayerAddress()
+        
         self.Importer.writeInt(self.playerAddr + game_addresses.addr['motbin_offset'], self.moveset.motbin_ptr, 8)
         
+        prev_charaId = self.getCharacterId()
         self.applyCharacterAliases()
-        prev_charaId = self.getWatchedCharaInfo()[0]
-        prevFrameCounter = self.getFrameCounter() - 10
         
         lastMotbinPtr = None
         usingMotaOffsets = False
         
         while runningMonitors[self.id] != None:
             try:
-                charaId, motbinPtr = self.getWatchedCharaInfo()
-                frameCounter = self.getFrameCounter()
-                
-                if motbinPtr != self.moveset.motbin_ptr:
-                    self.copyMotaOffsets(motbinPtr)
-                    self.Importer.writeInt(self.getPlayerMemArea(), self.moveset.motbin_ptr, 8)
-                    usingMotaOffsets = True
-                    lastMotbinPtr = motbinPtr
+                self.getPlayerAddress()
+                charaId = self.getCharacterId()
                 
                 if charaId != prev_charaId:
                     self.applyCharacterAliases()
                     prev_charaId = charaId
-                elif prevFrameCounter == frameCounter:
-                    self.moveset.applyMotaOffsets()
-                    usingMotaOffsets = False
-                    self.getPlayerAddresses()
-                elif not usingMotaOffsets:
-                    self.copyMotaOffsets(lastMotbinPtr)
-                    usingMotaOffsets = True
-                    
                 
-                    
-                prevFrameCounter = frameCounter
                 time.sleep(monitorVerificationFrequency)
             except:
                 try:
@@ -532,8 +572,8 @@ class GUI_TekkenMovesetExtractor(Tk):
         self.createButton(self.importButtonFrame, "Import to P1", (1,), importPlayer)
         self.createButton(self.importButtonFrame, "Import to P2", (2,), importPlayer)
         self.monitorButtons = [
-            self.createButton(self.importButtonFrame, "Monitor P1", (1,), self.toggleMonitor),
-            self.createButton(self.importButtonFrame, "Monitor P2", (2,), self.toggleMonitor)
+            self.createButton(self.importButtonFrame, "Online Local Player", (1,), self.toggleMonitor),
+            self.createButton(self.importButtonFrame, "Online Remote Player", (2,), self.toggleMonitor)
         ]
         
     def createExportButtons(self):

@@ -850,18 +850,18 @@ class MotbinStruct:
             motbin_ptr = self.importer.readInt(playerAddr + game_addresses.addr['motbin_offset'], 8)
     
         offsets = [
-            #(0x280, 8),
-            #(0x288, 8),
+            (0x280, 8),
+            (0x288, 8),
             (0x290, 8), #Hand
             (0x298, 8), #Hand
             (0x2a0, 8), #Face
             (0x2a8, 8), #Face
-            #(0x2b0, 8),
-            #(0x2b8, 8),
-            #(0x2c0, 8),
-            #(0x2c8, 8),
-            #(0x2d0, 8),
-            #(0x2d8, 8)
+            (0x2b0, 8),
+            (0x2b8, 8),
+            (0x2c0, 8),
+            (0x2c8, 8),
+            (0x2d0, 8),
+            (0x2d8, 8)
         ]
         
         for offset, read_size in offsets:

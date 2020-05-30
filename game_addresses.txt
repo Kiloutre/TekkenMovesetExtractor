@@ -1,6 +1,3 @@
-# Required to get consistent timings
-frame_counter = 0x1434B6060
-
 # T7 Player addresses, required for import and export. Might change with updates
 p1_addr            = 0x1434D2E10
 p2_addr            = 0x1434D63C0
