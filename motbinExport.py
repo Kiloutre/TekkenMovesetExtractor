@@ -540,8 +540,8 @@ class Move:
             'voiceclip_idx': self.voiceclip_idx,
             'extra_properties_idx': self.extra_properties_idx,
             'hitbox_location': self.hitbox_location,
-            'startup': self.startup,
-            'recovery': self.recovery,
+            'first_active_frame': self.startup,
+            'last_active_frame': self.recovery,
             
             #'u1': self.u1, #pointer
             'u2': self.u2,
@@ -798,7 +798,7 @@ class Motbin:
             self.throws_ptr = self.readInt(addr + throws_ptr, self.ptr_size)
             self.throws_size = self.readInt(addr + throws_size, self.ptr_size)
             
-            mota_start = 0x280 if TekkenVersion == 7 else 0x1d8
+            mota_start = 0x280 if self.TekkenVersion == 7 else 0x1d8
             self.mota_list = []
             
             for i in range(0, 11):

@@ -798,8 +798,8 @@ class MotbinStruct:
                 hitbox = getTag2HitboxAliasedValue(hitbox)
             
             self.writeInt(hitbox, 4)
-            self.writeInt(move['startup'], 4)
-            self.writeInt(move['recovery'], 4)
+            self.writeInt(move['first_active_frame'], 4)
+            self.writeInt(move['last_active_frame'], 4)
             
             self.writeInt(move['u16'], 2)
             self.writeInt(move['u17'], 2)

@@ -18,14 +18,12 @@ monitorVerificationFrequency   = (5)
 runningMonitors = [None, None]
 creatingMonitor = [False, False]
 
-newCodeAddr = None
-
-def hexToTuple(value, bytes_count):
-    return tuple([((value >> (b * 8)) & 0xFF) for b in range(bytes_count)])
+def hexToList(value, bytes_count):
+    return [((value >> (b * 8)) & 0xFF) for b in range(bytes_count)]
     
 def getSinglePlayerInjection(player, moveset, importer):
-    player = hexToTuple(player, 4)
-    moveset = hexToTuple(moveset, 8)
+    player = hexToList(player, 4)
+    moveset = hexToList(moveset, 8)
 
     singlePlayerBytecode = [
         0x81, 0xF9, *player, #cmp ecx, (player1, 4b)
@@ -43,11 +41,11 @@ def getSinglePlayerInjection(player, moveset, importer):
     return addr
 
 def getBothPlayersInjection(player1, moveset1, player2, moveset2, importer):
-    player1 = hexToTuple(player1, 4)
-    player2 = hexToTuple(player2, 4)
+    player1 = hexToList(player1, 4)
+    player2 = hexToList(player2, 4)
     
-    moveset1 = hexToTuple(moveset1, 8)
-    moveset2 = hexToTuple(moveset2, 8)
+    moveset1 = hexToList(moveset1, 8)
+    moveset2 = hexToList(moveset2, 8)
 
     bothPlayersBytecode = [
         0x81, 0xF9, *player1, #cmp ecx, (player1, 4b)
@@ -110,7 +108,7 @@ class Monitor:
             codeAddr = getSinglePlayerInjection(self.playerAddr, self.moveset.motbin_ptr, self.Importer)
             
         jmpInstruction = [
-            0xFF, 0x25, 0, 0, 0, 0, *hexToTuple(codeAddr, 8)
+            0xFF, 0x25, 0, 0, 0, 0, *hexToList(codeAddr, 8)
         ]
             
         self.Importer.writeBytes(game_addresses.addr['code_injection_addr'], bytes(jmpInstruction))
@@ -165,12 +163,12 @@ class Monitor:
                 charaId, motbinPtr = self.getWatchedCharaInfo()
                 
                 if charaId != prev_charaId:
-                    print("CharaID not the same")
                     self.applyCharacterAliases()
                     prev_charaId = charaId
 
                 elif motbinPtr != self.moveset.motbin_ptr:
-                    print("Moveset not the same")
+                    pass
+                    #print("Moveset not the same")
                     #self.copyMotaOffsets()
                     #self.Importer.writeInt(self.watchedPlayer + game_addresses.addr['motbin_offset'], self.moveset.motbin_ptr, 8)
 
@@ -326,7 +324,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         self.selected_char = None
         self.chara_data = None
         
-        self.wm_title("TekkenMovesetExtractor 1.0.0") 
+        self.wm_title("TekkenMovesetExtractor 1.0.0 BETA") 
         self.iconbitmap('GUI_TekkenMovesetExtractor/natsumi.ico')
         self.minsize(960, 540)
         self.geometry("960x540")
