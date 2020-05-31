@@ -279,11 +279,14 @@ class Monitor:
         
     def exit(self, errcode=1):
         print("Monitor %d closed." % (self.playerId))
-        if errcode == 1:
-            self.resetCodeInjection()
         runningMonitors[self.id] = None
         creatingMonitor[self.id] = None
         self.parent.setMonitorButton(self.id, False)
+        if errcode == 1:
+            try:
+                self.resetCodeInjection()
+            except:
+                pass
         sys.exit(errcode)
     
 def startMonitor(parent, playerId):

@@ -874,8 +874,6 @@ class Motbin:
         print("Date: %s %s\n" % (self.date, self.fulldate))
         
     def dict(self):
-        anim_names = [anim.name for anim in self.anims]
-        
         return {
             'original_hash': '',
             'export_version': exportVersion,
@@ -891,7 +889,6 @@ class Motbin:
             'requirements': self.requirements,
             'cancels': self.cancels,
             'group_cancels': self.group_cancels,
-            'anims': anim_names,
             'moves': self.moves,
             'reaction_list': self.reaction_list,    
             'hit_conditions': self.hit_conditions,

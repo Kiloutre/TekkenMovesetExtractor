@@ -278,16 +278,17 @@ def getMovesetTotalSize(m, folderName):
     size = align8Bytes(size)
     size += len(m['voiceclips']) * 0x4
 
+    anim_names = set([move['anim_name'] for move in m['moves']])
     size = align8Bytes(size)
-    for animName in m['anims']: 
-        size += len(animName) + 1
+    for anim_name in anim_names:
+        size += len(anim_name) + 1
     
     size = align8Bytes(size)
-    for anim in m['anims']:
+    for anim_name in anim_names:
         try:
-            size += os.path.getsize("%s/anim/%s.bin" % (folderName, anim))
+            size += os.path.getsize("%s/anim/%s.bin" % (folderName, anim_name))
         except:
-            pass
+            print("Anim %s missing, moveset might crash" % (anim_name), file=sys.stderr)
 
     size = align8Bytes(size)
     for move in m['moves']:
@@ -720,10 +721,11 @@ class MotbinStruct:
     def allocateAnimations(self):
         print("Allocating animations...")
         self.animation_names_ptr = self.align()
-        self.animation_table = {name:{'name_ptr':self.writeString(name)} for name in self.m['anims']}
+        anim_names = set([move['anim_name'] for move in self.m['moves']])
+        self.animation_table = {name:{'name_ptr':self.writeString(name)} for name in anim_names}
         
         self.animation_ptr = self.align()
-        for name in self.m['anims']:
+        for name in anim_names:
             try:
                 with open("%s/anim/%s.bin" % (self.folderName, name), "rb") as f:
                     self.animation_table[name]['data_ptr'] = self.writeBytes(f.read())
