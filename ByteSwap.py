@@ -1,4 +1,5 @@
 # Python 3.6.5
+import sys
 
 def swapArrBytes(arr, index1, index2, len):
     for i in range(len):
@@ -108,3 +109,25 @@ def SwapAnimBytes(fb):
         return bytes(fb)
     else:
         return None
+        
+def sadamitsuParse(filename):
+    with open(filename, "r") as f:
+        lines = [line[11:] for line in f]
+        byteList = []
+        for line in lines:
+            for i in range(4):
+                val = int(line[i * 2:i * 2 + 2], 16)
+                byteList.append(val)
+        return byteList
+    return None
+    
+if __name__ == "__main__":
+    if len(sys.argv) == 1:
+        print("No filename provided")
+        sys.exit(1)
+        
+    fileBytes = sadamitsuParse(sys.argv[1])
+    fileBytes = SwapAnimBytes(fileBytes)
+    
+    with open(sys.argv[1][:-4] + "_new.bin", "wb") as f:
+        f.write(bytes(fileBytes))
