@@ -96,17 +96,12 @@ Administrator rights may be required to import the moveset into memory.
 - Remove reliance on Python 3.6.5
 - Add export naming option
 - Automatically get cemu_base from CEMU location
-- Check requirements of 'Co_DA_Ground' for tag2 & t7
 - Import anim & move names like tekken 7 does
-- Fix Kunimitsu's broken hand
-- Search for Raven clone leftovers in T7
 - Import camera and projectiles for Tekken 7. Lee crashes with Lili or Leo RA.
 - Look into making ttt2 intro and outro end automatically
 - Use opponent for tag2 outros (might not be viable)
-- Remove all requirement & property aliased to 0 and use 'copy_nearby' instead -> also rename to copy_nearest
 - Delete files before exporting moveset
 - Tekken ball imitation using Akuma fireball, greenscreend on tekken 3 beach
-- Allow specific item moves
 - (Jin) Dj tag2 vs DJ tag2, treasure battle, online player buttons, crash on loadscreen
 - Lee T7:
   Error extracting animation kole_guru2qururi, game might crash with this moveset.

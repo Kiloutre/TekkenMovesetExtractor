@@ -178,6 +178,7 @@ class Monitor:
             self.monitor()
         except Exception as e:
             print(e, file=sys.stderr)
+            self.exit()
         
             
     def injectPermanentMovesetCode(self):
@@ -220,7 +221,6 @@ class Monitor:
         offset = ((playerId - 1) * 8)
         self.Importer.writeInt(codeInjection + codeInjectionSize - 0x10 + offset, self.moveset.motbin_ptr, 8)
         self.Importer.writeInt(codeInjection + codeInjectionSize - 0x20 + offset, self.moveset.motbin_ptr, 8)
-        print("Writng local %d to %x" % (self.playerId, codeInjection + codeInjectionSize - 0x20 + offset))
         
     def getPlayerAddress(self, forceWriting = False):
         startingAddr = game_addresses.addr['playerid_starting_ptr']
