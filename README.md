@@ -106,5 +106,11 @@ Administrator rights may be required to import the moveset into memory.
 - Remove all requirement & property aliased to 0 and use 'copy_nearby' instead -> also rename to copy_nearest
 - Delete files before exporting moveset
 - Tekken ball imitation using Akuma fireball, greenscreend on tekken 3 beach
-- Rename indexes in the file to _idx
 - Allow specific item moves
+- (Jin) Dj tag2 vs DJ tag2, treasure battle, online player buttons, crash on loadscreen
+- Lee T7:
+  Error extracting animation kole_guru2qururi, game might crash with this moveset.
+  Error extracting animation kole_guru2qururi, file will not be created
+- Chloe:
+  Error extracting animation dckb_neckhholdnuke_re_y, game might crash with this moveset.
+  Error extracting animation dckb_neckhholdnuke_re_y, file will not be created

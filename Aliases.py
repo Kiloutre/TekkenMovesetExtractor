@@ -70,10 +70,13 @@ requirements = {
     201: { 't7_id': 218, 'desc': 'Player NOT character id'},
     202: { 't7_id': 219, 'desc': 'Opponent character id' },
     203: { 't7_id': 220, 'desc': 'Opponent NOT character id' },
-    204: { 't7_id': 0, 'desc': 'Team character ID is ??'}, #unknown t7 id
-    208: { 't7_id': 223, 'desc': '(ALISA) Co_IFLnage00vsOGR_n R' },
+    204: { 't7_id': 221, 'desc': 'Partner character id'},
+    205: { 't7_id': 222, 'desc': 'Partner NOT character id'},
+    208: { 't7_id': 223, 'desc': 'Opponent partner character id' },
+    209: { 't7_id': 224, 'desc': 'Opponent partner NOT character id' },
     214: { 't7_id': 225, 'desc': '(HEIHACHI) sJUMP_00_ -> Co_sJP_RP' },
     228: { 't7_id': 232, 'desc': '(NINA) sDm_KAOBntR -> R_bintrp' },
+    228: { 't7_id': 234, 'desc': '(NINA) sDm_KAOBntR -> R_bintrp' },
     232: { 't7_id': 251, 'desc': '(HEIHACHI) He_sKAM00_ -> He_sSTEPB' },
     234: { 't7_id': 253, 'desc': '(BRYAN) Bx_sDASHF -> Bx_super_RPsp' },
     246: { 't7_id': 265, 'desc': '(HEIHACHI) He_Ihp2_n -> Standing' },
@@ -598,8 +601,8 @@ extra_move_properties = {
     0x8146: { 't7_id': 0x81f3, 'desc': 'Dj_beam_01' },
     0x81d6: { 't7_id': 0x81f3, 'desc': 'Tag2 projectiles fix timestop (tochange)' },
     0x823c: { 't7_id': 0x8393, 'desc': '(ALISA) Aa_spiral' },
-    0x824e: { 't7_id': 0x83a3, 'desc': 'Tag out (assumption, filled)' },
-    #0x82cd: { 't7_id': 0, 'desc': 'Raven clone' }, #Unknown t7 ID
+    #0x824e: { 't7_id': 0x83a3, 'desc': 'Tag out (assumption, filled)' },
+    #0x82cd: { 't7_id': 0x8422, 'desc': 'Set Raven clone move id' }, #Unknown t7 ID
 }
 
 def getTag2CharIDAliases(charid):
@@ -615,7 +618,13 @@ def getTag2CharIDAliases(charid):
 
 
 globalRequirementsReplace = {
-    219: 'copy_nearby'  #Opponent is specific character
+    218: 'copy_nearest', #Character ID
+    219: 'copy_nearest', #Character ID
+    220: 'copy_nearest', #Character ID
+    221: 'copy_nearest', #Character ID
+    222: 'copy_nearest', #Character ID
+    223: 'copy_nearest', #Character ID
+    224: 'copy_nearest', #Character ID
 }
 
 tag2CharacterSpecificFixes = {
@@ -669,7 +678,7 @@ tag2CharacterSpecificFixes = {
         'extraproperty': [
             {
                 'id': 0x8036, #Fix D/F+1+2 throw crash
-                'copy_nearby': True
+                'copy_nearest': True
             },
             {
                 'id': 0x82e9, #Fix D/F+1+2 camera
@@ -730,7 +739,7 @@ class ExtraPropertyFix:
             value = property_list[index]['value']
             property_list[index]['value'] = self.alias['value_alias'].get(value, value)
         
-        if 'copy_nearby' in self.alias:
+        if 'copy_nearest' in self.alias:
             matching_property = self.searchPropertyByMatch(property_list, index) 
             property_list[index] = matching_property
         return True
@@ -777,7 +786,7 @@ class GlobalRequirementFix:
         if requirement_list[index]['req'] != self.req:
             return False
             
-        if self.value == 'copy_nearby':
+        if self.value == 'copy_nearest':
             matching_requirement = self.searchReq(requirement_list, index) 
             requirement_list[index] = matching_requirement
     
