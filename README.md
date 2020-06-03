@@ -103,9 +103,5 @@ Administrator rights may be required to import the moveset into memory.
 - Delete files before exporting moveset
 - Tekken ball imitation using Akuma fireball, greenscreend on tekken 3 beach
 - (Jin) Dj tag2 vs DJ tag2, treasure battle, online player buttons, crash on loadscreen
-- Lee T7:
-  Error extracting animation kole_guru2qururi, game might crash with this moveset.
-  Error extracting animation kole_guru2qururi, file will not be created
-- Chloe:
-  Error extracting animation dckb_neckhholdnuke_re_y, game might crash with this moveset.
-  Error extracting animation dckb_neckhholdnuke_re_y, file will not be created
+- Green Ogre 3~4 crash
+- Allow throws using item moves?

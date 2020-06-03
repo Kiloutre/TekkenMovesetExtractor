@@ -933,13 +933,18 @@ class Motbin:
         path = self.folder_destination + self.export_folder
         self.extraction_path = path
         anim_path = "%s/anim" % (path)
+            
+        jsonPath = "%s/%s.json" % (path, self.name)
         
         if not os.path.isdir(path):
             os.mkdir(path)
         if not os.path.isdir(anim_path):
             os.mkdir(anim_path)
             
-        with open("%s/%s.json" % (path, self.name), "w") as f:
+        if os.path.exists(jsonPath):
+            os.remove(jsonPath)
+            
+        with open(jsonPath, "w") as f:
             selfData = self.dict()
             selfData['original_hash'] = self.calculateHash(selfData)
             json.dump(selfData, f, indent=4)

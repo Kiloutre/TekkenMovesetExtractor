@@ -168,7 +168,6 @@ class Monitor:
         except Exception as e:
             print(e, file=sys.stderr)
             self.exit()
-            return
             
     def start(self):
         print("\nMonitoring successfully started for player %d. Moveset: %s" % (self.playerId, self.moveset.m['character_name']))
@@ -266,7 +265,6 @@ class Monitor:
                 
                 time.sleep(monitorVerificationFrequency)
             except Exception as e:
-                print(e)
                 try:
                     self.Importer.readInt(self.moveset.motbin_ptr, 8) # Read on self to see if process still exists
                     time.sleep(monitorVerificationFrequency)
