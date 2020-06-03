@@ -225,7 +225,7 @@ class FormEditor:
         self.initEditor(col, row)
         
     def initEditor(self, col, row):
-        container = Frame(self.rootFrame)
+        container = Frame(self.rootFrame, bg='pink')
         container.grid(row=row, column=col, sticky="nsew")
         container.pack_propagate(False)
         
@@ -280,12 +280,26 @@ class CancelEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
         FormEditor.__init__(self, root, rootFrame, 'cancels', col, row)
         
-        self.container = Frame(self.container, bg='red')
-        self.container.pack(side='left', fill=BOTH, expand=True)
+        navigatorFrame = Frame(self.container)
+        navigatorFrame.pack(side='bottom', fill=X)
+        
+        prevCancelButton = Button(navigatorFrame, text="<< Previous Cancel", command=lambda : self.navigateToCancel(-1))
+        prevCancelButton.pack(fill=X, side='left', expand=True)
+        
+        nextCancelButton = Button(navigatorFrame, text="Next Cancel >>", command=lambda : self.navigateToCancel(1))
+        nextCancelButton.pack(fill=X, side='right', expand=True)
+        
         
         self.initFields()
         self.resetForm()
         self.setLabel("No cancel selected")
+        
+    def navigateToCancel(self, offset):
+        if self.editMode == None:
+            return
+        cancelId = self.id + offset
+        cancelData = self.root.movelist['cancels'][cancelId]
+        self.root.CancelEditor.setCancel(cancelData, cancelId)
         
     def initFields(self):
         fields = sortKeys(cancelFields.keys())
@@ -294,7 +308,7 @@ class CancelEditor(FormEditor):
             container.pack(side='top', anchor=N, fill=BOTH)
 
             fieldLabel = Label(container, text=field, width=15)
-            fieldLabel.grid(row=0, column=0, sticky='w')
+            fieldLabel.grid(row=0, column=0, pady=2, sticky='w')
             
             sv = StringVar()
             sv.trace("w", lambda name, index, mode, field=field, sv=sv: self.onchange(field, sv))
@@ -386,9 +400,16 @@ class GUI_TekkenMovesetExtractor(Tk):
         for i in range(2):
             editorFrame.grid_columnconfigure(i, weight=1, uniform="group1")
             editorFrame.grid_rowconfigure(i, weight=1)
+            
+        northEastFrame = Frame(editorFrame, bg='red')
+        northEastFrame.grid(row=0, column=1, sticky="nsew")
+        northEastFrame.grid_columnconfigure(0, weight=1, uniform="group1")
+        northEastFrame.grid_columnconfigure(1, weight=1, uniform="group1")
+        northEastFrame.grid_rowconfigure(0, weight=1)
         
         self.MoveEditor = MoveEditor(self, editorFrame, col=0, row=0)
-        self.CancelEditor = CancelEditor(self, editorFrame, col=1, row=0)
+        self.CancelEditor = CancelEditor(self, northEastFrame, col=0, row=0)
+        
         
         moveFrame2 = Frame(editorFrame, bg='pink')
         moveFrame2.grid(row=1, column=0, sticky="nsew")
@@ -409,6 +430,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         
     def resetForms(self):
         self.MoveEditor.resetForm()
+        self.CancelEditor.resetForm()
         
     def onMoveSelection(self, event):
         w = event.widget
