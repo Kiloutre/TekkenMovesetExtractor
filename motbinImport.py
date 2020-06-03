@@ -54,8 +54,8 @@ class Importer:
     def allocateMem(self, allocSize):
         return VirtualAllocEx(self.T.handle, 0, allocSize, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE)
                 
-    def importMoveset(self, playerAddr, folderName):
-        moveset = self.loadMoveset(folderName)
+    def importMoveset(self, playerAddr, folderName, moveset=None):
+        moveset = self.loadMoveset(folderName=folderName, moveset=moveset)
         
         motbin_ptr_addr = playerAddr + game_addresses.addr['motbin_offset']
         current_motbin_ptr = self.readInt(motbin_ptr_addr, 8)
@@ -68,14 +68,15 @@ class Importer:
         self.writeInt(motbin_ptr_addr, moveset.motbin_ptr, 8)
         return moveset
         
-    def loadMoveset(self, folderName):
-        m = None
-        
-        jsonFilename = next(file for file in os.listdir(folderName) if file.endswith(".json"))
-        print("Reading %s..." % (jsonFilename))
-        with open("%s/%s" % (folderName, jsonFilename), "r") as f:
-            m = json.load(f)
-            f.close()
+    def loadMoveset(self, folderName=None, moveset=None):
+        if moveset == None:
+            jsonFilename = next(file for file in os.listdir(folderName) if file.endswith(".json"))
+            print("Reading %s..." % (jsonFilename))
+            with open("%s/%s" % (folderName, jsonFilename), "r") as f:
+                m = json.load(f)
+                f.close()
+        else:
+            m = moveset
             
         if 'export_version' not in m or not versionMatches(m['export_version']):
             print("Error: trying to import outdated moveset, please extract again.")
@@ -112,6 +113,7 @@ class Importer:
         throw_extras_ptr, throw_extras_count = p.allocateThrowExtras()
         throws_ptr, throws_count = p.allocateThrows()
         parry_related_ptr, parry_related_count = p.allocateParryRelated()
+        
         p.allocateMota()
         
         self.writeInt(p.motbin_ptr + 0x0, 65536, 4)
@@ -183,7 +185,7 @@ class Importer:
         
         p.applyMotaOffsets()
         
-        print("%s (ID: %d) successfully imported in memory at 0x%x." % (jsonFilename, m['character_id'], p.motbin_ptr))
+        print("%s (ID: %d) successfully imported in memory at 0x%x." % (m['character_name'], m['character_id'], p.motbin_ptr))
         print("%d/%d bytes left." % (p.size - (p.curr_ptr - p.head_ptr), p.size))
         
         return p

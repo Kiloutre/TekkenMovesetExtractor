@@ -3,7 +3,7 @@
 from tkinter import *
 from tkinter.ttk import Button
 from re import match
-from Addresses import game_addresses, GameClass
+from Addresses import game_addresses
 import sys
 import os
 import json
@@ -164,7 +164,7 @@ class Monitor:
         self.getPlayerAddress()
         
         try:
-            self.moveset = self.Importer.loadMoveset(charactersPath + self.selected_char)
+            self.moveset = self.Importer.loadMoveset(folderName=(charactersPath + self.selected_char))
         except Exception as e:
             print(e, file=sys.stderr)
             self.exit()

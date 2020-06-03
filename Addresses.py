@@ -83,6 +83,9 @@ class GameClass:
         if bytes_length <= 0:
             bytes_length = value.bit_length() + 7 // 8
         return self.writeBytes(addr, value.to_bytes(bytes_length, 'little'))
+        
+def bToInt(data, offset, length, endian='little'):
+    return int.from_bytes(data[offset:offset + length], endian)
  
 ReadProcessMemory = kernel32.ReadProcessMemory
 ReadProcessMemory.argtypes = [w.HANDLE, w.LPCVOID, w.LPVOID, ctypes.c_size_t, ctypes.POINTER(ctypes.c_size_t)]
