@@ -273,6 +273,7 @@ class FormEditor:
     def resetForm(self):
         self.editMode = None
         self.id = None
+        self.setLabel("No item selected")
         for field in self.fieldTypes.keys():
             self.fields[field].set('')
             
@@ -291,8 +292,6 @@ class CancelEditor(FormEditor):
         
         
         self.initFields()
-        self.resetForm()
-        self.setLabel("No cancel selected")
         
     def navigateToCancel(self, offset):
         if self.editMode == None:
@@ -339,8 +338,6 @@ class MoveEditor(FormEditor):
         self.easternFrame.pack(side='right', fill=BOTH, expand=True)
         
         self.initFields()
-        self.resetForm()
-        self.setLabel("No move selected")
         
         self.fieldsInputs['cancel_idx'].bind("<Button-1>", self.selectCancel)
         
