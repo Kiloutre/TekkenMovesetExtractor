@@ -57,6 +57,15 @@ def sortKeys(keys):
     unknownKeys = [key for key in keys if re.match("^u[0-9_]+$", key)]
     return keyList + unknownKeys
         
+def typeMatch(type, value):
+    if type == 'number':
+        return re.match("^-?[0-9]+$", value)
+    if type == 'hex':
+        return re.match("^0x[0-9A-Za-z]+$", value)
+    if type == 'text':
+        return re.match("^[a-zA-Z0-9_\-\(\)]+$", value)
+    raise Exception("Unknown type '%s'" % (type))
+        
 class CharalistSelector:
     def __init__(self, root):
         self.root = root
@@ -155,7 +164,7 @@ class MovelistSelector:
     def setMoves(self, moves):
         self.movelistSelect.delete(0,'end')
         for m in moves: self.movelistSelect.insert(END, m)
-        
+    
 class MoveEditor:
     def __init__(self, rootFrame):
         container = Frame(rootFrame, bg='#999')
@@ -175,6 +184,7 @@ class MoveEditor:
         self.editMode = None
         self.moveLabel = moveLabel
         self.fields = {}
+        self.fieldValues = {}
         self.initFields()
         self.resetForm()
         
@@ -199,7 +209,17 @@ class MoveEditor:
         if self.editMode == None:
             return
         value = sv.get()
-        print(field, value)
+        valueType = moveFields[field]
+        if not typeMatch(valueType, value):
+            self.setField(field, self.fieldValues[field])
+            return
+        self.fieldValues[field] = value
+        
+    def setField(self, field, value):
+        self.editMode = None
+        self.fieldValues[field] = value
+        self.fields[field].set(value)
+        self.editMode = True
         
     def resetForm(self):
         self.editMode = None
@@ -209,13 +229,14 @@ class MoveEditor:
             self.fields[field].set('')
         
     def setMove(self, moveData, moveId):
-        self.editMode = None
-        self.moveLabel['text'] = "(%s)    Move %d: %s" % (moveId, moveData['name'])
+        self.moveLabel['text'] = "Move %d: %s" % (moveId, moveData['name'])
         self.moveId = moveId
             
+        self.editMode = None
         for field in moveData:
             if field in moveFields:
                 self.fields[field].set(moveData[field])
+                self.fieldValues[field] = moveData[field]
         self.editMode = True
 
 class GUI_TekkenMovesetExtractor(Tk):
