@@ -418,7 +418,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         self.chara_data = None
         
         self.wm_title("TekkenMovesetExtractor 1.0.0 BETA") 
-        self.iconbitmap('GUI_TekkenMovesetExtractor/natsumi.ico')
+        self.iconbitmap('InterfaceData/natsumi.ico')
         self.minsize(960, 540)
         self.geometry("960x540")
         
@@ -444,7 +444,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         self.protocol("WM_DELETE_WINDOW", on_close)
         
         try:
-            with open("GUI_TekkenMovesetExtractor/readme.txt") as f:
+            with open("InterfaceData/readme.txt") as f:
                 for line in f: print(line)
         except:
             pass
@@ -525,7 +525,14 @@ class GUI_TekkenMovesetExtractor(Tk):
         if len(self.characterList) == 0:
             self.charaList.insert(0, "No moveset extracted yet...")
         else:
-            self.charaList.insert(0, *self.characterList)
+            colors = [
+                ["#fff", "#eee"], #TTT2
+                ["#ddd", "#ccc"]  #T7
+            ]
+            for i, character in enumerate(self.characterList):
+                self.charaList.insert(END, character)
+                color = colors[character.startswith("7_")][i & 1]
+                self.charaList.itemconfig(i, {'bg': color })
             
     def loadCharaInfo(self):
         path = charactersPath + self.selected_char

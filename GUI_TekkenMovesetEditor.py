@@ -39,6 +39,22 @@ moveFields = {
     'u18': 'number',
     'u17': 'number'
 }
+
+cancelFields = {
+    'command': 'number',
+    'extradata_idx': 'number',
+    'requirement_idx': 'number',
+    'frame_window_start': 'number',
+    'frame_window_end': 'number',
+    'starting_frame': 'number',
+    'move_id': 'number',
+    'cancel_option': 'number'
+}
+
+fieldsTypes = {
+    'moves': moveFields,
+    'cancels': cancelFields
+}
     
 def getCharacterList():
     if not os.path.isdir(charactersPath):
@@ -110,7 +126,14 @@ class CharalistSelector:
         if len(characterList) == 0:
             self.charaSelect.insert(0, "No moveset extracted yet...")
         else:
-            self.charaSelect.insert(0, *characterList)
+            colors = [
+                ["#fff", "#eee"], #TTT2
+                ["#eee", "#ddd"]  #T7
+            ]
+            for i, character in enumerate(characterList):
+                self.charaSelect.insert(END, character)
+                color = colors[character.startswith("7_")][i & 1]
+                self.charaSelect.itemconfig(i, {'bg': color })
         self.characterList = characterList
 
     def onCharaSelectionChange(self, event):
@@ -174,33 +197,119 @@ class MovelistSelector:
                 self.movelistSelect.itemconfig(index, {'bg': '#b5caff'})
             elif isAttack:
                 self.movelistSelect.itemconfig(index, {'bg': '#ffbdbd'})
-    
-class MoveEditor:
-    def __init__(self, root, rootFrame):
+                
+class FormEditor:
+    def __init__(self, root, rootFrame, key, col, row):
+        self.key = key
+        self.fieldTypes = fieldsTypes[key]
         self.root = root
-        container = Frame(rootFrame, bg='#999')
-        container.grid(row=0, column=0, sticky="nsew")
+        self.rootFrame = rootFrame
+        self.id = None
+        self.editMode = None
+        self.fields = {}
+        self.fieldValues = {}
+        self.container = None
+        
+        self.initEditor(col, row)
+        
+    def initEditor(self, col, row):
+        container = Frame(self.rootFrame)
+        container.grid(row=row, column=col, sticky="nsew")
         container.pack_propagate(False)
         
-        moveLabel = Label(container, bg='#ddd')
-        moveLabel.pack(side='top', fill=X)
+        label = Label(container, bg='#ddd')
+        label.pack(side='top', fill=X)
         
         saveButton = Button(container, text="Apply", command=self.save)
         saveButton.pack(side='bottom', fill=X)
         
-        self.westernFrame = Frame(container)
-        self.westernFrame.pack(side='left', fill=BOTH, expand=True)
+        self.container = container
+        self.label = label
         
-        self.easternFrame = Frame(container)
-        self.easternFrame.pack(side='right', fill=BOTH, expand=True)
+    def setLabel(self, text):
+        self.label['text'] = text
+    
+    def onchange(self, field, sv):
+        if self.editMode == None:
+            return
+        value = sv.get()
+        valueType = self.fieldTypes
+        if not validateField(valueType, value):
+            self.setField(field, self.fieldValues[field])
+        else:
+            self.setField(field, value)
         
-        self.moveId = None
+    def save(self):
+        if self.editMode == None:
+            return
+        for field in self.fields:
+            valueType = self.fieldTypes
+            value = self.fields[field].get()
+            if validateField(valueType, value):
+                self.root.movelist[self.key][self.id][field] = getFieldValue(valueType, value)
+        
+    def setField(self, field, value):
         self.editMode = None
-        self.moveLabel = moveLabel
-        self.fields = {}
-        self.fieldValues = {}
+        self.fieldValues[field] = value
+        self.fields[field].set(value)
+        self.editMode = True
+        
+    def resetForm(self):
+        self.editMode = None
+        self.id = None
+        for field in self.fieldTypes.keys():
+            self.fields[field].set('')
+            
+class CancelEditor(FormEditor):
+    def __init__(self, root, rootFrame, col, row):
+        FormEditor.__init__(self, root, rootFrame, 'cancels', col, row)
+        
+        self.container = Frame(self.container, bg='red')
+        self.container.pack(side='left', fill=BOTH, expand=True)
+        
         self.initFields()
         self.resetForm()
+        self.setLabel("No cancel selected")
+        
+    def initFields(self):
+        fields = sortKeys(cancelFields.keys())
+        for field in fields:
+            container = Frame(self.container)
+            container.pack(side='top', anchor=N, fill=BOTH)
+
+            fieldLabel = Label(container, text=field, width=15)
+            fieldLabel.grid(row=0, column=0, sticky='w')
+            
+            sv = StringVar()
+            sv.trace("w", lambda name, index, mode, field=field, sv=sv: self.onchange(field, sv))
+            self.fields[field] = sv
+
+            fieldInput = Entry(container, textvariable=sv)
+            fieldInput.grid(row=0, column=1, sticky='ew')
+        
+    def setCancel(self, cancelData, moveId):
+        self.label['text'] = "Cancel %d: %s" % (moveId, cancelData['name'])
+        self.id = moveId
+            
+        self.editMode = None
+        for field in cancelData:
+            if field in cancelFields:
+                self.setField(field, cancelData[field])
+        self.editMode = True
+    
+class MoveEditor(FormEditor):
+    def __init__(self, root, rootFrame, col, row):
+        FormEditor.__init__(self, root, rootFrame, 'moves', col, row)
+        
+        self.westernFrame = Frame(self.container)
+        self.westernFrame.pack(side='left', fill=BOTH, expand=True)
+        
+        self.easternFrame = Frame(self.container)
+        self.easternFrame.pack(side='right', fill=BOTH, expand=True)
+        
+        self.initFields()
+        self.resetForm()
+        self.setLabel("No move selected")
         
     def initFields(self):
         fields = sortKeys(moveFields.keys())
@@ -218,42 +327,10 @@ class MoveEditor:
 
             fieldInput = Entry(container, textvariable=sv)
             fieldInput.grid(row=0, column=1, sticky='ew')
-    
-    def onchange(self, field, sv):
-        if self.editMode == None:
-            return
-        value = sv.get()
-        valueType = moveFields[field]
-        if not validateField(valueType, value):
-            self.setField(field, self.fieldValues[field])
-        else:
-            self.setField(field, value)
-        
-    def save(self):
-        if self.editMode == None:
-            return
-        for field in self.fields:
-            valueType = moveFields[field]
-            value = self.fields[field].get()
-            if validateField(valueType, value):
-                self.root.movelist['moves'][self.moveId][field] = getFieldValue(valueType, value)
-        
-    def setField(self, field, value):
-        self.editMode = None
-        self.fieldValues[field] = value
-        self.fields[field].set(value)
-        self.editMode = True
-        
-    def resetForm(self):
-        self.editMode = None
-        self.moveLabel['text'] = "No move selected"
-        self.moveId = None
-        for field in moveFields.keys():
-            self.fields[field].set('')
         
     def setMove(self, moveData, moveId):
-        self.moveLabel['text'] = "Move %d: %s" % (moveId, moveData['name'])
-        self.moveId = moveId
+        self.label['text'] = "Move %d: %s" % (moveId, moveData['name'])
+        self.id = moveId
             
         self.editMode = None
         for field in moveData:
@@ -266,7 +343,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         Tk.__init__(self)
         
         self.wm_title("TekkenMovesetEditor 0.1") 
-        self.iconbitmap('GUI_TekkenMovesetExtractor/renge.ico')
+        self.iconbitmap('InterfaceData/renge.ico')
         self.minsize(960, 540)
         self.geometry("1280x720")
         
@@ -279,10 +356,9 @@ class GUI_TekkenMovesetExtractor(Tk):
             editorFrame.grid_columnconfigure(i, weight=1, uniform="group1")
             editorFrame.grid_rowconfigure(i, weight=1)
         
-        self.MoveEditor = MoveEditor(self, editorFrame)
+        self.MoveEditor = MoveEditor(self, editorFrame, col=0, row=0)
+        self.CancelEditor = CancelEditor(self, editorFrame, col=1, row=0)
         
-        moveFrame2 = Frame(editorFrame, bg='green')
-        moveFrame2.grid(row=0, column=1, sticky="nsew")
         moveFrame2 = Frame(editorFrame, bg='pink')
         moveFrame2.grid(row=1, column=0, sticky="nsew")
         moveFrame2 = Frame(editorFrame, bg='violet')
@@ -310,7 +386,6 @@ class GUI_TekkenMovesetExtractor(Tk):
             moveData = self.movelist['moves'][move_id]
             self.MoveEditor.setMove(moveData, move_id)
         except Exception as e:
-            print(e)
             pass
         
 
