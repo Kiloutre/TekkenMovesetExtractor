@@ -20,7 +20,7 @@ moveFields = {
     'hit_condition_idx': 'number',
     'voiceclip_idx': 'number',
     'extra_properties_idx': 'number',
-    'hitbox_location': 'number',
+    'hitbox_location': 'hex',
     'first_active_frame': 'number',
     'last_active_frame': 'number',
     'u2': 'number',
@@ -41,7 +41,7 @@ moveFields = {
 }
 
 cancelFields = {
-    'command': 'number',
+    'command': 'hex',
     'extradata_idx': 'number',
     'requirement_idx': 'number',
     'frame_window_start': 'number',
@@ -87,7 +87,18 @@ def getFieldValue(type, value):
         return int(value)
     if type == 'hex':
         return int(value, 16)
-    return value
+    if type == 'text':
+        return str(value)
+    raise Exception("Unknown type '%s'" % (type))
+    
+def formatFieldValue(type, value):
+    if type == 'number':
+        return str(value)
+    if type == 'hex':
+        return "0x%x" % (value)
+    if type == 'text':
+        return str(value)
+    raise Exception("Unknown type '%s'" % (type))
         
 class CharalistSelector:
     def __init__(self, root):
@@ -207,6 +218,7 @@ class FormEditor:
         self.id = None
         self.editMode = None
         self.fields = {}
+        self.fieldsInputs = {}
         self.fieldValues = {}
         self.container = None
         
@@ -233,17 +245,17 @@ class FormEditor:
         if self.editMode == None:
             return
         value = sv.get()
-        valueType = self.fieldTypes
+        valueType = self.fieldTypes[field]
         if not validateField(valueType, value):
             self.setField(field, self.fieldValues[field])
         else:
-            self.setField(field, value)
+            self.setField(field, getFieldValue(valueType, value))
         
     def save(self):
         if self.editMode == None:
             return
         for field in self.fields:
-            valueType = self.fieldTypes
+            valueType = self.fieldTypes[field]
             value = self.fields[field].get()
             if validateField(valueType, value):
                 self.root.movelist[self.key][self.id][field] = getFieldValue(valueType, value)
@@ -251,7 +263,11 @@ class FormEditor:
     def setField(self, field, value):
         self.editMode = None
         self.fieldValues[field] = value
+        
+        valueType = self.fieldTypes[field]
+        value = formatFieldValue(valueType, value)
         self.fields[field].set(value)
+        
         self.editMode = True
         
     def resetForm(self):
@@ -286,10 +302,11 @@ class CancelEditor(FormEditor):
 
             fieldInput = Entry(container, textvariable=sv)
             fieldInput.grid(row=0, column=1, sticky='ew')
+            self.fieldsInputs[field] = fieldInput
         
-    def setCancel(self, cancelData, moveId):
-        self.label['text'] = "Cancel %d: %s" % (moveId, cancelData['name'])
-        self.id = moveId
+    def setCancel(self, cancelData, cancelId):
+        self.label['text'] = "Cancel %d" % (cancelId)
+        self.id = cancelId
             
         self.editMode = None
         for field in cancelData:
@@ -311,6 +328,8 @@ class MoveEditor(FormEditor):
         self.resetForm()
         self.setLabel("No move selected")
         
+        self.fieldsInputs['cancel_idx'].bind("<Button-1>", self.selectCancel)
+        
     def initFields(self):
         fields = sortKeys(moveFields.keys())
         sideBreakpoint = len(fields) / 2
@@ -321,12 +340,16 @@ class MoveEditor(FormEditor):
             fieldLabel = Label(container, text=field, width=15)
             fieldLabel.grid(row=0, column=0, sticky='w')
             
+            if field.endswith("_idx") or field.endswith("_indexes"):
+                fieldLabel['bg'] = '#cce3e1'
+            
             sv = StringVar()
             sv.trace("w", lambda name, index, mode, field=field, sv=sv: self.onchange(field, sv))
             self.fields[field] = sv
 
             fieldInput = Entry(container, textvariable=sv)
             fieldInput.grid(row=0, column=1, sticky='ew')
+            self.fieldsInputs[field] = fieldInput
         
     def setMove(self, moveData, moveId):
         self.label['text'] = "Move %d: %s" % (moveId, moveData['name'])
@@ -337,6 +360,14 @@ class MoveEditor(FormEditor):
             if field in moveFields:
                 self.setField(field, moveData[field])
         self.editMode = True
+        
+    def selectCancel(self, event):
+        if self.editMode == None:
+            return
+        cancelId = self.fieldValues['cancel_idx']
+        cancelData = self.root.movelist['cancels'][cancelId]
+        self.root.CancelEditor.setCancel(cancelData, cancelId)
+
 
 class GUI_TekkenMovesetExtractor(Tk):
     def __init__(self):
