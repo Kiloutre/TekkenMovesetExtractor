@@ -105,3 +105,7 @@ Administrator rights may be required to import the moveset into memory.
 - (Jin) Dj tag2 vs DJ tag2, treasure battle, online player buttons, crash on loadscreen
 - Green Ogre 3~4 crash
 - Allow throws using item moves?
+- Rename "group_cancels" to "generic_cancels"
+
+Moveset editor:
+- Window to list animations and copy one to another character's folder
