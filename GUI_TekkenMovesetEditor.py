@@ -57,7 +57,7 @@ def sortKeys(keys):
     unknownKeys = [key for key in keys if re.match("^u[0-9_]+$", key)]
     return keyList + unknownKeys
         
-def typeMatch(type, value):
+def validateField(type, value):
     if type == 'number':
         return re.match("^-?[0-9]+$", value)
     if type == 'hex':
@@ -65,6 +65,13 @@ def typeMatch(type, value):
     if type == 'text':
         return re.match("^[a-zA-Z0-9_\-\(\)]+$", value)
     raise Exception("Unknown type '%s'" % (type))
+    
+def getFieldValue(type, value):
+    if type == 'number':
+        return int(value)
+    if type == 'hex':
+        return int(value, 16)
+    return value
         
 class CharalistSelector:
     def __init__(self, root):
@@ -83,9 +90,7 @@ class CharalistSelector:
         ]
         
         for label, callback in buttons:
-            newButton = Button(charalistFrame)
-            newButton["text"] = label
-            newButton["command"] = callback
+            newButton = Button(charalistFrame, text=label, command=callback)
             newButton.pack(fill=X)
         
         self.charaSelect = charaSelect
@@ -121,7 +126,7 @@ class CharalistSelector:
     def loadToPlayer(self):
         playerAddr = game_addresses.addr['p1_addr']
         TekkenImporter = importLib.Importer()
-        TekkenImporter.importMoveset(playerAddr, self.movelist_path, moveset=self.movelist)
+        TekkenImporter.importMoveset(playerAddr, self.movelist_path, moveset=self.root.movelist)
         
     def selectMoveset(self, selection=None):
         if selection == None and self.selection == None:
@@ -130,8 +135,7 @@ class CharalistSelector:
         
         movelist = getMovelist(self.movelist_path)
         
-        moveNames = ["%d   %s" % (i, move['name']) for i, move in enumerate(movelist['moves'])]
-        self.root.MovelistSelector.setMoves(moveNames)
+        self.root.MovelistSelector.setMoves(movelist['moves'], movelist['aliases'])
         self.root.MovelistSelector.setCharacter(movelist['character_name'])
         self.root.movelist = movelist
         self.root.resetForms()
@@ -142,8 +146,8 @@ class MovelistSelector:
         movelistFrame = Frame(root)
         movelistFrame.pack(side='left', fill=Y)
         
-        selectedChar = Label(movelistFrame, text="No selected char")
-        selectedChar.pack()
+        selectedChar = Label(movelistFrame, text="No char selected", bg='#bbb')
+        selectedChar.pack(side=BOTTOM, fill=X)
         
         movelistSelect = Listbox(movelistFrame, width=30)
         movelistSelect.bind('<<ListboxSelect>>', root.onMoveSelection)
@@ -159,25 +163,35 @@ class MovelistSelector:
         self.movelistSelect = movelistSelect
         
     def setCharacter(self, char):
-        self.selectedChar['text'] = char
+        self.selectedChar['text'] = 'Selected: ' + char
         
-    def setMoves(self, moves):
+    def setMoves(self, moves, aliases):
+        moves = [(i, move['hitlevel'] and move['first_active_frame'] and move['last_active_frame'] and move['hitbox_location'], move['name']) for i, move in enumerate(moves)]
         self.movelistSelect.delete(0,'end')
-        for m in moves: self.movelistSelect.insert(END, m)
+        for index, isAttack, moveName in moves:
+            self.movelistSelect.insert(END, "%d   %s" % (index, moveName))
+            if index in aliases:
+                self.movelistSelect.itemconfig(index, {'bg': '#b5caff'})
+            elif isAttack:
+                self.movelistSelect.itemconfig(index, {'bg': '#ffbdbd'})
     
 class MoveEditor:
-    def __init__(self, rootFrame):
+    def __init__(self, root, rootFrame):
+        self.root = root
         container = Frame(rootFrame, bg='#999')
         container.grid(row=0, column=0, sticky="nsew")
         container.pack_propagate(False)
         
-        moveLabel = Label(container, bg='#eee')
+        moveLabel = Label(container, bg='#ddd')
         moveLabel.pack(side='top', fill=X)
         
-        self.westernFrame = Frame(container, bg='blue')
+        saveButton = Button(container, text="Apply", command=self.save)
+        saveButton.pack(side='bottom', fill=X)
+        
+        self.westernFrame = Frame(container)
         self.westernFrame.pack(side='left', fill=BOTH, expand=True)
         
-        self.easternFrame = Frame(container, bg='red')
+        self.easternFrame = Frame(container)
         self.easternFrame.pack(side='right', fill=BOTH, expand=True)
         
         self.moveId = None
@@ -193,7 +207,7 @@ class MoveEditor:
         sideBreakpoint = len(fields) / 2
         for i, field in enumerate(fields):
             container = Frame(self.westernFrame if i < sideBreakpoint else self.easternFrame)
-            container.pack(side='top', anchor=NW, expand=False)
+            container.pack(side='top', anchor=N, fill=BOTH)
 
             fieldLabel = Label(container, text=field, width=15)
             fieldLabel.grid(row=0, column=0, sticky='w')
@@ -210,10 +224,19 @@ class MoveEditor:
             return
         value = sv.get()
         valueType = moveFields[field]
-        if not typeMatch(valueType, value):
+        if not validateField(valueType, value):
             self.setField(field, self.fieldValues[field])
+        else:
+            self.setField(field, value)
+        
+    def save(self):
+        if self.editMode == None:
             return
-        self.fieldValues[field] = value
+        for field in self.fields:
+            valueType = moveFields[field]
+            value = self.fields[field].get()
+            if validateField(valueType, value):
+                self.root.movelist['moves'][self.moveId][field] = getFieldValue(valueType, value)
         
     def setField(self, field, value):
         self.editMode = None
@@ -235,8 +258,7 @@ class MoveEditor:
         self.editMode = None
         for field in moveData:
             if field in moveFields:
-                self.fields[field].set(moveData[field])
-                self.fieldValues[field] = moveData[field]
+                self.setField(field, moveData[field])
         self.editMode = True
 
 class GUI_TekkenMovesetExtractor(Tk):
@@ -257,7 +279,7 @@ class GUI_TekkenMovesetExtractor(Tk):
             editorFrame.grid_columnconfigure(i, weight=1, uniform="group1")
             editorFrame.grid_rowconfigure(i, weight=1)
         
-        self.MoveEditor = MoveEditor(editorFrame)
+        self.MoveEditor = MoveEditor(self, editorFrame)
         
         moveFrame2 = Frame(editorFrame, bg='green')
         moveFrame2.grid(row=0, column=1, sticky="nsew")
@@ -270,7 +292,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         
         self.updateCharacterlist()
         self.Charalist.selectMoveset("2_JIN")
-        self.hideCharaFrame()
+        #self.hideCharaFrame()
         
     def hideCharaFrame(self):
         self.Charalist.hide()
