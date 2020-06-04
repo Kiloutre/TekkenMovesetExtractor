@@ -72,6 +72,7 @@ requirements = {
     203: { 't7_id': 220, 'desc': 'Opponent NOT character id' },
     204: { 't7_id': 221, 'desc': 'Partner character id'},
     205: { 't7_id': 222, 'desc': 'Partner NOT character id'},
+    206: { 't7_id': 9999, 'desc': 'Unknown U/F+4, 3'},
     208: { 't7_id': 223, 'desc': 'Opponent partner character id' },
     209: { 't7_id': 224, 'desc': 'Opponent partner NOT character id' },
     214: { 't7_id': 225, 'desc': '(HEIHACHI) sJUMP_00_ -> Co_sJP_RP' },
@@ -625,6 +626,7 @@ globalRequirementsReplace = {
     222: 'copy_nearest', #Character ID
     223: 'copy_nearest', #Character ID
     224: 'copy_nearest', #Character ID
+    9999: 'copy_nearest', #Disable
 }
 
 tag2CharacterSpecificFixes = {
@@ -831,7 +833,7 @@ def fillDict(dictionnary):
             for i in range(1, key_diff + 1):
                 dictionnary[key + i] = {
                     't7_id': dictionnary[key]['t7_id'] + i,
-                    'desc': 'FILLED'
+                    'desc': '%d:FILLED' % (key + i)
                 }
                 generatedKeys += 1
                 

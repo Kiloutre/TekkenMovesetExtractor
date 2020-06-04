@@ -6,6 +6,7 @@ from Addresses import game_addresses, GameClass
 import motbinImport as importLib
 import json
 import os
+from zlib import crc32
 
 charactersPath = "extracted_chars/"
 
@@ -99,6 +100,27 @@ def formatFieldValue(type, value):
     if type == 'text':
         return str(value)
     raise Exception("Unknown type '%s'" % (type))
+
+def calculateMovesetHash(movesetData):
+    exclude_keys =  [
+        'original_hash',
+        'last_calculated_hash',
+        'export_version',
+        'character_name',
+        'extraction_date',
+        'character_name',
+        'tekken_character_name',
+        'creator_name',
+        'date',
+        'fulldate'
+    ]    
+    
+    data = ""
+    for k in (key for key in movesetData.keys() if key not in exclude_keys):
+       data += str(movesetData[k])
+    
+    data = bytes(str.encode(data))
+    return "%x" % (crc32(data))
         
 class CharalistSelector:
     def __init__(self, root):
@@ -180,7 +202,7 @@ class MovelistSelector:
         movelistFrame = Frame(root)
         movelistFrame.pack(side='left', fill=Y)
         
-        selectedChar = Label(movelistFrame, text="No char selected", bg='#bbb')
+        selectedChar = Label(movelistFrame, text="No character selected", bg='#bbb')
         selectedChar.pack(side=BOTTOM, fill=X)
         
         movelistSelect = Listbox(movelistFrame, width=30)
@@ -197,7 +219,7 @@ class MovelistSelector:
         self.movelistSelect = movelistSelect
         
     def setCharacter(self, char):
-        self.selectedChar['text'] = 'Selected: ' + char
+        self.selectedChar['text'] = 'Current character: ' + char
         
     def setMoves(self, moves, aliases):
         moves = [(i, move['hitlevel'] and move['first_active_frame'] and move['last_active_frame'] and move['hitbox_location'], move['name']) for i, move in enumerate(moves)]
@@ -309,6 +331,9 @@ class CancelEditor(FormEditor):
             fieldLabel = Label(container, text=field, width=15)
             fieldLabel.grid(row=0, column=0, pady=2, sticky='w')
             
+            if field.endswith("_idx") or field.endswith("_indexes") or field.endswith('_id'):
+                fieldLabel['bg'] = '#cce3e1'
+            
             sv = StringVar()
             sv.trace("w", lambda name, index, mode, field=field, sv=sv: self.onchange(field, sv))
             self.fields[field] = sv
@@ -351,7 +376,7 @@ class MoveEditor(FormEditor):
             fieldLabel = Label(container, text=field, width=15)
             fieldLabel.grid(row=0, column=0, sticky='w')
             
-            if field.endswith("_idx") or field.endswith("_indexes"):
+            if field.endswith("_idx") or field.endswith("_indexes") or field.endswith('_id'):
                 fieldLabel['bg'] = '#cce3e1'
             
             sv = StringVar()

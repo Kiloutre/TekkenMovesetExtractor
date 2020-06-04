@@ -860,6 +860,7 @@ class Motbin:
     def dict(self):
         return {
             'original_hash': '',
+            'last_calculated_hash': '',
             'export_version': exportVersion,
             'version': self.version,
             'character_id': self.chara_id,
@@ -889,9 +890,10 @@ class Motbin:
             'parry_related': self.parry_related
         }
         
-    def calculateHash(self, selfData):
+    def calculateHash(self, movesetData):
         exclude_keys =  [
             'original_hash',
+            'last_calculated_hash',
             'export_version',
             'character_name',
             'extraction_date',
@@ -903,12 +905,10 @@ class Motbin:
         ]    
         
         data = ""
-        
-        for k in (key for key in selfData.keys() if key not in exclude_keys):
-           data += str(selfData[k])
+        for k in (key for key in movesetData.keys() if key not in exclude_keys):
+           data += str(movesetData[k])
         
         data = bytes(str.encode(data))
-        
         return "%x" % (crc32(data))
         
     def save(self):
@@ -929,9 +929,10 @@ class Motbin:
             os.remove(jsonPath)
             
         with open(jsonPath, "w") as f:
-            selfData = self.dict()
-            selfData['original_hash'] = self.calculateHash(selfData)
-            json.dump(selfData, f, indent=4)
+            movesetData = self.dict()
+            movesetData['original_hash'] = self.calculateHash(movesetData)
+            movesetData['last_calculated_hash'] = movesetData['original_hash']
+            json.dump(movesetData, f, indent=4)
             
         for i, mota in enumerate(self.mota_list):
             mota_addr, len = mota
@@ -950,7 +951,7 @@ class Motbin:
             except:
                 print("Error extracting animation %s, file will not be created" % (anim.name), file=sys.stderr)
             
-        print("Saved at path %s.\nHash: %s" % (path.replace("\\", "/"), selfData['original_hash']))
+        print("Saved at path %s.\nHash: %s" % (path.replace("\\", "/"), movesetData['original_hash']))
         
     def extractMoveset(self):
         self.printBasicData()
