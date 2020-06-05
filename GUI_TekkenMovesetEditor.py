@@ -275,8 +275,14 @@ class MovelistSelector:
         movelistFrame = Frame(rootFrame)
         movelistFrame.pack(side='left', fill='y')
         
-        newButton = Button(movelistFrame, text='Save', command=self.root.save)
-        newButton.pack(side='bottom', fill='x')
+        bottomButtons = [
+            ('Save', self.root.save),
+            ('Go to current move ID', self.goToCurrentMove)
+        ]
+        
+        for label, callback in bottomButtons:
+            newButton = Button(movelistFrame, text=label, command=callback)
+            newButton.pack(side='bottom', fill='x')
         
         selectedChar = Label(movelistFrame, text="No character selected", bg='#bbb')
         selectedChar.pack(side='bottom', fill='x')
@@ -302,6 +308,22 @@ class MovelistSelector:
             pass
         finally:
             self.root.setMove(moveId)
+            
+    def goToCurrentMove(self):
+        if self.root.movelist == None:
+            return
+        playerAddress = game_addresses.addr['p1_addr']
+        offset = game_addresses.addr['player_curr_move_offset']
+        TekkenGame = GameClass("TekkenGame-Win64-Shipping.exe")
+        
+        currMoveId = TekkenGame.readInt(playerAddress + offset, 4)
+        currMoveId = self.root.getMoveId(currMoveId)
+        
+        if currMoveId >= len(self.root.movelist['moves']):
+            return
+        
+        self.movelistSelect.see(currMoveId)
+        self.root.setMove(currMoveId)
         
     def setCharacter(self, char):
         self.selectedChar['text'] = 'Current character: ' + char
@@ -590,7 +612,7 @@ class GUI_TekkenMovesetEditor():
             editorFrame.grid_columnconfigure(i, weight=1, uniform="group1")
             editorFrame.grid_rowconfigure(i, weight=1)
             
-        northEastFrame = Frame(editorFrame, bg='red')
+        northEastFrame = Frame(editorFrame, bg='#bbb')
         northEastFrame.grid(row=0, column=1, sticky="nsew")
         northEastFrame.grid_columnconfigure(0, weight=1, uniform="group1")
         northEastFrame.grid_columnconfigure(1, weight=1, uniform="group1")
@@ -600,9 +622,9 @@ class GUI_TekkenMovesetEditor():
         self.CancelEditor = CancelEditor(self, northEastFrame, col=0, row=0)
         
         
-        moveFrame2 = Frame(editorFrame, bg='pink')
+        moveFrame2 = Frame(editorFrame, bg='#aaa')
         moveFrame2.grid(row=1, column=0, sticky="nsew")
-        moveFrame2 = Frame(editorFrame, bg='violet')
+        moveFrame2 = Frame(editorFrame, bg='#999')
         moveFrame2.grid(row=1, column=1, sticky="nsew")
         
         self.movelist = None
