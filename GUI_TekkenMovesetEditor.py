@@ -121,6 +121,34 @@ def calculateMovesetHash(movesetData):
     
     data = bytes(str.encode(data))
     return "%x" % (crc32(data))
+    
+def getCommandStr(commandBytes):
+    inputs = ""
+    direction = ""
+    
+    inputBits = commandBytes >> 32
+    directionBits = commandBytes & 0xffffffff
+
+    for i in range(1, 5):
+        if inputBits & (1 << (i - 1)):
+            inputs += "+%d" % (i)
+
+    direction =  {
+        (0): "",
+        (1 << 1): "D/B",
+        (1 << 2): "D",
+        (1 << 3): "D/F",
+        (1 << 4): "B",
+        (1 << 6): "F",
+        (1 << 7): "U/B",
+        (1 << 8): "U",
+        (1 << 9): "U/F",
+        (1 << 15): "[AUTO]",
+    }.get(directionBits, "UNKNOWN")
+        
+    if direction == "" and inputs != "":
+        return inputs[1:]
+    return direction + inputs
         
 class CharalistSelector:
     def __init__(self, root):
@@ -209,9 +237,8 @@ class MovelistSelector:
         movelistSelect.bind('<<ListboxSelect>>', root.onMoveSelection)
         movelistSelect.pack(side=LEFT, fill=BOTH)
         
-        scrollbar = Scrollbar(movelistFrame)
+        scrollbar = Scrollbar(movelistFrame, command=movelistSelect.yview)
         scrollbar.pack(side=RIGHT, fill=Y)
-        scrollbar.config(command=movelistSelect.yview)
         
         movelistSelect.config(yscrollcommand=scrollbar.set)
         
@@ -246,9 +273,10 @@ class FormEditor:
         self.rootFrame = rootFrame
         self.id = None
         self.editMode = None
-        self.fields = {}
-        self.fieldsInputs = {}
-        self.fieldValues = {}
+        self.fieldVar = {}
+        self.fieldInput = {}
+        self.fieldLabel = {}
+        self.fieldValue = {}
         self.container = None
         
         self.initEditor(col, row)
@@ -261,10 +289,13 @@ class FormEditor:
         label = Label(container, bg='#ddd')
         label.pack(side='top', fill=X)
         
+        content = Frame(container)
+        content.pack(side='top', fill=BOTH, expand=True)
+        
         saveButton = Button(container, text="Apply", command=self.save)
         saveButton.pack(side='bottom', fill=X)
         
-        self.container = container
+        self.container = content
         self.label = label
         
     def setLabel(self, text):
@@ -276,26 +307,26 @@ class FormEditor:
         value = sv.get()
         valueType = self.fieldTypes[field]
         if not validateField(valueType, value):
-            self.setField(field, self.fieldValues[field])
+            self.setField(field, self.fieldValue[field])
         else:
             self.setField(field, getFieldValue(valueType, value))
         
     def save(self):
         if self.editMode == None:
             return
-        for field in self.fields:
+        for field in self.fieldVar:
             valueType = self.fieldTypes[field]
-            value = self.fields[field].get()
+            value = self.fieldVar[field].get()
             if validateField(valueType, value):
                 self.root.movelist[self.key][self.id][field] = getFieldValue(valueType, value)
         
     def setField(self, field, value):
         self.editMode = None
-        self.fieldValues[field] = value
+        self.fieldValue[field] = value
         
         valueType = self.fieldTypes[field]
         value = formatFieldValue(valueType, value)
-        self.fields[field].set(value)
+        self.fieldVar[field].set(value)
         
         self.editMode = True
         
@@ -304,7 +335,8 @@ class FormEditor:
         self.id = None
         self.setLabel("No item selected")
         for field in self.fieldTypes.keys():
-            self.fields[field].set('')
+            if field in self.fieldVar:
+                self.fieldVar[field].set('')
             
 class CancelEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
@@ -313,51 +345,100 @@ class CancelEditor(FormEditor):
         navigatorFrame = Frame(self.container)
         navigatorFrame.pack(side='bottom', fill=X)
         
+        navigatorLabel = Label(navigatorFrame)
+        navigatorLabel.pack(side='top')
+        
         prevCancelButton = Button(navigatorFrame, text="<< Previous Cancel", command=lambda : self.navigateToCancel(-1))
         prevCancelButton.pack(fill=X, side='left', expand=True)
         
         nextCancelButton = Button(navigatorFrame, text="Next Cancel >>", command=lambda : self.navigateToCancel(1))
         nextCancelButton.pack(fill=X, side='right', expand=True)
         
+        commandLabel = Label(self.container)
+        commandLabel.pack(side='bottom', fill=X)
         
         self.initFields()
+        self.navigatorLabel = navigatorLabel
+        self.commandLabel = commandLabel
         
-    def navigateToCancel(self, offset):
+        self.fieldLabel['move_id'].bind("<Button-1>", self.selectMove)
+        
+    def selectMove(self, event):
         if self.editMode == None:
             return
-        self.root.setCancelList(self.id + offset)
+        self.root.setMove(self.fieldValue['move_id'])
+        
+    def setCommandLabel(self):
+        command = self.cancelList[self.listIndex]['command']
+        moveId = int(self.cancelList[self.listIndex]['move_id'])
+        moveName = self.root.getMoveName(moveId)
+        
+        text =  "Command: " + getCommandStr(command) + "\nMove: " + moveName
+        self.commandLabel['text'] = text
+        
+    def resetForm(self):
+        self.navigatorLabel['text'] = "No cancel selected"
+        self.commandLabel['text'] = ''
+        super().resetForm()
+        
+    def save(self):
+        super().save()
+        index = self.listIndex
+        self.root.setCancelList(self.baseId)
+        self.setCancel(index)
+        
+    def navigateToCancel(self, offset):
+        if self.editMode == None or (self.listIndex + offset) < 0 or (self.listIndex + offset) == len(self.cancelList):
+            return
+        self.setCancel(self.listIndex + offset)
         
     def initFields(self):
         fields = sortKeys(cancelFields.keys())
+        
         for field in fields:
             container = Frame(self.container)
             container.pack(side='top', anchor=N, fill=BOTH)
 
             fieldLabel = Label(container, text=field, width=15)
             fieldLabel.grid(row=0, column=0, pady=2, sticky='w')
-            
+        
             if field.endswith("_idx") or field.endswith("_indexes") or field.endswith('_id'):
-                fieldLabel['bg'] = '#cce3e1'
+                fieldLabel.config(cursor='hand2', bg='#cce3e1')
             
             sv = StringVar()
             sv.trace("w", lambda name, index, mode, field=field, sv=sv: self.onchange(field, sv))
-            self.fields[field] = sv
 
             fieldInput = Entry(container, textvariable=sv)
             fieldInput.grid(row=0, column=1, sticky='ew')
-            self.fieldsInputs[field] = fieldInput
-        
-    def setCancel(self, cancelData, cancelId):
-        cancelCount = " %d cancels" % (len(cancelData)) if (len(cancelData) > 1) else "1 cancel" 
-        self.setLabel("Cancel list %d: %s" % (cancelId, cancelCount))
-        self.id = cancelId
-        cancelData = [0]
             
+            self.fieldVar[field] = sv
+            self.fieldInput[field] = fieldInput
+            self.fieldLabel[field] = fieldLabel
+            
+    def setCancel(self, index):
+        cancelData = self.cancelList[index]
+        self.listIndex = index
+        self.id = self.baseId + index
+        
+        self.navigatorLabel['text'] = "Cancel %d/%d" % (index + 1, len(self.cancelList))
+        
         self.editMode = None
         for field in cancelData:
             if field in cancelFields:
                 self.setField(field, cancelData[field])
         self.editMode = True
+        
+        self.setCommandLabel()
+        
+    def setCancelList(self, cancelList, cancelId):
+        cancelCount = " %d cancels" % (len(cancelList)) if (len(cancelList) > 1) else "1 cancel" 
+        self.setLabel("Cancel list %d: %s" % (cancelId, cancelCount))
+        self.id = cancelId
+        self.baseId = cancelId
+        self.cancelList = cancelList
+        self.listIndex = 0
+        
+        self.setCancel(0)
     
 class MoveEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
@@ -371,7 +452,7 @@ class MoveEditor(FormEditor):
         
         self.initFields()
         
-        self.fieldsInputs['cancel_idx'].bind("<Button-1>", self.selectCancel)
+        self.fieldLabel['cancel_idx'].bind("<Button-1>", self.selectCancel)
         
     def initFields(self):
         fields = sortKeys(moveFields.keys())
@@ -384,15 +465,18 @@ class MoveEditor(FormEditor):
             fieldLabel.grid(row=0, column=0, sticky='w')
             
             if field.endswith("_idx") or field.endswith("_indexes") or field.endswith('_id'):
-                fieldLabel['bg'] = '#cce3e1'
+                fieldLabel.config(cursor='hand2', bg='#cce3e1')
             
             sv = StringVar()
             sv.trace("w", lambda name, index, mode, field=field, sv=sv: self.onchange(field, sv))
-            self.fields[field] = sv
 
             fieldInput = Entry(container, textvariable=sv)
             fieldInput.grid(row=0, column=1, sticky='ew')
-            self.fieldsInputs[field] = fieldInput
+                
+            
+            self.fieldVar[field] = sv
+            self.fieldInput[field] = fieldInput
+            self.fieldLabel[field] = fieldLabel
         
     def setMove(self, moveData, moveId):
         if moveId in self.root.movelist['aliases']:
@@ -411,7 +495,7 @@ class MoveEditor(FormEditor):
     def selectCancel(self, event):
         if self.editMode == None:
             return
-        self.root.setCancelList(self.fieldValues['cancel_idx'])
+        self.root.setCancelList(self.fieldValue['cancel_idx'])
 
 
 class GUI_TekkenMovesetExtractor(Tk):
@@ -479,6 +563,13 @@ class GUI_TekkenMovesetExtractor(Tk):
         moveData = self.movelist['moves'][moveId]
         self.MoveEditor.setMove(moveData, moveId)
         
+    def getMoveName(self, moveId):
+        if moveId >= 0x8000:
+            index = self.movelist['aliases'][moveId - 0x8000]
+            return self.movelist['moves'][index]['name']
+        else:
+            return self.movelist['moves'][moveId]['name']
+        
     def setCancelList(self, cancelId):
         if cancelId < 0 or cancelId >= len(self.movelist['cancels']):
             return
@@ -487,7 +578,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         while self.movelist['cancels'][id]['command'] != 0x8000:
             id += 1
         cancelList = [cancel for cancel in self.movelist['cancels'][cancelId:id + 1]]
-        self.CancelEditor.setCancel(cancelList, cancelId)
+        self.CancelEditor.setCancelList(cancelList, cancelId)
         
 
 if __name__ == "__main__":
