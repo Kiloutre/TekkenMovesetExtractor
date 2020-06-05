@@ -348,9 +348,10 @@ class CancelEditor(FormEditor):
             self.fieldsInputs[field] = fieldInput
         
     def setCancel(self, cancelData, cancelId):
-        cancelCount = "%d cancels" if (1 > 1) else "1 cancel" 
+        cancelCount = " %d cancels" % (len(cancelData)) if (len(cancelData) > 1) else "1 cancel" 
         self.setLabel("Cancel list %d: %s" % (cancelId, cancelCount))
         self.id = cancelId
+        cancelData = [0]
             
         self.editMode = None
         for field in cancelData:
@@ -396,7 +397,7 @@ class MoveEditor(FormEditor):
     def setMove(self, moveData, moveId):
         if moveId in self.root.movelist['aliases']:
             aliasValue = 32768 + self.root.movelist['aliases'].index(moveId)
-            self.setLabel("Move %d: %s (Aliased to: %d)" % (moveId, moveData['name'], aliasValue))
+            self.setLabel("Move %d: %s   (Aliased to: %d)" % (moveId, moveData['name'], aliasValue))
         else:
             self.setLabel("Move %d: %s" % (moveId, moveData['name']))
         self.id = moveId
@@ -486,7 +487,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         while self.movelist['cancels'][id]['command'] != 0x8000:
             id += 1
         cancelList = [cancel for cancel in self.movelist['cancels'][cancelId:id + 1]]
-        self.CancelEditor.setCancel(cancelList[0], cancelId)
+        self.CancelEditor.setCancel(cancelList, cancelId)
         
 
 if __name__ == "__main__":
