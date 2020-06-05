@@ -67,7 +67,7 @@ def getCharacterList():
 def getMovelist(path):
     jsonFilename = next(file for file in os.listdir(path) if file.endswith(".json"))
     with open('%s/%s' % (path, jsonFilename)) as f:
-        return json.load(f)
+        return json.load(f), jsonFilename
         
 def sortKeys(keys):
     keyList = [key for key in keys if not re.match("^u[0-9_]+$", key) and key != "id"]
@@ -101,7 +101,7 @@ def formatFieldValue(type, value):
         return str(value)
     raise Exception("Unknown type '%s'" % (type))
 
-def calculateMovesetHash(movesetData):
+def calculateHash(movesetData):
     exclude_keys =  [
         'original_hash',
         'last_calculated_hash',
@@ -162,8 +162,8 @@ class CharalistSelector:
         
         buttons = [
             ("Select Moveset", self.selectMoveset),
-            ("Load to P1", self.loadToPlayer),
-            ("Load to P2", self.loadToPlayer)
+            ("Load to P1", lambda self=self : self.loadToPlayer(0) ),
+            ("Load to P2", lambda self=self : self.loadToPlayer(1) )
         ]
         
         for label, callback in buttons:
@@ -175,6 +175,7 @@ class CharalistSelector:
         
         self.characterList = []
         self.selection = None
+        self.filename = None
        
     def hide(self):
         self.frame.pack_forget()
@@ -207,17 +208,18 @@ class CharalistSelector:
         except:
             self.selection = None
         
-    def loadToPlayer(self):
-        playerAddr = game_addresses.addr['p1_addr']
+    def loadToPlayer(self, playerId):
+        playerAddr = game_addresses.addr['p1_addr'] + (playerId * game_addresses.addr['playerstruct_size'])
         TekkenImporter = importLib.Importer()
         TekkenImporter.importMoveset(playerAddr, self.movelist_path, moveset=self.root.movelist)
         
     def selectMoveset(self, selection=None):
         if selection == None and self.selection == None:
             return
+            
         self.movelist_path = "extracted_chars/" + (self.selection if selection == None else selection)
-        
-        movelist = getMovelist(self.movelist_path)
+        movelist, filename = getMovelist(self.movelist_path)
+        self.filename = filename
         
         self.root.MovelistSelector.setMoves(movelist['moves'], movelist['aliases'])
         self.root.MovelistSelector.setCharacter(movelist['character_name'])
@@ -230,8 +232,11 @@ class MovelistSelector:
         movelistFrame = Frame(root)
         movelistFrame.pack(side='left', fill=Y)
         
+        newButton = Button(movelistFrame, text='Save', command=self.root.save)
+        newButton.pack(side='bottom', fill=X)
+        
         selectedChar = Label(movelistFrame, text="No character selected", bg='#bbb')
-        selectedChar.pack(side=BOTTOM, fill=X)
+        selectedChar.pack(side='bottom', fill=X)
         
         movelistSelect = Listbox(movelistFrame, width=30)
         movelistSelect.bind('<<ListboxSelect>>', root.onMoveSelection)
@@ -505,9 +510,8 @@ class MoveEditor(FormEditor):
             return
         self.root.setCancelList(self.fieldValue['cancel_idx'])
 
-
 class GUI_TekkenMovesetExtractor(Tk):
-    def __init__(self):
+    def __init__(self, showCharacterSelector=True):
         Tk.__init__(self)
         
         self.wm_title("TekkenMovesetEditor 0.1") 
@@ -541,9 +545,26 @@ class GUI_TekkenMovesetExtractor(Tk):
         
         self.movelist = None
         
-        self.updateCharacterlist()
+        if showCharacterSelector:
+            self.updateCharacterlist()
+        else:
+            self.hideCharaFrame()
+            
         self.Charalist.selectMoveset("7_JIN")
-        #self.hideCharaFrame()
+
+    def save(self):
+        if self.Charalist.filename == None:
+            return
+        jsonPath = "%s/%s" % (self.Charalist.movelist_path, self.Charalist.filename)
+        
+        if os.path.exists(jsonPath):
+            os.remove(jsonPath)
+            
+        with open(jsonPath, "w") as f:
+            self.movelist['last_calculated_hash'] = calculateHash(self.movelist)
+            json.dump(self.movelist, f, indent=4)
+            
+        print("Saved " + jsonPath)
         
     def hideCharaFrame(self):
         self.Charalist.hide()
