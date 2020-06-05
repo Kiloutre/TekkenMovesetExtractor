@@ -77,7 +77,7 @@ def sortKeys(keys):
 def validateField(type, value):
     if type == 'number':
         return re.match("^-?[0-9]+$", value)
-    if type == 'hex':
+    if type == 'hex' or type == '8hex':
         return re.match("^0x[0-9A-Za-z]+$", value)
     if type == 'text':
         return re.match("^[a-zA-Z0-9_\-\(\)]+$", value)
@@ -189,12 +189,12 @@ class CharalistSelector:
         for i, character in enumerate(self.characterList):
             self.charaSelect.insert(END, character)
             color = colors[character.startswith("7_")][i & 1]
-            self.charaSelect.itemconfig(i, {'bg': color })
+            self.charaSelect.itemconfig(i, {'bg': color, 'fg': 'black'})
     
         
     def updateCharacterlist(self):
         self.selection = None
-        self.charaSelect.delete(0,'end')
+        self.charaSelect.delete(0, 'end')
         
         characterList = getCharacterList()
         if len(characterList) == 0:
@@ -253,7 +253,7 @@ class MovelistSelector:
         selectedChar.pack(side='bottom', fill=X)
         
         movelistSelect = Listbox(movelistFrame, width=30)
-        movelistSelect.bind('<<ListboxSelect>>', root.onMoveSelection)
+        movelistSelect.bind('<<ListboxSelect>>', self.onMoveSelection)
         movelistSelect.pack(side=LEFT, fill=BOTH)
         
         scrollbar = Scrollbar(movelistFrame, command=movelistSelect.yview)
@@ -264,8 +264,19 @@ class MovelistSelector:
         self.selectedChar = selectedChar
         self.movelistSelect = movelistSelect
         
+    def onMoveSelection(self, event):
+        w = event.widget
+        moveId = -1
+        try:
+            moveId = int(w.curselection()[0])
+        except:
+            pass
+        finally:
+            self.root.setMove(moveId)
+        
     def setCharacter(self, char):
         self.selectedChar['text'] = 'Current character: ' + char
+        self.root.setTitle(char)
         
     def setMoves(self, moves, aliases):
         moves = [(i, move['hitlevel'] and move['first_active_frame'] and move['last_active_frame'] and move['hitbox_location'], move['name']) for i, move in enumerate(moves)]
@@ -528,7 +539,7 @@ class GUI_TekkenMovesetEditor(Tk):
     def __init__(self, showCharacterSelector=True):
         Tk.__init__(self)
         
-        self.wm_title("TekkenMovesetEditor 0.1") 
+        self.setTitle()
         self.iconbitmap('InterfaceData/renge.ico')
         self.minsize(960, 540)
         self.geometry("1280x720")
@@ -563,6 +574,12 @@ class GUI_TekkenMovesetEditor(Tk):
             self.updateCharacterlist()
         else:
             self.hideCharaFrame()
+            
+    def setTitle(self, label = ""):
+        title = "TekkenMovesetEditor 0.1"
+        if label != "":
+            title += " - " + label
+        self.wm_title(title) 
 
     def save(self):
         if self.Charalist.filename == None:
@@ -583,16 +600,6 @@ class GUI_TekkenMovesetEditor(Tk):
         
     def updateCharacterlist(self):
         self.Charalist.updateCharacterlist()
-        
-    def onMoveSelection(self, event):
-        w = event.widget
-        moveId = -1
-        try:
-            moveId = int(w.curselection()[0])
-        except:
-            pass
-        finally:
-            self.setMove(moveId)
         
     def resetForms(self):
         self.MoveEditor.resetForm()
