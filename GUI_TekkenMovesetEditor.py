@@ -8,7 +8,7 @@ import json
 import os
 from zlib import crc32
 
-charactersPath = "extracted_chars/"
+charactersPath = "./extracted_chars/"
 
 moveFields = {
     'name': 'text',
@@ -176,9 +176,21 @@ class CharalistSelector:
         self.characterList = []
         self.selection = None
         self.filename = None
+        self.selectionIndex = -1
        
     def hide(self):
         self.frame.pack_forget()
+        
+    def colorCharacterList(self):
+        colors = [
+            ["#fff", "#eee"], #TTT2
+            ["#eee", "#ddd"]  #T7
+        ]
+        for i, character in enumerate(self.characterList):
+            self.charaSelect.insert(END, character)
+            color = colors[character.startswith("7_")][i & 1]
+            self.charaSelect.itemconfig(i, {'bg': color })
+    
         
     def updateCharacterlist(self):
         self.selection = None
@@ -192,11 +204,9 @@ class CharalistSelector:
                 ["#fff", "#eee"], #TTT2
                 ["#eee", "#ddd"]  #T7
             ]
-            for i, character in enumerate(characterList):
-                self.charaSelect.insert(END, character)
-                color = colors[character.startswith("7_")][i & 1]
-                self.charaSelect.itemconfig(i, {'bg': color })
+            for character in characterList: self.charaSelect.insert(END, character)
         self.characterList = characterList
+        self.colorCharacterList()
 
     def onCharaSelectionChange(self, event):
         if len(self.characterList) == 0:
@@ -205,8 +215,10 @@ class CharalistSelector:
         try:
             index = int(w.curselection()[0])
             self.selection = w.get(index)
+            self.selectionIndex = int(index)
         except:
             self.selection = None
+            self.selectionIndex = -1
         
     def loadToPlayer(self, playerId):
         playerAddr = game_addresses.addr['p1_addr'] + (playerId * game_addresses.addr['playerstruct_size'])
@@ -216,6 +228,8 @@ class CharalistSelector:
     def selectMoveset(self, selection=None):
         if selection == None and self.selection == None:
             return
+        self.colorCharacterList()
+        self.charaSelect.itemconfig(self.selectionIndex, {'bg': '#a126c7', 'fg': 'white'})
             
         self.movelist_path = "extracted_chars/" + (self.selection if selection == None else selection)
         movelist, filename = getMovelist(self.movelist_path)
@@ -349,7 +363,7 @@ class CancelEditor(FormEditor):
         
         navigatorFrame = Frame(self.container)
         navigatorFrame.pack(side='bottom', fill=X)
-        
+       
         navigatorLabel = Label(navigatorFrame)
         navigatorLabel.pack(side='top')
         
@@ -510,7 +524,7 @@ class MoveEditor(FormEditor):
             return
         self.root.setCancelList(self.fieldValue['cancel_idx'])
 
-class GUI_TekkenMovesetExtractor(Tk):
+class GUI_TekkenMovesetEditor(Tk):
     def __init__(self, showCharacterSelector=True):
         Tk.__init__(self)
         
@@ -549,8 +563,6 @@ class GUI_TekkenMovesetExtractor(Tk):
             self.updateCharacterlist()
         else:
             self.hideCharaFrame()
-            
-        self.Charalist.selectMoveset("7_JIN")
 
     def save(self):
         if self.Charalist.filename == None:
@@ -612,5 +624,5 @@ class GUI_TekkenMovesetExtractor(Tk):
         
 
 if __name__ == "__main__":
-    app = GUI_TekkenMovesetExtractor()
+    app = GUI_TekkenMovesetEditor()
     app.mainloop()

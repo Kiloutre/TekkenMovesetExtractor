@@ -711,7 +711,7 @@ class MotbinStruct:
         self.extra_move_properties_ptr = self.align()
         
         for extra_property in self.m['extra_move_properties']:
-            type, id, value = extra_property.values()
+            type, id, value = extra_property['type'], extra_property['id'], extra_property['value']
             if self.m['version'] == "Tag2":
                 type, id, value = getTag2ExtramovePropertyAlias(type, id, value)
             self.writeInt(type, 4)

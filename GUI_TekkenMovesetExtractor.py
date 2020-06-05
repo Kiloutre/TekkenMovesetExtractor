@@ -11,6 +11,7 @@ import time
 import threading
 import motbinExport as exportLib
 import motbinImport as importLib
+from GUI_TekkenMovesetEditor import GUI_TekkenMovesetEditor
 
 charactersPath = "./extracted_chars/"
 codeInjectionSize = 256
@@ -408,10 +409,20 @@ def on_close():
             pass
     runningMonitors = [None, None]
     os._exit(0)
+    
+def openMovesetEditor():
+    app = GUI_TekkenMovesetEditor()
+    app.mainloop()
+    pass
         
 class GUI_TekkenMovesetExtractor(Tk):
     def __init__(self):
         Tk.__init__(self)
+        
+        menubar = Menu(self)
+        menubar.add_command(label="Moveset Editor", command=openMovesetEditor)
+        self.config(menu=menubar)
+        
         
         self.characterList = getCharacterList()
         self.selected_char = None
