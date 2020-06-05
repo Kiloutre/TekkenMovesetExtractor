@@ -363,14 +363,20 @@ class CancelEditor(FormEditor):
         
         self.fieldLabel['move_id'].bind("<Button-1>", self.selectMove)
         
+    def onchange(self, field, sv):
+        if self.editMode == None:
+            return
+        super().onchange(field, sv)
+        self.setCommandLabel()
+        
     def selectMove(self, event):
         if self.editMode == None:
             return
         self.root.setMove(self.fieldValue['move_id'])
         
     def setCommandLabel(self):
-        command = self.cancelList[self.listIndex]['command']
-        moveId = int(self.cancelList[self.listIndex]['move_id'])
+        command = self.fieldValue['command']
+        moveId = self.fieldValue['move_id']
         moveName = self.root.getMoveName(moveId)
         
         text =  "Command: " + getCommandStr(command) + "\nMove: " + moveName
@@ -382,6 +388,8 @@ class CancelEditor(FormEditor):
         super().resetForm()
         
     def save(self):
+        if self.editMode == None:
+            return
         super().save()
         index = self.listIndex
         self.root.setCancelList(self.baseId)
@@ -557,24 +565,25 @@ class GUI_TekkenMovesetExtractor(Tk):
         self.MoveEditor.resetForm()
         self.CancelEditor.resetForm()
         
+    def getMoveId(self, moveId):
+        return self.movelist['aliases'][moveId - 0x8000] if moveId >= 0x8000 else moveId
+        
     def setMove(self, moveId):
+        moveId = self.getMoveId(moveId)
         if moveId < 0 or moveId >= len(self.movelist['moves']):
             return
         moveData = self.movelist['moves'][moveId]
         self.MoveEditor.setMove(moveData, moveId)
         
     def getMoveName(self, moveId):
-        if moveId >= 0x8000:
-            index = self.movelist['aliases'][moveId - 0x8000]
-            return self.movelist['moves'][index]['name']
-        else:
-            return self.movelist['moves'][moveId]['name']
+        moveId = self.getMoveId(moveId)
+        return self.movelist['moves'][moveId]['name']
         
     def setCancelList(self, cancelId):
         if cancelId < 0 or cancelId >= len(self.movelist['cancels']):
             return
         cancelList = []
-        id = cancelId + 1
+        id = cancelId
         while self.movelist['cancels'][id]['command'] != 0x8000:
             id += 1
         cancelList = [cancel for cancel in self.movelist['cancels'][cancelId:id + 1]]
