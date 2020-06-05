@@ -403,10 +403,13 @@ class FormEditor:
         
     def setField(self, field, value, setFieldValue=False):
         self.editMode = None
-        self.fieldVar[field].set(value)
         
         if field not in self.fieldValue or setFieldValue:
+            valueType = self.fieldTypes[field]
+            self.fieldVar[field].set(formatFieldValue(valueType, value))
             self.fieldValue[field] = value
+        else:
+            self.fieldVar[field].set(value)
             
         self.editMode = True
         
