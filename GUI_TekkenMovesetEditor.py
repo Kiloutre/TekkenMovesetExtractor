@@ -11,6 +11,17 @@ from zlib import crc32
 
 charactersPath = "./extracted_chars/"
 
+fieldLabels = {
+    'name': 'Name',
+    'anim_name': 'Anim',
+    'vuln': 'Vuln',
+    'hitlevel': 'Hitlevel',
+    'cancel_idx': 'Cancel idx',
+    'transition': 'Transition',
+    'anim_max_len': 'Anim len',
+    'u17': 'Distance'
+}
+
 moveFields = {
     'name': 'text',
     'anim_name': 'text',
@@ -150,6 +161,17 @@ def getCommandStr(commandBytes):
     if direction == "" and inputs != "":
         return inputs[1:]
     return direction + inputs
+
+def getMoveColor(moveId, move, aliases):            
+    if moveId in aliases:
+        return '#b5caff'
+    if move['hitlevel'] == 4195602:
+        return 'violet'
+    if move['hitlevel'] and move['hitbox_location'] and move['first_active_frame'] and move['last_active_frame']:
+        return '#ffbdbd'
+    if move['hitlevel'] or move['hitbox_location'] or move['first_active_frame'] or move['last_active_frame']:
+        return '#ffe7e6'
+    return None
         
 class CharalistSelector:
     def __init__(self, root, rootFrame):
@@ -286,17 +308,14 @@ class MovelistSelector:
         self.root.setTitle(char)
         
     def setMoves(self, moves, aliases):
-        moves = [(i, move['hitlevel'] and move['first_active_frame'] and move['last_active_frame'] and move['hitbox_location'], move['name']) for i, move in enumerate(moves)]
+        moves = [(i, move) for i, move in enumerate(moves)]
         self.movelistSelect.delete(0,'end')
-        for moveId, isAttack, moveName in moves:
-            text = "%d   %s" % (moveId, moveName)
-            bg = None
+        for moveId, move in moves:
+            text = "%d   %s" % (moveId, move['name'])
+            bg = getMoveColor(moveId, move, aliases)
             
             if moveId in aliases:
-                bg = '#b5caff'
                 text += "   (%d)" % (32768 + aliases.index(moveId))
-            elif isAttack:
-                bg = '#ffbdbd'
                 
             self.movelistSelect.insert('end', text)
             if bg != None:
@@ -315,6 +334,7 @@ class FormEditor:
         self.fieldLabel = {}
         self.fieldValue = {}
         self.container = None
+        self.lastValidLabel = None
         
         self.initEditor(col, row)
         
@@ -335,18 +355,24 @@ class FormEditor:
         self.container = content
         self.label = label
         
-    def setLabel(self, text):
+    def setLabel(self, text, saveLabel=True):
         self.label['text'] = text
+        if saveLabel:
+            self.lastValidLabel = text
     
     def onchange(self, field, sv):
         if self.editMode == None:
             return
         value = sv.get()
         valueType = self.fieldTypes[field]
-        if not validateField(valueType, value):
-            self.setField(field, self.fieldValue[field])
+        
+        if validateField(valueType, value):
+            self.fieldValue[field] =  getFieldValue(valueType, value)
+            self.setLabel(self.lastValidLabel, False)
         else:
-            self.setField(field, getFieldValue(valueType, value))
+            self.setLabel(self.lastValidLabel + " - Invalid field: " + field, False)
+        
+        self.setField(field, value)
         
     def save(self):
         if self.editMode == None:
@@ -359,18 +385,18 @@ class FormEditor:
         
     def setField(self, field, value):
         self.editMode = None
-        self.fieldValue[field] = value
-        
-        valueType = self.fieldTypes[field]
-        value = formatFieldValue(valueType, value)
         self.fieldVar[field].set(value)
         
+        if field not in self.fieldValue:
+            self.fieldValue[field] = value
+            
         self.editMode = True
         
     def resetForm(self):
         self.editMode = None
         self.id = None
         self.setLabel("No item selected")
+        self.fieldValue = {}
         for field in self.fieldTypes.keys():
             if field in self.fieldVar:
                 self.fieldVar[field].set('')
@@ -508,7 +534,7 @@ class MoveEditor(FormEditor):
             container = Frame(self.westernFrame if i < sideBreakpoint else self.easternFrame)
             container.pack(side='top', anchor='n', fill='both')
 
-            fieldLabel = Label(container, text=field, width=15)
+            fieldLabel = Label(container, text=fieldLabels.get(field, field), width=15)
             fieldLabel.grid(row=0, column=0, sticky='w')
             
             if field.endswith("_idx") or field.endswith("_indexes") or field.endswith('_id'):
