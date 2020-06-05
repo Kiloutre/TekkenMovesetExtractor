@@ -224,12 +224,19 @@ class MovelistSelector:
     def setMoves(self, moves, aliases):
         moves = [(i, move['hitlevel'] and move['first_active_frame'] and move['last_active_frame'] and move['hitbox_location'], move['name']) for i, move in enumerate(moves)]
         self.movelistSelect.delete(0,'end')
-        for index, isAttack, moveName in moves:
-            self.movelistSelect.insert(END, "%d   %s" % (index, moveName))
-            if index in aliases:
-                self.movelistSelect.itemconfig(index, {'bg': '#b5caff'})
+        for moveId, isAttack, moveName in moves:
+            text = "%d   %s" % (moveId, moveName)
+            bg = None
+            
+            if moveId in aliases:
+                bg = '#b5caff'
+                text += "   (%d)" % (32768 + aliases.index(moveId))
             elif isAttack:
-                self.movelistSelect.itemconfig(index, {'bg': '#ffbdbd'})
+                bg = '#ffbdbd'
+                
+            self.movelistSelect.insert(END, text)
+            if bg != None:
+                self.movelistSelect.itemconfig(moveId, {'bg': bg})
                 
 class FormEditor:
     def __init__(self, root, rootFrame, key, col, row):
@@ -318,9 +325,7 @@ class CancelEditor(FormEditor):
     def navigateToCancel(self, offset):
         if self.editMode == None:
             return
-        cancelId = self.id + offset
-        cancelData = self.root.movelist['cancels'][cancelId]
-        self.root.CancelEditor.setCancel(cancelData, cancelId)
+        self.root.setCancelList(self.id + offset)
         
     def initFields(self):
         fields = sortKeys(cancelFields.keys())
@@ -343,7 +348,8 @@ class CancelEditor(FormEditor):
             self.fieldsInputs[field] = fieldInput
         
     def setCancel(self, cancelData, cancelId):
-        self.label['text'] = "Cancel %d" % (cancelId)
+        cancelCount = "%d cancels" if (1 > 1) else "1 cancel" 
+        self.setLabel("Cancel list %d: %s" % (cancelId, cancelCount))
         self.id = cancelId
             
         self.editMode = None
@@ -388,7 +394,11 @@ class MoveEditor(FormEditor):
             self.fieldsInputs[field] = fieldInput
         
     def setMove(self, moveData, moveId):
-        self.label['text'] = "Move %d: %s" % (moveId, moveData['name'])
+        if moveId in self.root.movelist['aliases']:
+            aliasValue = 32768 + self.root.movelist['aliases'].index(moveId)
+            self.setLabel("Move %d: %s (Aliased to: %d)" % (moveId, moveData['name'], aliasValue))
+        else:
+            self.setLabel("Move %d: %s" % (moveId, moveData['name']))
         self.id = moveId
             
         self.editMode = None
@@ -400,9 +410,7 @@ class MoveEditor(FormEditor):
     def selectCancel(self, event):
         if self.editMode == None:
             return
-        cancelId = self.fieldValues['cancel_idx']
-        cancelData = self.root.movelist['cancels'][cancelId]
-        self.root.CancelEditor.setCancel(cancelData, cancelId)
+        self.root.setCancelList(self.fieldValues['cancel_idx'])
 
 
 class GUI_TekkenMovesetExtractor(Tk):
@@ -441,7 +449,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         self.movelist = None
         
         self.updateCharacterlist()
-        self.Charalist.selectMoveset("2_JIN")
+        self.Charalist.selectMoveset("7_JIN")
         #self.hideCharaFrame()
         
     def hideCharaFrame(self):
@@ -450,18 +458,35 @@ class GUI_TekkenMovesetExtractor(Tk):
     def updateCharacterlist(self):
         self.Charalist.updateCharacterlist()
         
+    def onMoveSelection(self, event):
+        w = event.widget
+        moveId = -1
+        try:
+            moveId = int(w.curselection()[0])
+        except:
+            pass
+        finally:
+            self.setMove(moveId)
+        
     def resetForms(self):
         self.MoveEditor.resetForm()
         self.CancelEditor.resetForm()
         
-    def onMoveSelection(self, event):
-        w = event.widget
-        try:
-            move_id = int(w.curselection()[0])
-            moveData = self.movelist['moves'][move_id]
-            self.MoveEditor.setMove(moveData, move_id)
-        except Exception as e:
-            pass
+    def setMove(self, moveId):
+        if moveId < 0 or moveId >= len(self.movelist['moves']):
+            return
+        moveData = self.movelist['moves'][moveId]
+        self.MoveEditor.setMove(moveData, moveId)
+        
+    def setCancelList(self, cancelId):
+        if cancelId < 0 or cancelId >= len(self.movelist['cancels']):
+            return
+        cancelList = []
+        id = cancelId + 1
+        while self.movelist['cancels'][id]['command'] != 0x8000:
+            id += 1
+        cancelList = [cancel for cancel in self.movelist['cancels'][cancelId:id + 1]]
+        self.CancelEditor.setCancel(cancelList[0], cancelId)
         
 
 if __name__ == "__main__":
