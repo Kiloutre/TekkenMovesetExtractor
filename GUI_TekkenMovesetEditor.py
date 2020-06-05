@@ -194,6 +194,7 @@ class CharalistSelector:
         self.filename = None
         self.selectionIndex = -1
         self.last_selection = None
+        self.movelist_path = None
        
     def hide(self):
         self.frame.pack_forget()
@@ -237,6 +238,8 @@ class CharalistSelector:
             self.selectionIndex = -1
         
     def loadToPlayer(self, playerId):
+        if self.movelist_path == None:
+            return
         playerAddr = game_addresses.addr['p1_addr'] + (playerId * game_addresses.addr['playerstruct_size'])
         TekkenImporter = importLib.Importer()
         TekkenImporter.importMoveset(playerAddr, self.movelist_path, moveset=self.root.movelist)
@@ -636,7 +639,7 @@ class GUI_TekkenMovesetEditor():
         self.window.wm_title(title) 
 
     def save(self):
-        if self.Charalist.filename == None:
+        if self.Charalist.filename == None or self.Charalist.movelist_path:
             return
         jsonPath = "%s/%s" % (self.Charalist.movelist_path, self.Charalist.filename)
         
