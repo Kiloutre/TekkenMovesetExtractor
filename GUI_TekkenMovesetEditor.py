@@ -187,7 +187,6 @@ class CharalistSelector:
             ["#eee", "#ddd"]  #T7
         ]
         for i, character in enumerate(self.characterList):
-            self.charaSelect.insert(END, character)
             color = colors[character.startswith("7_")][i & 1]
             self.charaSelect.itemconfig(i, {'bg': color, 'fg': 'black'})
     
