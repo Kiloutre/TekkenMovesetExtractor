@@ -12,14 +12,7 @@ from zlib import crc32
 charactersPath = "./extracted_chars/"
 
 fieldLabels = {
-    'name': 'Name',
-    'anim_name': 'Anim',
-    'vuln': 'Vuln',
-    'hitlevel': 'Hitlevel',
-    'cancel_idx': 'Cancel idx',
-    'transition': 'Transition',
-    'anim_max_len': 'Anim len',
-    'u17': 'Distance'
+    'u17': 'distance'
 }
 
 moveFields = {
