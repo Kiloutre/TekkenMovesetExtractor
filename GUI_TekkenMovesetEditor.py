@@ -177,6 +177,7 @@ class CharalistSelector:
         self.selection = None
         self.filename = None
         self.selectionIndex = -1
+        self.last_selection = None
        
     def hide(self):
         self.frame.pack_forget()
@@ -225,14 +226,20 @@ class CharalistSelector:
         TekkenImporter.importMoveset(playerAddr, self.movelist_path, moveset=self.root.movelist)
         
     def selectMoveset(self, selection=None):
-        if selection == None and self.selection == None:
-            return
-        self.colorCharacterList()
-        self.charaSelect.itemconfig(self.selectionIndex, {'bg': '#a126c7', 'fg': 'white'})
+        selection = self.selection if selection == None else selection
+        
+        if selection == None:
+            selection = self.last_selection
+            if selection == None:
+                return
+        else:
+            self.colorCharacterList()
+            self.charaSelect.itemconfig(self.selectionIndex, {'bg': '#a126c7', 'fg': 'white'})
             
-        self.movelist_path = "extracted_chars/" + (self.selection if selection == None else selection)
+        self.movelist_path = "extracted_chars/" + selection
         movelist, filename = getMovelist(self.movelist_path)
         self.filename = filename
+        self.last_selection = selection
         
         self.root.MovelistSelector.setMoves(movelist['moves'], movelist['aliases'])
         self.root.MovelistSelector.setCharacter(movelist['character_name'])
@@ -350,7 +357,6 @@ class FormEditor:
                 self.root.movelist[self.key][self.id][field] = getFieldValue(valueType, value)
         
     def setField(self, field, value):
-        print(self.key, field, value)
         self.editMode = None
         self.fieldValue[field] = value
         
@@ -427,7 +433,7 @@ class CancelEditor(FormEditor):
         self.setCancel(index)
         
     def navigateToCancel(self, offset):
-        if self.editMode == None or (self.listIndex + offset) < 0 or (self.listIndex + offset) == len(self.cancelList):
+        if self.editMode == None or (self.listIndex + offset) < 0 or (self.listIndex + offset) >= len(self.cancelList):
             return
         self.setCancel(self.listIndex + offset)
         
