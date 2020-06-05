@@ -510,7 +510,12 @@ class CancelEditor(FormEditor):
         self.listIndex = index
         self.id = self.baseId + index
         
-        self.navigatorLabel['text'] = "Cancel %d/%d" % (index + 1, len(self.cancelList))
+        cancelLen = len(self.cancelList)
+        
+        cancelCount = " %d cancels" % (cancelLen) if cancelLen > 1 else "1 cancel" 
+        self.setLabel("Cancel list %d: %s" % (self.baseId, cancelCount))
+        
+        self.navigatorLabel['text'] = "Cancel %d/%d" % (index + 1, cancelLen)
         
         self.editMode = None
         for field in cancelData:
@@ -522,8 +527,6 @@ class CancelEditor(FormEditor):
         self.setCommandLabel()
         
     def setCancelList(self, cancelList, cancelId):
-        cancelCount = " %d cancels" % (len(cancelList)) if (len(cancelList) > 1) else "1 cancel" 
-        self.setLabel("Cancel list %d: %s" % (cancelId, cancelCount))
         self.id = cancelId
         self.baseId = cancelId
         self.cancelList = cancelList
