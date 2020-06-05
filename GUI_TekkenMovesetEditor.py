@@ -1,6 +1,6 @@
 # Python 3.6.5
 
-from tkinter import Tk, Frame, Listbox, Label, Scrollbar, StringVar
+from tkinter import Tk, Frame, Listbox, Label, Scrollbar, StringVar, Toplevel
 from tkinter.ttk import Button, Entry
 from Addresses import game_addresses, GameClass
 import motbinImport as importLib
@@ -152,9 +152,9 @@ def getCommandStr(commandBytes):
     return direction + inputs
         
 class CharalistSelector:
-    def __init__(self, root):
+    def __init__(self, root, rootFrame):
         self.root = root
-        charalistFrame = Frame(root)
+        charalistFrame = Frame(rootFrame)
         charalistFrame.pack(side='left', fill='y')
         
         charaSelect = Listbox(charalistFrame)
@@ -248,9 +248,9 @@ class CharalistSelector:
         self.root.resetForms()
         
 class MovelistSelector:
-    def __init__(self, root):
+    def __init__(self, root, rootFrame):
         self.root = root
-        movelistFrame = Frame(root)
+        movelistFrame = Frame(rootFrame)
         movelistFrame.pack(side='left', fill='y')
         
         newButton = Button(movelistFrame, text='Save', command=self.root.save)
@@ -545,19 +545,20 @@ class MoveEditor(FormEditor):
             return
         self.root.setCancelList(self.fieldValue['cancel_idx'])
 
-class GUI_TekkenMovesetEditor(Tk):
-    def __init__(self, showCharacterSelector=True):
-        Tk.__init__(self)
+class GUI_TekkenMovesetEditor():
+    def __init__(self, showCharacterSelector=True, mainWindow=True):
+        window = Tk() if mainWindow else Toplevel()
+        self.window = window
         
         self.setTitle()
-        self.iconbitmap('InterfaceData/renge.ico')
-        self.minsize(960, 540)
-        self.geometry("1280x720")
+        window.iconbitmap('InterfaceData/renge.ico')
+        window.minsize(960, 540)
+        window.geometry("1280x720")
         
-        self.Charalist = CharalistSelector(self)
-        self.MovelistSelector = MovelistSelector(self)
+        self.Charalist = CharalistSelector(self, window)
+        self.MovelistSelector = MovelistSelector(self, window)
         
-        editorFrame = Frame(self)
+        editorFrame = Frame(window)
         editorFrame.pack(side='right', fill='both', expand=1)
         for i in range(2):
             editorFrame.grid_columnconfigure(i, weight=1, uniform="group1")
@@ -591,7 +592,7 @@ class GUI_TekkenMovesetEditor(Tk):
         title = "TekkenMovesetEditor 0.1"
         if label != "":
             title += " - " + label
-        self.wm_title(title) 
+        self.window.wm_title(title) 
 
     def save(self):
         if self.Charalist.filename == None:
@@ -644,4 +645,4 @@ class GUI_TekkenMovesetEditor(Tk):
 
 if __name__ == "__main__":
     app = GUI_TekkenMovesetEditor()
-    app.mainloop()
+    app.window.mainloop()

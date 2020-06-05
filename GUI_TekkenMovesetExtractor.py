@@ -412,14 +412,9 @@ def on_close():
     runningMonitors = [None, None]
     os._exit(0)
     
-def test():
-    GUI_TekkenMovesetEditor()
-    
 def openMovesetEditor():
-    app = GUI_TekkenMovesetEditor()
-    app.mainloop()
-    #subprocess.run(['python', selfName, '--editor'])
-    subprocess.Popen([selfName, "--editor"])
+    app = GUI_TekkenMovesetEditor(mainWindow=False)
+    app.window.mainloop()
         
 class GUI_TekkenMovesetExtractor(Tk):
     def __init__(self):
@@ -465,7 +460,6 @@ class GUI_TekkenMovesetExtractor(Tk):
                 for line in f: print(line)
         except:
             pass
-        print(sys.argv)
             
     def setMonitorButton(self, button, active):
         text = 'Local' if button == 0 else 'Remote'
