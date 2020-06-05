@@ -215,7 +215,7 @@ class CharalistSelector:
         
         characterList = getCharacterList()
         if len(characterList) == 0:
-            self.charaSelect.insert(0, "No moveset extracted yet...")
+            self.charaSelect.insert(0, "No moveset...")
         else:
             colors = [
                 ["#fff", "#eee"], #TTT2
@@ -401,11 +401,11 @@ class FormEditor:
             if validateField(valueType, value):
                 self.root.movelist[self.key][self.id][field] = getFieldValue(valueType, value)
         
-    def setField(self, field, value):
+    def setField(self, field, value, setFieldValue=False):
         self.editMode = None
         self.fieldVar[field].set(value)
         
-        if field not in self.fieldValue:
+        if field not in self.fieldValue or setFieldValue:
             self.fieldValue[field] = value
             
         self.editMode = True
@@ -515,7 +515,7 @@ class CancelEditor(FormEditor):
         self.editMode = None
         for field in cancelData:
             if field in cancelFields:
-                self.setField(field, cancelData[field])
+                self.setField(field, cancelData[field], True)
                 self.fieldInput[field].config(state='enabled')
         self.editMode = True
         
@@ -580,7 +580,7 @@ class MoveEditor(FormEditor):
         self.editMode = None
         for field in moveData:
             if field in moveFields:
-                self.setField(field, moveData[field])
+                self.setField(field, moveData[field], True)
                 self.fieldInput[field].config(state='enabled')
         self.editMode = True
         
@@ -633,7 +633,7 @@ class GUI_TekkenMovesetEditor():
         self.resetForms()
             
     def setTitle(self, label = ""):
-        title = "TekkenMovesetEditor 0.1-BETA"
+        title = "TekkenMovesetEditor 0.2-BETA"
         if label != "":
             title += " - " + label
         self.window.wm_title(title) 
