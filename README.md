@@ -82,7 +82,7 @@ Every moveset extracted from Tag2 will be prefixed with `2_`
 
 Movesets are imported directly in memory, requiring the game to be loaded up and being only temporary.
 After having extracted a moveset, you can import it like such:
-
+g
 `python motbinImport.py CHARACTER` 
 
 **CHARACTER** is to be replaced with the folder name of the target character, containing the .json and animation data.
@@ -105,3 +105,11 @@ Administrator rights may be required to import the moveset into memory.
 - (Jin) Dj tag2 vs DJ tag2, treasure battle, online player buttons, crash on loadscreen
 - Green Ogre 3~4 crash
 - Allow throws using item moves?
+- Rename "group_cancels" to "generic_cancels"
+- Rename "anim_max_len" to "anim_len" in moves
+
+Moveset editor:
+- Window to list animations and copy one to another character's folder
+- Add note that requirement lists must end with 881
+- Add note that extraprop lists must end with type 0
+- Scrollbar for cancel editor, show multiple cancel

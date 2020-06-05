@@ -1,6 +1,6 @@
 # Python 3.6.5
 
-from tkinter import *
+from tkinter import Tk, Menu, Frame, Listbox, Label, Text
 from tkinter.ttk import Button
 from re import match
 from Addresses import game_addresses
@@ -9,12 +9,15 @@ import os
 import json
 import time
 import threading
+import subprocess 
 import motbinExport as exportLib
 import motbinImport as importLib
+from GUI_TekkenMovesetEditor import GUI_TekkenMovesetEditor
 
 charactersPath = "./extracted_chars/"
 codeInjectionSize = 256
 
+selfName = os.path.basename(__file__)
 monitorVerificationFrequency   = (2)
 runningMonitors = [None, None]
 creatingMonitor = [False, False]
@@ -408,17 +411,26 @@ def on_close():
             pass
     runningMonitors = [None, None]
     os._exit(0)
+    
+def openMovesetEditor():
+    app = GUI_TekkenMovesetEditor(mainWindow=False)
+    app.window.mainloop()
         
 class GUI_TekkenMovesetExtractor(Tk):
     def __init__(self):
         Tk.__init__(self)
         
+        menubar = Menu(self)
+        menubar.add_command(label="Moveset Editor", command=openMovesetEditor)
+        self.config(menu=menubar)
+        
+        
         self.characterList = getCharacterList()
         self.selected_char = None
         self.chara_data = None
         
-        self.wm_title("TekkenMovesetExtractor 1.0.0 BETA") 
-        self.iconbitmap('GUI_TekkenMovesetExtractor/natsumi.ico')
+        self.wm_title("TekkenMovesetExtractor 1.0.0") 
+        self.iconbitmap('InterfaceData/natsumi.ico')
         self.minsize(960, 540)
         self.geometry("960x540")
         
@@ -444,7 +456,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         self.protocol("WM_DELETE_WINDOW", on_close)
         
         try:
-            with open("GUI_TekkenMovesetExtractor/readme.txt") as f:
+            with open("InterfaceData/readme.txt") as f:
                 for line in f: print(line)
         except:
             pass
@@ -482,7 +494,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         
         
         self.selectionInfo = Label(self.charaInfoFrame, text="")
-        self.selectionInfo.pack(side='top', fill=BOTH, expand=1)
+        self.selectionInfo.pack(side='top', fill='both', expand=1)
         button = self.createButton(self.charaInfoFrame, "Update character list", (), GUI_TekkenMovesetExtractor.updateCharacterlist, side='bottom', expand='0')
         
     def initExportArea(self):
@@ -513,7 +525,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         TextArea = Text(self.consoleFrame, wrap="word")
         TextArea.configure(state="disabled")
         TextArea.tag_configure("err", foreground="#f2114d", background="#dddddd")
-        TextArea.pack(padx=10, pady=5, fill=BOTH, expand=1)
+        TextArea.pack(padx=10, pady=5, fill='both', expand=1)
         
         sys.stdout = TextRedirector(TextArea)
         sys.stderr = TextRedirector(TextArea, "err")
@@ -525,7 +537,14 @@ class GUI_TekkenMovesetExtractor(Tk):
         if len(self.characterList) == 0:
             self.charaList.insert(0, "No moveset extracted yet...")
         else:
-            self.charaList.insert(0, *self.characterList)
+            colors = [
+                ["#fff", "#eee"], #TTT2
+                ["#ddd", "#ccc"]  #T7
+            ]
+            for i, character in enumerate(self.characterList):
+                self.charaList.insert('end', character)
+                color = colors[character.startswith("7_")][i & 1]
+                self.charaList.itemconfig(i, {'bg': color })
             
     def loadCharaInfo(self):
         path = charactersPath + self.selected_char
@@ -580,7 +599,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         self.charaList = Listbox(self.charalistFrame)
         self.charaList.bind('<<ListboxSelect>>', self.onCharaSelectionChange)
         self.updateCharacterlist()
-        self.charaList.pack(fill=BOTH, expand=1)
+        self.charaList.pack(fill='both', expand=1)
         
         self.createButton(self.importButtonFrame, "Import to P1", (1,), importPlayer)
         self.createButton(self.importButtonFrame, "Import to P2", (2,), importPlayer)
@@ -608,9 +627,12 @@ class GUI_TekkenMovesetExtractor(Tk):
         exportButton = Button(frame)
         exportButton["text"] = text
         exportButton["command"] = lambda: callback(self, *const_args)
-        exportButton.pack(side=side, fill=X, expand=expand)
+        exportButton.pack(side=side, fill='x', expand=expand)
         return exportButton
 
 if __name__ == "__main__":
-    app = GUI_TekkenMovesetExtractor()
+    if "--editor" in sys.argv:
+        app = GUI_TekkenMovesetEditor()
+    else:
+        app = GUI_TekkenMovesetExtractor()
     app.mainloop()

@@ -231,17 +231,12 @@ class Requirement:
         data = self.readBytes(self.base + addr, 0x8)
         self.req = self.bToInt(data, 0, 4)
         self.param = self.bToInt(data, 4, 4)
-        self.id = -1
         
     def dict(self):
         return {
-            'id': self.id,
             'req': self.req,
             'param': self.param
         }
-        
-    def setId(self, id):
-        self.id = id
         
 class CancelExtradata:
     def __init__(self, addr, parent):
@@ -274,12 +269,10 @@ class Cancel:
             t2 = self.bToInt(data, 0x4, 4) 
             self.command = (t2 << 32) | t
         
-        self.id = -1
         self.extradata_id = -1
         
     def dict(self):
         return {
-            'id': self.id,
             'command': self.command,
             'extradata_idx': self.extradata_id,
             'requirement_idx': self.requirement_idx,
@@ -295,9 +288,6 @@ class Cancel:
     
     def setExtradataId(self, extradata_id):
         self.extradata_id = extradata_id
-        
-    def setId(self, id):
-        self.id = id
         
 class ReactionList:
     def __init__(self, addr, parent):
@@ -387,8 +377,8 @@ class ExtraMoveProperty:
             
     def dict(self):
         return {
-            'type': self.type,
             'id': self.id,
+            'type': self.type,
             'value': self.value
         }
     
@@ -524,12 +514,9 @@ class Move:
         self.hit_condition_idx = -1
         self.extra_properties_idx = -1
         self.voiceclip_idx = -1
-        
-        self.id = -1
     
     def dict(self):
         return {
-            'id': self.id,
             'name': self.name,
             'anim_name': self.anim_name,
             'vuln': self.vuln,
@@ -576,9 +563,6 @@ class Move:
         
     def setVoiceclipId(self, id):
         self.voiceclip_idx = id
-
-    def setId(self, id):
-        self.id = id
     
 class Voiceclip:
     def __init__(self, addr, parent):
@@ -876,6 +860,7 @@ class Motbin:
     def dict(self):
         return {
             'original_hash': '',
+            'last_calculated_hash': '',
             'export_version': exportVersion,
             'version': self.version,
             'character_id': self.chara_id,
@@ -905,9 +890,10 @@ class Motbin:
             'parry_related': self.parry_related
         }
         
-    def calculateHash(self, selfData):
+    def calculateHash(self, movesetData):
         exclude_keys =  [
             'original_hash',
+            'last_calculated_hash',
             'export_version',
             'character_name',
             'extraction_date',
@@ -919,12 +905,10 @@ class Motbin:
         ]    
         
         data = ""
-        
-        for k in (key for key in selfData.keys() if key not in exclude_keys):
-           data += str(selfData[k])
+        for k in (key for key in movesetData.keys() if key not in exclude_keys):
+           data += str(movesetData[k])
         
         data = bytes(str.encode(data))
-        
         return "%x" % (crc32(data))
         
     def save(self):
@@ -945,9 +929,10 @@ class Motbin:
             os.remove(jsonPath)
             
         with open(jsonPath, "w") as f:
-            selfData = self.dict()
-            selfData['original_hash'] = self.calculateHash(selfData)
-            json.dump(selfData, f, indent=4)
+            movesetData = self.dict()
+            movesetData['original_hash'] = self.calculateHash(movesetData)
+            movesetData['last_calculated_hash'] = movesetData['original_hash']
+            json.dump(movesetData, f, indent=4)
             
         for i, mota in enumerate(self.mota_list):
             mota_addr, len = mota
@@ -966,7 +951,7 @@ class Motbin:
             except:
                 print("Error extracting animation %s, file will not be created" % (anim.name), file=sys.stderr)
             
-        print("Saved at path %s.\nHash: %s" % (path.replace("\\", "/"), selfData['original_hash']))
+        print("Saved at path %s.\nHash: %s" % (path.replace("\\", "/"), movesetData['original_hash']))
         
     def extractMoveset(self):
         self.printBasicData()
@@ -990,7 +975,6 @@ class Motbin:
         print("Reading requirements...")
         for i in range(self.requirement_count):
             condition = Requirement(self.requirements_ptr + (i * self.Requirement_size), self)
-            condition.setId(i)
             self.requirements.append(condition.dict())
             
         print("Reading cancels extradatas...")
@@ -1003,7 +987,6 @@ class Motbin:
             cancel = Cancel(self.cancel_head_ptr + (i * self.Cancel_size), self)
             cancel.setRequirementId((cancel.requirement_addr - self.requirements_ptr) // self.Requirement_size)
             cancel.setExtradataId((cancel.extradata_addr - self.cancel_extradata_head_ptr) // self.CancelExtradata_size)
-            cancel.setId(i)
             self.cancels.append(cancel.dict())
         
         print("Reading grouped cancels...")
@@ -1011,7 +994,6 @@ class Motbin:
             cancel = Cancel(self.group_cancel_head_ptr + (i * self.Cancel_size), self)
             cancel.setRequirementId((cancel.requirement_addr - self.requirements_ptr) // self.Requirement_size)
             cancel.setExtradataId((cancel.extradata_addr - self.cancel_extradata_head_ptr) // self.CancelExtradata_size)
-            cancel.setId(i)
             self.group_cancels.append(cancel.dict())
         
         print("Reading pushbacks extradatas...")
@@ -1077,7 +1059,6 @@ class Motbin:
                 move.setExtraPropertiesIdx((move.extra_properties_ptr - self.extra_move_properties_ptr) // self.ExtraMoveProperty_size)
             if move.voiceclip_ptr != 0:
                 move.setVoiceclipId((move.voiceclip_ptr - self.voiceclip_list_ptr) // self.Voiceclip_size)
-            move.setId(i)
             self.moves.append(move.dict())
             
             if move.anim not in self.anims:

@@ -20,7 +20,8 @@ cemu_playerstruct_size = 0x2960  #Distance between 2 players addresses
 # miscellaneous
 chara_id_offset = 0xd8
 cemu_chara_id_offset = -0xCC
+player_curr_move_offset = 0x344
 code_injection_addr = 0x140738CDF # Address that writes on player+motbin_offset
-playerid_starting_ptr = 0x1434BE100
+playerid_starting_ptr = 0x1434BE100 # Used to find whether local player is 1P or 2P
 
 #raven_clone_addr = 0x1089A790 # EU v32
