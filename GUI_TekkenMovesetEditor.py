@@ -1,11 +1,12 @@
 # Python 3.6.5
 
-from tkinter import *
+from tkinter import Tk, Frame, Listbox, Label, Scrollbar, StringVar
 from tkinter.ttk import Button, Entry
 from Addresses import game_addresses, GameClass
 import motbinImport as importLib
 import json
 import os
+import re
 from zlib import crc32
 
 charactersPath = "./extracted_chars/"
@@ -154,11 +155,11 @@ class CharalistSelector:
     def __init__(self, root):
         self.root = root
         charalistFrame = Frame(root)
-        charalistFrame.pack(side='left', fill=Y)
+        charalistFrame.pack(side='left', fill='y')
         
         charaSelect = Listbox(charalistFrame)
         charaSelect.bind('<<ListboxSelect>>', self.onCharaSelectionChange)
-        charaSelect.pack(fill=BOTH, expand=1)
+        charaSelect.pack(fill='both', expand=1)
         
         buttons = [
             ("Select Moveset", self.selectMoveset),
@@ -168,7 +169,7 @@ class CharalistSelector:
         
         for label, callback in buttons:
             newButton = Button(charalistFrame, text=label, command=callback)
-            newButton.pack(fill=X)
+            newButton.pack(fill='x')
         
         self.charaSelect = charaSelect
         self.frame = charalistFrame
@@ -204,7 +205,7 @@ class CharalistSelector:
                 ["#fff", "#eee"], #TTT2
                 ["#eee", "#ddd"]  #T7
             ]
-            for character in characterList: self.charaSelect.insert(END, character)
+            for character in characterList: self.charaSelect.insert('end', character)
         self.characterList = characterList
         self.colorCharacterList()
 
@@ -250,20 +251,20 @@ class MovelistSelector:
     def __init__(self, root):
         self.root = root
         movelistFrame = Frame(root)
-        movelistFrame.pack(side='left', fill=Y)
+        movelistFrame.pack(side='left', fill='y')
         
         newButton = Button(movelistFrame, text='Save', command=self.root.save)
-        newButton.pack(side='bottom', fill=X)
+        newButton.pack(side='bottom', fill='x')
         
         selectedChar = Label(movelistFrame, text="No character selected", bg='#bbb')
-        selectedChar.pack(side='bottom', fill=X)
+        selectedChar.pack(side='bottom', fill='x')
         
         movelistSelect = Listbox(movelistFrame, width=30)
         movelistSelect.bind('<<ListboxSelect>>', self.onMoveSelection)
-        movelistSelect.pack(side=LEFT, fill=BOTH)
+        movelistSelect.pack(side='left', fill='both')
         
         scrollbar = Scrollbar(movelistFrame, command=movelistSelect.yview)
-        scrollbar.pack(side=RIGHT, fill=Y)
+        scrollbar.pack(side='right', fill='y')
         
         movelistSelect.config(yscrollcommand=scrollbar.set)
         
@@ -297,7 +298,7 @@ class MovelistSelector:
             elif isAttack:
                 bg = '#ffbdbd'
                 
-            self.movelistSelect.insert(END, text)
+            self.movelistSelect.insert('end', text)
             if bg != None:
                 self.movelistSelect.itemconfig(moveId, {'bg': bg})
                 
@@ -323,13 +324,13 @@ class FormEditor:
         container.pack_propagate(False)
         
         label = Label(container, bg='#ddd')
-        label.pack(side='top', fill=X)
+        label.pack(side='top', fill='x')
         
         content = Frame(container)
-        content.pack(side='top', fill=BOTH, expand=True)
+        content.pack(side='top', fill='both', expand=True)
         
         saveButton = Button(container, text="Apply", command=self.save)
-        saveButton.pack(side='bottom', fill=X)
+        saveButton.pack(side='bottom', fill='x')
         
         self.container = content
         self.label = label
@@ -380,19 +381,19 @@ class CancelEditor(FormEditor):
         FormEditor.__init__(self, root, rootFrame, 'cancels', col, row)
         
         navigatorFrame = Frame(self.container)
-        navigatorFrame.pack(side='bottom', fill=X)
+        navigatorFrame.pack(side='bottom', fill='x')
        
         navigatorLabel = Label(navigatorFrame)
         navigatorLabel.pack(side='top')
         
         prevCancelButton = Button(navigatorFrame, text="<< Previous Cancel", command=lambda : self.navigateToCancel(-1))
-        prevCancelButton.pack(fill=X, side='left', expand=True)
+        prevCancelButton.pack(fill='x', side='left', expand=True)
         
         nextCancelButton = Button(navigatorFrame, text="Next Cancel >>", command=lambda : self.navigateToCancel(1))
-        nextCancelButton.pack(fill=X, side='right', expand=True)
+        nextCancelButton.pack(fill='x', side='right', expand=True)
         
         commandLabel = Label(self.container)
-        commandLabel.pack(side='bottom', fill=X)
+        commandLabel.pack(side='bottom', fill='x')
         
         self.initFields()
         self.navigatorLabel = navigatorLabel
@@ -442,7 +443,7 @@ class CancelEditor(FormEditor):
         
         for field in fields:
             container = Frame(self.container)
-            container.pack(side='top', anchor=N, fill=BOTH)
+            container.pack(side='top', anchor='n', fill='both')
 
             fieldLabel = Label(container, text=field, width=15)
             fieldLabel.grid(row=0, column=0, pady=2, sticky='w')
@@ -491,10 +492,10 @@ class MoveEditor(FormEditor):
         FormEditor.__init__(self, root, rootFrame, 'moves', col, row)
         
         self.westernFrame = Frame(self.container)
-        self.westernFrame.pack(side='left', fill=BOTH, expand=True)
+        self.westernFrame.pack(side='left', fill='both', expand=True)
         
         self.easternFrame = Frame(self.container)
-        self.easternFrame.pack(side='right', fill=BOTH, expand=True)
+        self.easternFrame.pack(side='right', fill='both', expand=True)
         
         self.initFields()
         
@@ -505,7 +506,7 @@ class MoveEditor(FormEditor):
         sideBreakpoint = len(fields) / 2
         for i, field in enumerate(fields):
             container = Frame(self.westernFrame if i < sideBreakpoint else self.easternFrame)
-            container.pack(side='top', anchor=N, fill=BOTH)
+            container.pack(side='top', anchor='n', fill='both')
 
             fieldLabel = Label(container, text=field, width=15)
             fieldLabel.grid(row=0, column=0, sticky='w')
@@ -557,7 +558,7 @@ class GUI_TekkenMovesetEditor(Tk):
         self.MovelistSelector = MovelistSelector(self)
         
         editorFrame = Frame(self)
-        editorFrame.pack(side='right', fill=BOTH, expand=1)
+        editorFrame.pack(side='right', fill='both', expand=1)
         for i in range(2):
             editorFrame.grid_columnconfigure(i, weight=1, uniform="group1")
             editorFrame.grid_rowconfigure(i, weight=1)
