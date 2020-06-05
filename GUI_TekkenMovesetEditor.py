@@ -83,7 +83,7 @@ def validateField(type, value):
     if type == 'number':
         return re.match("^-?[0-9]+$", value)
     if type == 'hex' or type == '8hex':
-        return re.match("^0x[0-9A-Za-z]+$", value)
+        return re.match("^0(x|X)[0-9A-Za-z]+$", value)
     if type == 'text':
         return re.match("^[a-zA-Z0-9_\-\(\)]+$", value)
     raise Exception("Unknown type '%s'" % (type))
@@ -639,7 +639,7 @@ class GUI_TekkenMovesetEditor():
         self.resetForms()
             
     def setTitle(self, label = ""):
-        title = "TekkenMovesetEditor 0.2-BETA"
+        title = "TekkenMovesetEditor 0.3-BETA"
         if label != "":
             title += " - " + label
         self.window.wm_title(title) 
