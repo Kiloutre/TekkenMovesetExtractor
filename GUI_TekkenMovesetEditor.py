@@ -350,6 +350,7 @@ class FormEditor:
                 self.root.movelist[self.key][self.id][field] = getFieldValue(valueType, value)
         
     def setField(self, field, value):
+        print(self.key, field, value)
         self.editMode = None
         self.fieldValue[field] = value
         
@@ -366,6 +367,7 @@ class FormEditor:
         for field in self.fieldTypes.keys():
             if field in self.fieldVar:
                 self.fieldVar[field].set('')
+                self.fieldInput[field].config(state='disabled')
             
 class CancelEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
@@ -463,6 +465,7 @@ class CancelEditor(FormEditor):
         for field in cancelData:
             if field in cancelFields:
                 self.setField(field, cancelData[field])
+                self.fieldInput[field].config(state='enabled')
         self.editMode = True
         
         self.setCommandLabel()
@@ -527,6 +530,7 @@ class MoveEditor(FormEditor):
         for field in moveData:
             if field in moveFields:
                 self.setField(field, moveData[field])
+                self.fieldInput[field].config(state='enabled')
         self.editMode = True
         
     def selectCancel(self, event):
@@ -573,6 +577,8 @@ class GUI_TekkenMovesetEditor(Tk):
             self.updateCharacterlist()
         else:
             self.hideCharaFrame()
+            
+        self.resetForms()
             
     def setTitle(self, label = ""):
         title = "TekkenMovesetEditor 0.1"

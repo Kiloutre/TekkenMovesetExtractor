@@ -413,7 +413,6 @@ def on_close():
 def openMovesetEditor():
     app = GUI_TekkenMovesetEditor()
     app.mainloop()
-    pass
         
 class GUI_TekkenMovesetExtractor(Tk):
     def __init__(self):
