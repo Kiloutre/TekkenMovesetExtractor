@@ -6,6 +6,7 @@ from Aliases import getTag2Requirement, getTag2ExtraMoveProperty, getTag2CharIDA
 import json
 import os
 import sys
+from copy import deepcopy
 
 importVersion = "1.0.0"
 
@@ -76,7 +77,7 @@ class Importer:
                 m = json.load(f)
                 f.close()
         else:
-            m = moveset
+            m = deepcopy(moveset)
             
         if 'export_version' not in m or not versionMatches(m['export_version']):
             print("Error: trying to import outdated moveset, please extract again.")

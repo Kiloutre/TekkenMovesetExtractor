@@ -339,7 +339,7 @@ class MovelistSelector:
         movelistFrame.pack(side='left', fill='y')
         
         bottomButtons = [
-            ('Save', self.root.save),
+            ('Save to file', self.root.save),
             ('Go to current move ID', self.goToCurrentMove)
         ]
         
@@ -478,7 +478,7 @@ class FormEditor:
             valueType = self.fieldTypes[field]
             value = self.fieldVar[field].get()
             if validateField(valueType, value):
-                self.root.movelist[self.key][self.id][field] = getFieldValue(valueType, value)
+                self.root.saveField(self.key, self.id, field, getFieldValue(valueType, value))
                 
         if self.listSaveFunction != None:
             index = self.listIndex
@@ -928,7 +928,7 @@ class GUI_TekkenMovesetEditor():
         self.resetForms()
             
     def setTitle(self, label = ""):
-        title = "TekkenMovesetEditor 0.6-BETA"
+        title = "TekkenMovesetEditor 0.7-BETA"
         if label != "":
             title += " - " + label
         self.window.wm_title(title) 
@@ -1024,6 +1024,9 @@ class GUI_TekkenMovesetEditor():
             id += 1
         itemList = [item for item in self.movelist['hit_conditions'][itemId:id + 1]]
         self.HitConditionEditor.setItemList(itemList, itemId)
+        
+    def saveField(self, key, id, field, value):
+        self.movelist[key][id][field] = value
         
 
 if __name__ == "__main__":

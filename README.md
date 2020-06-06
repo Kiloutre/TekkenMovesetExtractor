@@ -108,7 +108,9 @@ Administrator rights may be required to import the moveset into memory.
 - Rename "group_cancels" to "generic_cancels"
 - Rename "anim_max_len" to "anim_len" in moves
 - Split command in two 4bytes
-- Add menu to hide character selection
+- Rename move's u17 to distance
+- Make cancel extradata and move voiceclip use a field?
+- Make reaction lists and u1 lists uses fields instead of arrays
 
 Moveset editor:
 - Window to list animations and copy one to another character's folder
