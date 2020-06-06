@@ -205,9 +205,23 @@ class CharalistSelector:
         self.selectionIndex = -1
         self.last_selection = None
         self.movelist_path = None
+        self.visible = True
+        
+    def toggleVisibility(self):
+        if self.visible:
+            self.hide()
+        else:
+            self.show()
        
     def hide(self):
         self.frame.pack_forget()
+        self.visible = False
+       
+    def show(self):
+        self.root.MovelistSelector.hide()
+        self.frame.pack(side='left', fill='y')
+        self.root.MovelistSelector.show()
+        self.visible = True
         
     def colorCharacterList(self):
         colors = [
@@ -275,6 +289,8 @@ class CharalistSelector:
         self.root.movelist = movelist
         self.root.resetForms()
         
+        self.hide()
+        
 class MovelistSelector:
     def __init__(self, root, rootFrame):
         self.root = root
@@ -283,7 +299,8 @@ class MovelistSelector:
         
         bottomButtons = [
             ('Save', self.root.save),
-            ('Go to current move ID', self.goToCurrentMove)
+            ('Go to current move ID', self.goToCurrentMove),
+            ('Toggle character selector', self.toggleCharacterSelector)
         ]
         
         for label, callback in bottomButtons:
@@ -302,8 +319,18 @@ class MovelistSelector:
         
         movelistSelect.config(yscrollcommand=scrollbar.set)
         
+        self.frame = movelistFrame
         self.selectedChar = selectedChar
         self.movelistSelect = movelistSelect
+       
+    def hide(self):
+        self.frame.pack_forget()
+       
+    def show(self):
+        self.frame.pack(side='left', fill='y')
+        
+    def toggleCharacterSelector(self):
+        self.root.Charalist.toggleVisibility()
         
     def onMoveSelection(self, event):
         w = event.widget
@@ -761,7 +788,7 @@ class GUI_TekkenMovesetEditor():
         if showCharacterSelector:
             self.updateCharacterlist()
         else:
-            self.hideCharaFrame()
+            self.setCharaFrame.toggleVisibility()
             
         self.resetForms()
             
@@ -784,9 +811,6 @@ class GUI_TekkenMovesetEditor():
             json.dump(self.movelist, f, indent=4)
             
         print("Saved " + jsonPath)
-        
-    def hideCharaFrame(self):
-        self.Charalist.hide()
         
     def updateCharacterlist(self):
         self.Charalist.updateCharacterlist()
