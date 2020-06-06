@@ -934,7 +934,7 @@ class GUI_TekkenMovesetEditor():
         self.window.wm_title(title) 
 
     def save(self):
-        if self.Charalist.filename == None or self.Charalist.movelist_path:
+        if self.Charalist.filename == None or self.Charalist.movelist_path == None:
             return
         jsonPath = "%s/%s" % (self.Charalist.movelist_path, self.Charalist.filename)
         
@@ -945,7 +945,7 @@ class GUI_TekkenMovesetEditor():
             self.movelist['last_calculated_hash'] = calculateHash(self.movelist)
             json.dump(self.movelist, f, indent=4)
             
-        print("Saved " + jsonPath)
+        print("Editor: saved at " + jsonPath)
         
     def updateCharacterlist(self):
         self.Charalist.updateCharacterlist()

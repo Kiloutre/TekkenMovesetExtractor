@@ -577,7 +577,6 @@ extra_move_properties = {
     0x826e: {
         't7_id': 0x83c3,
         'desc': 'Balconybreak victim: set opponent move ID',
-        'force_type': 0x21,
         'nofill': True
     },
     0x8271: { 't7_id': 0x8408, 'desc': '(ALISA) sJUMP_00_' },
