@@ -469,7 +469,7 @@ class FormEditor:
         self.setField(field, value)
         
     def setListOnsaveFunction(self, function):
-        self.listSaveFunction = None
+        self.listSaveFunction = function
         
     def save(self):
         if self.editMode == None:
