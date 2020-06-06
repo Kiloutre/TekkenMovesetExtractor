@@ -16,7 +16,8 @@ itemNames = {
     'moves': 'move',
     'cancels': 'cancel',
     'requirements': 'requirement',
-    'extra_move_properties': 'move property'
+    'extra_move_properties': 'move property',
+    'hit_conditions': 'hit condition',
 }
 
 fieldLabels = {
@@ -77,11 +78,18 @@ extrapropFields = {
     'value': 'number'
 }
 
+hitConditionFields = {
+    'requirement_idx': 'number',
+    'damage': 'number',
+    'reaction_list_idx': 'number'
+}
+
 fieldsTypes = {
     'moves': moveFields,
     'cancels': cancelFields,
     'requirements': requirementFields,
-    'extra_move_properties': extrapropFields
+    'extra_move_properties': extrapropFields,
+    'hit_conditions': hitConditionFields
 }
     
 def getCharacterList():
@@ -535,12 +543,43 @@ class FormEditor:
     def registerFieldButtons(self, items):
         for field, function in items:
             self.fieldLabel[field].config(cursor='hand2', bg='#cce3e1')
-            self.fieldLabel[field].bind("<Button-1>", lambda _, self=self, field=field, function=function : function(self.fieldValue[field]))
+            self.fieldLabel[field].bind("<Button-1>", lambda _, self=self, field=field, function=function : function(self.fieldValue[field]) if self.editMode != None else 0 )
     
     def enableDetailsArea(self):
         details = Label(self.container)
         details.pack(side='bottom', fill='x')
         self.details = details
+            
+class HitConditionEditor(FormEditor):
+    def __init__(self, root, rootFrame, col, row):
+        FormEditor.__init__(self, root, rootFrame, 'hit_conditions', col, row)
+        self.setListOnsaveFunction(self.root.setConditionList)
+        self.enableNavigator(itemLabel='Condition')
+        
+        self.initFields()
+        
+        self.registerFieldButtons([
+            ('requirement_idx', self.root.setRequirementList),
+        ])
+            
+    def setItem(self, index):
+        propertyData = self.itemList[index]
+        self.listIndex = index
+        self.id = self.baseId + index
+        
+        propertyCount = len(self.itemList)
+        
+        propCount = " %d conditions" % (propertyCount) if propertyCount > 1 else "1 condition" 
+        self.setLabel("Hit conditions list %d: %s" % (self.baseId, propCount))
+        
+        self.navigatorLabel['text'] = "Condition %d/%d" % (index + 1, propertyCount)
+        
+        self.editMode = None
+        for field in propertyData:
+            if field in hitConditionFields:
+                self.setField(field, propertyData[field], True)
+                self.fieldInput[field].config(state='enabled')
+        self.editMode = True
             
 class ExtrapropEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
@@ -553,6 +592,8 @@ class ExtrapropEditor(FormEditor):
         
     def setDetails(self):
         return
+        
+        """
         propId = self.fieldValue['id']
         getDetails = getProperty if self.root.movelist['version'] == 'Tekken7' else getTag2ExtraMoveProperty
         
@@ -563,6 +604,7 @@ class ExtrapropEditor(FormEditor):
         else:
             text = ''
         self.details['text'] = text
+        """
             
     def setItem(self, index):
         propertyData = self.itemList[index]
@@ -691,6 +733,7 @@ class MoveEditor(FormEditor):
         self.registerFieldButtons([
             ('cancel_idx', self.root.setCancelList),
             ('extra_properties_idx', self.root.setExtrapropList),
+            ('hit_condition_idx', self.root.setConditionList),
         ])
         
 
@@ -769,27 +812,27 @@ class GUI_TekkenMovesetEditor():
         editorFrame.pack(side='right', fill='both', expand=1)
         for i in range(2):
             editorFrame.grid_columnconfigure(i, weight=1, uniform="group1")
-            editorFrame.grid_rowconfigure(i, weight=1)
+            editorFrame.grid_rowconfigure(i, weight=1, uniform="group1")
             
-        northEastFrame = splitFrame(editorFrame, 'vertical')
-        northEastFrame.grid(row=0, column=1, sticky="nsew")
+        topRightFrame = splitFrame(editorFrame, 'vertical')
+        topRightFrame.grid(row=0, column=1, sticky="nsew")
             
-        reqAndPropsFrame = splitFrame(northEastFrame, split='horizontal')
+        reqAndPropsFrame = splitFrame(topRightFrame, split='horizontal')
         reqAndPropsFrame.grid(row=0, column=1, sticky="nsew")
         
-        tFrame = Frame(editorFrame, bg='#aaa')
-        tFrame.grid(row=1, column=0, sticky="nsew")
+        bottomLeftFrame = splitFrame(editorFrame, 'vertical')
+        bottomLeftFrame.grid(row=1, column=0, sticky="nsew")
+        
         
         self.MoveEditor = MoveEditor(self, editorFrame, col=0, row=0)
-        self.CancelEditor = CancelEditor(self, northEastFrame, col=0, row=0)
+        self.CancelEditor = CancelEditor(self, topRightFrame, col=0, row=0)
         self.RequirementEditor = RequirementEditor(self, reqAndPropsFrame, col=0, row=0)
         self.ExtrapropEditor = ExtrapropEditor(self, reqAndPropsFrame, col=0, row=1)
-       # self.ExtrapropEditor = ExtrapropEditor(self, reqAndPropsFrame, col=0, row=1)
+        self.HitConditionEditor = HitConditionEditor(self, bottomLeftFrame, col=0, row=0)
         
         
         moveFrame2 = Frame(editorFrame, bg='#999')
         moveFrame2.grid(row=1, column=1, sticky="nsew")
-        
         
         
         menuActions = [
@@ -841,6 +884,7 @@ class GUI_TekkenMovesetEditor():
         self.CancelEditor.resetForm()
         self.RequirementEditor.resetForm()
         self.ExtrapropEditor.resetForm()
+        self.HitConditionEditor.resetForm()
         
     def getMoveId(self, moveId):
         return self.movelist['aliases'][moveId - 0x8000] if moveId >= 0x8000 else moveId
@@ -888,6 +932,20 @@ class GUI_TekkenMovesetEditor():
             id += 1
         propList = [prop for prop in self.movelist['extra_move_properties'][propId:id + 1]]
         self.ExtrapropEditor.setItemList(propList, propId)
+        
+    def setConditionList(self, itemId):
+        if itemId < 0 or itemId >= len(self.movelist['hit_conditions']):
+            return
+        itemList = []
+        id = itemId
+        reqEndValue = 881 if self.movelist['version'] == 'Tekken7' else 690
+        while self.movelist['hit_conditions'][id]['requirement_idx'] != 0:
+            reqIdx = self.movelist['hit_conditions'][id]['requirement_idx'] 
+            if self.movelist['requirements'][reqIdx]['req'] == reqEndValue:
+                break
+            id += 1
+        itemList = [item for item in self.movelist['hit_conditions'][itemId:id + 1]]
+        self.HitConditionEditor.setItemList(itemList, itemId)
         
 
 if __name__ == "__main__":
