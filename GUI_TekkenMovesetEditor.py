@@ -12,6 +12,13 @@ from zlib import crc32
 
 charactersPath = "./extracted_chars/"
 
+itemNames = {
+    'moves': 'move',
+    'cancels': 'cancel',
+    'requirements': 'requirement',
+    'extra_move_properties': 'move property'
+}
+
 fieldLabels = {
     'u17': 'distance (u17)',
     'anim_max_len': 'anim_len',
@@ -453,7 +460,8 @@ class FormEditor:
     def resetForm(self):
         self.editMode = None
         self.id = None
-        self.setLabel("No item selected")
+        itemName = itemNames[self.key]
+        self.setLabel("No %s selected" % (itemName))
         self.fieldValue = {}
         for field in self.fieldTypes.keys():
             if field in self.fieldVar:
@@ -484,7 +492,7 @@ class ExtrapropEditor(FormEditor):
         self.details = details
         
     def resetForm(self):
-        self.navigatorLabel['text'] = "No move property selected"
+        self.navigatorLabel['text'] = ""
         self.details['text'] = ''
         super().resetForm()
         
@@ -590,7 +598,7 @@ class RequirementEditor(FormEditor):
         self.details = details
         
     def resetForm(self):
-        self.navigatorLabel['text'] = "No requirement selected"
+        self.navigatorLabel['text'] = ""
         self.details['text'] = ''
         super().resetForm()
         
@@ -722,7 +730,7 @@ class CancelEditor(FormEditor):
         self.commandLabel['text'] = text
         
     def resetForm(self):
-        self.navigatorLabel['text'] = "No cancel selected"
+        self.navigatorLabel['text'] = ""
         self.commandLabel['text'] = ''
         super().resetForm()
         
