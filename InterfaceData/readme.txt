@@ -5,4 +5,4 @@ Movesets loaded using "Import to P1/P2" will be unloaded after the next loading 
 If you want the moveset to stay constantly, use the "Online Player" buttons.
 Both online players must load the same moveset on the same players.
 Movesets should be loaded BEFORE the loading screen, using the "Online Player" buttons, to avoid desyncs.
---------------------------------
+-------- by kilo --------
