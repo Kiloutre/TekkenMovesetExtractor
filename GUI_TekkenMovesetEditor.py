@@ -387,7 +387,7 @@ class FormEditor:
         self.initEditor(col, row)
         
     def initEditor(self, col, row):
-        container = Frame(self.rootFrame, bg='pink')
+        container = Frame(self.rootFrame)
         container.grid(row=row, column=col, sticky="nsew")
         container.pack_propagate(False)
         
