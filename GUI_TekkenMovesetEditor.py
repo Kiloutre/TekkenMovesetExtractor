@@ -12,7 +12,8 @@ from zlib import crc32
 charactersPath = "./extracted_chars/"
 
 fieldLabels = {
-    'u17': 'distance'
+    'u17': 'distance (u17)',
+    'anim_max_len': 'anim_len',
 }
 
 moveFields = {
@@ -66,8 +67,10 @@ def getCharacterList():
     if not os.path.isdir(charactersPath):
         return []
     folders = [folder for folder in os.listdir(charactersPath) if os.path.isdir(charactersPath + folder)]
+    tag2_chars = sorted([f for f in folders if f.startswith('2_')])
+    t7_chars = sorted([f for f in folders if f.startswith('7_')])
     
-    return sorted(folders)
+    return t7_chars + tag2_chars
     
 def getMovelist(path):
     jsonFilename = next(file for file in os.listdir(path) if file.endswith(".json"))
@@ -318,7 +321,6 @@ class MovelistSelector:
         if currMoveId >= len(self.root.movelist['moves']):
             return
         
-        self.movelistSelect.see(currMoveId)
         self.root.setMove(currMoveId)
         
     def setCharacter(self, char):
@@ -677,6 +679,8 @@ class GUI_TekkenMovesetEditor():
             return
         moveData = self.movelist['moves'][moveId]
         self.MoveEditor.setMove(moveData, moveId)
+        self.MovelistSelector.movelistSelect.select_set(moveId)
+        self.MovelistSelector.movelistSelect.see(moveId)
         
     def getMoveName(self, moveId):
         moveId = self.getMoveId(moveId)

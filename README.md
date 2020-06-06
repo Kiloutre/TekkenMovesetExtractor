@@ -107,6 +107,8 @@ Administrator rights may be required to import the moveset into memory.
 - Allow throws using item moves?
 - Rename "group_cancels" to "generic_cancels"
 - Rename "anim_max_len" to "anim_len" in moves
+- Split command in two 4bytes
+- Add menu to hide character selection
 
 Moveset editor:
 - Window to list animations and copy one to another character's folder
