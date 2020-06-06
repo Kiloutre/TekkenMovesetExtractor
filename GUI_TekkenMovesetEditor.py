@@ -3,7 +3,7 @@
 from tkinter import Tk, Frame, Listbox, Label, Scrollbar, StringVar, Toplevel, Menu
 from tkinter.ttk import Button, Entry
 from Addresses import game_addresses, GameClass
-from Aliases import getRequirement, getTag2Requirement
+from Aliases import getRequirement, getTag2Requirement, getProperty, getTag2ExtraMoveProperty
 import motbinImport as importLib
 import json
 import os
@@ -64,10 +64,17 @@ requirementFields = {
     'param': 'number'
 }
 
+extrapropFields = {
+    'type': 'hex',
+    'id': 'hex',
+    'value': 'number'
+}
+
 fieldsTypes = {
     'moves': moveFields,
     'cancels': cancelFields,
-    'requirements': requirementFields
+    'requirements': requirementFields,
+    'extra_move_properties': extrapropFields
 }
     
 def getCharacterList():
@@ -85,7 +92,7 @@ def getMovelist(path):
         return json.load(f), jsonFilename
         
 def sortKeys(keys):
-    keyList = [key for key in keys if not re.match("^u[0-9_]+$", key) and key != "id"]
+    keyList = [key for key in keys if not re.match("^u[0-9_]+$", key)]
     unknownKeys = [key for key in keys if re.match("^u[0-9_]+$", key)]
     return keyList + unknownKeys
         
@@ -93,7 +100,7 @@ def validateField(type, value):
     if type == 'number':
         return re.match("^-?[0-9]+$", value)
     if type == 'hex' or type == '8hex':
-        return re.match("^0(x|X)[0-9A-Za-z]+$", value)
+        return re.match("^(0(x|X))?[0-9A-Za-z]+$", value)
     if type == 'text':
         return re.match("^[a-zA-Z0-9_\-\(\)]+$", value)
     raise Exception("Unknown type '%s'" % (type))
@@ -453,6 +460,112 @@ class FormEditor:
                 self.fieldVar[field].set('')
                 self.fieldInput[field].config(state='disabled')
             
+class ExtrapropEditor(FormEditor):
+    def __init__(self, root, rootFrame, col, row):
+        FormEditor.__init__(self, root, rootFrame, 'extra_move_properties', col, row)
+        
+        navigatorFrame = Frame(self.container)
+        navigatorFrame.pack(side='bottom', fill='x')
+       
+        navigatorLabel = Label(navigatorFrame)
+        navigatorLabel.pack(side='top')
+        
+        prevButton = Button(navigatorFrame, text="<< Previous Prop...", command=lambda : self.navigateTo(-1))
+        prevButton.pack(fill='x', side='left', expand=True)
+        
+        nextButton = Button(navigatorFrame, text="Next Prop... >>", command=lambda : self.navigateTo(1))
+        nextButton.pack(fill='x', side='right', expand=True)
+        
+        details = Label(self.container)
+        #details.pack(side='bottom', fill='x')
+        
+        self.initFields()
+        self.navigatorLabel = navigatorLabel
+        self.details = details
+        
+    def resetForm(self):
+        self.navigatorLabel['text'] = "No move property selected"
+        self.details['text'] = ''
+        super().resetForm()
+        
+    def save(self):
+        if self.editMode == None:
+            return
+        super().save()
+        index = self.listIndex
+        self.root.setExtrapropList(self.baseId)
+        self.setProperty(index)
+        
+    def setDetails(self):
+        return
+        propId = self.fieldValue['id']
+        getDetails = getProperty if self.root.movelist['version'] == 'Tekken7' else getTag2ExtraMoveProperty
+        
+        details = getDetails(propId)
+        
+        if details != None and details['desc'] != 'MAPPING' and not details['desc'].startswith('('):
+            text = details['desc']
+        else:
+            text = ''
+        self.details['text'] = text
+        
+    def navigateTo(self, offset):
+        if self.editMode == None or (self.listIndex + offset) < 0 or (self.listIndex + offset) >= len(self.propertyList):
+            return
+        self.setProperty(self.listIndex + offset)
+        
+    def initFields(self):
+        fields = sortKeys(extrapropFields.keys())
+        
+        for field in fields:
+            container = Frame(self.container)
+            container.pack(side='top', anchor='n', fill='both')
+
+            fieldLabel = Label(container, text=field, width=15)
+            fieldLabel.grid(row=0, column=0, pady=2, sticky='w')
+        
+            if field.endswith("_idx") or field.endswith("_indexes") or field.endswith('_id'):
+                fieldLabel.config(cursor='hand2', bg='#cce3e1')
+            
+            sv = StringVar()
+            sv.trace("w", lambda name, index, mode, field=field, sv=sv: self.onchange(field, sv))
+
+            fieldInput = Entry(container, textvariable=sv)
+            fieldInput.grid(row=0, column=1, sticky='ew')
+            
+            self.fieldVar[field] = sv
+            self.fieldInput[field] = fieldInput
+            self.fieldLabel[field] = fieldLabel
+            
+    def setProperty(self, index):
+        propertyData = self.propertyList[index]
+        self.listIndex = index
+        self.id = self.baseId + index
+        
+        propertyCount = len(self.propertyList)
+        
+        propCount = " %d properties" % (propertyCount) if propertyCount > 1 else "1 property" 
+        self.setLabel("Move property list %d: %s" % (self.baseId, propCount))
+        
+        self.navigatorLabel['text'] = "Property %d/%d" % (index + 1, propertyCount)
+        
+        self.editMode = None
+        for field in propertyData:
+            if field in extrapropFields:
+                self.setField(field, propertyData[field], True)
+                self.fieldInput[field].config(state='enabled')
+        self.editMode = True
+        
+        self.setDetails()
+        
+    def setPropertyList(self, propertyList, propertyId):
+        self.id = propertyId
+        self.baseId = propertyId
+        self.propertyList = propertyList
+        self.listIndex = 0
+        
+        self.setProperty(0)
+            
 class RequirementEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
         FormEditor.__init__(self, root, rootFrame, 'requirements', col, row)
@@ -496,7 +609,7 @@ class RequirementEditor(FormEditor):
         details = getDetails(reqId)
         
         if details != None and details['desc'] != 'MAPPING' and not details['desc'].startswith('('):
-            text = '%d\'s description:\n%s' % (reqId, details['desc'])
+            text = '%d: %s' % (reqId, details['desc'])
         else:
             text = ''
         self.details['text'] = text
@@ -691,6 +804,7 @@ class MoveEditor(FormEditor):
         self.initFields()
         
         self.fieldLabel['cancel_idx'].bind("<Button-1>", self.selectCancel)
+        self.fieldLabel['extra_properties_idx'].bind("<Button-1>", self.selectExtraprop)
         
     def initFields(self):
         fields = sortKeys(moveFields.keys())
@@ -735,6 +849,11 @@ class MoveEditor(FormEditor):
         if self.editMode == None:
             return
         self.root.setCancelList(self.fieldValue['cancel_idx'])
+        
+    def selectExtraprop(self, event):
+        if self.editMode == None:
+            return
+        self.root.setExtrapropList(self.fieldValue['extra_properties_idx'])
 
 class GUI_TekkenMovesetEditor():
     def __init__(self, showCharacterSelector=True, mainWindow=True):
@@ -770,6 +889,7 @@ class GUI_TekkenMovesetEditor():
         self.MoveEditor = MoveEditor(self, editorFrame, col=0, row=0)
         self.CancelEditor = CancelEditor(self, northEastFrame, col=0, row=0)
         self.RequirementEditor = RequirementEditor(self, tFrame, col=0, row=0)
+        self.ExtrapropEditor = ExtrapropEditor(self, tFrame, col=0, row=1)
         
         
         moveFrame2 = Frame(editorFrame, bg='#aaa')
@@ -801,7 +921,7 @@ class GUI_TekkenMovesetEditor():
         self.resetForms()
             
     def setTitle(self, label = ""):
-        title = "TekkenMovesetEditor 0.4-BETA"
+        title = "TekkenMovesetEditor 0.5-BETA"
         if label != "":
             title += " - " + label
         self.window.wm_title(title) 
@@ -827,6 +947,7 @@ class GUI_TekkenMovesetEditor():
         self.MoveEditor.resetForm()
         self.CancelEditor.resetForm()
         self.RequirementEditor.resetForm()
+        self.ExtrapropEditor.resetForm()
         
     def getMoveId(self, moveId):
         return self.movelist['aliases'][moveId - 0x8000] if moveId >= 0x8000 else moveId
@@ -857,13 +978,23 @@ class GUI_TekkenMovesetEditor():
     def setRequirementList(self, requirementId):
         if requirementId < 0 or requirementId >= len(self.movelist['requirements']):
             return
-        cancelList = []
+        reqList = []
         id = requirementId
         endValue = 881 if self.movelist['version'] == 'Tekken7' else 690
         while self.movelist['requirements'][id]['req'] != endValue:
             id += 1
-        cancelList = [cancel for cancel in self.movelist['requirements'][requirementId:id + 1]]
-        self.RequirementEditor.setRequirementList(cancelList, requirementId)
+        reqList = [req for req in self.movelist['requirements'][requirementId:id + 1]]
+        self.RequirementEditor.setRequirementList(reqList, requirementId)
+        
+    def setExtrapropList(self, propId):
+        if propId < 0 or propId >= len(self.movelist['extra_move_properties']):
+            return
+        propList = []
+        id = propId
+        while self.movelist['extra_move_properties'][id]['type'] != 0:
+            id += 1
+        propList = [prop for prop in self.movelist['extra_move_properties'][propId:id + 1]]
+        self.ExtrapropEditor.setPropertyList(propList, propId)
         
 
 if __name__ == "__main__":
