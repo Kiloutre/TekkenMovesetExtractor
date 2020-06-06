@@ -18,11 +18,13 @@ itemNames = {
     'requirements': 'requirement',
     'extra_move_properties': 'move property',
     'hit_conditions': 'hit condition',
+    'reaction_list': 'reaction list'
 }
 
 fieldLabels = {
     'u17': 'distance (u17)',
     'anim_max_len': 'anim_len',
+    'standing': 'default'
 }
 
 moveFields = {
@@ -84,12 +86,31 @@ hitConditionFields = {
     'reaction_list_idx': 'number'
 }
 
+reactionlistFields = {
+    'vertical_pushback': 'number',
+    'standing': 'number',
+    'ch': 'number',
+    'crouch': 'number',
+    'crouch_ch': 'number',
+    'left_side': 'number',
+    'left_side_crouch': 'number',
+    'right_side': 'number',
+    'right_side_crouch': 'number',
+    'back': 'number',
+    'back_crouch': 'number',
+    'block': 'number',
+    'crouch_block': 'number',
+    'wallslump': 'number',
+    'downed': 'number'
+}
+
 fieldsTypes = {
     'moves': moveFields,
     'cancels': cancelFields,
     'requirements': requirementFields,
     'extra_move_properties': extrapropFields,
-    'hit_conditions': hitConditionFields
+    'hit_conditions': hitConditionFields,
+    'reaction_list': reactionlistFields
 }
     
 def getCharacterList():
@@ -560,26 +581,75 @@ class HitConditionEditor(FormEditor):
         
         self.registerFieldButtons([
             ('requirement_idx', self.root.setRequirementList),
+            ('reaction_list_idx', self.root.setReactionList),
         ])
             
     def setItem(self, index):
-        propertyData = self.itemList[index]
+        hitconditionData = self.itemList[index]
         self.listIndex = index
         self.id = self.baseId + index
         
-        propertyCount = len(self.itemList)
+        hitConditionCount = len(self.itemList)
         
-        propCount = " %d conditions" % (propertyCount) if propertyCount > 1 else "1 condition" 
+        propCount = " %d conditions" % (hitConditionCount) if hitConditionCount > 1 else "1 condition" 
         self.setLabel("Hit conditions list %d: %s" % (self.baseId, propCount))
         
-        self.navigatorLabel['text'] = "Condition %d/%d" % (index + 1, propertyCount)
+        self.navigatorLabel['text'] = "Condition %d/%d" % (index + 1, hitConditionCount)
         
         self.editMode = None
-        for field in propertyData:
+        for field in hitconditionData:
             if field in hitConditionFields:
-                self.setField(field, propertyData[field], True)
+                self.setField(field, hitconditionData[field], True)
                 self.fieldInput[field].config(state='enabled')
         self.editMode = True
+        
+        reactionlistId = self.fieldValue['reaction_list_idx']
+        self.root.setReactionList(reactionlistId)
+            
+class ReactionListEditor(FormEditor):
+    def __init__(self, root, rootFrame, col, row):
+        FormEditor.__init__(self, root, rootFrame, 'reaction_list', col, row)
+        
+        self.westernFrame = Frame(self.container)
+        self.westernFrame.pack(side='left', fill='both', expand=True)
+        
+        self.easternFrame = Frame(self.container)
+        self.easternFrame.pack(side='right', fill='both', expand=True)
+        
+        self.initFields()
+            
+    def setItem(self, itemData, itemId):
+        self.id = itemId
+        self.setLabel("Reaction list %d: Pushback & Move IDs" % (itemId))
+        
+        self.editMode = None
+        for field in itemData:
+            if field in reactionlistFields:
+                self.setField(field, itemData[field], True)
+                self.fieldInput[field].config(state='enabled')
+        self.editMode = True
+
+    def initFields(self):
+        fields = sortKeys(reactionlistFields.keys())
+        sideBreakpoint = len(fields) / 2
+        
+        for i, field in enumerate(fields):
+            container = Frame(self.westernFrame if i < sideBreakpoint else self.easternFrame)
+            container.pack(side='top', anchor='n', fill='both')
+
+            fieldLabel = Label(container, text=fieldLabels.get(field, field), width=15)
+            fieldLabel.grid(row=0, column=0, sticky='w')
+            
+            sv = StringVar()
+            sv.trace("w", lambda name, index, mode, field=field, sv=sv: self.onchange(field, sv))
+
+            fieldInput = Entry(container, textvariable=sv)
+            fieldInput.grid(row=0, column=1, sticky='ew')
+                
+            
+            self.fieldVar[field] = sv
+            self.fieldInput[field] = fieldInput
+            self.fieldLabel[field] = fieldLabel
             
 class ExtrapropEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
@@ -828,11 +898,12 @@ class GUI_TekkenMovesetEditor():
         self.CancelEditor = CancelEditor(self, topRightFrame, col=0, row=0)
         self.RequirementEditor = RequirementEditor(self, reqAndPropsFrame, col=0, row=0)
         self.ExtrapropEditor = ExtrapropEditor(self, reqAndPropsFrame, col=0, row=1)
-        self.HitConditionEditor = HitConditionEditor(self, bottomLeftFrame, col=0, row=0)
+        self.HitConditionEditor = HitConditionEditor(self, bottomLeftFrame, col=1, row=0)
+        self.ReactionListEditor = ReactionListEditor(self, editorFrame, col=1, row=1)
         
         
-        moveFrame2 = Frame(editorFrame, bg='#999')
-        moveFrame2.grid(row=1, column=1, sticky="nsew")
+        #moveFrame2 = Frame(editorFrame, bg='#999')
+        #moveFrame2.grid(row=1, column=1, sticky="nsew")
         
         
         menuActions = [
@@ -885,6 +956,7 @@ class GUI_TekkenMovesetEditor():
         self.RequirementEditor.resetForm()
         self.ExtrapropEditor.resetForm()
         self.HitConditionEditor.resetForm()
+        self.ReactionListEditor.resetForm()
         
     def getMoveId(self, moveId):
         return self.movelist['aliases'][moveId - 0x8000] if moveId >= 0x8000 else moveId
@@ -897,6 +969,12 @@ class GUI_TekkenMovesetEditor():
         self.MoveEditor.setMove(moveData, moveId)
         self.MovelistSelector.movelistSelect.select_set(moveId)
         self.MovelistSelector.movelistSelect.see(moveId)
+        
+    def setReactionList(self, itemId):
+        if itemId < 0 or itemId >= len(self.movelist['reaction_list']):
+            return
+        itemData = self.movelist['reaction_list'][itemId]
+        self.ReactionListEditor.setItem(itemData, itemId)
         
     def getMoveName(self, moveId):
         moveId = self.getMoveId(moveId)
