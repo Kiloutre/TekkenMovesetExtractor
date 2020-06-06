@@ -928,7 +928,7 @@ class GUI_TekkenMovesetEditor():
         self.resetForms()
             
     def setTitle(self, label = ""):
-        title = "TekkenMovesetEditor 0.7-BETA"
+        title = "TekkenMovesetEditor 0.8-BETA"
         if label != "":
             title += " - " + label
         self.window.wm_title(title) 
