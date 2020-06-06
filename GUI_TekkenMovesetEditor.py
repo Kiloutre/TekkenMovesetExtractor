@@ -1,6 +1,6 @@
 # Python 3.6.5
 
-from tkinter import Tk, Frame, Listbox, Label, Scrollbar, StringVar, Toplevel
+from tkinter import Tk, Frame, Listbox, Label, Scrollbar, StringVar, Toplevel, Menu
 from tkinter.ttk import Button, Entry
 from Addresses import game_addresses, GameClass
 from Aliases import getRequirement, getTag2Requirement
@@ -187,9 +187,7 @@ class CharalistSelector:
         charaSelect.pack(fill='both', expand=1)
         
         buttons = [
-            ("Select Moveset", self.selectMoveset),
-            ("Load to P1", lambda self=self : self.loadToPlayer(0) ),
-            ("Load to P2", lambda self=self : self.loadToPlayer(1) )
+            ("Select Moveset", self.selectMoveset)
         ]
         
         for label, callback in buttons:
@@ -299,8 +297,7 @@ class MovelistSelector:
         
         bottomButtons = [
             ('Save', self.root.save),
-            ('Go to current move ID', self.goToCurrentMove),
-            ('Toggle character selector', self.toggleCharacterSelector)
+            ('Go to current move ID', self.goToCurrentMove)
         ]
         
         for label, callback in bottomButtons:
@@ -328,9 +325,6 @@ class MovelistSelector:
        
     def show(self):
         self.frame.pack(side='left', fill='y')
-        
-    def toggleCharacterSelector(self):
-        self.root.Charalist.toggleVisibility()
         
     def onMoveSelection(self, event):
         w = event.widget
@@ -782,6 +776,20 @@ class GUI_TekkenMovesetEditor():
         moveFrame2.grid(row=1, column=0, sticky="nsew")
         moveFrame2 = Frame(editorFrame, bg='#999')
         moveFrame2.grid(row=1, column=1, sticky="nsew")
+        
+        
+        
+        menuActions = [
+            ('Toggle character selector', self.Charalist.toggleVisibility),
+            ("Load to P1", lambda self=self : self.Charalist.loadToPlayer(0) ),
+            ("Load to P2", lambda self=self : self.Charalist.loadToPlayer(1) )
+        ]
+        
+        
+        menubar = Menu(window)
+        for label, command in menuActions:
+            menubar.add_command(label=label, command=command)
+        window.config(menu=menubar)
         
         self.movelist = None
         
