@@ -467,6 +467,15 @@ class FormEditor:
             if field in self.fieldVar:
                 self.fieldVar[field].set('')
                 self.fieldInput[field].config(state='disabled')
+        
+    def setItemList(self, itemList, itemId):
+        self.id = itemId
+        self.baseId = itemId
+        self.itemList = itemList
+        self.listIndex = 0
+        
+        self.setItem(0)
+        
             
 class ExtrapropEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
@@ -502,7 +511,7 @@ class ExtrapropEditor(FormEditor):
         super().save()
         index = self.listIndex
         self.root.setExtrapropList(self.baseId)
-        self.setProperty(index)
+        self.setItem(index)
         
     def setDetails(self):
         return
@@ -518,9 +527,9 @@ class ExtrapropEditor(FormEditor):
         self.details['text'] = text
         
     def navigateTo(self, offset):
-        if self.editMode == None or (self.listIndex + offset) < 0 or (self.listIndex + offset) >= len(self.propertyList):
+        if self.editMode == None or (self.listIndex + offset) < 0 or (self.listIndex + offset) >= len(self.itemList):
             return
-        self.setProperty(self.listIndex + offset)
+        self.setItem(self.listIndex + offset)
         
     def initFields(self):
         fields = sortKeys(extrapropFields.keys())
@@ -545,12 +554,12 @@ class ExtrapropEditor(FormEditor):
             self.fieldInput[field] = fieldInput
             self.fieldLabel[field] = fieldLabel
             
-    def setProperty(self, index):
-        propertyData = self.propertyList[index]
+    def setItem(self, index):
+        propertyData = self.itemList[index]
         self.listIndex = index
         self.id = self.baseId + index
         
-        propertyCount = len(self.propertyList)
+        propertyCount = len(self.itemList)
         
         propCount = " %d properties" % (propertyCount) if propertyCount > 1 else "1 property" 
         self.setLabel("Move property list %d: %s" % (self.baseId, propCount))
@@ -565,14 +574,6 @@ class ExtrapropEditor(FormEditor):
         self.editMode = True
         
         self.setDetails()
-        
-    def setPropertyList(self, propertyList, propertyId):
-        self.id = propertyId
-        self.baseId = propertyId
-        self.propertyList = propertyList
-        self.listIndex = 0
-        
-        self.setProperty(0)
             
 class RequirementEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
@@ -608,7 +609,7 @@ class RequirementEditor(FormEditor):
         super().save()
         index = self.listIndex
         self.root.setRequirementList(self.baseId)
-        self.setRequirement(index)
+        self.setItem(index)
         
     def setDetails(self):
         reqId = self.fieldValue['req']
@@ -623,9 +624,9 @@ class RequirementEditor(FormEditor):
         self.details['text'] = text
         
     def navigateTo(self, offset):
-        if self.editMode == None or (self.listIndex + offset) < 0 or (self.listIndex + offset) >= len(self.requirementList):
+        if self.editMode == None or (self.listIndex + offset) < 0 or (self.listIndex + offset) >= len(self.itemList):
             return
-        self.setRequirement(self.listIndex + offset)
+        self.setItem(self.listIndex + offset)
         
     def initFields(self):
         fields = sortKeys(requirementFields.keys())
@@ -650,12 +651,12 @@ class RequirementEditor(FormEditor):
             self.fieldInput[field] = fieldInput
             self.fieldLabel[field] = fieldLabel
             
-    def setRequirement(self, index):
-        requirementData = self.requirementList[index]
+    def setItem(self, index):
+        requirementData = self.itemList[index]
         self.listIndex = index
         self.id = self.baseId + index
         
-        requirementsLen = len(self.requirementList)
+        requirementsLen = len(self.itemList)
         
         reqCount = " %d requirements" % (requirementsLen) if requirementsLen > 1 else "1 requirement" 
         self.setLabel("Requirement list %d: %s" % (self.baseId, reqCount))
@@ -670,14 +671,6 @@ class RequirementEditor(FormEditor):
         self.editMode = True
         
         self.setDetails()
-        
-    def setRequirementList(self, requirementList, requirementId):
-        self.id = requirementId
-        self.baseId = requirementId
-        self.requirementList = requirementList
-        self.listIndex = 0
-        
-        self.setRequirement(0)
             
 class CancelEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
@@ -740,12 +733,12 @@ class CancelEditor(FormEditor):
         super().save()
         index = self.listIndex
         self.root.setCancelList(self.baseId)
-        self.setCancel(index)
+        self.setItem(index)
         
     def navigateToCancel(self, offset):
-        if self.editMode == None or (self.listIndex + offset) < 0 or (self.listIndex + offset) >= len(self.cancelList):
+        if self.editMode == None or (self.listIndex + offset) < 0 or (self.listIndex + offset) >= len(self.itemList):
             return
-        self.setCancel(self.listIndex + offset)
+        self.setItem(self.listIndex + offset)
         
     def initFields(self):
         fields = sortKeys(cancelFields.keys())
@@ -770,12 +763,12 @@ class CancelEditor(FormEditor):
             self.fieldInput[field] = fieldInput
             self.fieldLabel[field] = fieldLabel
             
-    def setCancel(self, index):
-        cancelData = self.cancelList[index]
+    def setItem(self, index):
+        cancelData = self.itemList[index]
         self.listIndex = index
         self.id = self.baseId + index
         
-        cancelLen = len(self.cancelList)
+        cancelLen = len(self.itemList)
         
         cancelCount = " %d cancels" % (cancelLen) if cancelLen > 1 else "1 cancel" 
         self.setLabel("Cancel list %d: %s" % (self.baseId, cancelCount))
@@ -790,14 +783,6 @@ class CancelEditor(FormEditor):
         self.editMode = True
         
         self.setCommandLabel()
-        
-    def setCancelList(self, cancelList, cancelId):
-        self.id = cancelId
-        self.baseId = cancelId
-        self.cancelList = cancelList
-        self.listIndex = 0
-        
-        self.setCancel(0)
     
 class MoveEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
@@ -862,6 +847,17 @@ class MoveEditor(FormEditor):
         if self.editMode == None:
             return
         self.root.setExtrapropList(self.fieldValue['extra_properties_idx'])
+        
+def splitFrame(root, split, bg=None):
+    rowCount = 1 + (split == 'horizontal')
+    colCount = 1 + (split == 'vertical')
+    newFrame = Frame(root, bg=bg)
+    
+    for i in range(rowCount):
+        newFrame.grid_rowconfigure(i, weight=1, uniform='group1' )
+    for i in range(colCount):
+        newFrame.grid_columnconfigure(i, weight=1, uniform='group1' )
+    return newFrame
 
 class GUI_TekkenMovesetEditor():
     def __init__(self, showCharacterSelector=True, mainWindow=True):
@@ -882,26 +878,22 @@ class GUI_TekkenMovesetEditor():
             editorFrame.grid_columnconfigure(i, weight=1, uniform="group1")
             editorFrame.grid_rowconfigure(i, weight=1)
             
-        northEastFrame = Frame(editorFrame, bg='#bbb')
+        northEastFrame = splitFrame(editorFrame, 'vertical')
         northEastFrame.grid(row=0, column=1, sticky="nsew")
-        northEastFrame.grid_columnconfigure(0, weight=1, uniform="group1")
-        northEastFrame.grid_columnconfigure(1, weight=1, uniform="group1")
-        northEastFrame.grid_rowconfigure(0, weight=1)
             
-        tFrame = Frame(northEastFrame, bg='#bbb')
-        tFrame.grid(row=0, column=1, sticky="nsew")
-        tFrame.grid_columnconfigure(0, weight=1)
-        tFrame.grid_rowconfigure(0, weight=1, uniform="group1")
-        tFrame.grid_rowconfigure(1, weight=1, uniform="group1")
+        reqAndPropsFrame = splitFrame(northEastFrame, split='horizontal')
+        reqAndPropsFrame.grid(row=0, column=1, sticky="nsew")
+        
+        tFrame = Frame(editorFrame, bg='#aaa')
+        tFrame.grid(row=1, column=0, sticky="nsew")
         
         self.MoveEditor = MoveEditor(self, editorFrame, col=0, row=0)
         self.CancelEditor = CancelEditor(self, northEastFrame, col=0, row=0)
-        self.RequirementEditor = RequirementEditor(self, tFrame, col=0, row=0)
-        self.ExtrapropEditor = ExtrapropEditor(self, tFrame, col=0, row=1)
+        self.RequirementEditor = RequirementEditor(self, reqAndPropsFrame, col=0, row=0)
+        self.ExtrapropEditor = ExtrapropEditor(self, reqAndPropsFrame, col=0, row=1)
+       # self.ExtrapropEditor = ExtrapropEditor(self, reqAndPropsFrame, col=0, row=1)
         
         
-        moveFrame2 = Frame(editorFrame, bg='#aaa')
-        moveFrame2.grid(row=1, column=0, sticky="nsew")
         moveFrame2 = Frame(editorFrame, bg='#999')
         moveFrame2.grid(row=1, column=1, sticky="nsew")
         
@@ -981,7 +973,7 @@ class GUI_TekkenMovesetEditor():
         while self.movelist['cancels'][id]['command'] != 0x8000:
             id += 1
         cancelList = [cancel for cancel in self.movelist['cancels'][cancelId:id + 1]]
-        self.CancelEditor.setCancelList(cancelList, cancelId)
+        self.CancelEditor.setItemList(cancelList, cancelId)
         
     def setRequirementList(self, requirementId):
         if requirementId < 0 or requirementId >= len(self.movelist['requirements']):
@@ -992,7 +984,7 @@ class GUI_TekkenMovesetEditor():
         while self.movelist['requirements'][id]['req'] != endValue:
             id += 1
         reqList = [req for req in self.movelist['requirements'][requirementId:id + 1]]
-        self.RequirementEditor.setRequirementList(reqList, requirementId)
+        self.RequirementEditor.setItemList(reqList, requirementId)
         
     def setExtrapropList(self, propId):
         if propId < 0 or propId >= len(self.movelist['extra_move_properties']):
@@ -1002,7 +994,7 @@ class GUI_TekkenMovesetEditor():
         while self.movelist['extra_move_properties'][id]['type'] != 0:
             id += 1
         propList = [prop for prop in self.movelist['extra_move_properties'][propId:id + 1]]
-        self.ExtrapropEditor.setPropertyList(propList, propId)
+        self.ExtrapropEditor.setItemList(propList, propId)
         
 
 if __name__ == "__main__":
