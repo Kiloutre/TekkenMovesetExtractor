@@ -299,8 +299,6 @@ class ReactionList:
         self.u1list = [self.bToInt(data, (self.ptr_size * 7) + i * 2, 2) for i in range(6)]
         
         list_starting_offset = 0x50 if self.TekkenVersion == 7 else 0x34
-        self.reaction_list = [self.bToInt(data, list_starting_offset + (offset * 2), 2) for offset in range(0, 14)]
-        
         
         self.vertical_pushback = self.bToInt(data, list_starting_offset - 4, 2)
         self.standing = self.bToInt(data, list_starting_offset + 0x0, 2)
