@@ -7,7 +7,7 @@ requirements = {
     133: { 't7_id': 135, 'desc': 'Death' },
     3: { 't7_id': 3, 'desc': '1536: Enemy standing, throw (checking vuln?)' },
     27: { 't7_id': 27, 'desc': '2536: Enemy airborne, throw (checking vuln?)' },
-    46: { 't7_id': 44, 'desc': 'MAPPING' },
+    46: { 't7_id': 44, 'desc': 'Counterhit' },
     49: { 't7_id': 47, 'desc': 'MAPPING' },
     51: { 't7_id': 48, 'desc': 'MAPPING' },
     53: { 't7_id': 52, 'desc': '(ASUKA) aiki_y -> Standing' },

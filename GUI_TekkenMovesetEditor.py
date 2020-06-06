@@ -3,6 +3,7 @@
 from tkinter import Tk, Frame, Listbox, Label, Scrollbar, StringVar, Toplevel
 from tkinter.ttk import Button, Entry
 from Addresses import game_addresses, GameClass
+from Aliases import getRequirement, getTag2Requirement
 import motbinImport as importLib
 import json
 import os
@@ -58,9 +59,15 @@ cancelFields = {
     'cancel_option': 'number'
 }
 
+requirementFields = {
+    'req': 'number',
+    'param': 'number'
+}
+
 fieldsTypes = {
     'moves': moveFields,
-    'cancels': cancelFields
+    'cancels': cancelFields,
+    'requirements': requirementFields
 }
     
 def getCharacterList():
@@ -425,6 +432,111 @@ class FormEditor:
                 self.fieldVar[field].set('')
                 self.fieldInput[field].config(state='disabled')
             
+class RequirementEditor(FormEditor):
+    def __init__(self, root, rootFrame, col, row):
+        FormEditor.__init__(self, root, rootFrame, 'requirements', col, row)
+        
+        navigatorFrame = Frame(self.container)
+        navigatorFrame.pack(side='bottom', fill='x')
+       
+        navigatorLabel = Label(navigatorFrame)
+        navigatorLabel.pack(side='top')
+        
+        prevButton = Button(navigatorFrame, text="<< Previous Req...", command=lambda : self.navigateTo(-1))
+        prevButton.pack(fill='x', side='left', expand=True)
+        
+        nextButton = Button(navigatorFrame, text="Next Req... >>", command=lambda : self.navigateTo(1))
+        nextButton.pack(fill='x', side='right', expand=True)
+        
+        details = Label(self.container)
+        details.pack(side='bottom', fill='x')
+        
+        self.initFields()
+        self.navigatorLabel = navigatorLabel
+        self.details = details
+        
+    def resetForm(self):
+        self.navigatorLabel['text'] = "No requirement selected"
+        self.details['text'] = ''
+        super().resetForm()
+        
+    def save(self):
+        if self.editMode == None:
+            return
+        super().save()
+        index = self.listIndex
+        self.root.setRequirementList(self.baseId)
+        self.setRequirement(index)
+        
+    def setDetails(self):
+        reqId = self.fieldValue['req']
+        getDetails = getRequirement if self.root.movelist['version'] == 'Tekken7' else getTag2Requirement
+        
+        details = getDetails(reqId)
+        
+        if details != None and details['desc'] != 'MAPPING' and not details['desc'].startswith('('):
+            text = '%d\'s description:\n%s' % (reqId, details['desc'])
+        else:
+            text = ''
+        self.details['text'] = text
+        
+    def navigateTo(self, offset):
+        if self.editMode == None or (self.listIndex + offset) < 0 or (self.listIndex + offset) >= len(self.requirementList):
+            return
+        self.setRequirement(self.listIndex + offset)
+        
+    def initFields(self):
+        fields = sortKeys(requirementFields.keys())
+        
+        for field in fields:
+            container = Frame(self.container)
+            container.pack(side='top', anchor='n', fill='both')
+
+            fieldLabel = Label(container, text=field, width=15)
+            fieldLabel.grid(row=0, column=0, pady=2, sticky='w')
+        
+            if field.endswith("_idx") or field.endswith("_indexes") or field.endswith('_id'):
+                fieldLabel.config(cursor='hand2', bg='#cce3e1')
+            
+            sv = StringVar()
+            sv.trace("w", lambda name, index, mode, field=field, sv=sv: self.onchange(field, sv))
+
+            fieldInput = Entry(container, textvariable=sv)
+            fieldInput.grid(row=0, column=1, sticky='ew')
+            
+            self.fieldVar[field] = sv
+            self.fieldInput[field] = fieldInput
+            self.fieldLabel[field] = fieldLabel
+            
+    def setRequirement(self, index):
+        requirementData = self.requirementList[index]
+        self.listIndex = index
+        self.id = self.baseId + index
+        
+        requirementsLen = len(self.requirementList)
+        
+        reqCount = " %d requirements" % (requirementsLen) if requirementsLen > 1 else "1 requirement" 
+        self.setLabel("Requirement list %d: %s" % (self.baseId, reqCount))
+        
+        self.navigatorLabel['text'] = "Requirement %d/%d" % (index + 1, requirementsLen)
+        
+        self.editMode = None
+        for field in requirementData:
+            if field in requirementFields:
+                self.setField(field, requirementData[field], True)
+                self.fieldInput[field].config(state='enabled')
+        self.editMode = True
+        
+        self.setDetails()
+        
+    def setRequirementList(self, requirementList, requirementId):
+        self.id = requirementId
+        self.baseId = requirementId
+        self.requirementList = requirementList
+        self.listIndex = 0
+        
+        self.setRequirement(0)
+            
 class CancelEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
         FormEditor.__init__(self, root, rootFrame, 'cancels', col, row)
@@ -449,6 +561,7 @@ class CancelEditor(FormEditor):
         self.commandLabel = commandLabel
         
         self.fieldLabel['move_id'].bind("<Button-1>", self.selectMove)
+        self.fieldLabel['requirement_idx'].bind("<Button-1>", self.selectRequirement)
         
     def onchange(self, field, sv):
         if self.editMode == None:
@@ -460,6 +573,11 @@ class CancelEditor(FormEditor):
         if self.editMode == None:
             return
         self.root.setMove(self.fieldValue['move_id'])
+        
+    def selectRequirement(self, event):
+        if self.editMode == None:
+            return
+        self.root.setRequirementList(self.fieldValue['requirement_idx'])
         
     def setCommandLabel(self):
         command = self.fieldValue['command']
@@ -621,9 +739,16 @@ class GUI_TekkenMovesetEditor():
         northEastFrame.grid_columnconfigure(0, weight=1, uniform="group1")
         northEastFrame.grid_columnconfigure(1, weight=1, uniform="group1")
         northEastFrame.grid_rowconfigure(0, weight=1)
+            
+        tFrame = Frame(northEastFrame, bg='#bbb')
+        tFrame.grid(row=0, column=1, sticky="nsew")
+        tFrame.grid_columnconfigure(0, weight=1)
+        tFrame.grid_rowconfigure(0, weight=1, uniform="group1")
+        tFrame.grid_rowconfigure(1, weight=1, uniform="group1")
         
         self.MoveEditor = MoveEditor(self, editorFrame, col=0, row=0)
         self.CancelEditor = CancelEditor(self, northEastFrame, col=0, row=0)
+        self.RequirementEditor = RequirementEditor(self, tFrame, col=0, row=0)
         
         
         moveFrame2 = Frame(editorFrame, bg='#aaa')
@@ -669,6 +794,7 @@ class GUI_TekkenMovesetEditor():
     def resetForms(self):
         self.MoveEditor.resetForm()
         self.CancelEditor.resetForm()
+        self.RequirementEditor.resetForm()
         
     def getMoveId(self, moveId):
         return self.movelist['aliases'][moveId - 0x8000] if moveId >= 0x8000 else moveId
@@ -695,6 +821,17 @@ class GUI_TekkenMovesetEditor():
             id += 1
         cancelList = [cancel for cancel in self.movelist['cancels'][cancelId:id + 1]]
         self.CancelEditor.setCancelList(cancelList, cancelId)
+        
+    def setRequirementList(self, requirementId):
+        if requirementId < 0 or requirementId >= len(self.movelist['requirements']):
+            return
+        cancelList = []
+        id = requirementId
+        endValue = 881 if self.movelist['version'] == 'Tekken7' else 690
+        while self.movelist['requirements'][id]['req'] != endValue:
+            id += 1
+        cancelList = [cancel for cancel in self.movelist['requirements'][requirementId:id + 1]]
+        self.RequirementEditor.setRequirementList(cancelList, requirementId)
         
 
 if __name__ == "__main__":
