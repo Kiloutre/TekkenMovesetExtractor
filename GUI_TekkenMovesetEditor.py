@@ -397,6 +397,9 @@ class FormEditor:
         self.fieldValue = {}
         self.container = None
         self.lastValidLabel = None
+        self.listSaveFunction = None
+        self.navigatorLabel = None
+        self.details = None
         
         self.initEditor(col, row)
         
@@ -436,6 +439,9 @@ class FormEditor:
         
         self.setField(field, value)
         
+    def setListOnsaveFunction(self, function):
+        self.listSaveFunction = None
+        
     def save(self):
         if self.editMode == None:
             return
@@ -444,6 +450,11 @@ class FormEditor:
             value = self.fieldVar[field].get()
             if validateField(valueType, value):
                 self.root.movelist[self.key][self.id][field] = getFieldValue(valueType, value)
+                
+        if self.listSaveFunction != None:
+            index = self.listIndex
+            self.listSaveFunction(self.baseId)
+            self.setItem(index)
         
     def setField(self, field, value, setFieldValue=False):
         self.editMode = None
@@ -467,6 +478,11 @@ class FormEditor:
             if field in self.fieldVar:
                 self.fieldVar[field].set('')
                 self.fieldInput[field].config(state='disabled')
+                
+        if self.navigatorLabel != None:
+            self.navigatorLabel['text'] = ""
+        if self.details != None:
+            self.details['text'] = ''
         
     def setItemList(self, itemList, itemId):
         self.id = itemId
@@ -476,42 +492,64 @@ class FormEditor:
         
         self.setItem(0)
         
-            
-class ExtrapropEditor(FormEditor):
-    def __init__(self, root, rootFrame, col, row):
-        FormEditor.__init__(self, root, rootFrame, 'extra_move_properties', col, row)
+    def navigateToItem(self, offset):
+        if self.editMode == None or (self.listIndex + offset) < 0 or (self.listIndex + offset) >= len(self.itemList):
+            return
+        self.setItem(self.listIndex + offset)
         
+    def enableNavigator(self, itemLabel):
         navigatorFrame = Frame(self.container)
         navigatorFrame.pack(side='bottom', fill='x')
        
         navigatorLabel = Label(navigatorFrame)
         navigatorLabel.pack(side='top')
         
-        prevButton = Button(navigatorFrame, text="<< Previous Prop...", command=lambda : self.navigateTo(-1))
+        prevButton = Button(navigatorFrame, text="<< Previous %s" % (itemLabel), command=lambda : self.navigateToItem(-1))
         prevButton.pack(fill='x', side='left', expand=True)
         
-        nextButton = Button(navigatorFrame, text="Next Prop... >>", command=lambda : self.navigateTo(1))
+        nextButton = Button(navigatorFrame, text="Next %s >>" % (itemLabel), command=lambda : self.navigateToItem(1))
         nextButton.pack(fill='x', side='right', expand=True)
         
+        self.navigatorLabel = navigatorLabel
+        
+    def initFields(self):
+        fields = sortKeys(self.fieldTypes.keys())
+        
+        for field in fields:
+            container = Frame(self.container)
+            container.pack(side='top', anchor='n', fill='both')
+
+            fieldLabel = Label(container, text=field, width=15)
+            fieldLabel.grid(row=0, column=0, pady=2, sticky='w')
+            
+            sv = StringVar()
+            sv.trace("w", lambda name, index, mode, field=field, sv=sv: self.onchange(field, sv))
+
+            fieldInput = Entry(container, textvariable=sv)
+            fieldInput.grid(row=0, column=1, sticky='ew')
+            
+            self.fieldVar[field] = sv
+            self.fieldInput[field] = fieldInput
+            self.fieldLabel[field] = fieldLabel
+            
+    def registerFieldButtons(self, items):
+        for field, function in items:
+            self.fieldLabel[field].config(cursor='hand2', bg='#cce3e1')
+            self.fieldLabel[field].bind("<Button-1>", lambda _, self=self, field=field, function=function : function(self.fieldValue[field]))
+    
+    def enableDetailsArea(self):
         details = Label(self.container)
-        #details.pack(side='bottom', fill='x')
+        details.pack(side='bottom', fill='x')
+        self.details = details
+            
+class ExtrapropEditor(FormEditor):
+    def __init__(self, root, rootFrame, col, row):
+        FormEditor.__init__(self, root, rootFrame, 'extra_move_properties', col, row)
+        self.setListOnsaveFunction(self.root.setExtrapropList)
+        self.enableNavigator(itemLabel='Prop')
+        #self.enableDetailsArea()
         
         self.initFields()
-        self.navigatorLabel = navigatorLabel
-        self.details = details
-        
-    def resetForm(self):
-        self.navigatorLabel['text'] = ""
-        self.details['text'] = ''
-        super().resetForm()
-        
-    def save(self):
-        if self.editMode == None:
-            return
-        super().save()
-        index = self.listIndex
-        self.root.setExtrapropList(self.baseId)
-        self.setItem(index)
         
     def setDetails(self):
         return
@@ -525,34 +563,6 @@ class ExtrapropEditor(FormEditor):
         else:
             text = ''
         self.details['text'] = text
-        
-    def navigateTo(self, offset):
-        if self.editMode == None or (self.listIndex + offset) < 0 or (self.listIndex + offset) >= len(self.itemList):
-            return
-        self.setItem(self.listIndex + offset)
-        
-    def initFields(self):
-        fields = sortKeys(extrapropFields.keys())
-        
-        for field in fields:
-            container = Frame(self.container)
-            container.pack(side='top', anchor='n', fill='both')
-
-            fieldLabel = Label(container, text=field, width=15)
-            fieldLabel.grid(row=0, column=0, pady=2, sticky='w')
-        
-            if field.endswith("_idx") or field.endswith("_indexes") or field.endswith('_id'):
-                fieldLabel.config(cursor='hand2', bg='#cce3e1')
-            
-            sv = StringVar()
-            sv.trace("w", lambda name, index, mode, field=field, sv=sv: self.onchange(field, sv))
-
-            fieldInput = Entry(container, textvariable=sv)
-            fieldInput.grid(row=0, column=1, sticky='ew')
-            
-            self.fieldVar[field] = sv
-            self.fieldInput[field] = fieldInput
-            self.fieldLabel[field] = fieldLabel
             
     def setItem(self, index):
         propertyData = self.itemList[index]
@@ -578,38 +588,11 @@ class ExtrapropEditor(FormEditor):
 class RequirementEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
         FormEditor.__init__(self, root, rootFrame, 'requirements', col, row)
-        
-        navigatorFrame = Frame(self.container)
-        navigatorFrame.pack(side='bottom', fill='x')
-       
-        navigatorLabel = Label(navigatorFrame)
-        navigatorLabel.pack(side='top')
-        
-        prevButton = Button(navigatorFrame, text="<< Previous Req...", command=lambda : self.navigateTo(-1))
-        prevButton.pack(fill='x', side='left', expand=True)
-        
-        nextButton = Button(navigatorFrame, text="Next Req... >>", command=lambda : self.navigateTo(1))
-        nextButton.pack(fill='x', side='right', expand=True)
-        
-        details = Label(self.container)
-        details.pack(side='bottom', fill='x')
+        self.setListOnsaveFunction(self.root.setRequirementList)
+        self.enableNavigator(itemLabel='Req')
+        self.enableDetailsArea()
         
         self.initFields()
-        self.navigatorLabel = navigatorLabel
-        self.details = details
-        
-    def resetForm(self):
-        self.navigatorLabel['text'] = ""
-        self.details['text'] = ''
-        super().resetForm()
-        
-    def save(self):
-        if self.editMode == None:
-            return
-        super().save()
-        index = self.listIndex
-        self.root.setRequirementList(self.baseId)
-        self.setItem(index)
         
     def setDetails(self):
         reqId = self.fieldValue['req']
@@ -622,34 +605,6 @@ class RequirementEditor(FormEditor):
         else:
             text = ''
         self.details['text'] = text
-        
-    def navigateTo(self, offset):
-        if self.editMode == None or (self.listIndex + offset) < 0 or (self.listIndex + offset) >= len(self.itemList):
-            return
-        self.setItem(self.listIndex + offset)
-        
-    def initFields(self):
-        fields = sortKeys(requirementFields.keys())
-        
-        for field in fields:
-            container = Frame(self.container)
-            container.pack(side='top', anchor='n', fill='both')
-
-            fieldLabel = Label(container, text=field, width=15)
-            fieldLabel.grid(row=0, column=0, pady=2, sticky='w')
-        
-            if field.endswith("_idx") or field.endswith("_indexes") or field.endswith('_id'):
-                fieldLabel.config(cursor='hand2', bg='#cce3e1')
-            
-            sv = StringVar()
-            sv.trace("w", lambda name, index, mode, field=field, sv=sv: self.onchange(field, sv))
-
-            fieldInput = Entry(container, textvariable=sv)
-            fieldInput.grid(row=0, column=1, sticky='ew')
-            
-            self.fieldVar[field] = sv
-            self.fieldInput[field] = fieldInput
-            self.fieldLabel[field] = fieldLabel
             
     def setItem(self, index):
         requirementData = self.itemList[index]
@@ -675,28 +630,16 @@ class RequirementEditor(FormEditor):
 class CancelEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
         FormEditor.__init__(self, root, rootFrame, 'cancels', col, row)
-        
-        navigatorFrame = Frame(self.container)
-        navigatorFrame.pack(side='bottom', fill='x')
-       
-        navigatorLabel = Label(navigatorFrame)
-        navigatorLabel.pack(side='top')
-        
-        prevCancelButton = Button(navigatorFrame, text="<< Previous Cancel", command=lambda : self.navigateToCancel(-1))
-        prevCancelButton.pack(fill='x', side='left', expand=True)
-        
-        nextCancelButton = Button(navigatorFrame, text="Next Cancel >>", command=lambda : self.navigateToCancel(1))
-        nextCancelButton.pack(fill='x', side='right', expand=True)
-        
-        commandLabel = Label(self.container)
-        commandLabel.pack(side='bottom', fill='x')
+        self.setListOnsaveFunction(self.root.setCancelList)
+        self.enableNavigator(itemLabel='Cancel')
+        self.enableDetailsArea()
         
         self.initFields()
-        self.navigatorLabel = navigatorLabel
-        self.commandLabel = commandLabel
         
-        self.fieldLabel['move_id'].bind("<Button-1>", self.selectMove)
-        self.fieldLabel['requirement_idx'].bind("<Button-1>", self.selectRequirement)
+        self.registerFieldButtons([
+            ('move_id', self.root.setMove),
+            ('requirement_idx', self.root.setRequirementList),
+        ])
         
     def onchange(self, field, sv):
         if self.editMode == None:
@@ -704,64 +647,13 @@ class CancelEditor(FormEditor):
         super().onchange(field, sv)
         self.setCommandLabel()
         
-    def selectMove(self, event):
-        if self.editMode == None:
-            return
-        self.root.setMove(self.fieldValue['move_id'])
-        
-    def selectRequirement(self, event):
-        if self.editMode == None:
-            return
-        self.root.setRequirementList(self.fieldValue['requirement_idx'])
-        
     def setCommandLabel(self):
         command = self.fieldValue['command']
         moveId = self.fieldValue['move_id']
         moveName = self.root.getMoveName(moveId)
         
         text =  "Command: " + getCommandStr(command) + "\nMove: " + moveName
-        self.commandLabel['text'] = text
-        
-    def resetForm(self):
-        self.navigatorLabel['text'] = ""
-        self.commandLabel['text'] = ''
-        super().resetForm()
-        
-    def save(self):
-        if self.editMode == None:
-            return
-        super().save()
-        index = self.listIndex
-        self.root.setCancelList(self.baseId)
-        self.setItem(index)
-        
-    def navigateToCancel(self, offset):
-        if self.editMode == None or (self.listIndex + offset) < 0 or (self.listIndex + offset) >= len(self.itemList):
-            return
-        self.setItem(self.listIndex + offset)
-        
-    def initFields(self):
-        fields = sortKeys(cancelFields.keys())
-        
-        for field in fields:
-            container = Frame(self.container)
-            container.pack(side='top', anchor='n', fill='both')
-
-            fieldLabel = Label(container, text=field, width=15)
-            fieldLabel.grid(row=0, column=0, pady=2, sticky='w')
-        
-            if field.endswith("_idx") or field.endswith("_indexes") or field.endswith('_id'):
-                fieldLabel.config(cursor='hand2', bg='#cce3e1')
-            
-            sv = StringVar()
-            sv.trace("w", lambda name, index, mode, field=field, sv=sv: self.onchange(field, sv))
-
-            fieldInput = Entry(container, textvariable=sv)
-            fieldInput.grid(row=0, column=1, sticky='ew')
-            
-            self.fieldVar[field] = sv
-            self.fieldInput[field] = fieldInput
-            self.fieldLabel[field] = fieldLabel
+        self.details['text'] = text
             
     def setItem(self, index):
         cancelData = self.itemList[index]
@@ -796,21 +688,22 @@ class MoveEditor(FormEditor):
         
         self.initFields()
         
-        self.fieldLabel['cancel_idx'].bind("<Button-1>", self.selectCancel)
-        self.fieldLabel['extra_properties_idx'].bind("<Button-1>", self.selectExtraprop)
+        self.registerFieldButtons([
+            ('cancel_idx', self.root.setCancelList),
+            ('extra_properties_idx', self.root.setExtrapropList),
+        ])
         
+
     def initFields(self):
         fields = sortKeys(moveFields.keys())
         sideBreakpoint = len(fields) / 2
+        
         for i, field in enumerate(fields):
             container = Frame(self.westernFrame if i < sideBreakpoint else self.easternFrame)
             container.pack(side='top', anchor='n', fill='both')
 
             fieldLabel = Label(container, text=fieldLabels.get(field, field), width=15)
             fieldLabel.grid(row=0, column=0, sticky='w')
-            
-            if field.endswith("_idx") or field.endswith("_indexes") or field.endswith('_id'):
-                fieldLabel.config(cursor='hand2', bg='#cce3e1')
             
             sv = StringVar()
             sv.trace("w", lambda name, index, mode, field=field, sv=sv: self.onchange(field, sv))
