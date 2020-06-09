@@ -1,27 +1,30 @@
-# T7 Player addresses, required for import and export. Might change with updates
-p1_addr            = 0x1434D2E10
-p2_addr            = 0x1434D63C0
-playerstruct_size  = 0x35B0 #Distance between 2 players addresses
-motbin_offset      = 0x14a0
+# T7 addresses and offsets. Changes with updates
+t7_process_name       = TekkenGame-Win64-Shipping.exe
+t7_base               = 0x0
+t7_p1_addr            = 0x1434D2E10
+t7_playerstruct_size  = 0x35B0 #Distance between 2 players addresses
+t7_motbin_offset      = 0x14a0
+t7_chara_id_offset    = 0xd8
 
-# CEMU base address, needs to be changed at every CEMU restart. See CEMU log file to get this address.
-cemu_base      =   0x9999999999999999
+# Tag2 addresses.
+tag2_process_name       = Cemu.exe
+tag2_base               = 0x0
+tag2_p1_addr            = 0x10885C90 #Game ID: 00050000-1010f800 [EU v32]
+tag2_p1_addr            = 0x10884C70 #Game ID: 00050000-10110000 [US v16]
+tag2_playerstruct_size  = 0x2960 #Distance between 2 players addresses
+tag2_motbin_offset      = -0x98
+tag2_chara_id_offset    = -0xCC
 
-# CEMU player addr
-# Player addresses automatically fetched for those two versions, DO NOT CHANGE!!!
+# Tekken Revolution addresses
+rev_process_name       = rpcs3.exe
+rev_base               = 0x0
+rev_p1_addr            = 0x12DA030 #This is actually p2
+rev_playerstruct_size  = 0x2960 #Distance between 2 players addresses
+rev_motbin_offset      = -0xa8
+rev_chara_id_offset    = -0xCC #to find
 
-00050000-1010f800_p1_addr = 0x10885C90 #Game ID: 00050000-1010f800 [EU v32]
-00050000-10110000_p1_addr = 0x10884C70 #Game ID: 00050000-10110000 [US v16]
-
-
-# Player struct size, does not change
-cemu_playerstruct_size = 0x2960  #Distance between 2 players addresses
 
 # miscellaneous
-chara_id_offset = 0xd8
-cemu_chara_id_offset = -0xCC
-player_curr_move_offset = 0x344
+player_curr_move_offset = 0x344 #used by editor
 code_injection_addr = 0x140738CDF # Address that writes on player+motbin_offset
 playerid_starting_ptr = 0x1434BE100 # Used to find whether local player is 1P or 2P
-
-#raven_clone_addr = 0x1089A790 # EU v32

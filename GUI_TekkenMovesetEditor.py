@@ -1017,7 +1017,7 @@ class GUI_TekkenMovesetEditor():
         itemList = []
         id = itemId
         reqEndValue = 881 if self.movelist['version'] == 'Tekken7' else 690
-        while self.movelist['hit_conditions'][id]['requirement_idx'] != 0:
+        while True:
             reqIdx = self.movelist['hit_conditions'][id]['requirement_idx'] 
             if self.movelist['requirements'][reqIdx]['req'] == reqEndValue:
                 break

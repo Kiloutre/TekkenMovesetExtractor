@@ -10,12 +10,126 @@ import sys
 import re
 from zlib import crc32
 
-exportVersion = "1.0.0"
+exportVersion = "1.0.0"       
+        
+def GetTT2AnimEndPos(data, searchStart):
+    return [
+        data[searchStart:].find(b'\x00\x64\x00\x17\x00'),
+        data[searchStart:].find(b'\x00\x64\x00\x1B\x00'),
+        data[searchStart:].find(b'\x00\xC8\x00\x17'),
+        data[searchStart:].find(b'motOrigin'),
+        data[searchStart:].find(bytes([0] * 100))
+    ]
+    
+def GetT7AnimEndPos(data, searchStart):
+    return [
+        data[searchStart:].find(b'\x64\x00\x17\x00'),
+        data[searchStart:].find(b'\x64\x00\x1B\x00'),
+        data[searchStart:].find(b'\xC8\x00\x17'),
+        data[searchStart:].find(b'motOrigin'),
+        data[searchStart:].find(bytes([0] * 100))
+    ]
+
+processNames = {
+    't7': "TekkenGame-Win64-Shipping.exe",
+    'tag2': 'Cemu.exe',
+    'rev': 'rpcs3.exe'
+}
+
+ptrSizes = {
+    't7': 8,
+    'tag2': 4,
+    'rev': 4
+}
+
+endians = {
+    't7': 'little',
+    'tag2': 'big',
+    'rev': 'big'
+}
+
+swapGameAnimBytes = {
+    't7': True,
+    'tag2': False,
+    'rev': False
+}
+
+animEndPosFunc = {
+    't7': GetT7AnimEndPos,
+    'tag2': GetTT2AnimEndPos,
+    'rev': GetTT2AnimEndPos,
+}
+
+versionLabels = {
+    't7': 'Tekken7',
+    'tag2': 'Tag2',
+    'rev': 'Revolution'
+}
+
+structSizes = {
+    't7': {
+        'Pushback_size': 0x10,
+        'PushbackExtradata_size': 0x2,
+        'Requirement_size': 0x8,
+        'CancelExtradata_size': 0x4,
+        'Cancel_size': 0x28,
+        'ReactionList_size': 0x70,
+        'HitCondition_size': 0x18,
+        'ExtraMoveProperty_size': 0xC,
+        'Move_size': 0xB0,
+        'Voiceclip_size': 0x4,
+        'InputExtradata_size': 0x8,
+        'InputSequence_size': 0x10,
+        'Projectile_size': 0xa8,
+        'ThrowExtra_size': 0xC,
+        'Throw_size': 0x10,
+        'UnknownParryRelated_size': 0x4
+    },
+    'tag2': {
+        'Pushback_size': 0xC,
+        'PushbackExtradata_size': 0x2,
+        'Requirement_size': 0x8,
+        'CancelExtradata_size': 0x4,
+        'Cancel_size': 0x20,
+        'ReactionList_size': 0x50,
+        'HitCondition_size': 0xC,
+        'ExtraMoveProperty_size': 0xC,
+        'Move_size': 0x70,
+        'Voiceclip_size': 0x4,
+        'InputExtradata_size': 0x8,
+        'InputSequence_size': 0x8,
+        'Projectile_size': 0x88,
+        'ThrowExtra_size': 0xC,
+        'Throw_size': 0x8,
+        'UnknownParryRelated_size': 0x4
+    },
+    'rev': {
+        'Pushback_size': 0xC,
+        'PushbackExtradata_size': 0x2,
+        'Requirement_size': 0x8,
+        'CancelExtradata_size': 0x4,
+        'Cancel_size': 0x20,
+        'ReactionList_size': 0x50,
+        'HitCondition_size': 0xC,
+        'ExtraMoveProperty_size': 0xC,
+        'Move_size': 0x70,
+        'Voiceclip_size': 0x4,
+        'InputExtradata_size': 0x8,
+        'InputSequence_size': 0x8,
+        'Projectile_size': 0x88,
+        'ThrowExtra_size': 0xC,
+        'Throw_size': 0x8,
+        'UnknownParryRelated_size': 0x4
+    }
+}
+
 
 def getMovesetName(TekkenVersion, character_name):
     if character_name.startswith('['):
         character_name = character_name[1:-1]
-    return '%d_%s' % (TekkenVersion, character_name.upper())
+    if character_name.starts(TekkenVersion):
+        return character_name
+    return '%s_%s' % (TekkenVersion, character_name.upper())
 
 def initTekkenStructure(self, parent, addr=0, size=0):
     self.addr = addr
@@ -38,37 +152,19 @@ def initTekkenStructure(self, parent, addr=0, size=0):
     return self.data
         
 def setStructureSizes(self):
-    self.Pushback_size = 0x10 if self.TekkenVersion == 7 else 0xC
-    self.PushbackExtradata_size = 0x2
-    self.Requirement_size = 0x8
-    self.CancelExtradata_size = 0x4
-    self.Cancel_size = 0x28 if self.TekkenVersion == 7 else 0x20
-    self.ReactionList_size = 0x70 if self.TekkenVersion == 7 else 0x50
-    self.HitCondition_size = 0x18 if self.TekkenVersion == 7 else 0xC
-    self.ExtraMoveProperty_size = 0xC
-    self.Move_size = 0xB0 if self.TekkenVersion == 7 else 0x70
-    self.Voiceclip_size = 0x4
-    self.InputExtradata_size = 0x8
-    self.InputSequence_size = 0x10 if self.TekkenVersion == 7 else 0x8
-    self.Projectile_size = 0xa8 if self.TekkenVersion == 7 else 0x88
-    self.ThrowExtra_size = 0xC
-    self.Throw_size = 0x10 if self.TekkenVersion == 7 else 0x8
-    self.UnknownParryRelated_size = 0x4
+    for key in structSizes[version]:
+        setattr(self, key, structSizes[version][key])
             
 class Exporter:
     def __init__(self, TekkenVersion, folder_destination='./extracted_chars/'):
         game_addresses.reloadValues()
 
-        self.T = GameClass("TekkenGame-Win64-Shipping.exe" if TekkenVersion == 7 else "Cemu.exe")
+        self.T = GameClass(processNames[TekkenVersion])
         self.TekkenVersion = TekkenVersion
-        self.ptr_size = 8 if TekkenVersion == 7 else 4
-        self.base = 0x0 if TekkenVersion == 7 else game_addresses.addr['cemu_base']
-        self.endian = 'little' if TekkenVersion == 7 else 'big'
+        self.ptr_size = ptrSizes[TekkenVersion]
+        self.base =  game_addresses.addr[TekkenVersion + '_base']
+        self.endian = endians[TekkenVersion]
         self.folder_destination = folder_destination
-            
-        if self.base == 0x9999999999999999:
-            raise Exception("Cemu base address has not been modified yet, please insert the correct cemu_base address in game_address.txt")
-        
         
         if not os.path.isdir(folder_destination):
             os.mkdir(folder_destination)
@@ -101,9 +197,10 @@ class Exporter:
         return int.from_bytes(data[offset:offset + length], ed if ed != None else self.endian)
         
     def getMotbinPtr(self, playerAddress):
-        motbin_ptr_addr = (playerAddress + game_addresses.addr['motbin_offset']) if self.TekkenVersion == 7 else playerAddress - 0x98
+        key = self.TekkenVersion + '_motbin_offset'
+        motbin_ptr_addr = (playerAddress + game_addresses.addr[key])
         return self.readInt(motbin_ptr_addr, self.ptr_size)
-            
+
     def getPlayerMovesetName(self, playerAddress):
         motbin_ptr = self.getMotbinPtr(self.base + playerAddress)
         return self.readStringPtr(self.base + motbin_ptr + 8)
@@ -114,32 +211,14 @@ class Exporter:
         m = Motbin(self.base + motbin_ptr, self, name)
         m.getCharacterId(playerAddress)
         m.extractMoveset()
-        return m
-        
-def GetTT2AnimEndPos(data, searchStart):
-    return [
-        data[searchStart:].find(b'\x00\x64\x00\x17\x00'),
-        data[searchStart:].find(b'\x00\x64\x00\x1B\x00'),
-        data[searchStart:].find(b'\x00\xC8\x00\x17'),
-        data[searchStart:].find(b'motOrigin'),
-        data[searchStart:].find(bytes([0] * 100))
-    ]
-    
-def GetT7AnimEndPos(data, searchStart):
-    return [
-        data[searchStart:].find(b'\x64\x00\x17\x00'),
-        data[searchStart:].find(b'\x64\x00\x1B\x00'),
-        data[searchStart:].find(b'\xC8\x00\x17'),
-        data[searchStart:].find(b'motOrigin'),
-        data[searchStart:].find(bytes([0] * 100))
-    ]
+        return m 
     
 def getAnimEndPos(TekkenVersion, data):
     minSize = 1000
     if len(data) < minSize:
         return -1
     searchStart = minSize - 100
-    pos = GetT7AnimEndPos(data, searchStart) if TekkenVersion == 7 else GetTT2AnimEndPos(data, searchStart)
+    pos = animEndPosFunc[TekkenVersion](data, searchStart)
     pos = [p+searchStart for p in pos if p != -1]
     return -1 if len(pos) == 0 else min(pos)
     
@@ -183,7 +262,7 @@ class AnimData:
                 return None
                 
             oldData = self.data
-            if self.TekkenVersion != 7:
+            if swapGameAnimBytes[self.TekkenVersion]:
                 try:
                     self.data = SwapAnimBytes(self.data)
                 except:
@@ -696,7 +775,7 @@ class Motbin:
         self.folder_destination= exporterObject.folder_destination
     
         self.name = ''
-        self.version = "Tekken7" if self.TekkenVersion == 7 else "Tag2"
+        self.version = versionLabels[self.TekkenVersion]
         self.extraction_date = datetime.now(timezone.utc).__str__()
         self.extraction_path = ''
     
@@ -1065,8 +1144,16 @@ class Motbin:
         self.save()
         
 if __name__ == "__main__":
+
+    if len(sys.argv) <= 1:
+        print("Usage: ./motbinExport [t7/tag2/rev]")
+        os._exit(1)
+        
+    TekkenVersion = sys.argv
+    if TekkenVersion not in processNames:
+        print("Unknown version '%s'" % (TekkenVersion))
+        os._exit(1)
     
-    TekkenVersion = 2 if (len(sys.argv) > 1 and sys.argv[1].lower() == "tag2") else 7
     try:
         TekkenExporter = Exporter(TekkenVersion)
     except Exception as e:
@@ -1080,7 +1167,7 @@ if __name__ == "__main__":
         playerAddr = game_addresses.addr["p1_addr"] 
         playerOffset = game_addresses.addr["playerstruct_size"]
     else:
-        playerAddr = TekkenExporter.getCemuP1Addr()
+        playerAddr = 0x12DA030 #TekkenExporter.getCemuP1Addr()
         playerOffset = game_addresses.addr["cemu_playerstruct_size"]
     
     for i in range(2 if TekkenVersion == 7 else 4):
