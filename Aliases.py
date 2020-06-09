@@ -1,6 +1,6 @@
 
 from Tag2Aliases import tag2_requirements, tag2_extra_move_properties, tag2_character_fixes, getTag2CharIDAliases, tag2_odd_hitbox_aliases, tag2_even_hitbox_aliases
-from RevAliases import rev_requirements
+from RevAliases import rev_requirements, getRevExtraprop
 
 versionAliases = {
     'Tag2': {
@@ -12,7 +12,8 @@ versionAliases = {
         'char_id_func':  getTag2CharIDAliases
     },
     'Revolution': {
-        'requirements': rev_requirements
+        'requirements': rev_requirements,
+        'extraprop_func': getRevExtraprop
     },
     'Tekken7': {}
 }
@@ -59,6 +60,8 @@ def getRequirementAlias(version, req, param):
     return req, param
 
 def getMoveExtrapropAlias(version, type, id, value):
+    if 'extraprop_func' in versionAliases[version]:
+        return versionAliases[version]['extraprop_func'](type, id, value)
     if 'extra_move_properties' in versionAliases[version]:
         alias = versionAliases[version]['extra_move_properties'].get(id, None)
         if alias != None:
@@ -67,6 +70,7 @@ def getMoveExtrapropAlias(version, type, id, value):
                 type = alias['force_type']
             if 'force_value' in alias:
                 value = alias['value']
+    return 0,0,0
     return type, id, value
 
 class ExtraPropertyFix:
