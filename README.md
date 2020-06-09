@@ -117,4 +117,4 @@ Moveset editor:
 - Window to list animations and copy one to another character's folder
 - Add note that requirement lists must end with 881
 - Add note that extraprop lists must end with type 0
-- Scrollbar for cancel editor, show multiple cancel
+- Fix modifying tag2 movesets, 'if you change the requirement of a move to screw / bound with any tag 2 character, the game insta crashes'

@@ -22,10 +22,13 @@ rev_base               = 0x300000000
 rev_p1_addr            = 0x12DA030
 rev_playerstruct_size  = 0x24A0 #Distance between 2 players addresses
 rev_motbin_offset      = -0xa8
-rev_chara_id_offset    = -0xCC #to find
+rev_chara_id_offset    = -0xDC
 
 
 # miscellaneous
 player_curr_move_offset = 0x344 #used by editor
 code_injection_addr = 0x140738CDF # Address that writes on player+motbin_offset
 playerid_starting_ptr = 0x1434BE100 # Used to find whether local player is 1P or 2P
+
+
+

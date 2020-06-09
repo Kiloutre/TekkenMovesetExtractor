@@ -12,7 +12,7 @@ from zlib import crc32
 
 exportVersion = "1.0.0"       
         
-def GetTT2AnimEndPos(data, searchStart):
+def GetBigEndianAnimEnd(data, searchStart):
     return [
         data[searchStart:].find(b'\x00\x64\x00\x17\x00'),
         data[searchStart:].find(b'\x00\x64\x00\x1B\x00'),
@@ -21,7 +21,7 @@ def GetTT2AnimEndPos(data, searchStart):
         data[searchStart:].find(bytes([0] * 100))
     ]
     
-def GetT7AnimEndPos(data, searchStart):
+def GetLittleEndianAnimEnd(data, searchStart):
     return [
         data[searchStart:].find(b'\x64\x00\x17\x00'),
         data[searchStart:].find(b'\x64\x00\x1B\x00'),
@@ -30,40 +30,39 @@ def GetT7AnimEndPos(data, searchStart):
         data[searchStart:].find(bytes([0] * 100))
     ]
 
-processNames = {
-    't7': "TekkenGame-Win64-Shipping.exe",
-    'tag2': 'Cemu.exe',
-    'rev': 'rpcs3.exe'
-}
-
 ptrSizes = {
     't7': 8,
     'tag2': 4,
-    'rev': 4
+    'rev': 4,
+    't6': 4
 }
 
 endians = {
     't7': 'little',
     'tag2': 'big',
-    'rev': 'big'
+    'rev': 'big',
+    't6': 'big'
 }
 
 swapGameAnimBytes = {
     't7': False,
     'tag2': True,
-    'rev': True
+    'rev': True,
+    't6': True,
 }
 
 animEndPosFunc = {
-    't7': GetT7AnimEndPos,
-    'tag2': GetTT2AnimEndPos,
-    'rev': GetTT2AnimEndPos,
+    't7': GetBigEndianAnimEnd,
+    'tag2': GetBigEndianAnimEnd,
+    'rev': GetLittleEndianAnimEnd,
+    't6': GetLittleEndianAnimEnd,
 }
 
 versionLabels = {
     't7': 'Tekken7',
     'tag2': 'Tag2',
-    'rev': 'Revolution'
+    'rev': 'Revolution',
+    't6': 'Tekken6',
 }
 
 structSizes = {
@@ -120,6 +119,24 @@ structSizes = {
         'ThrowExtra_size': 0xC,
         'Throw_size': 0x8,
         'UnknownParryRelated_size': 0x4
+    },
+    't6': {
+        'Pushback_size': 0xC,
+        'PushbackExtradata_size': 0x2,
+        'Requirement_size': 0x8,
+        'CancelExtradata_size': 0x4,
+        'Cancel_size': 0x20,
+        'ReactionList_size': 0x50,
+        'HitCondition_size': 0xC,
+        'ExtraMoveProperty_size': 0xC,
+        'Move_size': 0x70,
+        'Voiceclip_size': 0x4,
+        'InputExtradata_size': 0x8,
+        'InputSequence_size': 0x8,
+        'Projectile_size': 0x88,
+        'ThrowExtra_size': 0xC,
+        'Throw_size': 0x8,
+        'UnknownParryRelated_size': 0x4
     }
 }
 
@@ -159,7 +176,7 @@ class Exporter:
     def __init__(self, TekkenVersion, folder_destination='./extracted_chars/'):
         game_addresses.reloadValues()
 
-        self.T = GameClass(processNames[TekkenVersion])
+        self.T = GameClass(game_addresses.addr[TekkenVersion + '_process_name'])
         self.TekkenVersion = TekkenVersion
         self.ptr_size = ptrSizes[TekkenVersion]
         self.base =  game_addresses.addr[TekkenVersion + '_base']
@@ -1161,7 +1178,7 @@ if __name__ == "__main__":
         os._exit(1)
         
     TekkenVersion = sys.argv[1]
-    if TekkenVersion not in processNames:
+    if (TekkenVersion + '_process_name') not in game_addresses.addr:
         print("Unknown version '%s'" % (TekkenVersion))
         os._exit(1)
     
@@ -1174,7 +1191,6 @@ if __name__ == "__main__":
     extractedMovesetNames = []
     extractedMovesets = []
     
-
     playerAddr = TekkenExporter.getP1Addr()
     playerOffset = game_addresses.addr[TekkenVersion + "_playerstruct_size"]
     
@@ -1183,6 +1199,7 @@ if __name__ == "__main__":
         playerCount = int(sys.argv[2])
     
     for i in range(playerCount):
+        playerAddr += playerOffset
         try:
             player_name = TekkenExporter.getPlayerMovesetName(playerAddr)
         except Exception as e:
@@ -1199,6 +1216,7 @@ if __name__ == "__main__":
         extractedMovesetNames.append(player_name)
         extractedMovesets.append(moveset)
         playerAddr += playerOffset
+        break
     
     if len(extractedMovesets) > 0:
         print("\nSuccessfully extracted:")

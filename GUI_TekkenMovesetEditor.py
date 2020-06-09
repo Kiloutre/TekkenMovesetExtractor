@@ -117,8 +117,7 @@ def getCharacterList():
     if not os.path.isdir(charactersPath):
         return []
     folders = [folder for folder in os.listdir(charactersPath) if os.path.isdir(charactersPath + folder)]
-    tag2_chars = sorted([f for f in folders if f.startswith('2_')])
-    t7_chars = sorted([f for f in folders if f.startswith('7_')])
+    tag2_chars = sorted(folders)
     
     return t7_chars + tag2_chars
     

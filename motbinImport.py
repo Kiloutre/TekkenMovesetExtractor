@@ -2,7 +2,7 @@
 # Python 3.6.5
 
 from Addresses import game_addresses, GameClass, VirtualAllocEx, VirtualFreeEx, GetLastError, MEM_RESERVE, MEM_COMMIT, MEM_DECOMMIT, MEM_RELEASE, PAGE_EXECUTE_READWRITE
-from Aliases import getTag2Requirement, getTag2ExtraMoveProperty, getTag2CharIDAliases,fillAliasesDictonnaries, applyGlobalRequirementAliases, getTag2HitboxAliasedValue, applyCharacterSpecificFixes
+from Aliases import getRequirementAlias, getMoveExtrapropAlias, getCharacteridAlias, ApplyCharacterFixes, fillAliasesDictonnaries, getHitboxAliases, applyGlobalRequirementAliases
 import json
 import os
 import sys
@@ -85,9 +85,10 @@ class Importer:
                 raise Exception("Moveset version: %s. Importer version: %s." % (m['export_version'], importVersion))
             
 
-        if m['version'] == "Tag2":
-            fillAliasesDictonnaries()
-            applyCharacterSpecificFixes(m)
+        fillAliasesDictonnaries(m['version'])
+            
+        ApplyCharacterFixes(m)
+            
         p = MotbinStruct(m, folderName, self)
             
         character_name = p.writeString(m['character_name'])
@@ -209,27 +210,6 @@ def versionMatches(version):
         print("Moveset version: %s. Importer version: %s.\n" % (version, importVersion))
     
     return importUpperVersion == exportUpperVersion
-
-def getTag2RequirementAlias(req, param):
-    requirement_detail = getTag2Requirement(req)
-    if requirement_detail == None:
-        return req, param
-    if 'param_alias' in requirement_detail:
-        param = requirement_detail['param_alias'].get(param, param)
-            
-    return requirement_detail['t7_id'], param
-
-def getTag2ExtramovePropertyAlias(type, id, value):
-    new_extra_property = getTag2ExtraMoveProperty(id)
-    if new_extra_property == None:
-        return type, id, value
-        
-    if 'force_type' in new_extra_property:
-        type = new_extra_property['force_type']
-    if 'force_value' in new_extra_property:
-        value = new_extra_property['force_value']
-        
-    return type, new_extra_property['t7_id'], value
         
 def align8Bytes(value):
     return value + (8 - (value % 8))
@@ -514,13 +494,13 @@ class MotbinStruct:
         requirements = self.m['requirements']
         requirement_count = len(requirements)
         
-        if self.m['version'] == "Tag2":
+        if self.m['version'] != "Tekken7":
             for i, requirement in enumerate(requirements):
-                req, param = getTag2RequirementAlias(requirement['req'], requirement['param'])
+                req, param = getRequirementAlias(self.m['version'], requirement['req'], requirement['param'])
                 requirements[i]['req'] = req
                 requirements[i]['param'] = param
                 
-        applyGlobalRequirementAliases(requirements, self.requirements_ptr)
+        applyGlobalRequirementAliases(requirements)
         
         for i, requirement in enumerate(requirements):
             req, param = requirement['req'], requirement['param']
@@ -713,8 +693,7 @@ class MotbinStruct:
         
         for extra_property in self.m['extra_move_properties']:
             type, id, value = extra_property['type'], extra_property['id'], extra_property['value']
-            if self.m['version'] == "Tag2":
-                type, id, value = getTag2ExtramovePropertyAlias(type, id, value)
+            type, id, value = getMoveExtrapropAlias(self.m['version'], type, id, value)
             self.writeInt(type, 4)
             self.writeInt(id, 4)
             self.writeInt(value, 4)
@@ -811,9 +790,7 @@ class MotbinStruct:
             self.writeInt(0, 8) #['u14'], ptr
             self.writeInt(move['u15'], 4)
             
-            hitbox = move['hitbox_location']
-            if self.m['version'] == "Tag2":
-                hitbox = getTag2HitboxAliasedValue(hitbox)
+            hitbox = getHitboxAliases(self.m['version'], move['hitbox_location'])
             
             self.writeInt(hitbox, 4)
             self.writeInt(move['first_active_frame'], 4)
@@ -832,9 +809,7 @@ class MotbinStruct:
     def applyCharacterIDAliases(self, playerAddr):
         currentChar = self.importer.readInt(playerAddr + game_addresses.addr['t7_chara_id_offset'])
         
-        movesetCharId = self.m['character_id']
-        if self.m['version'] == "Tag2":
-            movesetCharId = getTag2CharIDAliases(movesetCharId)
+        movesetCharId = getCharacteridAlias(self.m['version'], self.m['character_id'])
         
         for i, requirement in enumerate(self.m['requirements']):
             req, param = requirement['req'], requirement['param']
