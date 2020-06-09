@@ -32,6 +32,8 @@ class AddressFile:
                         value = int(value, 16)
                     elif match('-?[0-9]+', value):
                         value = int(value, 10)
+                    else:
+                        value = value.strip()
                     
                     self.addr[name] = value
             except Exception as e:

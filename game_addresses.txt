@@ -8,18 +8,19 @@ t7_chara_id_offset    = 0xd8
 
 # Tag2 addresses.
 tag2_process_name       = Cemu.exe
-tag2_base               = 0x0
-tag2_p1_addr            = 0x10885C90 #Game ID: 00050000-1010f800 [EU v32]
-tag2_p1_addr            = 0x10884C70 #Game ID: 00050000-10110000 [US v16]
+tag2_base               = 0x21a8c330000
+tag2_p1_addr_1010f800   = 0x10885C90 #Game ID: 00050000-1010f800 [EU v32]
+tag2_p1_addr_10110000   = 0x10884C70 #Game ID: 00050000-10110000 [US v16]
+tag2_window_title_regex = TitleId: [0-9a-fA-F]{8}\-([0-9a-fA-F]{8})  #Defines what part of the title to keep. This makes it choose the right addr.
 tag2_playerstruct_size  = 0x2960 #Distance between 2 players addresses
 tag2_motbin_offset      = -0x98
 tag2_chara_id_offset    = -0xCC
 
 # Tekken Revolution addresses
 rev_process_name       = rpcs3.exe
-rev_base               = 0x0
-rev_p1_addr            = 0x12DA030 #This is actually p2
-rev_playerstruct_size  = 0x2960 #Distance between 2 players addresses
+rev_base               = 0x300000000
+rev_p1_addr            = 0x12DA030
+rev_playerstruct_size  = 0x24A0 #Distance between 2 players addresses
 rev_motbin_offset      = -0xa8
 rev_chara_id_offset    = -0xCC #to find
 

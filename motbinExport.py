@@ -169,13 +169,23 @@ class Exporter:
         if not os.path.isdir(folder_destination):
             os.mkdir(folder_destination)
         
-    def getCemuP1Addr(self):
+    def getP1Addr(self):
+        if (self.TekkenVersion + '_p1_addr') in game_addresses.addr:
+            return game_addresses.addr[self.TekkenVersion + '_p1_addr']
+        matchKeys = [key for key in game_addresses.addr if key.startswith(self.TekkenVersion + '_p1_addr_')]
+        regex = game_addresses.addr[self.TekkenVersion + '_window_title_regex']
+        
         windowTitle = self.T.getWindowTitle()
-        p = re.compile("TitleId: ([0-9a-fA-F]{8}\-[0-9a-fA-F]{8})")
+        p = re.compile(regex)
         match = p.search(windowTitle)
+        print(windowTitle, regex)
         if match == None:
+            print('no match')
+            os._exit(0)
             return None
-        key = match.group(1) + '_p1_addr'
+        print(match.group(1))
+        os._exit(0)
+        key = self.TekkenVersion + '_p1_addr_' + match.group(1)
         return None if key not in game_addresses.addr else game_addresses.addr[key]
         
     def readInt(self, addr, len):
@@ -1164,7 +1174,8 @@ if __name__ == "__main__":
     extractedMovesetNames = []
     extractedMovesets = []
     
-    playerAddr = game_addresses.addr[TekkenVersion + "_p1_addr"] 
+
+    playerAddr = TekkenExporter.getP1Addr()
     playerOffset = game_addresses.addr[TekkenVersion + "_playerstruct_size"]
     
     playerCount = 4 if TekkenVersion == 'tag2' else 2

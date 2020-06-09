@@ -305,7 +305,7 @@ class CharalistSelector:
     def loadToPlayer(self, playerId):
         if self.movelist_path == None:
             return
-        playerAddr = game_addresses.addr['p1_addr'] + (playerId * game_addresses.addr['playerstruct_size'])
+        playerAddr = game_addresses.addr['t7_p1_addr'] + (playerId * game_addresses.addr['t7_playerstruct_size'])
         TekkenImporter = importLib.Importer()
         TekkenImporter.importMoveset(playerAddr, self.movelist_path, moveset=self.root.movelist)
         
@@ -382,7 +382,7 @@ class MovelistSelector:
     def goToCurrentMove(self):
         if self.root.movelist == None:
             return
-        playerAddress = game_addresses.addr['p1_addr']
+        playerAddress = game_addresses.addr['t7_p1_addr']
         offset = game_addresses.addr['player_curr_move_offset']
         TekkenGame = GameClass("TekkenGame-Win64-Shipping.exe")
         
