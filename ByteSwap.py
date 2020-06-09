@@ -46,7 +46,6 @@ def SwapAnimBytesC8(fb):
 def SwapAnimBytes(fb):
     fb = list(fb)
     if fb[0] != 0x64 and fb[0] != 0xC8 and (fb[0] << 8) & 0xFFFF != 0x64:
-    
         if fb[1] == 0xC8:
             return SwapAnimBytesC8(fb)
             

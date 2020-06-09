@@ -140,8 +140,8 @@ def getBothPlayersInjection(movesetAddr, movesetAddr2, importer):
         movesetAddresses = importer.readBytes(codeInjection + codeInjectionSize - 0x20, 0x20)
         importer.writeBytes(codeAddr + codeInjectionSize - 0x20, movesetAddresses)
     
-    importer.writeInt(playerLocation, game_addresses.addr['p1_addr'], 8)
-    importer.writeInt(playerLocation + 8, game_addresses.addr['p1_addr'] + game_addresses.addr['playerstruct_size'], 8)
+    importer.writeInt(playerLocation, game_addresses.addr['t7_p1_addr'], 8)
+    importer.writeInt(playerLocation + 8, game_addresses.addr['t7_p1_addr'] + game_addresses.addr['t7_playerstruct_size'], 8)
     
     importer.writeInt(loadedMovesetLocation, movesetAddr, 8)
     importer.writeInt(loadedMovesetLocation + 8, movesetAddr2, 8)
@@ -234,14 +234,16 @@ class Monitor:
         playerId = self.playerId + invertPlayers
         if playerId == 3:
             playerId = 1
-        self.playerAddr = game_addresses.addr['p%d_addr' % (playerId)]
+        self.playerAddr = game_addresses.addr['t7_p1_addr']
+        if playerId == 2:
+            self.playerAddr += game_addresses.addr['t7_playerstruct_size']
             
         if self.invertedPlayers != invertPlayers or forceWriting:
             self.writeMovesetToCode(playerId)
             self.invertedPlayers = invertPlayers
         
     def getCharacterId(self):
-        return self.Importer.readInt(self.playerAddr + game_addresses.addr['chara_id_offset'], 8)
+        return self.Importer.readInt(self.playerAddr + game_addresses.addr['t7_chara_id_offset'], 8)
         
     def applyCharacterAliases(self):
         self.moveset.applyCharacterIDAliases(self.playerAddr)
@@ -249,7 +251,7 @@ class Monitor:
     def monitor(self):
         self.getPlayerAddress(forceWriting = True)
         
-        self.Importer.writeInt(self.playerAddr + game_addresses.addr['motbin_offset'], self.moveset.motbin_ptr, 8)
+        self.Importer.writeInt(self.playerAddr + game_addresses.addr['t7_motbin_offset'], self.moveset.motbin_ptr, 8)
         
         prev_charaId = self.getCharacterId()
         self.applyCharacterAliases()
@@ -313,24 +315,18 @@ def getCharacterList():
     
     return sorted(folders)
     
-def exportCharacter(parent, tekkenVersion, playerAddr, name=''):
+def exportCharacter(parent, tekkenVersion, playerid, name=''):
     game_addresses.reloadValues()
     TekkenExporter = exportLib.Exporter(tekkenVersion, folder_destination=charactersPath)
-    TekkenExporter.exportMoveset(playerAddr, name)
-    parent.updateCharacterlist()
-    
-def exportTag2Character(parent, tekkenVersion, playerAddr, name=''):
-    game_addresses.reloadValues()
-    TekkenExporter = exportLib.Exporter(tekkenVersion, folder_destination=charactersPath)
-    playerAddr += TekkenExporter.getCemuP1Addr()
+    playerAddr = TekkenExporter.getP1Addr() + (playerid * game_addresses.addr[tekkenVersion + '_playerstruct_size'])
     TekkenExporter.exportMoveset(playerAddr, name)
     
     parent.updateCharacterlist()
     
-def exportAllTag2(parent, tekkenVersion, playerSize):
+def exportAllTag2(parent, playerSize):
     game_addresses.reloadValues()
     
-    TekkenExporter = exportLib.Exporter(tekkenVersion, folder_destination=charactersPath)
+    TekkenExporter = exportLib.Exporter('tag2', folder_destination=charactersPath)
     playerAddr = TekkenExporter.getCemuP1Addr()
     
     exportedMovesets = []
@@ -352,14 +348,14 @@ def exportAllTag2(parent, tekkenVersion, playerSize):
         
     parent.updateCharacterlist()
     
-def exportAll(parent, tekkenVersion, key_match):
+def exportAll(parent):
     game_addresses.reloadValues()
-    player_addresses = [game_addresses.addr[key] for key in game_addresses.addr if match(key_match, key)]
-    TekkenExporter = exportLib.Exporter(tekkenVersion)
+    TekkenExporter = exportLib.Exporter('t7')
     
     exportedMovesets = []
+    playerAddr = game_addresses.addr['t7_p1_addr']
     
-    for playerAddr in player_addresses:
+    for i in range(2):
         moveset_name = TekkenExporter.getPlayerMovesetName(playerAddr)
         if moveset_name not in exportedMovesets:
             print("Requesting export for %s..." % (moveset_name))
@@ -368,6 +364,7 @@ def exportAll(parent, tekkenVersion, key_match):
             print()
         else:
             print('Player', moveset_name, 'already exported, not exporting again.')
+        playerAddr += game_addresses.addr['t7_playerstruct_size']
             
     print('\nSuccessfully exported:')
     for name in exportedMovesets:
@@ -380,7 +377,9 @@ def importPlayer(parent, playerId):
         print("No character selected")
         return
     folderPath = charactersPath + parent.selected_char 
-    playerAddr = game_addresses.addr['p%d_addr' % (playerId)]
+    playerAddr = game_addresses.addr['t7_p1_addr']
+    if playerId == 2:
+        playerAddr += game_addresses.addr['t7_playerstruct_size']
     
     TekkenImporter = importLib.Importer()
     TekkenImporter.importMoveset(playerAddr, folderPath)
@@ -528,7 +527,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         TextArea.pack(padx=10, pady=5, fill='both', expand=1)
         
         sys.stdout = TextRedirector(TextArea)
-        sys.stderr = TextRedirector(TextArea, "err")
+        #sys.stderr = TextRedirector(TextArea, "err")
         
     def updateCharacterlist(self):
         self.characterList = getCharacterList()
@@ -609,19 +608,15 @@ class GUI_TekkenMovesetExtractor(Tk):
         ]
         
     def createExportButtons(self):
-        tekken7_addr_match = "p([1-9]+)_addr"
-        playerAddresses = [key for key in game_addresses.addr if match(tekken7_addr_match, key)]
-        for playerid, player_key in enumerate(playerAddresses):
-            self.createButton(self.t7_exportFrame, "Export: Tekken 7: Player %d" % (playerid + 1), (7, game_addresses.addr[player_key]), exportCharacter)
+        for playerid in range(2):
+            self.createButton(self.t7_exportFrame, "Export: Tekken 7: Player %d" % (playerid + 1), ("t7", playerid), exportCharacter)
         
-        self.createButton(self.t7_exportFrame, "Export: Tekken 7: All Players", (7, tekken7_addr_match), exportAll)
-
-        playerOffset = game_addresses.addr["cemu_playerstruct_size"]
+        self.createButton(self.t7_exportFrame, "Export: Tekken 7: All Players", (), exportAll)
 
         for playerid in range(4):
-            self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: Player %d" % (playerid + 1), (2, playerid * playerOffset), exportTag2Character)
+            self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: Player %d" % (playerid + 1), ("tag2", playerid), exportCharacter)
         
-        self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: All players", (2, playerOffset), exportAllTag2)
+        self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: All players", ("tag2", 0), exportAllTag2)
         
     def createButton(self, frame, text, const_args, callback, side='top', expand=1):
         exportButton = Button(frame)

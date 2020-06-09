@@ -2,7 +2,7 @@
 # Python 3.6.5
 
 from Addresses import game_addresses, GameClass, VirtualAllocEx, VirtualFreeEx, GetLastError, MEM_RESERVE, MEM_COMMIT, MEM_DECOMMIT, MEM_RELEASE, PAGE_EXECUTE_READWRITE
-from Aliases import getTag2Requirement, getTag2ExtraMoveProperty, getTag2CharIDAliases,fillAliasesDictonnaries, applyGlobalRequirementAliases, getTag2HitboxAliasedValue, applyCharacterSpecificFixes
+from Aliases import getRequirementAlias, getMoveExtrapropAlias, getCharacteridAlias, ApplyCharacterFixes, fillAliasesDictonnaries, getHitboxAliases, applyGlobalRequirementAliases
 import json
 import os
 import sys
@@ -58,7 +58,7 @@ class Importer:
     def importMoveset(self, playerAddr, folderName, moveset=None):
         moveset = self.loadMoveset(folderName=folderName, moveset=moveset)
         
-        motbin_ptr_addr = playerAddr + game_addresses.addr['motbin_offset']
+        motbin_ptr_addr = playerAddr + game_addresses.addr['t7_motbin_offset']
         current_motbin_ptr = self.readInt(motbin_ptr_addr, 8)
         old_character_name = self.readString(self.readInt(current_motbin_ptr + 0x8, 8))
         moveset.copyMotaOffsets(current_motbin_ptr)
@@ -85,9 +85,10 @@ class Importer:
                 raise Exception("Moveset version: %s. Importer version: %s." % (m['export_version'], importVersion))
             
 
-        if m['version'] == "Tag2":
-            fillAliasesDictonnaries()
-            applyCharacterSpecificFixes(m)
+        fillAliasesDictonnaries(m['version'])
+            
+        ApplyCharacterFixes(m)
+            
         p = MotbinStruct(m, folderName, self)
             
         character_name = p.writeString(m['character_name'])
@@ -209,27 +210,6 @@ def versionMatches(version):
         print("Moveset version: %s. Importer version: %s.\n" % (version, importVersion))
     
     return importUpperVersion == exportUpperVersion
-
-def getTag2RequirementAlias(req, param):
-    requirement_detail = getTag2Requirement(req)
-    if requirement_detail == None:
-        return req, param
-    if 'param_alias' in requirement_detail:
-        param = requirement_detail['param_alias'].get(param, param)
-            
-    return requirement_detail['t7_id'], param
-
-def getTag2ExtramovePropertyAlias(type, id, value):
-    new_extra_property = getTag2ExtraMoveProperty(id)
-    if new_extra_property == None:
-        return type, id, value
-        
-    if 'force_type' in new_extra_property:
-        type = new_extra_property['force_type']
-    if 'force_value' in new_extra_property:
-        value = new_extra_property['force_value']
-        
-    return type, new_extra_property['t7_id'], value
         
 def align8Bytes(value):
     return value + (8 - (value % 8))
@@ -514,13 +494,13 @@ class MotbinStruct:
         requirements = self.m['requirements']
         requirement_count = len(requirements)
         
-        if self.m['version'] == "Tag2":
+        if self.m['version'] != "Tekken7":
             for i, requirement in enumerate(requirements):
-                req, param = getTag2RequirementAlias(requirement['req'], requirement['param'])
+                req, param = getRequirementAlias(self.m['version'], requirement['req'], requirement['param'])
                 requirements[i]['req'] = req
                 requirements[i]['param'] = param
                 
-        applyGlobalRequirementAliases(requirements, self.requirements_ptr)
+        applyGlobalRequirementAliases(requirements)
         
         for i, requirement in enumerate(requirements):
             req, param = requirement['req'], requirement['param']
@@ -713,8 +693,7 @@ class MotbinStruct:
         
         for extra_property in self.m['extra_move_properties']:
             type, id, value = extra_property['type'], extra_property['id'], extra_property['value']
-            if self.m['version'] == "Tag2":
-                type, id, value = getTag2ExtramovePropertyAlias(type, id, value)
+            type, id, value = getMoveExtrapropAlias(self.m['version'], type, id, value)
             self.writeInt(type, 4)
             self.writeInt(id, 4)
             self.writeInt(value, 4)
@@ -811,9 +790,7 @@ class MotbinStruct:
             self.writeInt(0, 8) #['u14'], ptr
             self.writeInt(move['u15'], 4)
             
-            hitbox = move['hitbox_location']
-            if self.m['version'] == "Tag2":
-                hitbox = getTag2HitboxAliasedValue(hitbox)
+            hitbox = getHitboxAliases(self.m['version'], move['hitbox_location'])
             
             self.writeInt(hitbox, 4)
             self.writeInt(move['first_active_frame'], 4)
@@ -830,11 +807,9 @@ class MotbinStruct:
         return self.movelist_ptr, moveCount
         
     def applyCharacterIDAliases(self, playerAddr):
-        currentChar = self.importer.readInt(playerAddr + game_addresses.addr['chara_id_offset'])
+        currentChar = self.importer.readInt(playerAddr + game_addresses.addr['t7_chara_id_offset'])
         
-        movesetCharId = self.m['character_id']
-        if self.m['version'] == "Tag2":
-            movesetCharId = getTag2CharIDAliases(movesetCharId)
+        movesetCharId = getCharacteridAlias(self.m['version'], self.m['character_id'])
         
         for i, requirement in enumerate(self.m['requirements']):
             req, param = requirement['req'], requirement['param']
@@ -852,7 +827,7 @@ class MotbinStruct:
             raise Exception("copyMotaOffsets: No valid addres provided")
         
         if motbin_ptr == None:
-            motbin_ptr = self.importer.readInt(playerAddr + game_addresses.addr['motbin_offset'], 8)
+            motbin_ptr = self.importer.readInt(playerAddr + game_addresses.addr['t7_motbin_offset'], 8)
     
         offsets = [
             (0x280, 8),
@@ -878,9 +853,11 @@ if __name__ == "__main__":
         print("Usage: [FOLDER_NAME]")
         os._exit(1)
         
+    playerAddress = game_addresses.addr['t7_p1_addr']
     TekkenImporter = Importer()
-    TekkenImporter.importMoveset(game_addresses.addr['p1_addr'], sys.argv[1])
+    TekkenImporter.importMoveset(playerAddress, sys.argv[1])
     
     if len(sys.argv) > 2:
-        TekkenImporter.importMoveset(game_addresses.addr['p2_addr'], sys.argv[2])
+        playerAddress += game_addresses.addr['t7_playerstruct_size']
+        TekkenImporter.importMoveset(playerAddress, sys.argv[2])
     

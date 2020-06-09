@@ -109,11 +109,12 @@ Administrator rights may be required to import the moveset into memory.
 - Rename "anim_max_len" to "anim_len" in moves
 - Split command in two 4bytes
 - Rename move's u17 to distance
-- Make cancel extradata and move voiceclip use a field?
+- Make cancel extradata and moves' voiceclip use a field?
 - Make reaction lists and u1 lists uses fields instead of arrays
+- Split attack hitlevel in 2? need to keep the order the same for tag2
 
 Moveset editor:
 - Window to list animations and copy one to another character's folder
 - Add note that requirement lists must end with 881
 - Add note that extraprop lists must end with type 0
-- Scrollbar for cancel editor, show multiple cancel
+- Fix modifying tag2 movesets, 'if you change the requirement of a move to screw / bound with any tag 2 character, the game insta crashes'

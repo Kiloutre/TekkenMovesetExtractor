@@ -117,8 +117,7 @@ def getCharacterList():
     if not os.path.isdir(charactersPath):
         return []
     folders = [folder for folder in os.listdir(charactersPath) if os.path.isdir(charactersPath + folder)]
-    tag2_chars = sorted([f for f in folders if f.startswith('2_')])
-    t7_chars = sorted([f for f in folders if f.startswith('7_')])
+    tag2_chars = sorted(folders)
     
     return t7_chars + tag2_chars
     
@@ -305,7 +304,7 @@ class CharalistSelector:
     def loadToPlayer(self, playerId):
         if self.movelist_path == None:
             return
-        playerAddr = game_addresses.addr['p1_addr'] + (playerId * game_addresses.addr['playerstruct_size'])
+        playerAddr = game_addresses.addr['t7_p1_addr'] + (playerId * game_addresses.addr['t7_playerstruct_size'])
         TekkenImporter = importLib.Importer()
         TekkenImporter.importMoveset(playerAddr, self.movelist_path, moveset=self.root.movelist)
         
@@ -382,7 +381,7 @@ class MovelistSelector:
     def goToCurrentMove(self):
         if self.root.movelist == None:
             return
-        playerAddress = game_addresses.addr['p1_addr']
+        playerAddress = game_addresses.addr['t7_p1_addr']
         offset = game_addresses.addr['player_curr_move_offset']
         TekkenGame = GameClass("TekkenGame-Win64-Shipping.exe")
         
@@ -1017,7 +1016,7 @@ class GUI_TekkenMovesetEditor():
         itemList = []
         id = itemId
         reqEndValue = 881 if self.movelist['version'] == 'Tekken7' else 690
-        while self.movelist['hit_conditions'][id]['requirement_idx'] != 0:
+        while True:
             reqIdx = self.movelist['hit_conditions'][id]['requirement_idx'] 
             if self.movelist['requirements'][reqIdx]['req'] == reqEndValue:
                 break
