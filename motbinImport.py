@@ -58,7 +58,7 @@ class Importer:
     def importMoveset(self, playerAddr, folderName, moveset=None):
         moveset = self.loadMoveset(folderName=folderName, moveset=moveset)
         
-        motbin_ptr_addr = playerAddr + game_addresses.addr['motbin_offset']
+        motbin_ptr_addr = playerAddr + game_addresses.addr['t7_motbin_offset']
         current_motbin_ptr = self.readInt(motbin_ptr_addr, 8)
         old_character_name = self.readString(self.readInt(current_motbin_ptr + 0x8, 8))
         moveset.copyMotaOffsets(current_motbin_ptr)
@@ -830,7 +830,7 @@ class MotbinStruct:
         return self.movelist_ptr, moveCount
         
     def applyCharacterIDAliases(self, playerAddr):
-        currentChar = self.importer.readInt(playerAddr + game_addresses.addr['chara_id_offset'])
+        currentChar = self.importer.readInt(playerAddr + game_addresses.addr['t7_chara_id_offset'])
         
         movesetCharId = self.m['character_id']
         if self.m['version'] == "Tag2":
@@ -852,7 +852,7 @@ class MotbinStruct:
             raise Exception("copyMotaOffsets: No valid addres provided")
         
         if motbin_ptr == None:
-            motbin_ptr = self.importer.readInt(playerAddr + game_addresses.addr['motbin_offset'], 8)
+            motbin_ptr = self.importer.readInt(playerAddr + game_addresses.addr['t7_motbin_offset'], 8)
     
         offsets = [
             (0x280, 8),
@@ -878,9 +878,11 @@ if __name__ == "__main__":
         print("Usage: [FOLDER_NAME]")
         os._exit(1)
         
+    playerAddress = game_addresses.addr['t7_p1_addr']
     TekkenImporter = Importer()
-    TekkenImporter.importMoveset(game_addresses.addr['p1_addr'], sys.argv[1])
+    TekkenImporter.importMoveset(playerAddress, sys.argv[1])
     
     if len(sys.argv) > 2:
-        TekkenImporter.importMoveset(game_addresses.addr['p2_addr'], sys.argv[2])
+        playerAddress += game_addresses.addr['t7_playerstruct_size']
+        TekkenImporter.importMoveset(playerAddress, sys.argv[2])
     
