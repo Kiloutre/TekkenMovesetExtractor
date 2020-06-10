@@ -70,7 +70,6 @@ def getMoveExtrapropAlias(version, type, id, value):
                 type = alias['force_type']
             if 'force_value' in alias:
                 value = alias['value']
-    return 0,0,0
     return type, id, value
 
 class ExtraPropertyFix:

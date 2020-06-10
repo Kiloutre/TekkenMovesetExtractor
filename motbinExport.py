@@ -65,6 +65,25 @@ versionLabels = {
     't6': 'Tekken6',
 }
 
+tag2StructSizes = {
+    'Pushback_size': 0xC,
+    'PushbackExtradata_size': 0x2,
+    'Requirement_size': 0x8,
+    'CancelExtradata_size': 0x4,
+    'Cancel_size': 0x20,
+    'ReactionList_size': 0x50,
+    'HitCondition_size': 0xC,
+    'ExtraMoveProperty_size': 0xC,
+    'Move_size': 0x70,
+    'Voiceclip_size': 0x4,
+    'InputExtradata_size': 0x8,
+    'InputSequence_size': 0x8,
+    'Projectile_size': 0x88,
+    'ThrowExtra_size': 0xC,
+    'Throw_size': 0x8,
+    'UnknownParryRelated_size': 0x4
+}
+
 structSizes = {
     't7': {
         'Pushback_size': 0x10,
@@ -84,42 +103,8 @@ structSizes = {
         'Throw_size': 0x10,
         'UnknownParryRelated_size': 0x4
     },
-    'tag2': {
-        'Pushback_size': 0xC,
-        'PushbackExtradata_size': 0x2,
-        'Requirement_size': 0x8,
-        'CancelExtradata_size': 0x4,
-        'Cancel_size': 0x20,
-        'ReactionList_size': 0x50,
-        'HitCondition_size': 0xC,
-        'ExtraMoveProperty_size': 0xC,
-        'Move_size': 0x70,
-        'Voiceclip_size': 0x4,
-        'InputExtradata_size': 0x8,
-        'InputSequence_size': 0x8,
-        'Projectile_size': 0x88,
-        'ThrowExtra_size': 0xC,
-        'Throw_size': 0x8,
-        'UnknownParryRelated_size': 0x4
-    },
-    'rev': {
-        'Pushback_size': 0xC,
-        'PushbackExtradata_size': 0x2,
-        'Requirement_size': 0x8,
-        'CancelExtradata_size': 0x4,
-        'Cancel_size': 0x20,
-        'ReactionList_size': 0x50,
-        'HitCondition_size': 0xC,
-        'ExtraMoveProperty_size': 0xC,
-        'Move_size': 0x70,
-        'Voiceclip_size': 0x4,
-        'InputExtradata_size': 0x8,
-        'InputSequence_size': 0x8,
-        'Projectile_size': 0x88,
-        'ThrowExtra_size': 0xC,
-        'Throw_size': 0x8,
-        'UnknownParryRelated_size': 0x4
-    },
+    'tag2': tag2StructSizes,
+    'rev': tag2StructSizes,
     't6': {
         'Pushback_size': 0xC,
         'PushbackExtradata_size': 0x2,
@@ -140,6 +125,355 @@ structSizes = {
     }
 }
 
+t7_offsetTable = {
+    'character_name': { 'offset': 0x8, 'size': 'stringPtr'},
+    'creator_name': { 'offset': 0x10, 'size': 'stringPtr' },
+    'date': { 'offset': 0x18, 'size': 'stringPtr' },
+    'fulldate': { 'offset': 0x20, 'size': 'stringPtr' },
+    
+    'reaction_list_ptr': { 'offset': 0x150, 'size': 8 },
+    'reaction_list_size': { 'offset': 0x158, 'size': 8 },
+    'requirements_ptr': { 'offset': 0x160, 'size': 8 },
+    'requirement_count': { 'offset': 0x168, 'size': 8 },
+    'hit_conditions_ptr': { 'offset': 0x170, 'size': 8 },
+    'hit_conditions_size': { 'offset': 0x178, 'size': 8 },
+    'projectile_ptr': { 'offset': 0x180, 'size': 8 },
+    'projectile_size': { 'offset': 0x188, 'size': 8 },
+    'pushback_ptr': { 'offset': 0x190, 'size': 8 },
+    'pushback_list_size': { 'offset': 0x198, 'size': 8 },
+    'pushback_extradata_ptr': { 'offset': 0x1a0, 'size': 8 },
+    'pushback_extradata_size': { 'offset': 0x1a8, 'size': 8 },
+    'cancel_head_ptr': { 'offset': 0x1b0, 'size': 8 },
+    'cancel_list_size': { 'offset': 0x1b8, 'size': 8 },
+    'group_cancel_head_ptr': { 'offset': 0x1c0, 'size': 8 },
+    'group_cancel_list_size': { 'offset': 0x1c8, 'size': 8 },
+    'cancel_extradata_head_ptr': { 'offset': 0x1d0, 'size': 8 },
+    'cancel_extradata_list_size': { 'offset': 0x1d8, 'size': 8 },
+    'extra_move_properties_ptr': { 'offset': 0x1e0, 'size': 8 },
+    'extra_move_properties_size': { 'offset': 0x1e8, 'size': 8 },
+    'movelist_head_ptr': { 'offset': 0x210, 'size': 8 },
+    'movelist_size': { 'offset': 0x218, 'size': 8 },
+    'voiceclip_list_ptr': { 'offset': 0x220, 'size': 8 },
+    'voiceclip_list_size': { 'offset': 0x228, 'size': 8 },
+    'input_sequence_ptr': { 'offset': 0x230, 'size': 8 },
+    'input_sequence_size': { 'offset': 0x238, 'size': 8 },
+    'input_extradata_ptr': { 'offset': 0x240, 'size': 8 },
+    'input_extradata_size': { 'offset': 0x248, 'size': 8 },
+    'unknown_parryrelated_list_ptr': { 'offset': 0x250, 'size': 8 },
+    'unknown_parryrelated_list_size': { 'offset': 0x258, 'size': 8 },
+    'throw_extras_ptr': { 'offset': 0x260, 'size': 8 },
+    'throw_extras_size': { 'offset': 0x268, 'size': 8 },
+    'throws_ptr': { 'offset': 0x270, 'size': 8 },
+    'throws_size': { 'offset': 0x278, 'size': 8 },
+    
+    'mota_start': { 'offset': 0x280, 'size': None },
+    'aliases': { 'offset': 0x28, 'size': (148, 2) }, #148 aliases of 2 bytes
+    
+    'pushback:val1': { 'offset': 0x0, 'size': 2 },
+    'pushback:val2': { 'offset': 0x2, 'size': 2 },
+    'pushback:val3': { 'offset': 0x4, 'size': 2 },
+    'pushback:extra_addr': { 'offset': 0x8, 'size': 8 },
+    
+    'pushbackextradata:value': { 'offset': 0x0, 'size': 2 },
+    
+    'requirement:req': { 'offset': 0x0, 'size': 4 },
+    'requirement:param': { 'offset': 0x4, 'size': 4 },
+    
+    'cancelextradata:value': { 'offset': 0x0, 'size': 4 },
+    
+    'cancel:command': { 'offset': 0x0, 'size': 8 },
+    'cancel:requirement_addr': { 'offset': 0x8, 'size': 8 },
+    'cancel:extradata_addr': { 'offset': 0x10, 'size': 8 },
+    'cancel:frame_window_start': { 'offset': 0x18, 'size': 4 },
+    'cancel:frame_window_end': { 'offset': 0x1c, 'size': 4 },
+    'cancel:starting_frame': { 'offset': 0x20, 'size': 4 },
+    'cancel:move_id': { 'offset': 0x24, 'size': 2 },
+    'cancel:cancel_option': { 'offset': 0x26, 'size': 2 },
+    
+    'reactionlist:ptr_list': { 'offset': 0x0, 'size': (7, 8) }, #array of 7 variables, each 8 bytes long
+    'reactionlist:u1list': { 'offset': 0x38, 'size': (6, 2) },  #array of 6 variables, each 2 bytes long
+    'reactionlist:vertical_pushback': { 'offset': 0x4C, 'size': 2 },
+    'reactionlist:standing': { 'offset': 0x50, 'size': 2 },
+    'reactionlist:crouch': { 'offset': 0x52, 'size': 2 },
+    'reactionlist:ch': { 'offset': 0x54, 'size': 2 },
+    'reactionlist:crouch_ch': { 'offset': 0x56, 'size': 2 },
+    'reactionlist:left_side': { 'offset': 0x58, 'size': 2 },
+    'reactionlist:left_side_crouch': { 'offset': 0x5a, 'size': 2 },
+    'reactionlist:right_side': { 'offset': 0x5c, 'size': 2 },
+    'reactionlist:right_side_crouch': { 'offset': 0x5e, 'size': 2 },
+    'reactionlist:back': { 'offset': 0x60, 'size': 2 },
+    'reactionlist:back_crouch': { 'offset': 0x62, 'size': 2 },
+    'reactionlist:block': { 'offset': 0x64, 'size': 2 },
+    'reactionlist:crouch_block': { 'offset': 0x66, 'size': 2 },
+    'reactionlist:wallslump': { 'offset': 0x68, 'size': 2 },
+    'reactionlist:downed': { 'offset': 0x6a, 'size': 2 },
+    
+    'hitcondition:requirement_addr': { 'offset': 0x0, 'size': 8 },
+    'hitcondition:damage': { 'offset': 0x8, 'size': 4 },
+    'hitcondition:reaction_list_addr': { 'offset': 0x10, 'size': 8 },
+    
+    'extramoveprop:type': { 'offset': 0x0, 'size': 4 },
+    'extramoveprop:id': { 'offset': 0x4, 'size': 4 },
+    'extramoveprop:value': { 'offset': 0x8, 'size': 4 },    
+    
+    'move:name': { 'offset': 0x0, 'size': 'stringPtr' },
+    'move:anim_name': { 'offset': 0x8, 'size': 'stringPtr' },
+    'move:anim_addr': { 'offset': 0x10, 'size': 8 },
+    'move:vuln': { 'offset': 0x18, 'size': 4 },
+    'move:hitlevel': { 'offset': 0x1c, 'size': 4 },
+    'move:cancel_addr': { 'offset': 0x20, 'size': 8 },
+    'move:transition': { 'offset': 0x54, 'size': 2 },
+    'move:anim_max_len': { 'offset': 0x68, 'size': 4 },
+    'move:startup': { 'offset': 0xa0, 'size': 4 },
+    'move:recovery': { 'offset': 0xa4, 'size': 4 },
+    'move:hitbox_location': { 'offset': 0x9c, 'size': 4 },
+    'move:hit_condition_addr': { 'offset': 0x60, 'size': 8 },
+    'move:extra_properties_ptr': { 'offset': 0x80, 'size': 8 },
+    'move:voiceclip_ptr': { 'offset': 0x78, 'size': 8 },
+    #'move:u1': { 'offset': 0x10, 'size': 8 },
+    'move:u2': { 'offset': 0x30, 'size': 8 },
+    'move:u3': { 'offset': 0x38, 'size': 8 },
+    'move:u4': { 'offset': 0x40, 'size': 8 },
+    #'move:u5': { 'offset': 0x10, 'size': 8 },
+    'move:u6': { 'offset': 0x50, 'size': 4 },
+    'move:u7': { 'offset': 0x56, 'size': 2 },
+    'move:u8': { 'offset': 0x58, 'size': 2 },
+    'move:u8_2': { 'offset': 0x5a, 'size': 2 },
+    'move:u9': { 'offset': 0x5c, 'size': 2 },
+    'move:u10': { 'offset': 0x6c, 'size': 4 },
+    'move:u11': { 'offset': 0x70, 'size': 4 },
+    'move:u12': { 'offset': 0x74, 'size': 4 },
+    #'move:u13': { 'offset': 0x10, 'size': 8 },
+    #'move:u14': { 'offset': 0x10, 'size': 8 },
+    'move:u15': { 'offset': 0x98, 'size': 4 },
+    'move:u16': { 'offset': 0xa8, 'size': 2 },
+    'move:u17': { 'offset': 0xaa, 'size': 2 },
+    'move:u18': { 'offset': 0xac, 'size': 4 },
+    
+    'voiceclip:value': { 'offset': 0x0, 'size': 4 },
+    
+    'inputextradata:u1': { 'offset': 0x0, 'size': 4 },
+    'inputextradata:u2': { 'offset': 0x4, 'size': 4 },
+    
+    'inputsequence:u1': { 'offset': 0x0, 'size': 2 },
+    'inputsequence:u2': { 'offset': 0x2, 'size': 2 },
+    'inputsequence:u3': { 'offset': 0x4, 'size': 4 },
+    'inputsequence:extradata_addr': { 'offset': 0x8, 'size': 8 },
+    
+    
+    'throw:u1': { 'offset': 0x0, 'size': 8 },
+    'throw:throwextra_addr': { 'offset': 0x8, 'size': 8 },
+    
+    'unknownparryrelated:value': { 'offset': 0x0, 'size': 4 },
+    
+    'projectile:u1': { 'offset': 0x0, 'size': (48, 2) },
+    'projectile:hit_condition_addr': { 'offset': 0x60, 'size': 8 },
+    'projectile:cancel_addr': { 'offset': 0x68, 'size': 8 },
+    'projectile:u2': { 'offset': 0x70, 'size': (28, 2) },
+    
+    'throwextra:u1': { 'offset': 0x0, 'size': 4 },
+    'throwextra:u2': { 'offset': 4, 'size': (4, 2) },
+}
+
+tag2_offsetTable = {
+    'character_name': { 'offset': 0x8, 'size': 'stringPtr'},
+    'creator_name': { 'offset': 0xc, 'size': 'stringPtr' },
+    'date': { 'offset': 0x10, 'size': 'stringPtr' },
+    'fulldate': { 'offset': 0x14, 'size': 'stringPtr' },
+    
+    'reaction_list_ptr': { 'offset': 0x140, 'size': 4 },
+    'reaction_list_size': { 'offset': 0x144, 'size': 4 },
+    'requirements_ptr': { 'offset': 0x148, 'size': 4 },
+    'requirement_count': { 'offset': 0x14c, 'size': 4 },
+    'hit_conditions_ptr': { 'offset': 0x150, 'size': 4 },
+    'hit_conditions_size': { 'offset': 0x154, 'size': 4 },
+    'projectile_ptr': { 'offset': 0x158, 'size': 4 },
+    'projectile_size': { 'offset': 0x15c, 'size': 4 },
+    'pushback_ptr': { 'offset': 0x160, 'size': 4 },
+    'pushback_list_size': { 'offset': 0x164, 'size': 4 },
+    'pushback_extradata_ptr': { 'offset': 0x168, 'size': 4 },
+    'pushback_extradata_size': { 'offset': 0x16c, 'size': 4 },
+    'cancel_head_ptr': { 'offset': 0x170, 'size': 4 },
+    'cancel_list_size': { 'offset': 0x174, 'size': 4 },
+    'group_cancel_head_ptr': { 'offset': 0x178, 'size': 4 },
+    'group_cancel_list_size': { 'offset': 0x17c, 'size': 4 },
+    'cancel_extradata_head_ptr': { 'offset': 0x180, 'size': 4 },
+    'cancel_extradata_list_size': { 'offset': 0x184, 'size': 4 },
+    'extra_move_properties_ptr': { 'offset': 0x188, 'size': 4 },
+    'extra_move_properties_size': { 'offset': 0x18c, 'size': 4 },
+    'movelist_head_ptr': { 'offset': 0x1a0, 'size': 4 },
+    'movelist_size': { 'offset': 0x1a4, 'size': 4 },
+    'voiceclip_list_ptr': { 'offset': 0x1a8, 'size': 4 },
+    'voiceclip_list_size': { 'offset': 0x1ac, 'size': 4 },
+    'input_sequence_ptr': { 'offset': 0x1b0, 'size': 4 },
+    'input_sequence_size': { 'offset': 0x1b4, 'size': 4 },
+    'input_extradata_ptr': { 'offset': 0x1b8, 'size': 4 },
+    'input_extradata_size': { 'offset': 0x1bc, 'size': 4 },
+    'unknown_parryrelated_list_ptr': { 'offset': 0x1c0, 'size': 4 },
+    'unknown_parryrelated_list_size': { 'offset': 0x1c4, 'size': 4 },
+    'throw_extras_ptr': { 'offset': 0x1c8, 'size': 4 },
+    'throw_extras_size': { 'offset': 0x1cc, 'size': 4 },
+    'throws_ptr': { 'offset': 0x1d0, 'size': 4 },
+    'throws_size': { 'offset': 0x1d4, 'size': 4 },
+    
+    'mota_start': { 'offset': 0x1d8, 'size': None },
+    'aliases': { 'offset': 0x18, 'size': (148, 2) }, #148 aliases of 2 bytes
+    
+    'pushback:val1': { 'offset': 0x0, 'size': 2 },
+    'pushback:val2': { 'offset': 0x2, 'size': 2 },
+    'pushback:val3': { 'offset': 0x4, 'size': 4 },
+    'pushback:extra_addr': { 'offset': 0x8, 'size': 4 },
+    
+    'pushbackextradata:value': { 'offset': 0x0, 'size': 2 },
+    
+    'requirement:req': { 'offset': 0x0, 'size': 4 },
+    'requirement:param': { 'offset': 0x4, 'size': 4 },
+    
+    'cancelextradata:value': { 'offset': 0x0, 'size': 4 },
+    
+    'cancel:command': { 'offset': 0x0, 'size': 8 },
+    'cancel:requirement_addr': { 'offset': 0x8, 'size': 4 },
+    'cancel:extradata_addr': { 'offset': 0xc, 'size': 4 },
+    'cancel:frame_window_start': { 'offset': 0x10, 'size': 4 },
+    'cancel:frame_window_end': { 'offset': 0x14, 'size': 4 },
+    'cancel:starting_frame': { 'offset': 0x18, 'size': 4 },
+    'cancel:move_id': { 'offset': 0x1c, 'size': 2 },
+    'cancel:cancel_option': { 'offset': 0x1e, 'size': 2 },
+    
+    'reactionlist:ptr_list': { 'offset': 0x0, 'size': (7, 4) }, #array of 7 variables, each 8 bytes long
+    'reactionlist:u1list': { 'offset': 0x1c, 'size': (6, 2) },  #array of 6 variables, each 2 bytes long
+    'reactionlist:vertical_pushback': { 'offset': 0x30, 'size': 2 },
+    'reactionlist:standing': { 'offset': 0x34, 'size': 2 },
+    'reactionlist:crouch': { 'offset': 0x36, 'size': 2 },
+    'reactionlist:ch': { 'offset': 0x38, 'size': 2 },
+    'reactionlist:crouch_ch': { 'offset': 0x3a, 'size': 2 },
+    'reactionlist:left_side': { 'offset': 0x3c, 'size': 2 },
+    'reactionlist:left_side_crouch': { 'offset': 0x3e, 'size': 2 },
+    'reactionlist:right_side': { 'offset': 0x40, 'size': 2 },
+    'reactionlist:right_side_crouch': { 'offset': 0x42, 'size': 2 },
+    'reactionlist:back': { 'offset': 0x44, 'size': 2 },
+    'reactionlist:back_crouch': { 'offset': 0x46, 'size': 2 },
+    'reactionlist:block': { 'offset': 0x48, 'size': 2 },
+    'reactionlist:crouch_block': { 'offset': 0x4a, 'size': 2 },
+    'reactionlist:wallslump': { 'offset': 0x4c, 'size': 2 },
+    'reactionlist:downed': { 'offset': 0x4e, 'size': 2 },
+    
+    'hitcondition:requirement_addr': { 'offset': 0x0, 'size': 4 },
+    'hitcondition:damage': { 'offset': 0x4, 'size': 4 },
+    'hitcondition:reaction_list_addr': { 'offset': 0x8, 'size': 4 },
+    
+    'extramoveprop:type': { 'offset': 0x0, 'size': 4 },
+    'extramoveprop:id': { 'offset': 0x4, 'size': 4 },
+    'extramoveprop:value': { 'offset': 0x8, 'size': 4 },    
+    
+    'move:name': { 'offset': 0x0, 'size': 'stringPtr' },
+    'move:anim_name': { 'offset': 0x4, 'size': 'stringPtr' },
+    'move:anim_addr': { 'offset': 0x8, 'size': 4 },
+    'move:vuln': { 'offset': 0xc, 'size': 4 },
+    'move:hitlevel': { 'offset': 0x10, 'size': 4 },
+    'move:cancel_addr': { 'offset': 0x14, 'size': 4 },
+    'move:transition': { 'offset': 0x30, 'size': 2 },
+    'move:anim_max_len': { 'offset': 0x3c, 'size': 4 },
+    'move:startup': { 'offset': 0x64, 'size': 4 },
+    'move:recovery': { 'offset': 0x68, 'size': 4 },
+    'move:hitbox_location': { 'offset': 0x60, 'size': 4, 'endian': 'little' },
+    'move:hit_condition_addr': { 'offset': 0x38, 'size': 4 },
+    'move:extra_properties_ptr': { 'offset': 0x50, 'size': 4 },
+    'move:voiceclip_ptr': { 'offset': 0x4c, 'size': 4 },
+    #'move:u1': { 'offset': 0x18, 'size': 4 },
+    'move:u2': { 'offset': 0x1c, 'size': 4 },
+    'move:u3': { 'offset': 0x20, 'size': 4 },
+    'move:u4': { 'offset': 0x24, 'size': 4 },
+    #'move:u5': { 'offset': 0x28, 'size': 4 },
+    'move:u6': { 'offset': 0x2c, 'size': 4 },
+    'move:u7': { 'offset': 0x32, 'size': 2 },
+    'move:u8': { 'offset': 0x36, 'size': 2 },
+    'move:u8_2': { 'offset': 0x34, 'size': 2 },
+    'move:u9': { 'offset': None, 'size': 2 },
+    'move:u10': { 'offset': 0x40, 'size': 4 },
+    'move:u11': { 'offset': 0x44, 'size': 4 },
+    'move:u12': { 'offset': 0x48, 'size': 4 },
+    #'move:u13': { 'offset': 0x54 'size': 4 },
+    #'move:u14': { 'offset': 0x58, 'size': 4 },
+    'move:u15': { 'offset': 0x5c, 'size': 4 },
+    'move:u16': { 'offset': 0x6c, 'size': 2 },
+    'move:u17': { 'offset': 0x6e, 'size': 2 },
+    'move:u18': { 'offset': None, 'size': 4 },
+    
+    'voiceclip:value': { 'offset': 0x0, 'size': 4 },
+    
+    'inputextradata:u1': { 'offset': 0x0, 'size': 4 },
+    'inputextradata:u2': { 'offset': 0x4, 'size': 4 },
+    
+    'inputsequence:u1': { 'offset': 0x1, 'size': 1 },
+    'inputsequence:u2': { 'offset': 0x2, 'size': 2 },
+    'inputsequence:u3': { 'offset': 0x0, 'size': 1 },
+    'inputsequence:extradata_addr': { 'offset': 4, 'size': 4 },
+    
+    'throw:u1': { 'offset': 0x0, 'size': 4 },
+    'throw:throwextra_addr': { 'offset': 0x4, 'size': 4 },
+    
+    'unknownparryrelated:value': { 'offset': 0x0, 'size': 4 },
+    
+    'projectile:u1': { 'offset': 0x0, 'size': (48, None) },
+    'projectile:hit_condition_addr': { 'offset': None, 'size': 4 },
+    'projectile:cancel_addr': { 'offset': None, 'size': 4 },
+    'projectile:u2': { 'offset': 0x70, 'size': (28, None) },
+    
+    'throwextra:u1': { 'offset': 0x0, 'size': 4 },
+    'throwextra:u2': { 'offset': 4, 'size': (4, 2) },
+}
+
+offsetTables = {
+    't7': t7_offsetTable,
+    'tag2': tag2_offsetTable,
+    'rev': tag2_offsetTable,
+}
+ 
+def readOffsetTable(self, key=''):
+    if key == '':
+        keyPrefix = ''
+        keylist = [k for k in self.offsetTable if k.find(':') == -1]
+    else:
+        keyPrefix = key + ':'
+        splitLen = len(keyPrefix)
+        keylist = [k[splitLen:] for k in self.offsetTable if k.startswith(keyPrefix)]
+    
+    for label in keylist:
+        key = keyPrefix + label
+        offset, size = self.offsetTable[key]['offset'], self.offsetTable[key]['size']
+        endian = self.endian if 'endian' not in self.offsetTable[key] else self.offsetTable[key]['endian']
+        
+        if size == None:
+            continue
+            
+        if offset == None:
+            value = 0
+        elif size == 'stringPtr':
+            if self.data == None:
+                value = self.readInt(self.addr + offset, self.ptr_size)
+            else:
+                value = self.bToInt(self.data, offset, self.ptr_size)
+            value = self.readString(self.base + value)
+        elif type(size) is tuple:
+            value = []
+            varCount, varSize = size
+            
+            for i in range(varCount):
+                if varSize == None:
+                    varVal = 0
+                elif self.data == None:
+                    varVal = self.readInt(self.addr + offset + (i * varSize), varSize)
+                else:
+                    varVal = self.bToInt(self.data, offset + (i * varSize), varSize)
+                value.append(varVal)
+        else:
+            if self.data == None:
+                value = self.readInt(self.addr + offset, size)
+            else:
+                value = self.bToInt(self.data, offset, size, ed=endian)
+    
+        setattr(self, label, value)
 
 def getMovesetName(TekkenVersion, character_name):
     if character_name.startswith('['):
@@ -155,6 +489,7 @@ def initTekkenStructure(self, parent, addr=0, size=0):
     self.ptr_size = parent.ptr_size
     self.base = parent.base
     self.endian = parent.endian
+    self.offsetTable = parent.offsetTable
     
     self.readInt = parent.readInt
     self.readBytes = parent.readBytes
@@ -180,8 +515,10 @@ class Exporter:
         self.TekkenVersion = TekkenVersion
         self.ptr_size = ptrSizes[TekkenVersion]
         self.base =  game_addresses.addr[TekkenVersion + '_base']
+
         self.endian = endians[TekkenVersion]
         self.folder_destination = folder_destination
+        self.offsetTable = offsetTables[TekkenVersion]
         
         if not os.path.isdir(folder_destination):
             os.mkdir(folder_destination)
@@ -195,13 +532,8 @@ class Exporter:
         windowTitle = self.T.getWindowTitle()
         p = re.compile(regex)
         match = p.search(windowTitle)
-        print(windowTitle, regex)
         if match == None:
-            print('no match')
-            os._exit(0)
             return None
-        print(match.group(1))
-        os._exit(0)
         key = self.TekkenVersion + '_p1_addr_' + match.group(1)
         return None if key not in game_addresses.addr else game_addresses.addr[key]
         
@@ -305,11 +637,8 @@ class Pushback:
     def __init__(self, addr, parent):
         data = initTekkenStructure(self, parent, addr, parent.Pushback_size)
         
-        self.val1 = self.bToInt(data, 0, 2)
-        self.val2 = self.bToInt(data, 2, 2)
-        self.val3 = self.bToInt(data, 4, 4)
+        readOffsetTable(self, 'pushback')
         self.extra_index = -1
-        self.extra_addr = self.bToInt(data, 8, self.ptr_size)
         
     def dict(self):
         return {
@@ -326,7 +655,7 @@ class PushbackExtradata:
     def __init__(self, addr, parent):
         data = initTekkenStructure(self, parent, addr, parent.PushbackExtradata_size)
         
-        self.value = self.bToInt(data, 0, 2)
+        readOffsetTable(self, 'pushbackextradata')
         
     def dict(self):
         return self.value
@@ -335,9 +664,7 @@ class Requirement:
     def __init__(self, addr, parent):
         data = initTekkenStructure(self, parent, addr, parent.Requirement_size)
         
-        data = self.readBytes(self.base + addr, 0x8)
-        self.req = self.bToInt(data, 0, 4)
-        self.param = self.bToInt(data, 4, 4)
+        readOffsetTable(self, 'requirement')
         
     def dict(self):
         return {
@@ -349,7 +676,7 @@ class CancelExtradata:
     def __init__(self, addr, parent):
         data = initTekkenStructure(self, parent, addr, parent.CancelExtradata_size)
         
-        self.value = self.bToInt(data, 0x0, parent.CancelExtradata_size)
+        readOffsetTable(self, 'cancelextradata')
         
     def dict(self):
         return self.value
@@ -359,24 +686,15 @@ class Cancel:
     def __init__(self, addr, parent):
         data = initTekkenStructure(self, parent, addr, parent.Cancel_size)
         
+        readOffsetTable(self, 'cancel')
         
-        after_ptr_offset = 0x8 + (self.ptr_size * 2)
-        
-        self.command = self.bToInt(data, 0x0, 8)
-        self.requirement_addr = self.bToInt(data, 0x8, self.ptr_size)
-        self.extradata_addr = self.bToInt(data, 0x8 + self.ptr_size, self.ptr_size)
-        self.frame_window_start = self.bToInt(data, after_ptr_offset, 4)
-        self.frame_window_end = self.bToInt(data, after_ptr_offset + 4, 4)
-        self.starting_frame = self.bToInt(data,after_ptr_offset + 8, 4)
-        self.move_id = self.bToInt(data, after_ptr_offset + 12, 2)
-        self.cancel_option = self.bToInt(data, after_ptr_offset + 14, 2)
-        
-        if self.TekkenVersion != 7: #swapping first two ints
+        if self.endian == 'big': #swapping first two ints
             t = self.bToInt(data, 0, 4)
             t2 = self.bToInt(data, 0x4, 4) 
             self.command = (t2 << 32) | t
         
         self.extradata_id = -1
+        self.requirement_idx =- -1
         
     def dict(self):
         return {
@@ -400,28 +718,8 @@ class ReactionList:
     def __init__(self, addr, parent):
         data = initTekkenStructure(self, parent, addr, parent.ReactionList_size)
         
-        self.ptr_list = [self.bToInt(data, i * self.ptr_size, self.ptr_size) for i in range(7)]
+        readOffsetTable(self, 'reactionlist')
         self.pushback_indexes = [-1] * 7
-        
-        self.u1list = [self.bToInt(data, (self.ptr_size * 7) + i * 2, 2) for i in range(6)]
-        
-        list_starting_offset = 0x50 if self.ptr_size == 8 else 0x34
-        
-        self.vertical_pushback = self.bToInt(data, list_starting_offset - 4, 2)
-        self.standing = self.bToInt(data, list_starting_offset + 0x0, 2)
-        self.crouch = self.bToInt(data, list_starting_offset + 0x2, 2)
-        self.ch = self.bToInt(data, list_starting_offset + 0x4, 2)
-        self.crouch_ch = self.bToInt(data, list_starting_offset + 0x6, 2)
-        self.left_side = self.bToInt(data, list_starting_offset + 0x8, 2)
-        self.left_side_crouch = self.bToInt(data, list_starting_offset + 0xA, 2)
-        self.right_side = self.bToInt(data, list_starting_offset + 0xC, 2)
-        self.right_side_crouch = self.bToInt(data, list_starting_offset + 0xE, 2)
-        self.back = self.bToInt(data, list_starting_offset + 0x10, 2)
-        self.back_crouch = self.bToInt(data, list_starting_offset + 0x12, 2)
-        self.block = self.bToInt(data, list_starting_offset + 0x14, 2)
-        self.crouch_block = self.bToInt(data, list_starting_offset + 0x16, 2)
-        self.wallslump = self.bToInt(data, list_starting_offset + 0x18, 2)
-        self.downed = self.bToInt(data, list_starting_offset + 0x1A, 2)
         
     def setIndexes(self, pushback_ptr, pushback_size):
         for i, ptr in enumerate(self.ptr_list):
@@ -455,9 +753,7 @@ class HitCondition:
         self.reaction_list_idx = -1
         self.requirement_idx = -1
         
-        self.requirement_addr = self.bToInt(data, 0x0, self.ptr_size)
-        self.damage = self.bToInt(data, self.ptr_size, 4)
-        self.reaction_list_addr = self.bToInt(data, self.ptr_size * 2, self.ptr_size)
+        readOffsetTable(self, 'hitcondition')
         
     def dict(self):
         return {
@@ -476,9 +772,7 @@ class ExtraMoveProperty:
     def __init__(self, addr, parent):
         data = initTekkenStructure(self, parent, addr, parent.ExtraMoveProperty_size)
         
-        self.type = self.bToInt(data, 0, 4)
-        self.id = self.bToInt(data, 4, 4)
-        self.value = self.bToInt(data, 8, 4)
+        readOffsetTable(self, 'extramoveprop')
             
     def dict(self):
         return {
@@ -491,128 +785,7 @@ class Move:
     def __init__(self, addr, parent):
         data = initTekkenStructure(self, parent, addr, parent.Move_size)
         
-        if self.ptr_size == 8:
-            move_name_addr = self.bToInt(data, 0x0, self.ptr_size)
-            anim_name_addr = self.bToInt(data, 0x8, self.ptr_size)
-            anim_data_addr = self.bToInt(data, 0x10, self.ptr_size)
-            vuln = self.bToInt(data, 0x18, 4)
-            hit_level = self.bToInt(data, 0x1c, 4)
-            cancel_ptr = self.bToInt(data, 0x20, self.ptr_size)
-            
-            u1 = 0#bToInt(data, 0x28, self.ptr_size) #pointer!!!
-            u2 = self.bToInt(data, 0x30, self.ptr_size) #NOT pointer
-            u3 = self.bToInt(data, 0x38, self.ptr_size)
-            u4 = self.bToInt(data, 0x40, self.ptr_size)
-            u5 = 0#bToInt(data, 0x48, self.ptr_size)  #pointer!!!
-            u6 = self.bToInt(data, 0x50, 4)
-            
-            transition = self.bToInt(data, 0x54, 2)
-            
-            u7 = self.bToInt(data, 0x56, 2)
-            u8 = self.bToInt(data, 0x58, 2)
-            u8_2 = self.bToInt(data, 0x5A, 2)
-            u9 = self.bToInt(data, 0x5C, 4)
-            
-            on_hit_ptr = self.bToInt(data, 0x60, self.ptr_size)
-            anim_max_length = self.bToInt(data, 0x68, 4)
-            
-            u10 = self.bToInt(data, 0x6c, 4)
-            u11 = self.bToInt(data, 0x70, 4)
-            u12 = self.bToInt(data, 0x74, 4)
-            
-            voiceclip_ptr = self.bToInt(data, 0x78, self.ptr_size) #can_be_null
-            extra_properties_ptr = self.bToInt(data, 0x80, self.ptr_size) #can_be_null
-            
-            u13 = 0#bToInt(data, 0x88, 8) #pointer!!!
-            u14 = 0#bToInt(data, 0x90, 8) #pointer!!!
-            u15 = self.bToInt(data, 0x98, 4)
-            
-            hitbox_location = self.bToInt(data, 0x9c, 4)
-            attack_startup = self.bToInt(data, 0xa0, 4)
-            attack_recovery = self.bToInt(data, 0xa4, 4)
-            
-            u16 = self.bToInt(data, 0xa8, 2)
-            u17 = self.bToInt(data, 0xaa, 2)
-            u18 = self.bToInt(data, 0xac, 4)
-        else:
-            move_name_addr = self.bToInt(data, 0x0, self.ptr_size)
-            anim_name_addr = self.bToInt(data, 0x4, self.ptr_size)
-            anim_data_addr = self.bToInt(data, 0x8, self.ptr_size)
-            vuln = self.bToInt(data, 0xC, 4)
-            hit_level = self.bToInt(data, 0x10, 4)
-            cancel_ptr = self.bToInt(data, 0x14, self.ptr_size)
-            
-            u1 = 0#bToInt(data, 0x18, self.ptr_size) #pointer!!!
-            u2 = self.bToInt(data, 0x1c, self.ptr_size) #NOT pointer
-            u3 = self.bToInt(data, 0x20, self.ptr_size)
-            u4 = self.bToInt(data, 0x24, self.ptr_size)
-            u5 = 0#bToInt(data, 0x28, self.ptr_size) #pointer!!!
-            u6 = self.bToInt(data, 0x2c, 4)
-            
-            transition = self.bToInt(data, 0x30, 2)
-            
-            u7 = self.bToInt(data, 0x32, 2) 
-            u8 = self.bToInt(data, 0x36, 2)
-            u8_2 = self.bToInt(data, 0x34, 2) #inverted offsets for 0x36 & 0x34
-            u9 = 0 
-            
-            on_hit_ptr = self.bToInt(data, 0x38, self.ptr_size)
-            anim_max_length = self.bToInt(data, 0x3c, 4)
-            
-            u10 = self.bToInt(data, 0x40, 4)
-            u11 = self.bToInt(data, 0x44, 4)
-            u12 = self.bToInt(data, 0x48, 4)
-            
-            voiceclip_ptr = self.bToInt(data, 0x4c, self.ptr_size) #can_be_null
-            extra_properties_ptr = self.bToInt(data, 0x50, self.ptr_size) #can_be_null
-            
-            u13 = 0#bToInt(data, 0x54, 4) #pointer!!!
-            u14 = 0#bToInt(data, 0x58, 4) #pointer!!!
-            u15 = self.bToInt(data, 0x5c, 4)
-            
-            hitbox_location = self.bToInt(data, 0x60, 4, ed='little')
-            attack_startup = self.bToInt(data, 0x64, 4)
-            attack_recovery = self.bToInt(data, 0x68, 4)
-            
-            u16 = self.bToInt(data, 0x6c, 2) 
-            u17 = self.bToInt(data, 0x6e, 2) 
-            u18 = 0
-            
-        
-        self.name = self.readString(self.base + move_name_addr)
-        self.anim_name = self.readString(self.base + anim_name_addr)
-        self.anim_addr = anim_data_addr
-        self.vuln = vuln
-        self.hitlevel = hit_level
-        self.cancel_addr = cancel_ptr
-        self.transition = transition
-        self.anim_max_len = anim_max_length
-        self.startup = attack_startup
-        self.recovery = attack_recovery
-        self.hitbox_location = hitbox_location
-        self.hit_condition_addr = on_hit_ptr
-        self.extra_properties_ptr = extra_properties_ptr
-        self.voiceclip_ptr = voiceclip_ptr
-        
-        self.u1 = u1
-        self.u2 = u2
-        self.u3 = u3
-        self.u4 = u4
-        self.u5 = u5
-        self.u6 = u6
-        self.u7 = u7
-        self.u8 = u8
-        self.u8_2 = u8_2
-        self.u9 = u9
-        self.u10 = u10
-        self.u11 = u11
-        self.u12 = u12
-        self.u13 = u13
-        self.u14 = u14
-        self.u15 = u15
-        self.u16 = u16
-        self.u17 = u17
-        self.u18 = u18
+        readOffsetTable(self, 'move')
         
         self.anim = AnimData(self.anim_name, self.base + self.anim_addr, self)
         self.cancel_idx = -1
@@ -673,7 +846,7 @@ class Voiceclip:
     def __init__(self, addr, parent):
         data = initTekkenStructure(self, parent, addr, parent.Voiceclip_size)
         
-        self.value = self.bToInt(data, 0, 4)
+        readOffsetTable(self, 'voiceclip')
 
     def dict(self):
         return self.value
@@ -682,8 +855,7 @@ class InputExtradata:
     def __init__(self, addr, parent):
         data = initTekkenStructure(self, parent, addr, parent.InputExtradata_size)
         
-        self.u1 = self.bToInt(data, 0, 4)
-        self.u2 = self.bToInt(data, 4, 4)
+        readOffsetTable(self, 'inputextradata')
         
     def dict(self):
         return {
@@ -695,16 +867,7 @@ class InputSequence:
     def __init__(self, addr, parent):
         data = initTekkenStructure(self, parent, addr, parent.InputSequence_size)
         
-        if self.ptr_size == 8:
-            self.u1 = self.bToInt(data, 0, 2)
-            self.u2 = self.bToInt(data, 2, 2)
-            self.u3 = self.bToInt(data, 4, 4)
-            self.extradata_addr = self.bToInt(data, 8, self.ptr_size)
-        else:
-            self.u1 = self.bToInt(data, 1, 1)
-            self.u2 = self.bToInt(data, 2, 2)
-            self.u3 = self.bToInt(data, 0, 1)
-            self.extradata_addr = self.bToInt(data, 4, self.ptr_size)
+        readOffsetTable(self, 'inputsequence')
         
         self.extradata_idx = -1
         
@@ -723,20 +886,7 @@ class Projectile:
     def __init__(self, addr, parent):
         data = initTekkenStructure(self, parent, addr, parent.Projectile_size)
         
-        if self.ptr_size == 8:
-            self.u1 = [self.bToInt(data, offset * 2, 2) for offset in range(48)]
-            
-            self.hit_condition_addr = self.bToInt(data, 0x60, self.ptr_size)
-            self.cancel_addr = self.bToInt(data, 0x68, self.ptr_size)
-            
-            self.u2 = [self.bToInt(data, 0x70 + (offset * 2), 2) for offset in range(28)]
-        else:
-            self.u1 = [0] * 48
-            
-            self.hit_condition_addr = 0#bToInt(data, 0x60, self.ptr_size)
-            self.cancel_addr = 0#bToInt(data, 0x68, self.ptr_size)
-            
-            self.u2 = [0] * 28
+        readOffsetTable(self, 'projectile')
         
         self.hit_condition = -1
         self.cancel_idx = -1
@@ -759,8 +909,7 @@ class ThrowExtra:
     def __init__(self, addr, parent):
         data = initTekkenStructure(self, parent, addr, parent.ThrowExtra_size)
         
-        self.u1 = self.bToInt(data, 0x0, 4)
-        self.u2 = [self.bToInt(data, 4 + offset * 2, 2) for offset in range(4)]
+        readOffsetTable(self, 'throwextra')
 
     def dict(self):
         return {
@@ -772,8 +921,7 @@ class Throw:
     def __init__(self, addr, parent):
         data = initTekkenStructure(self, parent, addr, parent.Throw_size)
         
-        self.u1 = self.bToInt(data, 0, self.ptr_size)
-        self.unknown_addr = self.bToInt(data, self.ptr_size, self.ptr_size)
+        readOffsetTable(self, 'throw')
         
         self.throwextra_idx = -1
         
@@ -790,11 +938,10 @@ class UnknownParryRelated:
     def __init__(self, addr, parent):
         data = initTekkenStructure(self, parent, addr, parent.UnknownParryRelated_size)
         
-        self.value = self.bToInt(data, 0, 4)
+        readOffsetTable(self, 'unknownparryrelated')
         
     def dict(self):
         return self.value
- 
         
 class Motbin:
     def __init__(self, addr, exporterObject, name=''):
@@ -806,116 +953,17 @@ class Motbin:
         self.version = versionLabels[self.TekkenVersion]
         self.extraction_date = datetime.now(timezone.utc).__str__()
         self.extraction_path = ''
-    
-        character_name_addr = 0x8
-        creator_name_addr = character_name_addr + self.ptr_size
-        date_addr = creator_name_addr + self.ptr_size
-        fulldate_addr = date_addr + self.ptr_size
 
         try:
-            self.character_name = self.readStringPtr(addr + character_name_addr)
-            self.creator_name = self.readStringPtr(addr + creator_name_addr)
-            self.date = self.readStringPtr(addr + date_addr)
-            self.fulldate = self.readStringPtr(addr + fulldate_addr)
-        
-            reaction_list_ptr = 0x150 if self.ptr_size == 8 else 0x140
-            reaction_list_size = reaction_list_ptr + self.ptr_size
-            self.reaction_list_ptr = self.readInt(addr + reaction_list_ptr, self.ptr_size)
-            self.reaction_list_size = self.readInt(addr + reaction_list_size, self.ptr_size)
+            readOffsetTable(self, '')
             
-            requirements_ptr = 0x160 if self.ptr_size == 8 else 0x148
-            requirement_count = requirements_ptr + self.ptr_size
-            self.requirements_ptr = self.readInt(addr + requirements_ptr, self.ptr_size)
-            self.requirement_count = self.readInt(addr + requirement_count, self.ptr_size)
-            
-            hit_conditions_ptr = 0x170 if self.ptr_size == 8 else 0x150
-            hit_conditions_size = hit_conditions_ptr + self.ptr_size
-            self.hit_conditions_ptr = self.readInt(addr + hit_conditions_ptr, self.ptr_size)
-            self.hit_conditions_size = self.readInt(addr + hit_conditions_size, self.ptr_size)
-            
-            projectile_ptr = 0x180 if self.ptr_size == 8 else 0x158
-            projectile_size = projectile_ptr + self.ptr_size
-            self.projectile_ptr = self.readInt(addr + projectile_ptr, self.ptr_size)
-            self.projectile_size = self.readInt(addr + projectile_size, self.ptr_size)
-            
-            pushback_ptr = 0x190 if self.ptr_size == 8 else 0x160
-            pushback_list_size = pushback_ptr + self.ptr_size
-            self.pushback_ptr = self.readInt(addr + pushback_ptr, self.ptr_size)
-            self.pushback_list_size = self.readInt(addr + pushback_list_size, self.ptr_size)
-
-            pushback_extradata_ptr = 0x1A0 if self.ptr_size == 8 else 0x168
-            pushback_extradata_size = pushback_extradata_ptr + self.ptr_size
-            self.pushback_extradata_ptr = self.readInt(addr + pushback_extradata_ptr, self.ptr_size)
-            self.pushback_extradata_size = self.readInt(addr + pushback_extradata_size, self.ptr_size)
-
-            cancel_head_ptr = 0x1b0 if self.ptr_size == 8 else 0x170
-            cancel_list_size = cancel_head_ptr + self.ptr_size
-            self.cancel_head_ptr = self.readInt(addr + cancel_head_ptr, self.ptr_size)
-            self.cancel_list_size = self.readInt(addr + cancel_list_size, self.ptr_size)
-
-            group_cancel_head_ptr = 0x1c0 if self.ptr_size == 8 else 0x178
-            group_cancel_list_size = group_cancel_head_ptr + self.ptr_size
-            self.group_cancel_head_ptr = self.readInt(addr + group_cancel_head_ptr, self.ptr_size)
-            self.group_cancel_list_size = self.readInt(addr + group_cancel_list_size, self.ptr_size)
-
-            cancel_extradata_head_ptr = 0x1d0 if self.ptr_size == 8 else 0x180
-            cancel_extradata_list_size = cancel_extradata_head_ptr + self.ptr_size
-            self.cancel_extradata_head_ptr = self.readInt(addr + cancel_extradata_head_ptr, self.ptr_size)
-            self.cancel_extradata_list_size = self.readInt(addr + cancel_extradata_list_size, self.ptr_size)
-
-            extra_move_properties_ptr = 0x1e0 if self.ptr_size == 8 else 0x188
-            extra_move_properties_size = extra_move_properties_ptr + self.ptr_size
-            self.extra_move_properties_ptr = self.readInt(addr + extra_move_properties_ptr, self.ptr_size)
-            self.extra_move_properties_size = self.readInt(addr + extra_move_properties_size, self.ptr_size)
-
-            movelist_head_ptr = 0x210 if self.ptr_size == 8 else 0x1a0
-            movelist_size = movelist_head_ptr + self.ptr_size
-            self.movelist_head_ptr = self.readInt(addr + movelist_head_ptr, self.ptr_size)
-            self.movelist_size = self.readInt(addr + movelist_size, self.ptr_size)
-
-            voiceclip_list_ptr = 0x220 if self.ptr_size == 8 else 0x1a8
-            voiceclip_list_size = voiceclip_list_ptr + self.ptr_size
-            self.voiceclip_list_ptr = self.readInt(addr + voiceclip_list_ptr, self.ptr_size)
-            self.voiceclip_list_size = self.readInt(addr + voiceclip_list_size, self.ptr_size)
-
-            input_sequence_ptr = 0x230 if self.ptr_size == 8 else 0x1b0
-            input_sequence_size = input_sequence_ptr + self.ptr_size
-            self.input_sequence_ptr = self.readInt(addr + input_sequence_ptr, self.ptr_size)
-            self.input_sequence_size = self.readInt(addr + input_sequence_size, self.ptr_size)
-
-            input_extradata_ptr = 0x240 if self.ptr_size == 8 else 0x1b8
-            input_extradata_size = input_extradata_ptr + self.ptr_size
-            self.input_extradata_ptr = self.readInt(addr + input_extradata_ptr, self.ptr_size)
-            self.input_extradata_size = self.readInt(addr + input_extradata_size, self.ptr_size)
-
-            unknown_parryrelated_list_ptr = 0x250 if self.ptr_size == 8 else 0x1c0
-            unknown_parryrelated_list_size = unknown_parryrelated_list_ptr + self.ptr_size
-            self.unknown_parryrelated_list_ptr = self.readInt(addr + unknown_parryrelated_list_ptr, self.ptr_size)
-            self.unknown_parryrelated_list_size = self.readInt(addr + unknown_parryrelated_list_size, self.ptr_size)
-
-            throw_extras_ptr = 0x260 if self.ptr_size == 8 else 0x1c8
-            throw_extras_size = throw_extras_ptr + self.ptr_size
-            self.throw_extras_ptr = self.readInt(addr + throw_extras_ptr, self.ptr_size)
-            self.throw_extras_size = self.readInt(addr + throw_extras_size, self.ptr_size)
-
-            throws_ptr = 0x270 if self.ptr_size == 8 else 0x1d0
-            throws_size = throws_ptr + self.ptr_size
-            self.throws_ptr = self.readInt(addr + throws_ptr, self.ptr_size)
-            self.throws_size = self.readInt(addr + throws_size, self.ptr_size)
-            
-            mota_start = 0x280 if self.ptr_size == 8 else 0x1d8
+            mota_start = self.offsetTable['mota_start']['offset']
             self.mota_list = []
             
             for i in range(12):
                 mota_addr = self.readInt(addr + mota_start + (i * self.ptr_size), self.ptr_size)
                 mota_end_addr = self.readInt(addr + mota_start + ((i + 2) * self.ptr_size), self.ptr_size) if i < 9 else mota_addr + 20
                 self.mota_list.append((mota_addr, mota_end_addr - mota_addr))
-            
-            aliasCopySize = 0x2a
-            aliasOffset = fulldate_addr + self.ptr_size
-            aliasCount = 148
-        
-            self.aliases = [self.readInt(addr + aliasOffset + (offset * 2), 2) for offset in range(0, aliasCount)]
             
             self.name = getMovesetName(self.TekkenVersion, self.character_name) if name == '' else name
             self.export_folder = self.name
@@ -1152,7 +1200,7 @@ class Motbin:
         print("Reading throws...")
         for i in range(self.throws_size):
             throw = Throw(self.throws_ptr + (i * self.Throw_size), self)
-            throw.setThrowExtraIdx((throw.unknown_addr - self.throw_extras_ptr) // self.ThrowExtra_size)
+            throw.setThrowExtraIdx((throw.throwextra_addr - self.throw_extras_ptr) // self.ThrowExtra_size)
             self.throws.append(throw.dict())
         
         print("Reading movelist...")
@@ -1199,7 +1247,6 @@ if __name__ == "__main__":
         playerCount = int(sys.argv[2])
     
     for i in range(playerCount):
-        playerAddr += playerOffset
         try:
             player_name = TekkenExporter.getPlayerMovesetName(playerAddr)
         except Exception as e:
@@ -1216,7 +1263,6 @@ if __name__ == "__main__":
         extractedMovesetNames.append(player_name)
         extractedMovesets.append(moveset)
         playerAddr += playerOffset
-        break
     
     if len(extractedMovesets) > 0:
         print("\nSuccessfully extracted:")
