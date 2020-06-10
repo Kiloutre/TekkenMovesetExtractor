@@ -82,7 +82,7 @@ Every moveset extracted from Tag2 will be prefixed with `2_`
 
 Movesets are imported directly in memory, requiring the game to be loaded up and being only temporary.
 After having extracted a moveset, you can import it like such:
-
+g
 `python motbinImport.py CHARACTER` 
 
 **CHARACTER** is to be replaced with the folder name of the target character, containing the .json and animation data.
@@ -96,7 +96,26 @@ Administrator rights may be required to import the moveset into memory.
 - Remove reliance on Python 3.6.5
 - Add export naming option
 - Automatically get cemu_base from CEMU location
-- Check requirements of 'Co_DA_Ground' for tag2 & t7
 - Import anim & move names like tekken 7 does
-- Fix Kunimitsu's broken hand
-- Search for Raven clone leftovers in T7
+- Import camera and projectiles for Tekken 7. Lee crashes with Lili or Leo RA.
+- Look into making ttt2 intro and outro end automatically
+- Use opponent for tag2 outros (might not be viable)
+- Delete files before exporting moveset
+- Tekken ball imitation using Akuma fireball, greenscreend on tekken 3 beach
+- (Jin) Dj tag2 vs DJ tag2, treasure battle, online player buttons, crash on loadscreen
+- Green Ogre 3~4 crash
+- Allow throws using item moves?
+- Rename "group_cancels" to "generic_cancels"
+- Rename "anim_max_len" to "anim_len" in moves
+- Split command in two 4bytes
+- Rename move's u17 to distance
+- Make cancel extradata and moves' voiceclip use a field?
+- Make reaction lists and u1 lists uses fields instead of arrays
+- Split attack hitlevel in 2? need to keep the order the same for tag2
+- Check out eliza in tekken revolution for projectile struct
+
+Moveset editor:
+- Window to list animations and copy one to another character's folder
+- Add note that requirement lists must end with 881
+- Add note that extraprop lists must end with type 0
+- Fix modifying tag2 movesets, 'if you change the requirement of a move to screw / bound with any tag 2 character, the game insta crashes'

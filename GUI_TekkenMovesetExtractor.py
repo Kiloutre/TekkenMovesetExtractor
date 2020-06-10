@@ -1,84 +1,311 @@
 # Python 3.6.5
 
-from tkinter import *
+from tkinter import Tk, Menu, Frame, Listbox, Label, Text
 from tkinter.ttk import Button
 from re import match
-from Addresses import game_addresses, GameClass
+from Addresses import game_addresses
 import sys
 import os
 import json
 import time
 import threading
+import subprocess 
 import motbinExport as exportLib
 import motbinImport as importLib
+from GUI_TekkenMovesetEditor import GUI_TekkenMovesetEditor
 
 charactersPath = "./extracted_chars/"
+codeInjectionSize = 256
 
-monitorVerificationFrequency   = (0.0001) #check very frequently, increase this value if performance problems happen
-waitFrameVerificationFrequency = (0.0001)
+selfName = os.path.basename(__file__)
+monitorVerificationFrequency   = (2)
 runningMonitors = [None, None]
 creatingMonitor = [False, False]
-            
-def waitFrame(TekkenImporter, amount):
-    frame_counter_addr = game_addresses.addr['frame_counter']
-    prevFrame = TekkenImporter.readInt(frame_counter_addr, 4)
-    currFrame = prevFrame
-    while currFrame == prevFrame:
-        time.sleep(waitFrameVerificationFrequency)
-        currFrame = TekkenImporter.readInt(frame_counter_addr, 4)
+codeInjection = None
 
-def monitoringFunc(playerId, TekkenImporter, parent):
-    monitorId = playerId - 1
-    playerAddr = game_addresses.addr['p%d_addr' % (playerId)]
-    playerMotbinAddr = playerAddr + game_addresses.addr['motbin_offset']
+def hexToList(value, bytes_count):
+    return [((value >> (b * 8)) & 0xFF) for b in range(bytes_count)]
     
-    try:
-        moveset = TekkenImporter.loadMoveset(charactersPath + parent.selected_char)
-        print("\nMonitoring successfully started for player %d. Moveset: %s" % (playerId, moveset.m['character_name']))
+def getSinglePlayerInjection(playerAddr, movesetAddr, importer):
+    global codeInjection
+    player = hexToList(playerAddr, 4)
+    moveset = hexToList(movesetAddr, 8)
+    
+    codeSize = codeInjectionSize
+    codeAddr = importer.allocateMem(codeSize)
+    
+    playerLocation = codeAddr + codeInjectionSize - 0x30
+    loadedMovesetLocation = codeAddr + codeInjectionSize - 0x20
+    importedMovesetLocation = codeAddr + codeInjectionSize - 0x10
+    
+    playerLocation_bytes = hexToList(playerLocation, 4)
+    loadedMovesetLocation_bytes = hexToList(loadedMovesetLocation, 4)
+    importedMovesetLocation_bytes = hexToList(importedMovesetLocation, 4)
 
+    singlePlayerBytecode = [
+        0x3B, 0x0c, 0x25, *playerLocation_bytes, #cmp ecx,[location]
+        0x75, 0x3a, #jne end
+        0x48, 0x89, 0x14, 0x25, *loadedMovesetLocation_bytes, # mov [location], rdx
+        0x51, #push rcx
+        0x50, #push rax
+        0x53, #push rbx
+        0x48, 0x31, 0xDB, #xor rbx, rbx
+        0x48, 0x8b, 0x0c, 0x25, *importedMovesetLocation_bytes, #mov rcx, [location]
+        0x48, 0x8b, 0x84, 0xda, 0x80, 0x02, 0x00, 0x00, #mov rax,[rdx+rbx*8+00000290]
+        0x48, 0x89, 0x84, 0xd9, 0x80, 0x02, 0x00, 0x00, #mov [rcx+rbx*8+00000290], rax
+        0x48, 0xff, 0xc3, #inc rbx
+        0x48, 0x83, 0xfb, 0x0B, #cmp rbx, 11
+        0x75, 0xe7, #jne -e7
+        0x5b, #pop rbx
+        0x58, #pop rax
+        0x59, #pop rcx
+        0x48, 0x8b, 0x14, 0x25, *importedMovesetLocation_bytes, #mov rdx,[3f180066]
+        0x48, 0x89, 0x91, 0xa0, 0x14, 0x00, 0x00, #mov [rcx+14a0, rdx]
+        0x48, 0x89, 0x91, 0xa8, 0x14, 0x00, 0x00, #mov [rcx+14a8, rdx]
+        0xFF, 0x25, 0x00, 0x00, 0x00, 0x00 , 0xEd, 0x8C, 0x73, 0x40, 0x01, 0x00, 0x00, 0x00 #jmp 140738Ced
+    ]
+    
+    importer.writeBytes(codeAddr, bytes(singlePlayerBytecode))
+    importer.writeInt(playerLocation, playerAddr, 8)
+    importer.writeInt(loadedMovesetLocation, movesetAddr, 8)
+    importer.writeInt(importedMovesetLocation, movesetAddr, 8)
+    
+    codeInjection = codeAddr
+    return codeAddr
 
-        while runningMonitors[monitorId] != None:
+def getBothPlayersInjection(movesetAddr, movesetAddr2, importer):
+    global codeInjection
+    moveset = hexToList(movesetAddr, 8)
+    moveset2 = hexToList(movesetAddr2, 8)
+    
+    codeSize = codeInjectionSize
+    codeAddr = importer.allocateMem(codeSize)
+    
+    playerLocation = codeAddr + codeInjectionSize - 0x30
+    loadedMovesetLocation = codeAddr + codeInjectionSize - 0x20
+    importedMovesetLocation = codeAddr + codeInjectionSize - 0x10
+    
+    playerLocation_bytes = hexToList(playerLocation, 4)
+    playerLocation2_bytes = hexToList(playerLocation + 8, 4)
+    loadedMovesetLocation_bytes = hexToList(loadedMovesetLocation, 4)
+    loadedMovesetLocation2_bytes = hexToList(loadedMovesetLocation + 8, 4)
+    importedMovesetLocation_bytes = hexToList(importedMovesetLocation, 4)
+    importedMovesetLocation2_bytes = hexToList(importedMovesetLocation + 8, 4)
+
+    twoPlayersBytecode = [
+        0x3B, 0x0c, 0x25, *playerLocation_bytes, #cmp ecx,[location]
+        0x75, 0x3a, #jne p2_check
+        0x48, 0x89, 0x14, 0x25, *loadedMovesetLocation_bytes, # mov [location], rdx
+        0x51, #push rcx
+        0x50, #push rax
+        0x53, #push rbx
+        0x48, 0x31, 0xDB, #xor rbx, rbx
+        0x48, 0x8b, 0x0c, 0x25, *importedMovesetLocation_bytes, #mov rcx, [location]
+        0x48, 0x8b, 0x84, 0xda, 0x80, 0x02, 0x00, 0x00, #mov rax,[rdx+rbx*8+00000290]
+        0x48, 0x89, 0x84, 0xd9, 0x80, 0x02, 0x00, 0x00, #mov [rcx+rbx*8+00000290], rax
+        0x48, 0xff, 0xc3, #inc rbx
+        0x48, 0x83, 0xfb, 0x0B, #cmp rbx, 11
+        0x75, 0xe7, #jne -e7
+        0x5b, #pop rbx
+        0x58, #pop rax
+        0x59, #pop rcx
+        0x48, 0x8b, 0x14, 0x25, *importedMovesetLocation_bytes, #mov rdx,[3f180066]
+        
+        0x3B, 0x0c, 0x25, *playerLocation2_bytes, #cmp ecx,[location]
+        0x75, 0x3a, #jne end
+        0x48, 0x89, 0x14, 0x25, *loadedMovesetLocation2_bytes, # mov [location], rdx
+        0x51, #push rcx
+        0x50, #push rax
+        0x53, #push rbx
+        0x48, 0x31, 0xDB, #xor rbx, rbx
+        0x48, 0x8b, 0x0c, 0x25, *importedMovesetLocation2_bytes, #mov rcx, [location]
+        0x48, 0x8b, 0x84, 0xda, 0x80, 0x02, 0x00, 0x00, #mov rax,[rdx+rbx*8+00000290]
+        0x48, 0x89, 0x84, 0xd9, 0x80, 0x02, 0x00, 0x00, #mov [rcx+rbx*8+00000290], rax
+        0x48, 0xff, 0xc3, #inc rbx
+        0x48, 0x83, 0xfb, 0x0B, #cmp rbx, 11
+        0x75, 0xe7, #jne -e7
+        0x5b, #pop rbx
+        0x58, #pop rax
+        0x59, #pop rcx
+        0x48, 0x8b, 0x14, 0x25, *importedMovesetLocation2_bytes, #mov rdx,[3f180066]
+
+        0x48, 0x89, 0x91, 0xa0, 0x14, 0x00, 0x00, #mov [rcx+14a0, rdx]
+        0x48, 0x89, 0x91, 0xa8, 0x14, 0x00, 0x00, #mov [rcx+14a8, rdx]
+        0xFF, 0x25, 0x00, 0x00, 0x00, 0x00 , 0xEd, 0x8C, 0x73, 0x40, 0x01, 0x00, 0x00, 0x00 #jmp 140738Ced
+    ]
+    
+    importer.writeBytes(codeAddr, bytes(twoPlayersBytecode))
+    
+    if codeInjection != None:
+        movesetAddresses = importer.readBytes(codeInjection + codeInjectionSize - 0x20, 0x20)
+        importer.writeBytes(codeAddr + codeInjectionSize - 0x20, movesetAddresses)
+    
+    importer.writeInt(playerLocation, game_addresses.addr['t7_p1_addr'], 8)
+    importer.writeInt(playerLocation + 8, game_addresses.addr['t7_p1_addr'] + game_addresses.addr['t7_playerstruct_size'], 8)
+    
+    importer.writeInt(loadedMovesetLocation, movesetAddr, 8)
+    importer.writeInt(loadedMovesetLocation + 8, movesetAddr2, 8)
+    
+    importer.writeInt(importedMovesetLocation, movesetAddr, 8)
+    importer.writeInt(importedMovesetLocation + 8, movesetAddr2, 8)
+    
+    codeInjection = codeAddr
+    return codeAddr
+        
+class Monitor:
+    def __init__(self, playerId, TekkenImporter, parent):
+        self.id = playerId - 1
+        self.otherMonitorId = int(not self.id)
+        self.playerId = playerId
+        self.moveset = None
+        
+        self.Importer = TekkenImporter
+        self.parent = parent
+        self.selected_char = parent.selected_char
+        self.invertedPlayers = -1
+        
+        self.getPlayerAddress()
+        
+        try:
+            self.moveset = self.Importer.loadMoveset(folderName=(charactersPath + self.selected_char))
+        except Exception as e:
+            print(e, file=sys.stderr)
+            self.exit()
+            
+    def start(self):
+        print("\nMonitoring successfully started for player %d. Moveset: %s" % (self.playerId, self.moveset.m['character_name']))
+        self.injectPermanentMovesetCode()
+        
+        try:
+            self.monitor()
+        except Exception as e:
+            print(e, file=sys.stderr)
+            self.exit()
+        
+            
+    def injectPermanentMovesetCode(self):
+        otherMonitor = None
+        if runningMonitors[self.otherMonitorId] != None:
+            otherMonitor = runningMonitors[self.otherMonitorId]
+            otherPlayer, otherMoveset = otherMonitor.playerAddr, otherMonitor.moveset.motbin_ptr
+            currentPlayer, currentMoveset = self.playerAddr, self.moveset.motbin_ptr
+            
+            codeAddr = getBothPlayersInjection(self.moveset.motbin_ptr, otherMoveset, self.Importer)
+        else:
+            codeAddr = getSinglePlayerInjection(self.playerAddr, self.moveset.motbin_ptr, self.Importer)
+            
+        jmpInstruction = [
+            0xFF, 0x25, 0, 0, 0, 0, *hexToList(codeAddr, 8)
+        ]
+        
+        self.Importer.writeBytes(game_addresses.addr['code_injection_addr'], bytes(jmpInstruction))
+        
+        if otherMonitor != None:
+            otherMonitor.getPlayerAddress(forceWriting = True)
+        
+    def resetCodeInjection(self, forceReset=False):
+        if runningMonitors[self.otherMonitorId] == None or forceReset:
+            
+            originalInstructions = [
+                0x48, 0x89, 0x91, 0xa0, 0x14, 0, 0,
+                0x48, 0x89, 0x91, 0xa8, 0x14, 0, 0,
+            ]
+            self.Importer.writeBytes(game_addresses.addr['code_injection_addr'], bytes(originalInstructions))
+        else:
+            runningMonitors[self.otherMonitorId].injectPermanentMovesetCode()
+            
+    def writeMovesetToCode(self, playerId):
+        global codeInjection
+        
+        if codeInjection == None or self.moveset == None:
+            return
+        
+        offset = ((playerId - 1) * 8)
+        self.Importer.writeInt(codeInjection + codeInjectionSize - 0x10 + offset, self.moveset.motbin_ptr, 8)
+        self.Importer.writeInt(codeInjection + codeInjectionSize - 0x20 + offset, self.moveset.motbin_ptr, 8)
+        
+    def getPlayerAddress(self, forceWriting = False):
+        startingAddr = game_addresses.addr['playerid_starting_ptr']
+        for i in range(3):
+            startingAddr = self.Importer.readInt(startingAddr, 8)
+            
+        invertPlayers = self.Importer.readInt(startingAddr + 0x60, 4)
+        
+        playerId = self.playerId + invertPlayers
+        if playerId == 3:
+            playerId = 1
+        self.playerAddr = game_addresses.addr['t7_p1_addr']
+        if playerId == 2:
+            self.playerAddr += game_addresses.addr['t7_playerstruct_size']
+            
+        if self.invertedPlayers != invertPlayers or forceWriting:
+            self.writeMovesetToCode(playerId)
+            self.invertedPlayers = invertPlayers
+        
+    def getCharacterId(self):
+        return self.Importer.readInt(self.playerAddr + game_addresses.addr['t7_chara_id_offset'], 8)
+        
+    def applyCharacterAliases(self):
+        self.moveset.applyCharacterIDAliases(self.playerAddr)
+        
+    def monitor(self):
+        self.getPlayerAddress(forceWriting = True)
+        
+        self.Importer.writeInt(self.playerAddr + game_addresses.addr['t7_motbin_offset'], self.moveset.motbin_ptr, 8)
+        
+        prev_charaId = self.getCharacterId()
+        self.applyCharacterAliases()
+        
+        lastMotbinPtr = None
+        usingMotaOffsets = False
+        
+        while runningMonitors[self.id] != None:
             try:
-                currMovesetPtr = TekkenImporter.readInt(playerMotbinAddr, 8)
+                self.getPlayerAddress()
+                charaId = self.getCharacterId()
                 
-                if currMovesetPtr != moveset.motbin_ptr:
-                    waitFrame(TekkenImporter, 6)
-                    moveset.copyUnknownOffsets(currMovesetPtr)
-                    TekkenImporter.writeInt(playerMotbinAddr, moveset.motbin_ptr, 8)
-                    moveset.applyCharacterIDAliases(playerAddr)
-                    print("Player %d: Wrong moveset, applying %s" % (playerId, moveset.m['character_name']))
-                    
+                if charaId != prev_charaId:
+                    self.applyCharacterAliases()
+                    prev_charaId = charaId
+                
                 time.sleep(monitorVerificationFrequency)
-                
             except Exception as e:
                 try:
-                    TekkenImporter.readInt(moveset.motbin_ptr, 8)
+                    self.Importer.readInt(self.moveset.motbin_ptr, 8) # Read on self to see if process still exists
                     time.sleep(monitorVerificationFrequency)
-                except:
-                    print(e)
-                    print("Monitor %d closing because process can't be read" % (playerId), file=sys.stderr)
-                    runningMonitors[monitorId] = None
-                    parent.setMonitorButton(monitorId, False)
-                    break
-            
-    except Exception as e:
-        print(e, file=sys.stderr)
-    print("Monitor %d closing" % (playerId))
-    parent.setMonitorButton(monitorId, False)
-    sys.exit(0)
+                except Exception as e:
+                    print(e, file=sys.stderr)
+                    print("Monitor %d closing because process can't be read" % (self.playerId), file=sys.stderr)
+                    self.exit(errcode=1)
+                    
+        self.exit()
+        
+    def exit(self, errcode=1):
+        print("Monitor %d closed." % (self.playerId))
+        runningMonitors[self.id] = None
+        creatingMonitor[self.id] = None
+        self.parent.setMonitorButton(self.id, False)
+        if errcode == 1:
+            try:
+                self.resetCodeInjection()
+            except:
+                pass
+        sys.exit(errcode)
     
 def startMonitor(parent, playerId):
     if parent.selected_char == None:
         raise Exception("No character selected")
     print("Starting monitor for p%d..." % (playerId))
     monitorId = playerId - 1
-    creatingMonitor[monitorId] = True
     
+    creatingMonitor[monitorId] = True
     TekkenImporter = importLib.Importer()
         
-    monitor = threading.Thread(target=monitoringFunc, args=(playerId, TekkenImporter, parent))
-    runningMonitors[monitorId] = monitor
-    monitor.start()
+    newMonitor = Monitor(playerId, TekkenImporter, parent)
+    newThread = threading.Thread(target=newMonitor.start)
+    
+    newThread.start()
+    runningMonitors[monitorId] = newMonitor
     creatingMonitor[monitorId] = False
     
 def getCharacterList():
@@ -88,53 +315,24 @@ def getCharacterList():
     
     return sorted(folders)
     
-def exportCharacter(parent, tekkenVersion, playerAddr, name=''):
+def exportCharacter(parent, tekkenVersion, playerid, name=''):
     game_addresses.reloadValues()
     TekkenExporter = exportLib.Exporter(tekkenVersion, folder_destination=charactersPath)
-    TekkenExporter.exportMoveset(playerAddr, name)
-    parent.updateCharacterlist()
-    
-def exportTag2Character(parent, tekkenVersion, playerAddr, name=''):
-    game_addresses.reloadValues()
-    TekkenExporter = exportLib.Exporter(tekkenVersion, folder_destination=charactersPath)
-    playerAddr += TekkenExporter.getCemuP1Addr()
+    playerAddr = TekkenExporter.getP1Addr() + (playerid * game_addresses.addr[tekkenVersion + '_playerstruct_size'])
     TekkenExporter.exportMoveset(playerAddr, name)
     
     parent.updateCharacterlist()
     
-def exportAllTag2(parent, tekkenVersion, playerSize):
+def exportAll(parent, TekkenVersion):
     game_addresses.reloadValues()
     
-    TekkenExporter = exportLib.Exporter(tekkenVersion, folder_destination=charactersPath)
-    playerAddr = TekkenExporter.getCemuP1Addr()
+    TekkenExporter = exportLib.Exporter(TekkenVersion, folder_destination=charactersPath)
+    playerAddr = TekkenExporter.getP1Addr()
     
     exportedMovesets = []
+    playerSize = game_addresses.addr[TekkenVersion + '_playerstruct_size']
     
     for i in range(4):
-        addr = playerAddr + (i * playerSize) 
-        moveset_name = TekkenExporter.getPlayerMovesetName(addr)
-        if moveset_name not in exportedMovesets:
-            print("Requesting export for %s..." % (moveset_name))
-            moveset = TekkenExporter.exportMoveset(addr)
-            exportedMovesets.append(moveset_name)
-            print()
-        else:
-            print('Player', moveset_name, 'already exported, not exporting again.')
-            
-    print('\nSuccessfully exported:')
-    for name in exportedMovesets:
-        print(name)
-        
-    parent.updateCharacterlist()
-    
-def exportAll(parent, tekkenVersion, key_match):
-    game_addresses.reloadValues()
-    player_addresses = [game_addresses.addr[key] for key in game_addresses.addr if match(key_match, key)]
-    TekkenExporter = exportLib.Exporter(tekkenVersion)
-    
-    exportedMovesets = []
-    
-    for playerAddr in player_addresses:
         moveset_name = TekkenExporter.getPlayerMovesetName(playerAddr)
         if moveset_name not in exportedMovesets:
             print("Requesting export for %s..." % (moveset_name))
@@ -143,6 +341,7 @@ def exportAll(parent, tekkenVersion, key_match):
             print()
         else:
             print('Player', moveset_name, 'already exported, not exporting again.')
+        playerAddr += playerSize
             
     print('\nSuccessfully exported:')
     for name in exportedMovesets:
@@ -155,7 +354,9 @@ def importPlayer(parent, playerId):
         print("No character selected")
         return
     folderPath = charactersPath + parent.selected_char 
-    playerAddr = game_addresses.addr['p%d_addr' % (playerId)]
+    playerAddr = game_addresses.addr['t7_p1_addr']
+    if playerId == 2:
+        playerAddr += game_addresses.addr['t7_playerstruct_size']
     
     TekkenImporter = importLib.Importer()
     TekkenImporter.importMoveset(playerAddr, folderPath)
@@ -177,19 +378,35 @@ class TextRedirector(object):
         pass
         
 def on_close():
+    global runningMonitors
+    existingMonitor = next((r for r in runningMonitors if r != None), None)
+    if existingMonitor:
+        try:
+            existingMonitor.resetCodeInjection(forceReset=True)
+        except:
+            pass
     runningMonitors = [None, None]
     os._exit(0)
+    
+def openMovesetEditor():
+    app = GUI_TekkenMovesetEditor(mainWindow=False)
+    app.window.mainloop()
         
 class GUI_TekkenMovesetExtractor(Tk):
     def __init__(self):
         Tk.__init__(self)
         
+        menubar = Menu(self)
+        menubar.add_command(label="Moveset Editor", command=openMovesetEditor)
+        self.config(menu=menubar)
+        
+        
         self.characterList = getCharacterList()
         self.selected_char = None
         self.chara_data = None
         
-        self.wm_title("TekkenMovesetExtractor 0.9.2") 
-        self.iconbitmap('GUI_TekkenMovesetExtractor/natsumi.ico')
+        self.wm_title("TekkenMovesetExtractor 1.0.7") 
+        self.iconbitmap('InterfaceData/natsumi.ico')
         self.minsize(960, 540)
         self.geometry("960x540")
         
@@ -215,16 +432,17 @@ class GUI_TekkenMovesetExtractor(Tk):
         self.protocol("WM_DELETE_WINDOW", on_close)
         
         try:
-            with open("GUI_TekkenMovesetExtractor/readme.txt") as f:
+            with open("InterfaceData/readme.txt") as f:
                 for line in f: print(line)
         except:
             pass
             
     def setMonitorButton(self, button, active):
+        text = 'Local' if button == 0 else 'Remote'
         if active:
-            self.monitorButtons[button]['text'] = 'Kill P%d Monitor' % (button + 1)
+            self.monitorButtons[button]['text'] = 'Kill %s player monitor' % (text)
         else:
-            self.monitorButtons[button]['text'] = 'Monitor P%d' % (button + 1)
+            self.monitorButtons[button]['text'] = 'Set Online %s player' % (text)
         
     def initImportArea(self):
         self.charalistFrame = Frame(self.importFrame)
@@ -252,7 +470,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         
         
         self.selectionInfo = Label(self.charaInfoFrame, text="")
-        self.selectionInfo.pack(side='top', fill=BOTH, expand=1)
+        self.selectionInfo.pack(side='top', fill='both', expand=1)
         button = self.createButton(self.charaInfoFrame, "Update character list", (), GUI_TekkenMovesetExtractor.updateCharacterlist, side='bottom', expand='0')
         
     def initExportArea(self):
@@ -283,10 +501,10 @@ class GUI_TekkenMovesetExtractor(Tk):
         TextArea = Text(self.consoleFrame, wrap="word")
         TextArea.configure(state="disabled")
         TextArea.tag_configure("err", foreground="#f2114d", background="#dddddd")
-        TextArea.pack(padx=10, pady=5, fill=BOTH, expand=1)
+        TextArea.pack(padx=10, pady=5, fill='both', expand=1)
         
         sys.stdout = TextRedirector(TextArea)
-        sys.stderr = TextRedirector(TextArea, "err")
+        #sys.stderr = TextRedirector(TextArea, "err")
         
     def updateCharacterlist(self):
         self.characterList = getCharacterList()
@@ -295,7 +513,14 @@ class GUI_TekkenMovesetExtractor(Tk):
         if len(self.characterList) == 0:
             self.charaList.insert(0, "No moveset extracted yet...")
         else:
-            self.charaList.insert(0, *self.characterList)
+            colors = [
+                ["#fff", "#eee"], #TTT2
+                ["#ddd", "#ccc"]  #T7
+            ]
+            for i, character in enumerate(self.characterList):
+                self.charaList.insert('end', character)
+                color = colors[character.startswith("7_")][i & 1]
+                self.charaList.itemconfig(i, {'bg': color })
             
     def loadCharaInfo(self):
         path = charactersPath + self.selected_char
@@ -329,13 +554,14 @@ class GUI_TekkenMovesetExtractor(Tk):
             
     def toggleMonitor(self, parent, playerId):
         monitorId = playerId - 1 
+        
         if creatingMonitor[monitorId] == True:
-            print("!!! Can't start the same monitor twice !!!")
             return
+            
         if runningMonitors[monitorId] != None:
             runningMonitors[monitorId] = None
-            self.setMonitorButton(monitorId, False)
-            print("Killed monitor for player %d" % (playerId))
+            creatingMonitor[monitorId] = True
+            print("Killing monitor for player %d..." % (playerId))
         else:
             try:
                 startMonitor(self, playerId)
@@ -349,37 +575,35 @@ class GUI_TekkenMovesetExtractor(Tk):
         self.charaList = Listbox(self.charalistFrame)
         self.charaList.bind('<<ListboxSelect>>', self.onCharaSelectionChange)
         self.updateCharacterlist()
-        self.charaList.pack(fill=BOTH, expand=1)
+        self.charaList.pack(fill='both', expand=1)
         
         self.createButton(self.importButtonFrame, "Import to P1", (1,), importPlayer)
         self.createButton(self.importButtonFrame, "Import to P2", (2,), importPlayer)
         self.monitorButtons = [
-            self.createButton(self.importButtonFrame, "Monitor P1", (1,), self.toggleMonitor),
-            self.createButton(self.importButtonFrame, "Monitor P2", (2,), self.toggleMonitor)
+            self.createButton(self.importButtonFrame, "Set Online Local Player", (1,), self.toggleMonitor),
+            self.createButton(self.importButtonFrame, "Set Online Remote Player", (2,), self.toggleMonitor)
         ]
         
     def createExportButtons(self):
-        tekken7_addr_match = "p([1-9]+)_addr"
-        playerAddresses = [key for key in game_addresses.addr if match(tekken7_addr_match, key)]
-        for playerid, player_key in enumerate(playerAddresses):
-            self.createButton(self.t7_exportFrame, "Export: Tekken 7: Player %d" % (playerid + 1), (7, game_addresses.addr[player_key]), exportCharacter)
+        for playerid in range(2):
+            self.createButton(self.t7_exportFrame, "Export: Tekken 7: Player %d" % (playerid + 1), ("t7", playerid), exportCharacter)
         
-        self.createButton(self.t7_exportFrame, "Export: Tekken 7: All Players", (7, tekken7_addr_match), exportAll)
-
-        playerOffset = game_addresses.addr["cemu_playerstruct_size"]
-
-        for playerid in range(4):
-            self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: Player %d" % (playerid + 1), (2, playerid * playerOffset), exportTag2Character)
+        self.createButton(self.t7_exportFrame, "Export: Tekken 7: All Players", ("t7",), exportAll)
         
-        self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: All players", (2, playerOffset), exportAllTag2)
+        self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: All players", ("tag2",), exportAll)
+        self.createButton(self.tag2_exportFrame, "Export: Tekken Rev: All players", ("rev",), exportAll)
+        self.createButton(self.tag2_exportFrame, "Export: Tekken 6: All players", ("t6",), exportAll)
         
     def createButton(self, frame, text, const_args, callback, side='top', expand=1):
         exportButton = Button(frame)
         exportButton["text"] = text
         exportButton["command"] = lambda: callback(self, *const_args)
-        exportButton.pack(side=side, fill=X, expand=expand)
+        exportButton.pack(side=side, fill='x', expand=expand)
         return exportButton
 
 if __name__ == "__main__":
-    app = GUI_TekkenMovesetExtractor()
+    if "--editor" in sys.argv:
+        app = GUI_TekkenMovesetEditor()
+    else:
+        app = GUI_TekkenMovesetExtractor()
     app.mainloop()

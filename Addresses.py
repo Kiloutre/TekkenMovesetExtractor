@@ -6,7 +6,7 @@ import win32process
 import win32con
 from ctypes import wintypes as w
 from win32com.client import GetObject
-from re import findall
+from re import findall, match
 
 kernel32 = ctypes.windll.kernel32
 psapi = ctypes.windll.psapi
@@ -25,8 +25,17 @@ class AddressFile:
                     line = line.strip()
                     if len(line) == 0 or line[0] == "#":
                         continue
-                    name, addr, _ = findall('([a-z0-9\_\-]+) += +(-?(0x)?[a-fA-F0-9]+)', line)[0]
-                    self.addr[name] = int(addr, 16)
+                    name, _ = findall('^([a-zA-Z0-9\_\-]+)( *= *)', line)[0]
+                    value = line[len(name + _):].split('#')[0]
+                    
+                    if match('-?0(x|X)[0-9a-fA-F]+', value):
+                        value = int(value, 16)
+                    elif match('-?[0-9]+', value):
+                        value = int(value, 10)
+                    else:
+                        value = value.strip()
+                    
+                    self.addr[name] = value
             except Exception as e:
                 print(e)
                 print("Invalid game_addresses.txt format at line.")
@@ -36,6 +45,7 @@ class GameClass:
     def __init__(self, processName):
         self.PID = 0
         self.PROCESS = None
+        self.windowTitle = None
         
         wmi = GetObject('winmgmts:')
         for p in wmi.InstancesOf('win32_process'):
@@ -82,6 +92,9 @@ class GameClass:
         if bytes_length <= 0:
             bytes_length = value.bit_length() + 7 // 8
         return self.writeBytes(addr, value.to_bytes(bytes_length, 'little'))
+        
+def bToInt(data, offset, length, endian='little'):
+    return int.from_bytes(data[offset:offset + length], endian)
  
 ReadProcessMemory = kernel32.ReadProcessMemory
 ReadProcessMemory.argtypes = [w.HANDLE, w.LPCVOID, w.LPVOID, ctypes.c_size_t, ctypes.POINTER(ctypes.c_size_t)]
