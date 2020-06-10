@@ -540,14 +540,14 @@ t6_offsetTable = {
     'move:u8': { 'offset': None, 'size': 2 },
     'move:u8_2': { 'offset': None, 'size': 2 },
     'move:u9': { 'offset': None, 'size': 2 },
-    'move:u10': { 'offset': None, 'size': 4 },
-    'move:u11': { 'offset': None, 'size': 4 },
-    'move:u12': { 'offset': None, 'size': 4 },
+    'move:u10': { 'offset': 0x28, 'size': 4 },
+    'move:u11': { 'offset': 0x2c, 'size': 4 },
+    'move:u12': { 'offset': 0x30, 'size': 4 },
     #'move:u13': { 'offset': 0x54 'size': 4 },
     #'move:u14': { 'offset': 0x58, 'size': 4 },
     'move:u15': { 'offset': 0x44, 'size': 4 },
-    'move:u16': { 'offset': None, 'size': 2 },
-    'move:u17': { 'offset': None, 'size': 2 },
+    'move:u16': { 'offset': 0x54, 'size': 2 },
+    'move:u17': { 'offset': 0x56, 'size': 2 },
     'move:u18': { 'offset': None, 'size': 4 },
     
     'voiceclip:value': { 'offset': 0x0, 'size': 4 },
@@ -937,6 +937,11 @@ class Move:
         data = initTekkenStructure(self, parent, addr, parent.Move_size)
         
         readOffsetTable(self, 'move')
+        
+        if addr == 0x36338BA4:
+            print("0x%x" % (addr))
+            print("%x" % (self.u16))
+            print("%x" % (self.u17))
         
         if self.name == 0:
             self.name = str(addr) if moveId == None else str(moveId)
@@ -1378,7 +1383,7 @@ class Motbin:
 if __name__ == "__main__":
 
     if len(sys.argv) <= 1:
-        print("Usage: ./motbinExport [t7/tag2/rev]")
+        print("Usage: ./motbinExport [t7/tag2/rev/t6]")
         os._exit(1)
         
     TekkenVersion = sys.argv[1]

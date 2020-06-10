@@ -28,6 +28,7 @@ itemNames = {
 }
 
 fieldLabels = {
+    'u16': 'collision? (u16)',
     'u17': 'distance (u17)',
     'anim_max_len': 'anim_len',
     'standing': 'default'
