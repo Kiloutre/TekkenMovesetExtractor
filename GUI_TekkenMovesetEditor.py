@@ -1001,7 +1001,7 @@ class GUI_TekkenMovesetEditor():
             return
         reqList = []
         id = requirementId
-        endValue = reqEndValue(self.movelist['version'])
+        endValue = reqListEndval[self.movelist['version']]
         while self.movelist['requirements'][id]['req'] != endValue:
             id += 1
         reqList = [req for req in self.movelist['requirements'][requirementId:id + 1]]
@@ -1022,10 +1022,10 @@ class GUI_TekkenMovesetEditor():
             return
         itemList = []
         id = itemId
-        reqEndValue = 881 if self.movelist['version'] == 'Tekken7' else 690
+        endValue = reqListEndval[self.movelist['version']]
         while True:
             reqIdx = self.movelist['hit_conditions'][id]['requirement_idx'] 
-            if self.movelist['requirements'][reqIdx]['req'] == reqEndValue:
+            if self.movelist['requirements'][reqIdx]['req'] == endValue:
                 break
             id += 1
         itemList = [item for item in self.movelist['hit_conditions'][itemId:id + 1]]
