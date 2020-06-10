@@ -627,10 +627,14 @@ def readOffsetTable(self, key=''):
         setattr(self, label, value)
 
 def getMovesetName(TekkenVersion, character_name):
-    if character_name.startswith('['):
-        character_name = character_name[1:-1]
     if character_name.startswith(TekkenVersion):
         return character_name
+    if character_name.startswith('['):
+        if character_name.endswith(']'):
+            character_name = character_name[1:-1]
+        else:
+            character_name = character_name.replace('[', '__')
+            character_name = character_name.replace(']', '__')
     return '%s_%s' % (TekkenVersion, character_name.upper())
 
 def initTekkenStructure(self, parent, addr=0, size=0):
@@ -684,7 +688,7 @@ class Exporter:
         p = re.compile(regex)
         match = p.search(windowTitle)
         if match == None:
-            return None
+            raise Exception('Player address not found')
         key = self.TekkenVersion + '_p1_addr_' + match.group(1)
         return None if key not in game_addresses.addr else game_addresses.addr[key]
         

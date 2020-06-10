@@ -323,39 +323,16 @@ def exportCharacter(parent, tekkenVersion, playerid, name=''):
     
     parent.updateCharacterlist()
     
-def exportAllTag2(parent, playerSize):
+def exportAll(parent, TekkenVersion):
     game_addresses.reloadValues()
     
-    TekkenExporter = exportLib.Exporter('tag2', folder_destination=charactersPath)
-    playerAddr = TekkenExporter.getCemuP1Addr()
+    TekkenExporter = exportLib.Exporter(TekkenVersion, folder_destination=charactersPath)
+    playerAddr = TekkenExporter.getP1Addr()
     
     exportedMovesets = []
+    playerSize = game_addresses.addr[TekkenVersion + '_playerstruct_size']
     
     for i in range(4):
-        addr = playerAddr + (i * playerSize) 
-        moveset_name = TekkenExporter.getPlayerMovesetName(addr)
-        if moveset_name not in exportedMovesets:
-            print("Requesting export for %s..." % (moveset_name))
-            moveset = TekkenExporter.exportMoveset(addr)
-            exportedMovesets.append(moveset_name)
-            print()
-        else:
-            print('Player', moveset_name, 'already exported, not exporting again.')
-            
-    print('\nSuccessfully exported:')
-    for name in exportedMovesets:
-        print(name)
-        
-    parent.updateCharacterlist()
-    
-def exportAll(parent):
-    game_addresses.reloadValues()
-    TekkenExporter = exportLib.Exporter('t7')
-    
-    exportedMovesets = []
-    playerAddr = game_addresses.addr['t7_p1_addr']
-    
-    for i in range(2):
         moveset_name = TekkenExporter.getPlayerMovesetName(playerAddr)
         if moveset_name not in exportedMovesets:
             print("Requesting export for %s..." % (moveset_name))
@@ -364,7 +341,7 @@ def exportAll(parent):
             print()
         else:
             print('Player', moveset_name, 'already exported, not exporting again.')
-        playerAddr += game_addresses.addr['t7_playerstruct_size']
+        playerAddr += playerSize
             
     print('\nSuccessfully exported:')
     for name in exportedMovesets:
@@ -611,12 +588,11 @@ class GUI_TekkenMovesetExtractor(Tk):
         for playerid in range(2):
             self.createButton(self.t7_exportFrame, "Export: Tekken 7: Player %d" % (playerid + 1), ("t7", playerid), exportCharacter)
         
-        self.createButton(self.t7_exportFrame, "Export: Tekken 7: All Players", (), exportAll)
-
-        for playerid in range(4):
-            self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: Player %d" % (playerid + 1), ("tag2", playerid), exportCharacter)
+        self.createButton(self.t7_exportFrame, "Export: Tekken 7: All Players", ("t7",), exportAll)
         
-        self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: All players", ("tag2", 0), exportAllTag2)
+        self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: All players", ("tag2",), exportAll)
+        self.createButton(self.tag2_exportFrame, "Export: Tekken Rev: All players", ("rev",), exportAll)
+        self.createButton(self.tag2_exportFrame, "Export: Tekken 6: All players", ("t6",), exportAll)
         
     def createButton(self, frame, text, const_args, callback, side='top', expand=1):
         exportButton = Button(frame)

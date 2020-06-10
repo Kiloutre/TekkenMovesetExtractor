@@ -1,18 +1,18 @@
-# T7 addresses and offsets. Changes with updates
+# Tekken 7 addresses and offsets. Changes with updates
 t7_process_name       = TekkenGame-Win64-Shipping.exe
 t7_base               = 0x0
 t7_p1_addr            = 0x1434D2E10
-t7_playerstruct_size  = 0x35B0 #Distance between 2 players addresses
+t7_playerstruct_size  = 0x35B0             # Distance between 2 players addresses
 t7_motbin_offset      = 0x14a0
 t7_chara_id_offset    = 0xd8
 
 # Tag2 addresses.
 tag2_process_name       = Cemu.exe
-tag2_base               = 0x27d9bff0000
-tag2_p1_addr_1010f800   = 0x10885C90 #Game ID: 00050000-1010f800 [EU v32]
-tag2_p1_addr_10110000   = 0x10884C70 #Game ID: 00050000-10110000 [US v16]
-tag2_window_title_regex = TitleId: [0-9a-fA-F]{8}\-([0-9a-fA-F]{8})  #Defines what part of the title to keep. This makes it choose the right addr.
-tag2_playerstruct_size  = 0x2960 #Distance between 2 players addresses
+tag2_base               = 0x0              # Changes with every restart
+tag2_p1_addr_1010f800   = 0x10885C90       # Game ID: 00050000-1010f800 [EU v32]
+tag2_p1_addr_10110000   = 0x10884C70       # Game ID: 00050000-10110000 [US v16]
+tag2_window_title_regex = TitleId: [0-9a-fA-F]{8}\-([0-9a-fA-F]{8})  # Defines what part of the title to keep. This makes it choose the right addr.
+tag2_playerstruct_size  = 0x2960           # Distance between 2 players addresses
 tag2_motbin_offset      = -0x98
 tag2_chara_id_offset    = -0xCC
 
@@ -20,23 +20,20 @@ tag2_chara_id_offset    = -0xCC
 rev_process_name       = rpcs3.exe
 rev_base               = 0x300000000
 rev_p1_addr            = 0x12DA030
-rev_playerstruct_size  = 0x24A0 #Distance between 2 players addresses
+rev_playerstruct_size  = 0x24A0            # Distance between 2 players addresses
 rev_motbin_offset      = -0xa8
 rev_chara_id_offset    = -0xDC
 
-# T6 addresses
+# Tekken 6 addresses
 t6_process_name       = rpcs3.exe
 t6_base               = 0x300000000
 t6_p1_addr            = 0xB2C1EC
-t6_playerstruct_size  = 0xC40 #Distance between 2 players addresses
+t6_playerstruct_size  = 0xC40              # Distance between 2 players addresses
 t6_motbin_offset      = -0x8c
 t6_chara_id_offset    = -0xdC #to find
 
 
 # miscellaneous
-player_curr_move_offset = 0x344 #used by editor
-code_injection_addr = 0x140738CDF # Address that writes on player+motbin_offset
-playerid_starting_ptr = 0x1434BE100 # Used to find whether local player is 1P or 2P
-
-
-
+player_curr_move_offset = 0x344            # used by editor
+code_injection_addr     = 0x140738CDF      # Address that writes on player+motbin_offset
+playerid_starting_ptr   = 0x1434BE100      # Used to find whether local player is 1P or 2P
