@@ -112,6 +112,7 @@ Administrator rights may be required to import the moveset into memory.
 - Make cancel extradata and moves' voiceclip use a field?
 - Make reaction lists and u1 lists uses fields instead of arrays
 - Split attack hitlevel in 2? need to keep the order the same for tag2
+- Check out eliza in tekken revolution for projectile struct
 
 Moveset editor:
 - Window to list animations and copy one to another character's folder

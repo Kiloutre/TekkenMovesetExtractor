@@ -3,7 +3,6 @@
 from tkinter import Tk, Frame, Listbox, Label, Scrollbar, StringVar, Toplevel, Menu
 from tkinter.ttk import Button, Entry
 from Addresses import game_addresses, GameClass
-from Aliases import getRequirement, getTag2Requirement, getProperty, getTag2ExtraMoveProperty
 import motbinImport as importLib
 import json
 import os
@@ -11,6 +10,13 @@ import re
 from zlib import crc32
 
 charactersPath = "./extracted_chars/"
+
+reqListEndval = {
+    'Tekken7': 881,
+    'Tag2': 690,
+    'Revolution': 697,
+    'Tekken6': 397,
+}
 
 itemNames = {
     'moves': 'move',
@@ -117,9 +123,9 @@ def getCharacterList():
     if not os.path.isdir(charactersPath):
         return []
     folders = [folder for folder in os.listdir(charactersPath) if os.path.isdir(charactersPath + folder)]
-    tag2_chars = sorted(folders)
+    folders = sorted(folders)
     
-    return t7_chars + tag2_chars
+    return folders
     
 def getMovelist(path):
     jsonFilename = next(file for file in os.listdir(path) if file.endswith(".json"))
@@ -706,6 +712,7 @@ class RequirementEditor(FormEditor):
         self.initFields()
         
     def setDetails(self):
+        return
         reqId = self.fieldValue['req']
         getDetails = getRequirement if self.root.movelist['version'] == 'Tekken7' else getTag2Requirement
         
@@ -994,7 +1001,7 @@ class GUI_TekkenMovesetEditor():
             return
         reqList = []
         id = requirementId
-        endValue = 881 if self.movelist['version'] == 'Tekken7' else 690
+        endValue = reqEndValue(self.movelist['version'])
         while self.movelist['requirements'][id]['req'] != endValue:
             id += 1
         reqList = [req for req in self.movelist['requirements'][requirementId:id + 1]]

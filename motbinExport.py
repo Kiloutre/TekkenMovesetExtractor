@@ -114,7 +114,7 @@ structSizes = {
         'ReactionList_size': 0x50,
         'HitCondition_size': 0xC,
         'ExtraMoveProperty_size': 0xC,
-        'Move_size': 0x70,
+        'Move_size': 0x58,
         'Voiceclip_size': 0x4,
         'InputExtradata_size': 0x8,
         'InputSequence_size': 0x8,
@@ -415,10 +415,160 @@ tag2_offsetTable = {
     
     'unknownparryrelated:value': { 'offset': 0x0, 'size': 4 },
     
-    'projectile:u1': { 'offset': 0x0, 'size': (48, None) },
-    'projectile:hit_condition_addr': { 'offset': None, 'size': 4 },
-    'projectile:cancel_addr': { 'offset': None, 'size': 4 },
-    'projectile:u2': { 'offset': 0x70, 'size': (28, None) },
+    'projectile:u1': { 'offset': 0x0, 'size': (48, None) }, # 48 * [0]
+    'projectile:hit_condition_addr': { 'offset': None, 'size': 4 }, #0
+    'projectile:cancel_addr': { 'offset': None, 'size': 4 }, #0
+    'projectile:u2': { 'offset': 0x70, 'size': (28, None) }, # 28 * [0]
+    
+    'throwextra:u1': { 'offset': 0x0, 'size': 4 },
+    'throwextra:u2': { 'offset': 4, 'size': (4, 2) },
+}
+
+
+t6_offsetTable = {
+    'character_name': { 'offset': 0x8, 'size': 'stringPtr'},
+    'creator_name': { 'offset': 0xc, 'size': 'stringPtr' },
+    'date': { 'offset': 0x10, 'size': 'stringPtr' },
+    'fulldate': { 'offset': 0x14, 'size': 'stringPtr' },
+    
+    'reaction_list_ptr': { 'offset': 0x174, 'size': 4 },
+    'reaction_list_size': { 'offset': 0x178, 'size': 4 },
+    'requirements_ptr': { 'offset': 0x17c, 'size': 4 },
+    'requirement_count': { 'offset': 0x180, 'size': 4 },
+    'hit_conditions_ptr': { 'offset': 0x184, 'size': 4 },
+    'hit_conditions_size': { 'offset': 0x188, 'size': 4 },
+    'projectile_ptr': { 'offset': None, 'size': 4 }, #unknown
+    'projectile_size': { 'offset': None, 'size': 4 }, #unknown
+    'pushback_ptr': { 'offset': 0x18c, 'size': 4 },
+    'pushback_list_size': { 'offset': 0x190, 'size': 4 },
+    'pushback_extradata_ptr': { 'offset': 0x194, 'size': 4 },
+    'pushback_extradata_size': { 'offset': 0x198, 'size': 4 },
+    'cancel_head_ptr': { 'offset': 0x19c, 'size': 4 },
+    'cancel_list_size': { 'offset': 0x1a0, 'size': 4 },
+    'group_cancel_head_ptr': { 'offset': 0x1a4, 'size': 4 },
+    'group_cancel_list_size': { 'offset': 0x1a8, 'size': 4 },
+    'cancel_extradata_head_ptr': { 'offset': 0x1ac, 'size': 4 }, 
+    'cancel_extradata_list_size': { 'offset': 0x1b0, 'size': 4 }, 
+    'extra_move_properties_ptr': { 'offset': 0x1b4, 'size': 4 },
+    'extra_move_properties_size': { 'offset': 0x1b8, 'size': 4 },
+    'movelist_head_ptr': { 'offset': 0x1cc, 'size': 4 },
+    'movelist_size': { 'offset': 0x1d0, 'size': 4 },
+    'voiceclip_list_ptr': { 'offset': 0x1d4, 'size': 4 },
+    'voiceclip_list_size': { 'offset': 0x1d8, 'size': 4 },
+    'input_sequence_ptr': { 'offset': None, 'size': 4 }, #unknown
+    'input_sequence_size': { 'offset': None, 'size': 4 }, #unknown
+    'input_extradata_ptr': { 'offset': None, 'size': 4 }, #unknown
+    'input_extradata_size': { 'offset': None, 'size': 4 }, #unknown
+    'unknown_parryrelated_list_ptr': { 'offset': None, 'size': 4 }, #unknown
+    'unknown_parryrelated_list_size': { 'offset': None, 'size': 4 }, #unknown
+    'throw_extras_ptr': { 'offset': 0x22c, 'size': 4 },
+    'throw_extras_size': { 'offset': 0x230, 'size': 4 },
+    'throws_ptr': { 'offset': 0x224, 'size': 4 },
+    'throws_size': { 'offset': 0x228, 'size': 4 },
+    
+    'mota_start': { 'offset': 0x234, 'size': None },
+    'aliases': { 'offset': 0x18, 'size': (148, 2) }, #148 aliases of 2 bytes
+    
+    'pushback:val1': { 'offset': 0x0, 'size': 2 },
+    'pushback:val2': { 'offset': 0x2, 'size': 2 },
+    'pushback:val3': { 'offset': 0x4, 'size': 4 },
+    'pushback:extra_addr': { 'offset': 0x8, 'size': 4 },
+    
+    'pushbackextradata:value': { 'offset': 0x0, 'size': 2 },
+    
+    'requirement:req': { 'offset': 0x0, 'size': 4 },
+    'requirement:param': { 'offset': 0x4, 'size': 4 },
+    
+    'cancelextradata:value': { 'offset': 0x0, 'size': 4 },
+    
+    'cancel:command': { 'offset': 0x0, 'size': 8 },
+    'cancel:requirement_addr': { 'offset': 0x8, 'size': 4 },
+    'cancel:extradata_addr': { 'offset': 0xc, 'size': 4 },
+    'cancel:frame_window_start': { 'offset': 0x10, 'size': 4 },
+    'cancel:frame_window_end': { 'offset': 0x14, 'size': 4 },
+    'cancel:starting_frame': { 'offset': 0x18, 'size': 4 },
+    'cancel:move_id': { 'offset': 0x1c, 'size': 2 },
+    'cancel:cancel_option': { 'offset': 0x1e, 'size': 2 },
+    
+    'reactionlist:ptr_list': { 'offset': 0x0, 'size': (7, 4) }, #array of 7 variables, each 8 bytes long
+    'reactionlist:u1list': { 'offset': 0x1c, 'size': (6, 2) },  #array of 6 variables, each 2 bytes long
+    'reactionlist:vertical_pushback': { 'offset': 0x30, 'size': 2 },
+    'reactionlist:standing': { 'offset': 0x34, 'size': 2 },
+    'reactionlist:crouch': { 'offset': 0x36, 'size': 2 },
+    'reactionlist:ch': { 'offset': 0x38, 'size': 2 },
+    'reactionlist:crouch_ch': { 'offset': 0x3a, 'size': 2 },
+    'reactionlist:left_side': { 'offset': 0x3c, 'size': 2 },
+    'reactionlist:left_side_crouch': { 'offset': 0x3e, 'size': 2 },
+    'reactionlist:right_side': { 'offset': 0x40, 'size': 2 },
+    'reactionlist:right_side_crouch': { 'offset': 0x42, 'size': 2 },
+    'reactionlist:back': { 'offset': 0x44, 'size': 2 },
+    'reactionlist:back_crouch': { 'offset': 0x46, 'size': 2 },
+    'reactionlist:block': { 'offset': 0x48, 'size': 2 },
+    'reactionlist:crouch_block': { 'offset': 0x4a, 'size': 2 },
+    'reactionlist:wallslump': { 'offset': 0x4c, 'size': 2 },
+    'reactionlist:downed': { 'offset': 0x4e, 'size': 2 },
+    
+    'hitcondition:requirement_addr': { 'offset': 0x0, 'size': 4 },
+    'hitcondition:damage': { 'offset': 0x4, 'size': 4 },
+    'hitcondition:reaction_list_addr': { 'offset': 0x8, 'size': 4 },
+    
+    'extramoveprop:type': { 'offset': 0x0, 'size': 4 },
+    'extramoveprop:id': { 'offset': 0x4, 'size': 4 },
+    'extramoveprop:value': { 'offset': 0x8, 'size': 4 },    
+    
+    'move:name': { 'offset': None, 'size': 'stringPtr' }, #unknown
+    'move:anim_name': { 'offset': None, 'size': 'stringPtr' }, #unknown
+    'move:anim_addr': { 'offset': 0x8, 'size': 4 },
+    'move:vuln': { 'offset': 0xc, 'size': 4 },
+    'move:hitlevel': { 'offset': 0x10, 'size': 4 },
+    'move:cancel_addr': { 'offset': 0x14, 'size': 4 },
+    'move:transition': { 'offset': 0x18, 'size': 2 },
+    'move:anim_max_len': { 'offset': 0x24, 'size': 4 },
+    'move:startup': { 'offset': 0x4c, 'size': 4 },
+    'move:recovery': { 'offset': 0x50, 'size': 4 },
+    'move:hit_condition_addr': { 'offset': 0x20, 'size': 4 },
+    'move:voiceclip_ptr': { 'offset': 0x34, 'size': 4 },
+    'move:extra_properties_ptr': { 'offset': 0x38, 'size': 4 },
+    'move:hitbox_location': { 'offset': 0x48, 'size': 4, 'endian': 'little' },
+    #'move:u1': { 'offset': 0x18, 'size': 4 },
+    'move:u2': { 'offset': None, 'size': 4 },
+    'move:u3': { 'offset': None, 'size': 4 },
+    'move:u4': { 'offset': None, 'size': 4 },
+    #'move:u5': { 'offset': 0x28, 'size': 4 },
+    'move:u6': { 'offset': None, 'size': 4 },
+    'move:u7': { 'offset': None, 'size': 2 },
+    'move:u8': { 'offset': None, 'size': 2 },
+    'move:u8_2': { 'offset': None, 'size': 2 },
+    'move:u9': { 'offset': None, 'size': 2 },
+    'move:u10': { 'offset': None, 'size': 4 },
+    'move:u11': { 'offset': None, 'size': 4 },
+    'move:u12': { 'offset': None, 'size': 4 },
+    #'move:u13': { 'offset': 0x54 'size': 4 },
+    #'move:u14': { 'offset': 0x58, 'size': 4 },
+    'move:u15': { 'offset': 0x44, 'size': 4 },
+    'move:u16': { 'offset': None, 'size': 2 },
+    'move:u17': { 'offset': None, 'size': 2 },
+    'move:u18': { 'offset': None, 'size': 4 },
+    
+    'voiceclip:value': { 'offset': 0x0, 'size': 4 },
+    
+    'inputextradata:u1': { 'offset': 0x0, 'size': 4 },
+    'inputextradata:u2': { 'offset': 0x4, 'size': 4 },
+    
+    'inputsequence:u1': { 'offset': 0x1, 'size': 1 },
+    'inputsequence:u2': { 'offset': 0x2, 'size': 2 },
+    'inputsequence:u3': { 'offset': 0x0, 'size': 1 },
+    'inputsequence:extradata_addr': { 'offset': 4, 'size': 4 },
+    
+    'throw:u1': { 'offset': 0x0, 'size': 4 },
+    'throw:throwextra_addr': { 'offset': 0x4, 'size': 4 },
+    
+    'unknownparryrelated:value': { 'offset': 0x0, 'size': 4 },
+    
+    'projectile:u1': { 'offset': 0x0, 'size': (48, None) }, # 48 * [0]
+    'projectile:hit_condition_addr': { 'offset': None, 'size': 4 }, #0
+    'projectile:cancel_addr': { 'offset': None, 'size': 4 }, #0
+    'projectile:u2': { 'offset': 0x70, 'size': (28, None) }, # 28 * [0]
     
     'throwextra:u1': { 'offset': 0x0, 'size': 4 },
     'throwextra:u2': { 'offset': 4, 'size': (4, 2) },
@@ -428,6 +578,7 @@ offsetTables = {
     't7': t7_offsetTable,
     'tag2': tag2_offsetTable,
     'rev': tag2_offsetTable,
+    't6': t6_offsetTable
 }
  
 def readOffsetTable(self, key=''):
@@ -782,10 +933,14 @@ class ExtraMoveProperty:
         }
     
 class Move:
-    def __init__(self, addr, parent):
+    def __init__(self, addr, parent, moveId=None):
         data = initTekkenStructure(self, parent, addr, parent.Move_size)
         
         readOffsetTable(self, 'move')
+        
+        if self.name == 0:
+            self.name = str(addr) if moveId == None else str(moveId)
+            self.anim_name = self.name
         
         self.anim = AnimData(self.anim_name, self.base + self.anim_addr, self)
         self.cancel_idx = -1
@@ -1114,10 +1269,11 @@ class Motbin:
             unknown = UnknownParryRelated(self.unknown_parryrelated_list_ptr + (i * self.UnknownParryRelated_size), self)
             self.parry_related.append(unknown.dict())
             
-        print("Reading input extradata...")
-        for i in range(self.input_extradata_size + 1):
-            input_extradata = InputExtradata(self.input_extradata_ptr + (i * self.InputExtradata_size), self)
-            self.input_extradata.append(input_extradata.dict())
+        if self.input_extradata_size != 0:
+            print("Reading input extradata...")
+            for i in range(self.input_extradata_size + 1):
+                input_extradata = InputExtradata(self.input_extradata_ptr + (i * self.InputExtradata_size), self)
+                self.input_extradata.append(input_extradata.dict())
         
         print("Reading input sequences...")
         for i in range(self.input_sequence_size):
@@ -1205,7 +1361,7 @@ class Motbin:
         
         print("Reading movelist...")
         for i in range(self.movelist_size):
-            move = Move(self.movelist_head_ptr + (i * self.Move_size), self)
+            move = Move(self.movelist_head_ptr + (i * self.Move_size), self, i)
             move.setCancelIdx((move.cancel_addr - self.cancel_head_ptr) // self.Cancel_size)
             move.setHitConditionIdx((move.hit_condition_addr - self.hit_conditions_ptr) // self.HitCondition_size)
             if move.extra_properties_ptr != 0:
