@@ -773,7 +773,7 @@ class MotbinStruct:
             self.writeInt(on_hit_addr, 8)
             self.writeInt(move['anim_max_len'], 4)
             
-            if self.m['version'] == "Tag2": #Pushback correction
+            if self.m['version'] == "Tag2" or self.m['version'] == "Revolution":
                 move['u15'] = convertU15(move['u15'])
                 
             self.writeInt(move['u10'], 4)

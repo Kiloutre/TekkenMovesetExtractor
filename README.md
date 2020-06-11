@@ -114,8 +114,12 @@ Administrator rights may be required to import the moveset into memory.
 - Split attack hitlevel in 2? need to keep the order the same for tag2
 - Check out eliza in tekken revolution for projectile struct
 
+- Create tool to view current T7 move data. Cancel list, reactions
+
 Moveset editor:
 - Window to list animations and copy one to another character's folder
 - Add note that requirement lists must end with 881
 - Add note that extraprop lists must end with type 0
 - Fix modifying tag2 movesets, 'if you change the requirement of a move to screw / bound with any tag 2 character, the game insta crashes'
+- Look at what function writes MOTA offsets and byteswaps them
+- Dunno if you know already but using Anna's df4 will cause the character's body to spazz out a bit.
