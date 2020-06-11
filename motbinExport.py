@@ -34,14 +34,16 @@ ptrSizes = {
     't7': 8,
     'tag2': 4,
     'rev': 4,
-    't6': 4
+    't6': 4,
+    '3d': 4,
 }
 
 endians = {
     't7': 'little',
     'tag2': 'big',
     'rev': 'big',
-    't6': 'big'
+    't6': 'big',
+    '3d': 'little',
 }
 
 swapGameAnimBytes = {
@@ -49,13 +51,15 @@ swapGameAnimBytes = {
     'tag2': True,
     'rev': True,
     't6': True,
+    '3d': False
 }
 
 animEndPosFunc = {
     't7': GetBigEndianAnimEnd,
-    'tag2': GetBigEndianAnimEnd,
+    'tag2': GetLittleEndianAnimEnd,
     'rev': GetLittleEndianAnimEnd,
     't6': GetLittleEndianAnimEnd,
+    '3d': GetBigEndianAnimEnd,
 }
 
 versionLabels = {
@@ -63,6 +67,7 @@ versionLabels = {
     'tag2': 'Tag2',
     'rev': 'Revolution',
     't6': 'Tekken6',
+    '3d': 'Tekken3D',
 }
 
 tag2StructSizes = {
@@ -75,6 +80,25 @@ tag2StructSizes = {
     'HitCondition_size': 0xC,
     'ExtraMoveProperty_size': 0xC,
     'Move_size': 0x70,
+    'Voiceclip_size': 0x4,
+    'InputExtradata_size': 0x8,
+    'InputSequence_size': 0x8,
+    'Projectile_size': 0x88,
+    'ThrowExtra_size': 0xC,
+    'Throw_size': 0x8,
+    'UnknownParryRelated_size': 0x4
+}
+
+t6StructSizes = {
+    'Pushback_size': 0xC,
+    'PushbackExtradata_size': 0x2,
+    'Requirement_size': 0x8,
+    'CancelExtradata_size': 0x4,
+    'Cancel_size': 0x20,
+    'ReactionList_size': 0x50,
+    'HitCondition_size': 0xC,
+    'ExtraMoveProperty_size': 0xC,
+    'Move_size': 0x58,
     'Voiceclip_size': 0x4,
     'InputExtradata_size': 0x8,
     'InputSequence_size': 0x8,
@@ -105,24 +129,8 @@ structSizes = {
     },
     'tag2': tag2StructSizes,
     'rev': tag2StructSizes,
-    't6': {
-        'Pushback_size': 0xC,
-        'PushbackExtradata_size': 0x2,
-        'Requirement_size': 0x8,
-        'CancelExtradata_size': 0x4,
-        'Cancel_size': 0x20,
-        'ReactionList_size': 0x50,
-        'HitCondition_size': 0xC,
-        'ExtraMoveProperty_size': 0xC,
-        'Move_size': 0x58,
-        'Voiceclip_size': 0x4,
-        'InputExtradata_size': 0x8,
-        'InputSequence_size': 0x8,
-        'Projectile_size': 0x88,
-        'ThrowExtra_size': 0xC,
-        'Throw_size': 0x8,
-        'UnknownParryRelated_size': 0x4
-    }
+    't6': t6StructSizes,
+    '3d': t6StructSizes,
 }
 
 t7_offsetTable = {
@@ -578,7 +586,8 @@ offsetTables = {
     't7': t7_offsetTable,
     'tag2': tag2_offsetTable,
     'rev': tag2_offsetTable,
-    't6': t6_offsetTable
+    't6': t6_offsetTable,
+    '3d': t6_offsetTable,
 }
  
 def readOffsetTable(self, key=''):
@@ -1387,7 +1396,7 @@ class Motbin:
 if __name__ == "__main__":
 
     if len(sys.argv) <= 1:
-        print("Usage: ./motbinExport [t7/tag2/rev/t6]")
+        print("Usage: ./motbinExport [t7/tag2/rev/t6/3d]")
         os._exit(1)
         
     TekkenVersion = sys.argv[1]

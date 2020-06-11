@@ -20,6 +20,10 @@ versionAliases = {
         'requirements': t6_requirements,
         'extraprop_func': getT6Extraprop
     },
+    'Tekken3D': {
+        'requirements': t6_requirements,
+        'extraprop_func': getT6Extraprop
+    },
     'Tekken7': {}
 }
 

@@ -30,7 +30,15 @@ t6_base               = 0x300000000
 t6_p1_addr            = 0xB2C1EC
 t6_playerstruct_size  = 0xC40              # Distance between 2 players addresses
 t6_motbin_offset      = -0x8c
-t6_chara_id_offset    = -0xdC #to find
+t6_chara_id_offset    = -0xdC              #to find
+
+# Tekken 3D addresses
+3d_process_name       = citra-qt.exe
+3d_base               = 0x271B2273040
+3d_p1_addr            = 0x938C000
+3d_playerstruct_size  = 0xC40              # tofind, Distance between 2 players addresses
+3d_motbin_offset      = 0x1340
+3d_chara_id_offset    = -0xdC              # 'to find
 
 
 # miscellaneous
