@@ -925,10 +925,13 @@ class CancelEditor(FormEditor):
     def setCommandLabel(self):
         command = self.fieldValue['command']
         moveId = self.fieldValue['move_id']
-        moveName = self.root.getMoveName(moveId)
         
-        text =  "Command: " + getCommandStr(command) + "\nMove: " + moveName
-        self.details['text'] = text
+        if command != 0x800b:
+            moveName = self.root.getMoveName(moveId)
+            text =  "Command: " + getCommandStr(command) + "\nMove: " + moveName
+            self.details['text'] = text
+        else:
+            self.details['text'] = 'group_cancel ' + str(moveId)
             
     def setItem(self, index):
         cancelData = self.itemList[index]
