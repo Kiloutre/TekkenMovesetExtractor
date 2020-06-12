@@ -34,11 +34,19 @@ t6_chara_id_offset    = -0xdC              #to find
 
 # Tekken 3D addresses
 3d_process_name       = citra-qt.exe
-3d_base               = 0x271B2273040
+3d_base               = 0x271B2273040      # Does not look consistent
 3d_p1_addr            = 0x938C000
 3d_playerstruct_size  = 0xC40              # tofind, Distance between 2 players addresses
 3d_motbin_offset      = 0x1340
 3d_chara_id_offset    = -0xdC              # 'to find
+
+# Tekken 5 DR Online addresses
+t5_process_name       = rpcs3.exe
+t5_base               = 0x300000000
+t5_p1_addr            = 0x10090850
+t5_playerstruct_size  = 0xC40              # Distance between 2 players addresses
+t5_motbin_offset      = 0x50
+t5_chara_id_offset    = -0xdC              #to find
 
 
 # miscellaneous

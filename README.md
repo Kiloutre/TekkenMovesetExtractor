@@ -113,6 +113,8 @@ Administrator rights may be required to import the moveset into memory.
 - Make reaction lists and u1 lists uses fields instead of arrays
 - Split attack hitlevel in 2? need to keep the order the same for tag2
 - Check out eliza in tekken revolution for projectile struct
+- Display group_cancels. Command is 0x800b, id of the list is the move id
+
 
 - Create tool to view current T7 move data. Cancel list, reactions
 

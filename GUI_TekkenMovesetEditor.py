@@ -24,7 +24,10 @@ itemNames = {
     'requirements': 'requirement',
     'extra_move_properties': 'move property',
     'hit_conditions': 'hit condition',
-    'reaction_list': 'reaction list'
+    'reaction_list': 'reaction list',
+    'pushbacks': 'pushback',
+    'pushback_extras': 'pushback-extra',
+    'cancel_extradata': 'cancel-extra',
 }
 
 fieldLabels = {
@@ -108,7 +111,35 @@ reactionlistFields = {
     'block': 'number',
     'crouch_block': 'number',
     'wallslump': 'number',
-    'downed': 'number'
+    'downed': 'number',
+    'pushback_idx1': 'number',
+    'pushback_idx2': 'number',
+    'pushback_idx3': 'number',
+    'pushback_idx4': 'number',
+    'pushback_idx5': 'number',
+    'pushback_idx6': 'number',
+    'pushback_idx7': 'number',
+    'u1_1': 'number',
+    'u1_2': 'number',
+    'u1_3': 'number',
+    'u1_4': 'number',
+    'u1_5': 'number',
+    'u1_6': 'number',
+}
+
+pushbackFields = {
+    'val1': 'number',
+    'val2': 'number',
+    'val3': 'number',
+    'pushbackextra_idx': 'number'
+}
+
+pushbackExtradataFields = {
+    'value': 'number',
+}
+
+cancelExtradataFields = {
+    'value': 'number',
 }
 
 fieldsTypes = {
@@ -117,7 +148,10 @@ fieldsTypes = {
     'requirements': requirementFields,
     'extra_move_properties': extrapropFields,
     'hit_conditions': hitConditionFields,
-    'reaction_list': reactionlistFields
+    'reaction_list': reactionlistFields,
+    'pushbacks': pushbackFields,
+    'pushback_extras': pushbackExtradataFields,
+    'cancel_extradata': cancelExtradataFields,
 }
     
 def getCharacterList():
@@ -479,7 +513,7 @@ class FormEditor:
         
     def save(self):
         if self.editMode == None:
-            return
+            return False
         for field in self.fieldVar:
             valueType = self.fieldTypes[field]
             value = self.fieldVar[field].get()
@@ -490,6 +524,8 @@ class FormEditor:
             index = self.listIndex
             self.listSaveFunction(self.baseId)
             self.setItem(index)
+            
+        return True
         
     def setField(self, field, value, setFieldValue=False):
         self.editMode = None
@@ -571,7 +607,7 @@ class FormEditor:
         for field, function in items:
             self.fieldLabel[field].config(cursor='hand2', bg='#cce3e1')
             self.fieldLabel[field].bind("<Button-1>", lambda _, self=self, field=field, function=function : function(self.fieldValue[field]) if self.editMode != None else 0 )
-    
+
     def enableDetailsArea(self):
         details = Label(self.container)
         details.pack(side='bottom', fill='x')
@@ -612,6 +648,66 @@ class HitConditionEditor(FormEditor):
         reactionlistId = self.fieldValue['reaction_list_idx']
         self.root.setReactionList(reactionlistId)
             
+class CancelExtraEditor(FormEditor):
+    def __init__(self, root, rootFrame, col, row):
+        FormEditor.__init__(self, root, rootFrame, 'cancel_extradata', col, row)
+        
+        self.initFields()
+            
+    def setItem(self, itemData, itemId):
+        self.id = itemId
+        self.setLabel("Cancel-extradata %d" % (itemId))
+        
+        self.editMode = None
+        self.fieldInput['value'].config(state='enabled')
+        self.setField('value', itemData, True)
+        self.editMode = True
+        
+    def save(self):
+        if self.editMode == True and validateField('number', self.fieldVar['value'].get()):
+            self.root.saveField(self.key, self.id, None, getFieldValue('number', self.fieldVar['value'].get()))
+            
+class PushbackExtraEditor(FormEditor):
+    def __init__(self, root, rootFrame, col, row):
+        FormEditor.__init__(self, root, rootFrame, 'pushback_extras', col, row)
+        
+        self.initFields()
+            
+    def setItem(self, itemData, itemId):
+        self.id = itemId
+        self.setLabel("Pushback-extradata %d" % (itemId))
+        
+        self.editMode = None
+        self.fieldInput['value'].config(state='enabled')
+        self.setField('value', itemData, True)
+        self.editMode = True
+        
+    def save(self):
+        if self.editMode == True and validateField('number', self.fieldVar['value'].get()):
+            self.root.saveField(self.key, self.id, None, getFieldValue('number', self.fieldVar['value'].get()))
+            
+class PushbackEditor(FormEditor):
+    def __init__(self, root, rootFrame, col, row):
+        FormEditor.__init__(self, root, rootFrame, 'pushbacks', col, row)
+        
+        self.initFields()
+        
+        self.registerFieldButtons([
+            ('pushbackextra_idx', self.root.setPushbackExtra),
+        ])
+            
+    def setItem(self, itemData, itemId):
+        self.id = itemId
+        self.setLabel("Pushback %d" % (itemId))
+        
+        self.editMode = None
+        for field in pushbackFields:
+            self.fieldInput[field].config(state='enabled')
+            if field in itemData:
+                self.setField(field, itemData[field], True)
+            
+        self.editMode = True
+            
 class ReactionListEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
         FormEditor.__init__(self, root, rootFrame, 'reaction_list', col, row)
@@ -622,17 +718,43 @@ class ReactionListEditor(FormEditor):
         self.easternFrame = Frame(self.container)
         self.easternFrame.pack(side='right', fill='both', expand=True)
         
+        
         self.initFields()
+        
+        self.registerFieldButtons([
+            *[(f, self.root.setPushback) for f in self.fieldTypes if f.startswith('pushback_idx')]
+        ])
+        
+    def save(self):
+        if super().save():
+            pushbackFields = [f for f in self.fieldTypes if f.startswith('pushback_idx')]
+            invalidFields = [f for f in pushbackFields if not validateField('number', self.fieldVar[f].get())]
+
+            if len(invalidFields) == 0:
+                pushbackFields = [getFieldValue('number', self.fieldVar[f].get()) for f in pushbackFields]
+                self.root.saveField(self.key, self.id, 'pushback_indexes', pushbackFields)
+            
+            u1Fields = [f for f in self.fieldTypes if f.startswith('u1_')]
+            invalidFields = [f for f in u1Fields if not validateField('number', self.fieldVar[f].get())]
+
+            if len(invalidFields) == 0:
+                u1Fields = [getFieldValue('number', self.fieldVar[f].get()) for f in u1Fields]
+                self.root.saveField(self.key, self.id, 'u1list', u1Fields)
             
     def setItem(self, itemData, itemId):
         self.id = itemId
         self.setLabel("Reaction list %d: Pushback & Move IDs" % (itemId))
         
         self.editMode = None
-        for field in itemData:
-            if field in reactionlistFields:
+        for field in reactionlistFields:
+            self.fieldInput[field].config(state='enabled')
+            if field in itemData:
                 self.setField(field, itemData[field], True)
-                self.fieldInput[field].config(state='enabled')
+        for i, val in enumerate(itemData['pushback_indexes']):
+            self.setField('pushback_idx' + str(i + 1), val, True)
+        for i, val in enumerate(itemData['u1list']):
+            self.setField('u1_' + str(i + 1), val, True)
+            
         self.editMode = True
 
     def initFields(self):
@@ -758,6 +880,7 @@ class CancelEditor(FormEditor):
         self.registerFieldButtons([
             ('move_id', self.root.setMove),
             ('requirement_idx', self.root.setRequirementList),
+            ('extradata_idx', self.root.setCancelExtra),
         ])
         
     def onchange(self, field, sv):
@@ -900,12 +1023,21 @@ class GUI_TekkenMovesetEditor():
         bottomLeftFrame = splitFrame(editorFrame, 'vertical')
         bottomLeftFrame.grid(row=1, column=0, sticky="nsew")
         
+        bottomLeftToprow = splitFrame(bottomLeftFrame, 'horizontal',)
+        bottomLeftToprow.grid(row=0, column=0, sticky="nsew")
+        
+        bottomLeftToprow2 = splitFrame(bottomLeftFrame, 'horizontal')
+        bottomLeftToprow2.grid(row=0, column=1, sticky="nsew")
+        
         
         self.MoveEditor = MoveEditor(self, editorFrame, col=0, row=0)
         self.CancelEditor = CancelEditor(self, topRightFrame, col=0, row=0)
         self.RequirementEditor = RequirementEditor(self, reqAndPropsFrame, col=0, row=0)
         self.ExtrapropEditor = ExtrapropEditor(self, reqAndPropsFrame, col=0, row=1)
-        self.HitConditionEditor = HitConditionEditor(self, bottomLeftFrame, col=1, row=0)
+        self.HitConditionEditor = HitConditionEditor(self, bottomLeftToprow2, col=0, row=0)
+        self.PushbackExtraEditor = PushbackExtraEditor(self, bottomLeftToprow2, col=0, row=1)
+        self.PushbackEditor = PushbackEditor(self, bottomLeftToprow, col=0, row=0)
+        self.CancelExtraEditor = CancelExtraEditor(self, bottomLeftToprow, col=0, row=1)
         self.ReactionListEditor = ReactionListEditor(self, editorFrame, col=1, row=1)
         
         
@@ -935,7 +1067,7 @@ class GUI_TekkenMovesetEditor():
         self.resetForms()
             
     def setTitle(self, label = ""):
-        title = "TekkenMovesetEditor 0.8-BETA"
+        title = "TekkenMovesetEditor 0.9-BETA"
         if label != "":
             title += " - " + label
         self.window.wm_title(title) 
@@ -964,6 +1096,9 @@ class GUI_TekkenMovesetEditor():
         self.ExtrapropEditor.resetForm()
         self.HitConditionEditor.resetForm()
         self.ReactionListEditor.resetForm()
+        self.PushbackEditor.resetForm()
+        self.PushbackExtraEditor.resetForm()
+        self.CancelExtraEditor.resetForm()
         
     def getMoveId(self, moveId):
         return self.movelist['aliases'][moveId - 0x8000] if moveId >= 0x8000 else moveId
@@ -982,6 +1117,24 @@ class GUI_TekkenMovesetEditor():
             return
         itemData = self.movelist['reaction_list'][itemId]
         self.ReactionListEditor.setItem(itemData, itemId)
+        
+    def setCancelExtra(self, itemId):
+        if itemId < 0 or itemId >= len(self.movelist['cancel_extradata']):
+            return
+        itemData = self.movelist['cancel_extradata'][itemId]
+        self.CancelExtraEditor.setItem(itemData, itemId)
+        
+    def setPushbackExtra(self, itemId):
+        if itemId < 0 or itemId >= len(self.movelist['pushback_extras']):
+            return
+        itemData = self.movelist['pushback_extras'][itemId]
+        self.PushbackExtraEditor.setItem(itemData, itemId)
+        
+    def setPushback(self, itemId):
+        if itemId < 0 or itemId >= len(self.movelist['pushbacks']):
+            return
+        itemData = self.movelist['pushbacks'][itemId]
+        self.PushbackEditor.setItem(itemData, itemId)
         
     def getMoveName(self, moveId):
         moveId = self.getMoveId(moveId)
@@ -1033,7 +1186,10 @@ class GUI_TekkenMovesetEditor():
         self.HitConditionEditor.setItemList(itemList, itemId)
         
     def saveField(self, key, id, field, value):
-        self.movelist[key][id][field] = value
+        if field != None:
+            self.movelist[key][id][field] = value
+        else:
+            self.movelist[key][id] = value
         
 
 if __name__ == "__main__":

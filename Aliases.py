@@ -1,7 +1,8 @@
 
 from Tag2Aliases import tag2_requirements, tag2_extra_move_properties, tag2_character_fixes, getTag2CharIDAliases, tag2_odd_hitbox_aliases, tag2_even_hitbox_aliases
 from RevAliases import rev_requirements, getRevExtraprop
-from T6Aliases import t6_requirements, getT6Extraprop
+from T6Aliases import t6_requirements, t6_extra_move_properties
+from T5Aliases import t5_requirements, getT5Extraprop
 
 versionAliases = {
     'Tag2': {
@@ -14,15 +15,19 @@ versionAliases = {
     },
     'Revolution': {
         'requirements': rev_requirements,
-        'extraprop_func': getRevExtraprop
+        'extraprop_func': getRevExtraprop #todo
     },
     'Tekken6': {
         'requirements': t6_requirements,
-        'extraprop_func': getT6Extraprop
+        'extra_move_properties': t6_extra_move_properties
     },
     'Tekken3D': {
         'requirements': t6_requirements,
-        'extraprop_func': getT6Extraprop
+        'extra_move_properties': t6_extra_move_properties
+    },
+    'Tekken5': {
+        'requirements': t5_requirements,
+        'extraprop_func': getT5Extraprop #todo
     },
     'Tekken7': {}
 }
