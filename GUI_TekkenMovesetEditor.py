@@ -298,6 +298,7 @@ class CharalistSelector:
         if self.visible:
             self.hide()
         else:
+            self.updateCharacterlist()
             self.show()
        
     def hide(self):
