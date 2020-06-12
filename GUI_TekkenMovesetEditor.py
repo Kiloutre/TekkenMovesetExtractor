@@ -1,7 +1,7 @@
 # Python 3.6.5
 
 from tkinter import Tk, Frame, Listbox, Label, Scrollbar, StringVar, Toplevel, Menu
-from tkinter.ttk import Button, Entry
+from tkinter.ttk import Button, Entry, Style
 from Addresses import game_addresses, GameClass
 import motbinImport as importLib
 import json
@@ -28,6 +28,7 @@ itemNames = {
     'pushbacks': 'pushback',
     'pushback_extras': 'pushback-extra',
     'cancel_extradata': 'cancel-extra',
+    'voiceclips': 'voiceclip',
 }
 
 fieldLabels = {
@@ -142,6 +143,10 @@ cancelExtradataFields = {
     'value': 'number',
 }
 
+voiceclipFields = {
+    'value': 'number',
+}
+
 fieldsTypes = {
     'moves': moveFields,
     'cancels': cancelFields,
@@ -152,6 +157,7 @@ fieldsTypes = {
     'pushbacks': pushbackFields,
     'pushback_extras': pushbackExtradataFields,
     'cancel_extradata': cancelExtradataFields,
+    'voiceclips': voiceclipFields,
 }
     
 def getCharacterList():
@@ -488,15 +494,23 @@ class FormEditor:
         
         self.container = content
         self.label = label
+        self.saveButton = saveButton
         
     def setLabel(self, text, saveLabel=True):
         self.label['text'] = text
         if saveLabel:
             self.lastValidLabel = text
+           
+    def setSavebuttonBold(self):
+        self.saveButton['style'] = 'Bold.TButton'
+           
+    def resetSaveButton(self):
+        self.saveButton['style'] = 'TButton'
     
     def onchange(self, field, sv):
         if self.editMode == None:
             return
+        self.setSavebuttonBold()
         value = sv.get()
         valueType = self.fieldTypes[field]
         
@@ -514,6 +528,7 @@ class FormEditor:
     def save(self):
         if self.editMode == None:
             return False
+            
         for field in self.fieldVar:
             valueType = self.fieldTypes[field]
             value = self.fieldVar[field].get()
@@ -524,6 +539,8 @@ class FormEditor:
             index = self.listIndex
             self.listSaveFunction(self.baseId)
             self.setItem(index)
+            
+        self.resetSaveButton()
             
         return True
         
@@ -540,6 +557,7 @@ class FormEditor:
         self.editMode = True
         
     def resetForm(self):
+        self.resetSaveButton()
         self.editMode = None
         self.id = None
         itemName = itemNames[self.key]
@@ -562,10 +580,12 @@ class FormEditor:
         self.listIndex = 0
         
         self.setItem(0)
+        self.resetSaveButton()
         
     def navigateToItem(self, offset):
         if self.editMode == None or (self.listIndex + offset) < 0 or (self.listIndex + offset) >= len(self.itemList):
             return
+        self.resetSaveButton()
         self.setItem(self.listIndex + offset)
         
     def enableNavigator(self, itemLabel):
@@ -647,6 +667,28 @@ class HitConditionEditor(FormEditor):
         
         reactionlistId = self.fieldValue['reaction_list_idx']
         self.root.setReactionList(reactionlistId)
+        self.resetSaveButton()
+            
+class VoiceclipEditor(FormEditor):
+    def __init__(self, root, rootFrame, col, row):
+        FormEditor.__init__(self, root, rootFrame, 'voiceclips', col, row)
+        
+        self.initFields()
+            
+    def setItem(self, itemData, itemId):
+        self.id = itemId
+        self.setLabel("Voiceclip %d" % (itemId))
+        
+        self.editMode = None
+        self.fieldInput['value'].config(state='enabled')
+        self.setField('value', itemData, True)
+        self.editMode = True
+        self.resetSaveButton()
+        
+    def save(self):
+        if self.editMode == True and validateField('number', self.fieldVar['value'].get()):
+            self.root.saveField(self.key, self.id, None, getFieldValue('number', self.fieldVar['value'].get()))
+            self.resetSaveButton()
             
 class CancelExtraEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
@@ -662,10 +704,12 @@ class CancelExtraEditor(FormEditor):
         self.fieldInput['value'].config(state='enabled')
         self.setField('value', itemData, True)
         self.editMode = True
+        self.resetSaveButton()
         
     def save(self):
         if self.editMode == True and validateField('number', self.fieldVar['value'].get()):
             self.root.saveField(self.key, self.id, None, getFieldValue('number', self.fieldVar['value'].get()))
+            self.resetSaveButton()
             
 class PushbackExtraEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
@@ -681,10 +725,12 @@ class PushbackExtraEditor(FormEditor):
         self.fieldInput['value'].config(state='enabled')
         self.setField('value', itemData, True)
         self.editMode = True
+        self.resetSaveButton()
         
     def save(self):
         if self.editMode == True and validateField('number', self.fieldVar['value'].get()):
             self.root.saveField(self.key, self.id, None, getFieldValue('number', self.fieldVar['value'].get()))
+            self.resetSaveButton()
             
 class PushbackEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
@@ -707,6 +753,7 @@ class PushbackEditor(FormEditor):
                 self.setField(field, itemData[field], True)
             
         self.editMode = True
+        self.resetSaveButton()
             
 class ReactionListEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
@@ -756,6 +803,7 @@ class ReactionListEditor(FormEditor):
             self.setField('u1_' + str(i + 1), val, True)
             
         self.editMode = True
+        self.resetSaveButton()
 
     def initFields(self):
         fields = sortKeys(reactionlistFields.keys())
@@ -784,25 +832,8 @@ class ExtrapropEditor(FormEditor):
         FormEditor.__init__(self, root, rootFrame, 'extra_move_properties', col, row)
         self.setListOnsaveFunction(self.root.setExtrapropList)
         self.enableNavigator(itemLabel='Prop')
-        #self.enableDetailsArea()
         
         self.initFields()
-        
-    def setDetails(self):
-        return
-        
-        """
-        propId = self.fieldValue['id']
-        getDetails = getProperty if self.root.movelist['version'] == 'Tekken7' else getTag2ExtraMoveProperty
-        
-        details = getDetails(propId)
-        
-        if details != None and details['desc'] != 'MAPPING' and not details['desc'].startswith('('):
-            text = details['desc']
-        else:
-            text = ''
-        self.details['text'] = text
-        """
             
     def setItem(self, index):
         propertyData = self.itemList[index]
@@ -823,7 +854,7 @@ class ExtrapropEditor(FormEditor):
                 self.fieldInput[field].config(state='enabled')
         self.editMode = True
         
-        self.setDetails()
+        self.resetSaveButton()
             
 class RequirementEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
@@ -867,6 +898,7 @@ class RequirementEditor(FormEditor):
         self.editMode = True
         
         self.setDetails()
+        self.resetSaveButton()
             
 class CancelEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
@@ -917,6 +949,7 @@ class CancelEditor(FormEditor):
         self.editMode = True
         
         self.setCommandLabel()
+        self.resetSaveButton()
     
 class MoveEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
@@ -933,6 +966,7 @@ class MoveEditor(FormEditor):
         self.registerFieldButtons([
             ('cancel_idx', self.root.setCancelList),
             ('extra_properties_idx', self.root.setExtrapropList),
+            ('voiceclip_idx', self.root.setVoiceclip),
             ('hit_condition_idx', self.root.setConditionList),
         ])
         
@@ -973,6 +1007,7 @@ class MoveEditor(FormEditor):
                 self.setField(field, moveData[field], True)
                 self.fieldInput[field].config(state='enabled')
         self.editMode = True
+        self.resetSaveButton()
         
     def selectCancel(self, event):
         if self.editMode == None:
@@ -999,6 +1034,10 @@ class GUI_TekkenMovesetEditor():
     def __init__(self, showCharacterSelector=True, mainWindow=True):
         window = Tk() if mainWindow else Toplevel()
         self.window = window
+        
+
+        boldButtonStyle = Style()
+        boldButtonStyle.configure("Bold.TButton", font = ('Sans','10','bold'))
         
         self.setTitle()
         window.iconbitmap('InterfaceData/renge.ico')
@@ -1029,20 +1068,22 @@ class GUI_TekkenMovesetEditor():
         bottomLeftToprow2 = splitFrame(bottomLeftFrame, 'horizontal')
         bottomLeftToprow2.grid(row=0, column=1, sticky="nsew")
         
+        bottomLeftToprow3 = splitFrame(bottomLeftToprow, 'horizontal')
+        bottomLeftToprow3.grid(row=1, column=0, sticky="nsew")
+        
         
         self.MoveEditor = MoveEditor(self, editorFrame, col=0, row=0)
         self.CancelEditor = CancelEditor(self, topRightFrame, col=0, row=0)
         self.RequirementEditor = RequirementEditor(self, reqAndPropsFrame, col=0, row=0)
         self.ExtrapropEditor = ExtrapropEditor(self, reqAndPropsFrame, col=0, row=1)
+        
         self.HitConditionEditor = HitConditionEditor(self, bottomLeftToprow2, col=0, row=0)
         self.PushbackExtraEditor = PushbackExtraEditor(self, bottomLeftToprow2, col=0, row=1)
         self.PushbackEditor = PushbackEditor(self, bottomLeftToprow, col=0, row=0)
-        self.CancelExtraEditor = CancelExtraEditor(self, bottomLeftToprow, col=0, row=1)
+        self.VoiceclipEditor = VoiceclipEditor(self, bottomLeftToprow3, col=0, row=1)
+        self.CancelExtraEditor = CancelExtraEditor(self, bottomLeftToprow3, col=0, row=0)
+        
         self.ReactionListEditor = ReactionListEditor(self, editorFrame, col=1, row=1)
-        
-        
-        #moveFrame2 = Frame(editorFrame, bg='#999')
-        #moveFrame2.grid(row=1, column=1, sticky="nsew")
         
         
         menuActions = [
@@ -1099,9 +1140,14 @@ class GUI_TekkenMovesetEditor():
         self.PushbackEditor.resetForm()
         self.PushbackExtraEditor.resetForm()
         self.CancelExtraEditor.resetForm()
+        self.VoiceclipEditor.resetForm()
         
     def getMoveId(self, moveId):
         return self.movelist['aliases'][moveId - 0x8000] if moveId >= 0x8000 else moveId
+        
+    def getMoveName(self, moveId):
+        moveId = self.getMoveId(moveId)
+        return self.movelist['moves'][moveId]['name']
         
     def setMove(self, moveId):
         moveId = self.getMoveId(moveId)
@@ -1117,6 +1163,12 @@ class GUI_TekkenMovesetEditor():
             return
         itemData = self.movelist['reaction_list'][itemId]
         self.ReactionListEditor.setItem(itemData, itemId)
+        
+    def setVoiceclip(self, itemId):
+        if itemId < 0 or itemId >= len(self.movelist['voiceclips']):
+            return
+        itemData = self.movelist['voiceclips'][itemId]
+        self.VoiceclipEditor.setItem(itemData, itemId)
         
     def setCancelExtra(self, itemId):
         if itemId < 0 or itemId >= len(self.movelist['cancel_extradata']):
@@ -1135,10 +1187,6 @@ class GUI_TekkenMovesetEditor():
             return
         itemData = self.movelist['pushbacks'][itemId]
         self.PushbackEditor.setItem(itemData, itemId)
-        
-    def getMoveName(self, moveId):
-        moveId = self.getMoveId(moveId)
-        return self.movelist['moves'][moveId]['name']
         
     def setCancelList(self, cancelId):
         if cancelId < 0 or cancelId >= len(self.movelist['cancels']):
@@ -1189,6 +1237,7 @@ class GUI_TekkenMovesetEditor():
         if field != None:
             self.movelist[key][id][field] = value
         else:
+            print("Saving", key, id, value)
             self.movelist[key][id] = value
         
 
