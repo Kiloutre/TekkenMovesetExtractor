@@ -113,25 +113,6 @@ t6StructSizes = {
     'UnknownParryRelated_size': 0x4
 }
 
-t5StructSizes = {
-    'Pushback_size': 0xC,
-    'PushbackExtradata_size': 0x2,
-    'Requirement_size': 0x8,
-    'CancelExtradata_size': 0x4,
-    'Cancel_size': 0x20,
-    'ReactionList_size': 0x50,
-    'HitCondition_size': 0xC,
-    'ExtraMoveProperty_size': 0xC,
-    'Move_size': 0x4c,
-    'Voiceclip_size': 0x4,
-    'InputExtradata_size': 0x8,
-    'InputSequence_size': 0x8,
-    'Projectile_size': 0x88,
-    'ThrowExtra_size': 0xC,
-    'Throw_size': 0x8,
-    'UnknownParryRelated_size': 0x4
-}
-
 structSizes = {
     't7': {
         'Pushback_size': 0x10,
@@ -154,8 +135,25 @@ structSizes = {
     'tag2': tag2StructSizes,
     'rev': tag2StructSizes,
     't6': t6StructSizes,
-    't5': t5StructSizes,
     '3d': t6StructSizes,
+    't5': {
+        'Pushback_size': 0xC,
+        'PushbackExtradata_size': 0x2,
+        'Requirement_size': 0x4,
+        'CancelExtradata_size': 0x4,
+        'Cancel_size': 0x18,
+        'ReactionList_size': 0x50,
+        'HitCondition_size': 0xC,
+        'ExtraMoveProperty_size': 0xC,
+        'Move_size': 0x4c,
+        'Voiceclip_size': 0x4,
+        'InputExtradata_size': 0x8,
+        'InputSequence_size': 0x8,
+        'Projectile_size': 0x88,
+        'ThrowExtra_size': 0xC,
+        'Throw_size': 0x8,
+        'UnknownParryRelated_size': 0x4
+    },
 }
 
 t7_offsetTable = {
@@ -615,28 +613,28 @@ t5_offsetTable = {
     
     'reaction_list_ptr': { 'offset': 0x188, 'size': 4 },
     'reaction_list_size': { 'offset': 0x18c, 'size': 4 },
-    'requirements_ptr': { 'offset': 0x17c + 0x14, 'size': 4 }, #unknown
-    'requirement_count': { 'offset': 0x180 + 0x14, 'size': 4 }, #unknown
-    'hit_conditions_ptr': { 'offset': 0x184 + 0x14, 'size': 4 }, #unknown
-    'hit_conditions_size': { 'offset': 0x188 + 0x14, 'size': 4 }, #unknown
+    'requirements_ptr': { 'offset': 0x190, 'size': 4 },
+    'requirement_count': { 'offset': 0x194, 'size': 4 },
+    'hit_conditions_ptr': { 'offset': 0x198, 'size': 4 },
+    'hit_conditions_size': { 'offset': 0x19c, 'size': 4 },
     'projectile_ptr': { 'offset': None, 'size': 4 }, #unknown
     'projectile_size': { 'offset': None, 'size': 4 }, #unknown
-    'pushback_ptr': { 'offset': 0x18c + 0x14, 'size': 4 }, #unknown
-    'pushback_list_size': { 'offset': 0x190 + 0x14, 'size': 4 }, #unknown
-    'pushback_extradata_ptr': { 'offset': 0x194 + 0x14, 'size': 4 }, #unknown
-    'pushback_extradata_size': { 'offset': 0x198 + 0x14, 'size': 4 }, #unknown
-    'cancel_head_ptr': { 'offset': 0x19c + 0x14, 'size': 4 }, #unknown
-    'cancel_list_size': { 'offset': 0x1a0 + 0x14, 'size': 4 }, #unknown
-    'group_cancel_head_ptr': { 'offset': 0x1a4 + 0x14, 'size': 4 },#unknown
-    'group_cancel_list_size': { 'offset': 0x1a8 + 0x14, 'size': 4 }, #unknown
-    'cancel_extradata_head_ptr': { 'offset': 0x1ac + 0x14, 'size': 4 }, #unknown
-    'cancel_extradata_list_size': { 'offset': 0x1b0 + 0x14, 'size': 4 }, #unknown
-    'extra_move_properties_ptr': { 'offset': 0x1b4 + 0x14, 'size': 4 }, #unknown
-    'extra_move_properties_size': { 'offset': 0x1b8 + 0x14, 'size': 4 }, #unknown
-    'movelist_head_ptr': { 'offset': 0x1cc + 0x14, 'size': 4 }, #unknown
-    'movelist_size': { 'offset': 0x1d0 + 0x14, 'size': 4 }, #unknown
-    'voiceclip_list_ptr': { 'offset': 0x1d4 + 0x14, 'size': 4 }, #unknown
-    'voiceclip_list_size': { 'offset': 0x1d8 + 0x14, 'size': 4 }, #unknown
+    'pushback_ptr': { 'offset': 0x1a0, 'size': 4 },
+    'pushback_list_size': { 'offset': 0x1a4, 'size': 4 },
+    'pushback_extradata_ptr': { 'offset': 0x1a8, 'size': 4 },
+    'pushback_extradata_size': { 'offset': 0x1ac, 'size': 4 },
+    'cancel_head_ptr': { 'offset': 0x1b0, 'size': 4 },
+    'cancel_list_size': { 'offset': 0x1b4, 'size': 4 },
+    'group_cancel_head_ptr': { 'offset': 0x1b8, 'size': 4 },
+    'group_cancel_list_size': { 'offset': 0x1bc, 'size': 4 },
+    'cancel_extradata_head_ptr': { 'offset': 0x1c0, 'size': 4 },
+    'cancel_extradata_list_size': { 'offset': 0x1c4, 'size': 4 },
+    'extra_move_properties_ptr': { 'offset': 0x1c8, 'size': 4 },
+    'extra_move_properties_size': { 'offset': 0x1cc, 'size': 4 },
+    'movelist_head_ptr': { 'offset': 0x1e0, 'size': 4 },
+    'movelist_size': { 'offset': 0x1e4, 'size': 4 },
+    'voiceclip_list_ptr': { 'offset': 0x1e8, 'size': 4 },
+    'voiceclip_list_size': { 'offset': 0x1ec, 'size': 4 },
     'input_sequence_ptr': { 'offset': None, 'size': 4 }, #unknown
     'input_sequence_size': { 'offset': None, 'size': 4 }, #unknown
     'input_extradata_ptr': { 'offset': None, 'size': 4 }, #unknown
@@ -645,11 +643,12 @@ t5_offsetTable = {
     'unknown_parryrelated_list_size': { 'offset': None, 'size': 4 }, #unknown
     'throw_extras_ptr': { 'offset': None, 'size': 4 }, #unknown
     'throw_extras_size': { 'offset': None, 'size': 4 }, #unknown
-    'throws_ptr': { 'offset': 0x224 + 0x14, 'size': 4 }, #unknown
-    'throws_size': { 'offset': 0x228 + 0x14, 'size': 4 }, #unknown
+    'throws_ptr': { 'offset': None, 'size': 4 }, #unknown
+    'throws_size': { 'offset': None, 'size': 4 }, #unknown
     
     'mota_start': { 'offset': 0x240, 'size': None },
-    'aliases': { 'offset': 0x18, 'size': (148, 2) }, #148 aliases of 2 bytes
+    'aliases': { 'offset': 0x18, 'size': (70, 4) },
+    'aliases2': { 'offset': 0x13e, 'size': (5, 4) },
     
     'pushback:val1': { 'offset': 0x0, 'size': 2 },
     'pushback:val2': { 'offset': 0x2, 'size': 2 },
@@ -658,19 +657,19 @@ t5_offsetTable = {
     
     'pushbackextradata:value': { 'offset': 0x0, 'size': 2 },
     
-    'requirement:req': { 'offset': 0x0, 'size': 4 },
-    'requirement:param': { 'offset': 0x4, 'size': 4 },
+    'requirement:req': { 'offset': 0x0, 'size': 2 },
+    'requirement:param': { 'offset': 0x2, 'size': 2 },
     
     'cancelextradata:value': { 'offset': 0x0, 'size': 4 },
     
-    'cancel:command': { 'offset': 0x0, 'size': 8 },
-    'cancel:requirement_addr': { 'offset': 0x8, 'size': 4 },
+    'cancel:command': { 'offset': 0x0, 'size': 4 },
+    'cancel:requirement_addr': { 'offset': 0x4, 'size': 4 },
     'cancel:extradata_addr': { 'offset': 0xc, 'size': 4 },
-    'cancel:frame_window_start': { 'offset': 0x10, 'size': 4 },
-    'cancel:frame_window_end': { 'offset': 0x14, 'size': 4 },
-    'cancel:starting_frame': { 'offset': 0x18, 'size': 4 },
-    'cancel:move_id': { 'offset': 0x1c, 'size': 2 },
-    'cancel:cancel_option': { 'offset': 0x1e, 'size': 2 },
+    'cancel:frame_window_start': { 'offset': 0x10, 'size': 2 },
+    'cancel:frame_window_end': { 'offset': 0x12, 'size': 2 },
+    'cancel:starting_frame': { 'offset': 0x14, 'size': 2 },
+    'cancel:move_id': { 'offset': 0x8, 'size': 2 },
+    'cancel:cancel_option': { 'offset': 0x16, 'size': 2 },
     
     'reactionlist:ptr_list': { 'offset': 0x0, 'size': (7, 4) }, #array of 7 variables, each 8 bytes long
     'reactionlist:u1list': { 'offset': 0x1c, 'size': (6, 2) },  #array of 6 variables, each 2 bytes long
@@ -705,13 +704,13 @@ t5_offsetTable = {
     'move:hitlevel': { 'offset': 0x10, 'size': 4 },
     'move:cancel_addr': { 'offset': 0x14, 'size': 4 },
     'move:transition': { 'offset': 0x18, 'size': 2 },
-    'move:anim_max_len': { 'offset': 0x24, 'size': 4 },
-    'move:startup': { 'offset': None, 'size': 4 },
-    'move:recovery': { 'offset': None, 'size': 4 },
+    'move:anim_max_len': { 'offset': 0x24, 'size': 2 },
+    'move:startup': { 'offset': 0x44, 'size': 2 },
+    'move:recovery': { 'offset': 0x46, 'size': 2 },
     'move:hit_condition_addr': { 'offset': 0x20, 'size': 4 },
-    'move:voiceclip_ptr': { 'offset': None, 'size': 4 },
-    'move:extra_properties_ptr': { 'offset': None, 'size': 4 },
-    'move:hitbox_location': { 'offset': None, 'size': 4, 'endian': 'little' },
+    'move:voiceclip_ptr': { 'offset': 0x2c, 'size': 4 },
+    'move:extra_properties_ptr': { 'offset': 0x30, 'size': 4 },
+    'move:hitbox_location': { 'offset': 0x40, 'size': 4, 'endian': 'little' },
     #'move:u1': { 'offset': 0x18, 'size': 4 },
     'move:u2': { 'offset': None, 'size': 4 },
     'move:u3': { 'offset': None, 'size': 4 },
@@ -763,6 +762,10 @@ offsetTables = {
     't6': t6_offsetTable,
     't5': t5_offsetTable,
     '3d': t6_offsetTable,
+}
+
+animHeaders = {
+    't5': b'\x00\x64\x00\x17\x00\x0B\x00\x0B\x00\x05\x00\x07\x00\x07\x00\x07\x00\x0B\x00\x07\x00\x07\x00\x07\x00\x07\x00\x06\x00\x07\x00\x07\x00\x07\x00\x06\x00\x07\x00\x07\x00\x06\x00\x07\x00\x07\x00\x06\x00\x07'
 }
  
 def readOffsetTable(self, key=''):
@@ -926,40 +929,55 @@ class AnimData:
         initTekkenStructure(self, parent, data_addr, 0)
         self.name = name
         self.data = None
+        
+    def findEndingPos(self, maxLen=50000000):
+        read_size = 8192
+        offset = 0
+        prev_bytes = None
+        maxLen = 50000000
+        
+        while read_size >= 8:
+            try:
+                curr_bytes = self.readBytes(self.addr + offset, read_size)
+            except Exception as e:
+                read_size //= 2
+            else:
+                tmp = curr_bytes
+                if prev_bytes != None:
+                    curr_bytes = prev_bytes + curr_bytes
                 
-    def getData(self):
+                endPos = getAnimEndPos(self.TekkenVersion, curr_bytes)
+                if endPos != -1:
+                    offset += endPos
+                    break
+                
+                prev_bytes = tmp
+                if offset + read_size > maxLen:
+                    return maxLen
+                offset += read_size
+        return offset
+                
+    def getData(self, boundaries):
         if self.data == None:
-            read_size = 8192
-            offset = 0
-            prev_bytes = None
-            maxSize = 50000000 
-            
-            while read_size >= 16:
-                try:
-                    curr_bytes = self.readBytes(self.addr + offset, read_size)
-                except Exception as e:
-                    read_size //= 2
-                else:
-                    tmp = curr_bytes
-                    if prev_bytes != None:
-                        curr_bytes = prev_bytes + curr_bytes
+        
+            boundaryAddr = None
+            for i, addr in enumerate(boundaries):
+                if self.addr >= boundaries[i] and (len(boundaries) != i + 1 and self.addr < boundaries[i + 1]):
+                    boundaryAddr = boundaries[i + 1]
                     
-                    endPos = getAnimEndPos(self.TekkenVersion, curr_bytes)
-                    if endPos != -1:
-                        offset += endPos
-                        break
-                    
-                    prev_bytes = tmp
-                    if offset + read_size > maxSize:
-                        break
-                    offset += read_size
+                  
+            maxLen = boundaryAddr - self.addr if boundaryAddr != None else None
+            endPos = self.findEndingPos(maxLen)
                     
             try:
-                self.data = None if offset == 0 else self.readBytes(self.addr, offset)
+                self.data = None if endPos == 0 else self.readBytes(self.addr, endPos)
             except:
                 print("Error extracting animation " + self.name + ", game might crash with this moveset.", file=sys.stderr)
                 return None
                 
+            if self.TekkenVersion in animHeaders:
+                self.data = animHeaders[self.TekkenVersion] + self.data
+
             oldData = self.data
             if swapGameAnimBytes[self.TekkenVersion]:
                 try:
@@ -1028,10 +1046,19 @@ class Cancel:
         
         readOffsetTable(self, 'cancel')
         
-        if self.endian == 'big': #swapping first two ints
-            t = self.bToInt(data, 0, 4)
-            t2 = self.bToInt(data, 0x4, 4) 
-            self.command = (t2 << 32) | t
+        if self.endian == 'big':
+            if self.TekkenVersion != 't5': #swapping first two ints
+                t = self.bToInt(data, 0, 4)
+                t2 = self.bToInt(data, 0x4, 4) 
+                self.command = (t2 << 32) | t
+            else:
+                t = (self.command & 0xFFFF0000) >> 16
+                t |= (self.command & 0xFF) << 32
+                t |= (self.command & 0xFF00) << 49
+                self.command = t
+                
+                if self.command == 0x8005:
+                    self.command = 0x800b
         
         self.extradata_id = -1
         self.requirement_idx =- -1
@@ -1344,7 +1371,11 @@ class Motbin:
         
     def getCharacterId(self, playerAddress):
         key = self.TekkenVersion + '_chara_id_offset'
-        self.chara_id = (self.readInt(self.base + playerAddress + game_addresses.addr[key], 4))
+        if key in game_addresses.addr:
+            self.chara_id = (self.readInt(self.base + playerAddress + game_addresses.addr[key], 4))
+        else:
+            key = self.TekkenVersion + '_chara_id_addr'
+            self.chara_id = (self.readInt(self.base  + game_addresses.addr[key], 2))
         
     def printBasicData(self):
         if self.chara_id == -1:
@@ -1438,10 +1469,11 @@ class Motbin:
                 f.write(mota_data)
             
         print("Saving animations...")
+        animBoundaries = sorted([anim.addr for anim in self.anims])
         for anim in self.anims:
             try:
                 with open ("%s/%s.bin" % (anim_path, anim.name), "wb") as f:
-                    animdata = anim.getData()
+                    animdata = anim.getData(animBoundaries)
                     if animdata == None:
                         raise 
                     f.write(animdata)

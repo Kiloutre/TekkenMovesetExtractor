@@ -16,6 +16,7 @@ reqListEndval = {
     'Tag2': 690,
     'Revolution': 697,
     'Tekken6': 397,
+    'Tekken5': 327,
 }
 
 itemNames = {
@@ -1241,7 +1242,6 @@ class GUI_TekkenMovesetEditor():
         if field != None:
             self.movelist[key][id][field] = value
         else:
-            print("Saving", key, id, value)
             self.movelist[key][id] = value
         
 
