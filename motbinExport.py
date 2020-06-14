@@ -607,7 +607,7 @@ t6_offsetTable = {
 
 t5_offsetTable = {
     'character_name': { 'offset': 0x8, 'size': 'invalidStringPtr'},
-    'creator_name': { 'offset': 0xc, 'size': 'stringPtr' },
+    'creator_name': { 'offset': 0xc, 'size': 'invalidStringPtr' },
     'date': { 'offset': 0x10, 'size': 'stringPtr' },
     'fulldate': { 'offset': 0x14, 'size': 'stringPtr' },
     
@@ -770,7 +770,40 @@ animHeaders = {
 
 characterNameMapping = {
     't5': {
-        b'\x95\x97\x8a\xd4 \x90m': 'JIN'
+        b'\x95\x97\x8a\xd4 \x90m': '[JIN]',
+        b'BAEK DOO SAN': '[BAEK_DOO_SAN]',
+        b'[\x83G\x83f\x83B\x81E\x83S\x83\x8b\x83h\x81[]': '[EDDY]',
+        b'[DEVIL JIN]': '[DEVIL_JIN]',
+        b'[\x8d\x95\x90l\x94E\x8e\xd2]': '[RAVEN]',
+        b'[ \x94\xf2\x92\xb9 ]': '[ASUKA]',
+        b'[\x91\xbe\x8b\xc9\x8c\x9d]' : '[FENG]',
+        b'[\x8c\xb5\x97\xb3]': '[GANRYU]',
+        b'[ \x89\xa4 \x96\xb8\x97\x8b ]': '[WANG]',
+        b'[\x83A\x83}\x83L\x83\x93]': '[ARMOR_KING]',
+        b'[\x93S\x8c\x9d5\x83{\x83X]': '[JINPACHI]',
+        b'[ VALE-TUDO ]': '[MARDUK]',
+        b'[ANNA]': '[ANNA]',
+        b'[ \x83\x8d\x83E ]': '[LAW]',
+        b'[\x89\xd4\x98Y]': '[HWOARANG]',
+        b'[\x83L\x83\x93\x83O]': '[KING]',
+        b'[EMILIE]': '[EMILIE]',
+        b'[\x90V\x83L\x83\x83\x83\x89(\x91\xe5\x8d\xb2)]': '[DRAGUNOV]',
+        b'\x8eO\x93\x87 \x95\xbd\x94\xaa': '[HEIHACHI]',
+        b'[\x83N\x83\x8a\x83X\x83e\x83B]': '[CHRISTIE]',
+        b'[\x83|\x81[\x83\x8b]': '[PAUL]',
+        b'[\x83W\x83\x83\x83b\x83N\x82T]': '[JACK]',
+        b'\x83u\x83\x8b\x81[\x83X': '[BRUCE]',
+        b'[\x83\x8d\x83W\x83\x83\x81[]': '[ROGER]',
+        b'[ \x97\x8b \x95\x90\x97\xb4 ]': '[LEI_WULONG]',
+        b'[\x83j\x81[\x83i]': '[NINA]',
+        b'\x83{\x83N\x83T\x81[': '[STEVE_FOX]',
+        b'[ \x8eO\x93\x87 \x88\xea\x94\xaa ]': '[KAZUYA]',
+        b'\x97\xbd \x8b\xc5\x89J': '[LIN_XIAOYU]',
+        b'[ \x97\x9b \x92\xb4\x98T ]': '[LEE]',
+        b'[ \x83W\x83\x85\x83\x8a\x83A ]': '[JULIA]',
+        b'\x8bg\x8c\xf5': '[YOSHIMITSU]',
+        b'\x83u\x83\x89\x83C\x83A\x83\x93': '[BRYAN]',
+        b'[\x83N\x83}]': '[PANDA]'
     }
 }
  
@@ -952,12 +985,12 @@ class AnimData:
         self.name = name
         self.data = None
         
-    def findEndingPos(self, maxLen=50000000):
+    def findEndingPos(self, maxLen=None):
         read_size = 8192
         offset = 0
         prev_bytes = None
         defaultMaxLen = 50000000
-        maxLen = defaultMaxLen if maxLen > defaultMaxLen else maxLen
+        maxLen = defaultMaxLen if (maxLen == None or maxLen > defaultMaxLen) else maxLen
         
         while read_size >= 8:
             try:
@@ -1362,6 +1395,11 @@ class Motbin:
             
             if isinstance(self.character_name, bytes):
                 self.getCharacterNameFromBytes()
+            if isinstance(self.creator_name, bytes):
+                try:
+                    self.creator_name = self.creator_name.decode('ascii')
+                except:
+                    self.creator_name = 'UNKNOWN'
                 
             self.name = getMovesetName(self.TekkenVersion, self.character_name) if name == '' else name
             self.export_folder = self.name
@@ -1391,7 +1429,6 @@ class Motbin:
         self.parry_related = []
         
     def getCharacterNameFromBytes(self):
-        print(self.character_name)
         if self.TekkenVersion in characterNameMapping:
             self.character_name = characterNameMapping[self.TekkenVersion].get(self.character_name, 'UNKNOWN')
         else:
