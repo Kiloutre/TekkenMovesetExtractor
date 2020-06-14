@@ -606,7 +606,7 @@ t6_offsetTable = {
 
 
 t5_offsetTable = {
-    'character_name': { 'offset': 0xc, 'size': 'stringPtr'},
+    'character_name': { 'offset': 0x8, 'size': 'invalidStringPtr'},
     'creator_name': { 'offset': 0xc, 'size': 'stringPtr' },
     'date': { 'offset': 0x10, 'size': 'stringPtr' },
     'fulldate': { 'offset': 0x14, 'size': 'stringPtr' },
@@ -767,6 +767,12 @@ offsetTables = {
 animHeaders = {
     't5': b'\x00\x64\x00\x17\x00\x0B\x00\x0B\x00\x05\x00\x07\x00\x07\x00\x07\x00\x0B\x00\x07\x00\x07\x00\x07\x00\x07\x00\x06\x00\x07\x00\x07\x00\x07\x00\x06\x00\x07\x00\x07\x00\x06\x00\x07\x00\x07\x00\x06\x00\x07'
 }
+
+characterNameMapping = {
+    't5': {
+        b'\x95\x97\x8a\xd4 \x90m': 'JIN'
+    }
+}
  
 def readOffsetTable(self, key=''):
     if key == '':
@@ -787,12 +793,12 @@ def readOffsetTable(self, key=''):
             
         if offset == None:
             value = 0
-        elif size == 'stringPtr':
+        elif size == 'stringPtr' or size == 'invalidStringPtr':
             if self.data == None:
                 value = self.readInt(self.addr + offset, self.ptr_size)
             else:
                 value = self.bToInt(self.data, offset, self.ptr_size)
-            value = self.readString(self.base + value)
+            value = self.readString(self.base + value) if size == 'stringPtr' else self.readBytesUntilZero(self.base + value)
         elif type(size) is tuple:
             value = []
             varCount, varSize = size
@@ -836,6 +842,7 @@ def initTekkenStructure(self, parent, addr=0, size=0):
     self.readInt = parent.readInt
     self.readBytes = parent.readBytes
     self.readString = parent.readString
+    self.readBytesUntilZero = parent.readBytesUntilZero
     self.readStringPtr = parent.readStringPtr
     self.bToInt = parent.bToInt
     
@@ -891,8 +898,17 @@ class Exporter:
             offset += 1
         return self.readBytes(addr, offset).decode("ascii")
         
+    def readBytesUntilZero(self, addr):
+        offset = 0
+        while self.readInt(addr + offset, 1) != 0:
+            offset += 1
+        return self.readBytes(addr, offset)
+        
     def readStringPtr(self, addr):
         return self.readString(self.base + self.readInt(addr, self.ptr_size))
+        
+    def readInvalidStrPtr(self, addr):
+        return self.readBytesUntilZero(self.base + self.readInt(addr, self.ptr_size))
         
     def bToInt(self, data, offset, length, ed=None):
         return int.from_bytes(data[offset:offset + length], ed if ed != None else self.endian)
@@ -905,7 +921,13 @@ class Exporter:
     def getPlayerMovesetName(self, playerAddress):
         offset = self.offsetTable['character_name']['offset']
         motbin_ptr = self.getMotbinPtr(self.base + playerAddress)
-        return self.readStringPtr(self.base + motbin_ptr + offset)
+        try:
+            return self.readStringPtr(self.base + motbin_ptr + offset)
+        except:
+            if self.TekkenVersion not in characterNameMapping:
+                return 'UNKNOWN'
+            val = self.readInvalidStrPtr(self.base + motbin_ptr + offset)
+            return characterNameMapping[self.TekkenVersion].get(val, 'UNKNOWN')
             
     def exportMoveset(self, playerAddress, name=''):
         motbin_ptr = self.getMotbinPtr(self.base + playerAddress)
@@ -934,7 +956,8 @@ class AnimData:
         read_size = 8192
         offset = 0
         prev_bytes = None
-        maxLen = 50000000
+        defaultMaxLen = 50000000
+        maxLen = defaultMaxLen if maxLen > defaultMaxLen else maxLen
         
         while read_size >= 8:
             try:
@@ -1335,7 +1358,11 @@ class Motbin:
                 mota_addr = self.readInt(addr + mota_start + (i * self.ptr_size), self.ptr_size)
                 mota_end_addr = self.readInt(addr + mota_start + ((i + 2) * self.ptr_size), self.ptr_size) if i < 9 else mota_addr + 20
                 self.mota_list.append((mota_addr, mota_end_addr - mota_addr))
+                
             
+            if isinstance(self.character_name, bytes):
+                self.getCharacterNameFromBytes()
+                
             self.name = getMovesetName(self.TekkenVersion, self.character_name) if name == '' else name
             self.export_folder = self.name
             
@@ -1363,6 +1390,13 @@ class Motbin:
         self.throws = []
         self.parry_related = []
         
+    def getCharacterNameFromBytes(self):
+        print(self.character_name)
+        if self.TekkenVersion in characterNameMapping:
+            self.character_name = characterNameMapping[self.TekkenVersion].get(self.character_name, 'UNKNOWN')
+        else:
+            self.character_name = 'UNKNOWN'
+        
     def __eq__(self, other):
         return self.character_name == other.character_name \
             and self.creator_name == other.creator_name \
@@ -1375,7 +1409,10 @@ class Motbin:
             self.chara_id = (self.readInt(self.base + playerAddress + game_addresses.addr[key], 4))
         else:
             key = self.TekkenVersion + '_chara_id_addr'
-            self.chara_id = (self.readInt(self.base  + game_addresses.addr[key], 2))
+            if key not in game_addresses.addr:
+                self.chara_id = 0
+            else:
+                self.chara_id = (self.readInt(self.base  + game_addresses.addr[key], 2))
         
     def printBasicData(self):
         if self.chara_id == -1:

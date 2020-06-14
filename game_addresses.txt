@@ -16,40 +16,48 @@ tag2_playerstruct_size  = 0x2960           # Distance between 2 players addresse
 tag2_motbin_offset      = -0x98
 tag2_chara_id_offset    = -0xCC
 
-# Tekken Revolution addresses
+# Tekken Revolution addresses (NPEB01406 01.05)
 rev_process_name       = rpcs3.exe
 rev_base               = 0x300000000
 rev_p1_addr            = 0x12DA030
-rev_playerstruct_size  = 0x24A0            # Distance between 2 players addresses
+rev_playerstruct_size  = 0x24A0  
 rev_motbin_offset      = -0xa8
 rev_chara_id_offset    = -0xDC
 
-# Tekken 6 addresses
+# Tekken 6 addresses (BLES00635 01.03)
 t6_process_name       = rpcs3.exe
 t6_base               = 0x300000000
 t6_p1_addr            = 0xB2C1EC
-t6_playerstruct_size  = 0xC40              # Distance between 2 players addresses
+t6_playerstruct_size  = 0xC40
 t6_motbin_offset      = -0x8c
 t6_chara_id_offset    = -0xdC              #to find
 
 # Tekken 3D addresses
 3d_process_name       = citra-qt.exe
-3d_base               = 0x271B2273040      # Does not look consistent
+3d_base               = 0x271B2273040      # Does not look consistent, changes with every restart?
 3d_p1_addr            = 0x938C000
-3d_playerstruct_size  = 0xC40              # tofind, Distance between 2 players addresses
+3d_playerstruct_size  = 0xC40              # tofind
 3d_motbin_offset      = 0x1340
-3d_chara_id_offset    = 0x0                # 'to find
+3d_chara_id_offset    = 0x0                # to find
 
-# Tekken 5 DR Online addresses
+# Tekken 5 DR Online addresses (NPEA00019 01.00)
 t5_process_name       = rpcs3.exe
-t5_base               = 0x300000000
+t5_base               = 0x300000000 
 t5_p1_addr            = 0x10090850
-t5_playerstruct_size  = 0xC40              # Distance between 2 players addresses
+t5_playerstruct_size  = 0x8D0
 t5_motbin_offset      = 0x50
-t5_chara_id_addr      = 0x102C8D0A
+#t5_chara_id_addr     = 0x102C8D0A
+
+# Tekken 4 addresses
+t4_process_name       = pcsx2.exe
+t4_base               = 0x20000000 
+t4_p1_addr            = 0x2AA4E4           # tofind
+t4_playerstruct_size  = 0x8D0              # tofind
+t4_motbin_offset      = 0x50               # tofind
+td_chara_id_offset    = 0                  # tofind
 
 
 # miscellaneous
-player_curr_move_offset = 0x344            # used by editor
-code_injection_addr     = 0x140738CDF      # Address that writes on player+motbin_offset
-playerid_starting_ptr   = 0x1434BE100      # Used to find whether local player is 1P or 2P
+player_curr_move_offset = 0x344            # Used by editor
+code_injection_addr     = 0x140738CDF      # Address that writes on player+motbin_offset, used for online play
+playerid_starting_ptr   = 0x1434BE100      # Used to find whether local player is 1P or 2P, used for online play
