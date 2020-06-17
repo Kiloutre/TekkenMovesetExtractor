@@ -1217,6 +1217,7 @@ class GUI_TekkenMovesetEditor():
             ("Load to P2", lambda self=self : self.Charalist.loadToPlayer(1) ),
             ("Insert new Cancel to list", self.insertNewCancel ),
             ("Create new Cancel List", self.createCancelList ),
+            ("Delete current cancel", self.deleteCurrentCancel ),
         ]
         
         
@@ -1377,6 +1378,27 @@ class GUI_TekkenMovesetEditor():
         
         self.movelist['cancels'].append(newCancel)
         self.setCancelList(len(self.movelist['cancels']) - 1)
+        
+    def deleteCurrentCancel(self):
+        if self.CancelEditor.editMode == None:
+            return
+        
+        print('Deleting')
+        listIndex = self.CancelEditor.listIndex
+        index = self.CancelEditor.id + listIndex
+        resetForm = (self.movelist['cancels'][index]['command'] == 0x8000)
+        self.movelist['cancels'].pop(index)
+        
+        for move in self.movelist['moves']:
+            if move['cancel_idx'] > (index):
+                move['cancel_idx'] -= 1
+        
+        if not resetForm:
+            self.setCancelList(self.CancelEditor.baseId)
+            self.CancelEditor.setItem(listIndex)
+        else:
+            self.CancelEditor.resetForm()
+        
         
     def insertNewCancel(self):
         if self.CancelEditor.editMode == None:
