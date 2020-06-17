@@ -30,7 +30,7 @@ t6_base               = 0x300000000
 t6_p1_addr            = 0xB2C1EC
 t6_playerstruct_size  = 0xC40
 t6_motbin_offset      = -0x8c
-t6_chara_id_offset    = -0xdC              #to find
+t6_chara_id_offset    = -0xdC              # tofind
 
 # Tekken 3D addresses
 3d_process_name       = citra-qt.exe
@@ -38,7 +38,7 @@ t6_chara_id_offset    = -0xdC              #to find
 3d_p1_addr            = 0x938C000
 3d_playerstruct_size  = 0xC40              # tofind
 3d_motbin_offset      = 0x1340
-3d_chara_id_offset    = 0x0                # to find
+3d_chara_id_offset    = 0x0                # tofind
 
 # Tekken 5 DR Online addresses (NPEA00019 01.00)
 t5_process_name       = rpcs3.exe
@@ -50,7 +50,7 @@ t5_motbin_offset      = 0x50
 
 # Tekken 4 addresses
 t4_process_name       = pcsx2.exe
-t4_base               = 0x20000000 
+t4_base               = 0x20000000         # tofind
 t4_p1_addr            = 0x2AA4E4           # tofind
 t4_playerstruct_size  = 0x8D0              # tofind
 t4_motbin_offset      = 0x50               # tofind

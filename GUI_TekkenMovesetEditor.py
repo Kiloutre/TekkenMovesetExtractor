@@ -22,6 +22,7 @@ reqListEndval = {
 itemNames = {
     'moves': 'move',
     'cancels': 'cancel',
+    'group_cancels': 'group cancel',
     'requirements': 'requirement',
     'extra_move_properties': 'move property',
     'hit_conditions': 'hit condition',
@@ -71,6 +72,17 @@ moveFields = {
 }
 
 cancelFields = {
+    'command': 'hex',
+    'extradata_idx': 'number',
+    'requirement_idx': 'number',
+    'frame_window_start': 'number',
+    'frame_window_end': 'number',
+    'starting_frame': 'number',
+    'move_id': 'number',
+    'cancel_option': 'number'
+}
+
+groupCancelFields = {
     'command': 'hex',
     'extradata_idx': 'number',
     'requirement_idx': 'number',
@@ -151,6 +163,7 @@ voiceclipFields = {
 fieldsTypes = {
     'moves': moveFields,
     'cancels': cancelFields,
+    'group_cancels': groupCancelFields,
     'requirements': requirementFields,
     'extra_move_properties': extrapropFields,
     'hit_conditions': hitConditionFields,
@@ -299,7 +312,6 @@ class CharalistSelector:
         if self.visible:
             self.hide()
         else:
-            self.updateCharacterlist()
             self.show()
        
     def hide(self):
@@ -902,10 +914,10 @@ class RequirementEditor(FormEditor):
         self.setDetails()
         self.resetSaveButton()
             
-class CancelEditor(FormEditor):
+class GroupCancelEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
-        FormEditor.__init__(self, root, rootFrame, 'cancels', col, row)
-        self.setListOnsaveFunction(self.root.setCancelList)
+        FormEditor.__init__(self, root, rootFrame, 'group_cancels', col, row)
+        self.setListOnsaveFunction(self.root.openGroupCancel)
         self.enableNavigator(itemLabel='Cancel')
         self.enableDetailsArea()
         
@@ -921,18 +933,78 @@ class CancelEditor(FormEditor):
         if self.editMode == None:
             return
         super().onchange(field, sv)
-        self.setCommandLabel()
+        self.setMoveIdLabel()
         
-    def setCommandLabel(self):
+    def setMoveIdLabel(self):
         command = self.fieldValue['command']
         moveId = self.fieldValue['move_id']
         
-        if command != 0x800b:
+        if command == 0x800b:
+            self.details['text'] = '(move_id) group_cancel ' + str(moveId)
+        else:
             moveName = self.root.getMoveName(moveId)
             text =  "Command: " + getCommandStr(command) + "\nMove: " + moveName
             self.details['text'] = text
+            
+    def setItem(self, index):
+        cancelData = self.itemList[index]
+        self.listIndex = index
+        self.id = self.baseId + index
+        
+        cancelLen = len(self.itemList)
+        
+        cancelCount = " %d cancels" % (cancelLen) if cancelLen > 1 else "1 cancel" 
+        self.setLabel("Group Cancel list %d: %s" % (self.baseId, cancelCount))
+        
+        self.navigatorLabel['text'] = "Cancel %d/%d" % (index + 1, cancelLen)
+        
+        self.editMode = None
+        for field in cancelData:
+            if field in cancelFields:
+                self.setField(field, cancelData[field], True)
+                self.fieldInput[field].config(state='enabled')
+        self.editMode = True
+        
+        self.setMoveIdLabel()
+        self.resetSaveButton()
+            
+class CancelEditor(FormEditor):
+    def __init__(self, root, rootFrame, col, row):
+        FormEditor.__init__(self, root, rootFrame, 'cancels', col, row)
+        self.setListOnsaveFunction(self.root.setCancelList)
+        self.enableNavigator(itemLabel='Cancel')
+        self.enableDetailsArea()
+        
+        self.initFields()
+        
+        self.registerFieldButtons([
+            ('move_id', self.onMoveClick),
+            ('requirement_idx', self.root.setRequirementList),
+            ('extradata_idx', self.root.setCancelExtra),
+        ])
+        
+    def onMoveClick(self, id):
+        if self.fieldValue['command'] == 0x800b:
+            self.root.openGroupCancel(id)
         else:
-            self.details['text'] = 'group_cancel ' + str(moveId)
+            self.root.setMove(id)
+        
+    def onchange(self, field, sv):
+        if self.editMode == None:
+            return
+        super().onchange(field, sv)
+        self.setMoveIdLabel()
+        
+    def setMoveIdLabel(self):
+        command = self.fieldValue['command']
+        moveId = self.fieldValue['move_id']
+        
+        if command == 0x800b:
+            self.details['text'] = '(move_id) group_cancel ' + str(moveId)
+        else:
+            moveName = self.root.getMoveName(moveId)
+            text =  "Command: " + getCommandStr(command) + "\nMove: " + moveName
+            self.details['text'] = text
             
     def setItem(self, index):
         cancelData = self.itemList[index]
@@ -953,7 +1025,7 @@ class CancelEditor(FormEditor):
                 self.fieldInput[field].config(state='enabled')
         self.editMode = True
         
-        self.setCommandLabel()
+        self.setMoveIdLabel()
         self.resetSaveButton()
     
 class MoveEditor(FormEditor):
@@ -1034,12 +1106,48 @@ def splitFrame(root, split, bg=None):
     for i in range(colCount):
         newFrame.grid_columnconfigure(i, weight=1, uniform='group1' )
     return newFrame
-
+    
+class GroupCancelWindow:
+    def __init__(self, root, id):
+        window = Toplevel()
+        self.window = window
+        self.root = root
+        
+        editorFrame = Frame(window)
+        editorFrame.pack(fill='both', expand=1)
+        editorFrame.grid_columnconfigure(0, weight=1, uniform="group1")
+        editorFrame.grid_rowconfigure(0, weight=1, uniform="group1")
+        
+        window.iconbitmap('InterfaceData/renge.ico')
+        window.geometry("240x340")
+        window.minsize(240, 340)
+        
+        self.CancelEditor = GroupCancelEditor(root, editorFrame, col=0, row=0)
+        self.CancelEditor.resetForm()
+        
+        self.setCancelList(id)
+        
+        self.window.protocol("WM_DELETE_WINDOW", self.on_close)
+        
+    def on_close(self):
+        self.root.GroupCancelEditor = None
+        self.window.destroy()
+        self.window.update()
+        
+    def setCancelList(self, cancelId):
+        if cancelId < 0 or cancelId >= len(self.root.movelist['group_cancels']):
+            return
+        cancelList = []
+        id = cancelId
+        while self.root.movelist['group_cancels'][id]['command'] != 0x800c:
+            id += 1
+        cancelList = [cancel for cancel in self.root.movelist['group_cancels'][cancelId:id + 1]]
+        self.CancelEditor.setItemList(cancelList, cancelId)
+        
 class GUI_TekkenMovesetEditor():
     def __init__(self, showCharacterSelector=True, mainWindow=True):
         window = Tk() if mainWindow else Toplevel()
         self.window = window
-        
 
         boldButtonStyle = Style()
         boldButtonStyle.configure("Bold.TButton", font = ('Sans','10','bold'))
@@ -1087,6 +1195,7 @@ class GUI_TekkenMovesetEditor():
         self.PushbackEditor = PushbackEditor(self, bottomLeftToprow, col=0, row=0)
         self.VoiceclipEditor = VoiceclipEditor(self, bottomLeftToprow3, col=0, row=1)
         self.CancelExtraEditor = CancelExtraEditor(self, bottomLeftToprow3, col=0, row=0)
+        self.GroupCancelEditor = None
         
         self.ReactionListEditor = ReactionListEditor(self, editorFrame, col=1, row=1)
         
@@ -1146,6 +1255,14 @@ class GUI_TekkenMovesetEditor():
         self.PushbackExtraEditor.resetForm()
         self.CancelExtraEditor.resetForm()
         self.VoiceclipEditor.resetForm()
+        
+    def openGroupCancel(self, id):
+        if self.GroupCancelEditor == None:
+            app = GroupCancelWindow(self, id)
+            self.GroupCancelEditor = app
+            app.window.mainloop()
+        else:
+            self.GroupCancelEditor.setCancelList(id)
         
     def getMoveId(self, moveId):
         return self.movelist['aliases'][moveId - 0x8000] if moveId >= 0x8000 else moveId

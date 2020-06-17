@@ -4,6 +4,7 @@ tag2_requirements = {
     468: { 't7_id': 614, 'desc': 'Juggle' },
     65: { 't7_id': 68, 'desc': 'Incoming high' },
     133: { 't7_id': 135, 'desc': 'Death' },
+    124: { 't7_id': 126, 'desc': 'Opponent downed' },
     3: { 't7_id': 3, 'desc': '1536: Enemy standing, throw (checking vuln?)' },
     27: { 't7_id': 27, 'desc': '2536: Enemy airborne, throw (checking vuln?)' },
     46: { 't7_id': 44, 'desc': 'Counterhit' },
@@ -35,7 +36,6 @@ tag2_requirements = {
     115: { 't7_id': 117, 'desc': 'MAPPING' },
     120: { 't7_id': 122, 'desc': '(HEIHACHI) dwDWN_00U -> Downed' },
     122: { 't7_id': 124, 'desc': '(HEIHACHI) He_sDASHF -> He_sDASHF' },
-    124: { 't7_id': 126, 'desc': '(HEIHACHI) He_t_srk00 -> He_dwki' },
     126: { 't7_id': 128, 'desc': '(HEIHACHI) sRUN__01F -> Co_fumuA00' },
     128: { 't7_id': 130, 'desc': 'MAPPING' },
     129: { 't7_id': 131, 'desc': 'MAPPING' },
@@ -616,7 +616,7 @@ tag2_character_fixes = {
             }
         ],
         'moves': [
-            { 'name': 'Kt_6lklprp', 'hitbox_location': 0x08091009 } 
+            { 'name': 'Kt_6lklprp', 'hitbox_location': 0x08091009 }  #fix SEN 1 2 hitbox
         ]
     },
     "[ANGEL]": {
