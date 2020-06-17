@@ -1236,7 +1236,7 @@ class GUI_TekkenMovesetEditor():
         self.resetForms()
             
     def setTitle(self, label = ""):
-        title = "TekkenMovesetEditor 0.10-BETA"
+        title = "TekkenMovesetEditor 0.11-BETA"
         if label != "":
             title += " - " + label
         self.window.wm_title(title) 
@@ -1398,7 +1398,6 @@ class GUI_TekkenMovesetEditor():
             self.CancelEditor.setItem(listIndex)
         else:
             self.CancelEditor.resetForm()
-        
         
     def insertNewCancel(self):
         if self.CancelEditor.editMode == None:
