@@ -405,7 +405,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         self.selected_char = None
         self.chara_data = None
         
-        self.wm_title("TekkenMovesetExtractor 1.0.9") 
+        self.wm_title("TekkenMovesetExtractor 1.0.10") 
         self.iconbitmap('InterfaceData/natsumi.ico')
         self.minsize(960, 540)
         self.geometry("960x540")
@@ -593,6 +593,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: All players", ("tag2",), exportAll)
         self.createButton(self.tag2_exportFrame, "Export: Tekken Rev: All players", ("rev",), exportAll)
         self.createButton(self.tag2_exportFrame, "Export: Tekken 6: All players", ("t6",), exportAll)
+        #self.createButton(self.tag2_exportFrame, "Export: Tekken 5: All players", ("5",), exportAll)
         
     def createButton(self, frame, text, const_args, callback, side='top', expand=1):
         exportButton = Button(frame)

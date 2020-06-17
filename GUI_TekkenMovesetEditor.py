@@ -983,6 +983,8 @@ class CancelEditor(FormEditor):
             ('extradata_idx', self.root.setCancelExtra),
         ])
         
+        self.setTitleFunction = None
+        
     def onMoveClick(self, id):
         if self.fieldValue['command'] == 0x800b:
             self.root.openGroupCancel(id)
@@ -1113,6 +1115,8 @@ class GroupCancelWindow:
         self.window = window
         self.root = root
         
+        self.window.protocol("WM_DELETE_WINDOW", self.on_close)
+        
         editorFrame = Frame(window)
         editorFrame.pack(fill='both', expand=1)
         editorFrame.grid_columnconfigure(0, weight=1, uniform="group1")
@@ -1126,8 +1130,9 @@ class GroupCancelWindow:
         self.CancelEditor.resetForm()
         
         self.setCancelList(id)
-        
-        self.window.protocol("WM_DELETE_WINDOW", self.on_close)
+            
+    def setTitle(self, title):
+        self.window.wm_title(title) 
         
     def on_close(self):
         self.root.GroupCancelEditor = None
@@ -1143,6 +1148,7 @@ class GroupCancelWindow:
             id += 1
         cancelList = [cancel for cancel in self.root.movelist['group_cancels'][cancelId:id + 1]]
         self.CancelEditor.setItemList(cancelList, cancelId)
+        self.setTitle('Group %d' % (cancelId))
         
 class GUI_TekkenMovesetEditor():
     def __init__(self, showCharacterSelector=True, mainWindow=True):
@@ -1222,7 +1228,7 @@ class GUI_TekkenMovesetEditor():
         self.resetForms()
             
     def setTitle(self, label = ""):
-        title = "TekkenMovesetEditor 0.9-BETA"
+        title = "TekkenMovesetEditor 0.10-BETA"
         if label != "":
             title += " - " + label
         self.window.wm_title(title) 
