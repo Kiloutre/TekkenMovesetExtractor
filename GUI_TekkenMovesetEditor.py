@@ -1384,7 +1384,7 @@ class GUI_TekkenMovesetEditor():
             return
         
         listIndex = self.CancelEditor.listIndex
-        index = self.CancelEditor.id + listIndex
+        index = self.CancelEditor.id
         resetForm = (self.movelist['cancels'][index]['command'] == 0x8000)
         self.movelist['cancels'].pop(index)
         
@@ -1409,7 +1409,7 @@ class GUI_TekkenMovesetEditor():
         self.movelist['cancels'].insert(insertPoint, newCancel)
         
         for move in self.movelist['moves']:
-            if move['cancel_idx'] > (insertPoint + index):
+            if move['cancel_idx'] > insertPoint:
                 move['cancel_idx'] += 1
         
         self.setCancelList(self.CancelEditor.baseId)
