@@ -1112,9 +1112,11 @@ class Cancel:
                 t |= (self.command & 0xFF) << 32
                 t |= (self.command & 0xFF00) << 49
                 self.command = t
-                
+
                 if self.command == 0x8005:
                     self.command = 0x800b
+                elif self.command == 0x8006:
+                    self.command = 0x800c
         
         self.extradata_id = -1
         self.requirement_idx =- -1
