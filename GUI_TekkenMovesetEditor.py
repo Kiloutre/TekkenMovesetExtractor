@@ -517,9 +517,12 @@ class FormEditor:
            
     def setSavebuttonBold(self):
         self.saveButton['style'] = 'Bold.TButton'
+        self.saveButton['style'] = 'Bold.TButton'
+        self.saveButton.config(state='enabled')
            
     def resetSaveButton(self):
         self.saveButton['style'] = 'TButton'
+        self.saveButton.config(state='disabled')
     
     def onchange(self, field, sv):
         if self.editMode == None:
@@ -548,6 +551,8 @@ class FormEditor:
             value = self.fieldVar[field].get()
             if validateField(valueType, value):
                 self.root.saveField(self.key, self.id, field, getFieldValue(valueType, value))
+            else:
+                print("Invalid field value for '%s'" % (field))
                 
         if self.listSaveFunction != None:
             index = self.listIndex
@@ -1209,7 +1214,9 @@ class GUI_TekkenMovesetEditor():
         menuActions = [
             ('Toggle character selector', self.Charalist.toggleVisibility),
             ("Load to P1", lambda self=self : self.Charalist.loadToPlayer(0) ),
-            ("Load to P2", lambda self=self : self.Charalist.loadToPlayer(1) )
+            ("Load to P2", lambda self=self : self.Charalist.loadToPlayer(1) ),
+            ("Insert new Cancel to list", self.insertNewCancel ),
+            ("Create new Cancel List", self.createCancelList ),
         ]
         
         
@@ -1362,6 +1369,31 @@ class GUI_TekkenMovesetEditor():
             id += 1
         itemList = [item for item in self.movelist['hit_conditions'][itemId:id + 1]]
         self.HitConditionEditor.setItemList(itemList, itemId)
+        
+    def createCancelList(self):
+        if self.movelist == None:
+            return
+        newCancel = self.movelist['cancels'][0]
+        
+        self.movelist['cancels'].append(newCancel)
+        self.setCancelList(len(self.movelist['cancels']) - 1)
+        
+    def insertNewCancel(self):
+        if self.CancelEditor.editMode == None:
+            return
+        
+        newCancel = {f:0 for f in cancelFields}
+        index = self.CancelEditor.listIndex
+        insertPoint = self.CancelEditor.id
+        
+        self.movelist['cancels'].insert(insertPoint, newCancel)
+        
+        for move in self.movelist['moves']:
+            if move['cancel_idx'] > (insertPoint + index):
+                move['cancel_idx'] += 1
+        
+        self.setCancelList(self.CancelEditor.baseId)
+        self.CancelEditor.setItem(index)
         
     def saveField(self, key, id, field, value):
         if field != None:
