@@ -1383,14 +1383,13 @@ class GUI_TekkenMovesetEditor():
         if self.CancelEditor.editMode == None:
             return
         
-        print('Deleting')
         listIndex = self.CancelEditor.listIndex
         index = self.CancelEditor.id + listIndex
         resetForm = (self.movelist['cancels'][index]['command'] == 0x8000)
         self.movelist['cancels'].pop(index)
         
         for move in self.movelist['moves']:
-            if move['cancel_idx'] > (index):
+            if move['cancel_idx'] > index:
                 move['cancel_idx'] -= 1
         
         if not resetForm:
