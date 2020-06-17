@@ -101,27 +101,20 @@ Administrator rights may be required to import the moveset into memory.
 - Look into making ttt2 intro and outro end automatically
 - Use opponent for tag2 outros (might not be viable)
 - Delete files before exporting moveset
-- Tekken ball imitation using Akuma fireball, greenscreend on tekken 3 beach
 - (Jin) Dj tag2 vs DJ tag2, treasure battle, online player buttons, crash on loadscreen
 - Green Ogre 3~4 crash
 - Allow throws using item moves?
 - Rename "group_cancels" to "generic_cancels"
-- Rename "anim_max_len" to "anim_len" in moves
 - Split command in two 4bytes
-- Rename move's u17 to distance
-- Make cancel extradata and moves' voiceclip use a field?
-- Make reaction lists and u1 lists uses fields instead of arrays
 - Split attack hitlevel in 2? need to keep the order the same for tag2
 - Check out eliza in tekken revolution for projectile struct
-- Display group_cancels. Command is 0x800b, id of the list is the move id
+- Don't force_type the extra move prop that sets opponent move id, look into what the type is used for
+- Look at what function writes MOTA offsets and byteswaps them
+- Dunno if you know already but using Anna's df4 will cause the character's body to spazz out a bit.
 
 
 - Create tool to view current T7 move data. Cancel list, reactions
 
 Moveset editor:
 - Window to list animations and copy one to another character's folder
-- Add note that requirement lists must end with 881
-- Add note that extraprop lists must end with type 0
 - Fix modifying tag2 movesets, 'if you change the requirement of a move to screw / bound with any tag 2 character, the game insta crashes'
-- Look at what function writes MOTA offsets and byteswaps them
-- Dunno if you know already but using Anna's df4 will cause the character's body to spazz out a bit.
