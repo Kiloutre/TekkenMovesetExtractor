@@ -1261,6 +1261,8 @@ class GUI_TekkenMovesetEditor():
         self.PushbackExtraEditor.resetForm()
         self.CancelExtraEditor.resetForm()
         self.VoiceclipEditor.resetForm()
+        if self.GroupCancelEditor:
+            self.GroupCancelEditor.on_close()
         
     def openGroupCancel(self, id):
         if self.GroupCancelEditor == None:
