@@ -515,19 +515,18 @@ class FormEditor:
         if saveLabel:
             self.lastValidLabel = text
            
-    def setSavebuttonBold(self):
-        self.saveButton['style'] = 'Bold.TButton'
+    def enableSaveButton(self):
         self.saveButton['style'] = 'Bold.TButton'
         self.saveButton.config(state='enabled')
            
-    def resetSaveButton(self):
+    def disableSaveButton(self):
         self.saveButton['style'] = 'TButton'
         self.saveButton.config(state='disabled')
     
     def onchange(self, field, sv):
         if self.editMode == None:
             return
-        self.setSavebuttonBold()
+        self.enableSaveButton()
         value = sv.get()
         valueType = self.fieldTypes[field]
         
@@ -536,6 +535,7 @@ class FormEditor:
             self.setLabel(self.lastValidLabel, False)
         else:
             self.setLabel(self.lastValidLabel + " - Invalid field: " + field, False)
+            self.disableSaveButton()
         
         self.setField(field, value)
         
@@ -559,7 +559,7 @@ class FormEditor:
             self.listSaveFunction(self.baseId)
             self.setItem(index)
             
-        self.resetSaveButton()
+        self.disableSaveButton()
             
         return True
         
@@ -576,7 +576,7 @@ class FormEditor:
         self.editMode = True
         
     def resetForm(self):
-        self.resetSaveButton()
+        self.disableSaveButton()
         self.editMode = None
         self.id = None
         itemName = itemNames[self.key]
@@ -599,12 +599,12 @@ class FormEditor:
         self.listIndex = 0
         
         self.setItem(0)
-        self.resetSaveButton()
+        self.disableSaveButton()
         
     def navigateToItem(self, offset):
         if self.editMode == None or (self.listIndex + offset) < 0 or (self.listIndex + offset) >= len(self.itemList):
             return
-        self.resetSaveButton()
+        self.disableSaveButton()
         self.setItem(self.listIndex + offset)
         
     def enableNavigator(self, itemLabel):
@@ -686,7 +686,7 @@ class HitConditionEditor(FormEditor):
         
         reactionlistId = self.fieldValue['reaction_list_idx']
         self.root.setReactionList(reactionlistId)
-        self.resetSaveButton()
+        self.disableSaveButton()
             
 class VoiceclipEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
@@ -702,12 +702,12 @@ class VoiceclipEditor(FormEditor):
         self.fieldInput['value'].config(state='enabled')
         self.setField('value', itemData, True)
         self.editMode = True
-        self.resetSaveButton()
+        self.disableSaveButton()
         
     def save(self):
         if self.editMode == True and validateField('number', self.fieldVar['value'].get()):
             self.root.saveField(self.key, self.id, None, getFieldValue('number', self.fieldVar['value'].get()))
-            self.resetSaveButton()
+            self.disableSaveButton()
             
 class CancelExtraEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
@@ -723,12 +723,12 @@ class CancelExtraEditor(FormEditor):
         self.fieldInput['value'].config(state='enabled')
         self.setField('value', itemData, True)
         self.editMode = True
-        self.resetSaveButton()
+        self.disableSaveButton()
         
     def save(self):
         if self.editMode == True and validateField('number', self.fieldVar['value'].get()):
             self.root.saveField(self.key, self.id, None, getFieldValue('number', self.fieldVar['value'].get()))
-            self.resetSaveButton()
+            self.disableSaveButton()
             
 class PushbackExtraEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
@@ -744,12 +744,12 @@ class PushbackExtraEditor(FormEditor):
         self.fieldInput['value'].config(state='enabled')
         self.setField('value', itemData, True)
         self.editMode = True
-        self.resetSaveButton()
+        self.disableSaveButton()
         
     def save(self):
         if self.editMode == True and validateField('number', self.fieldVar['value'].get()):
             self.root.saveField(self.key, self.id, None, getFieldValue('number', self.fieldVar['value'].get()))
-            self.resetSaveButton()
+            self.disableSaveButton()
             
 class PushbackEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
@@ -772,7 +772,7 @@ class PushbackEditor(FormEditor):
                 self.setField(field, itemData[field], True)
             
         self.editMode = True
-        self.resetSaveButton()
+        self.disableSaveButton()
             
 class ReactionListEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
@@ -822,7 +822,7 @@ class ReactionListEditor(FormEditor):
             self.setField('u1_' + str(i + 1), val, True)
             
         self.editMode = True
-        self.resetSaveButton()
+        self.disableSaveButton()
 
     def initFields(self):
         fields = sortKeys(reactionlistFields.keys())
@@ -873,7 +873,7 @@ class ExtrapropEditor(FormEditor):
                 self.fieldInput[field].config(state='enabled')
         self.editMode = True
         
-        self.resetSaveButton()
+        self.disableSaveButton()
             
 class RequirementEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
@@ -917,7 +917,7 @@ class RequirementEditor(FormEditor):
         self.editMode = True
         
         self.setDetails()
-        self.resetSaveButton()
+        self.disableSaveButton()
             
 class GroupCancelEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
@@ -971,7 +971,7 @@ class GroupCancelEditor(FormEditor):
         self.editMode = True
         
         self.setMoveIdLabel()
-        self.resetSaveButton()
+        self.disableSaveButton()
             
 class CancelEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
@@ -1033,7 +1033,7 @@ class CancelEditor(FormEditor):
         self.editMode = True
         
         self.setMoveIdLabel()
-        self.resetSaveButton()
+        self.disableSaveButton()
     
 class MoveEditor(FormEditor):
     def __init__(self, root, rootFrame, col, row):
@@ -1091,7 +1091,7 @@ class MoveEditor(FormEditor):
                 self.setField(field, moveData[field], True)
                 self.fieldInput[field].config(state='enabled')
         self.editMode = True
-        self.resetSaveButton()
+        self.disableSaveButton()
         
     def selectCancel(self, event):
         if self.editMode == None:
@@ -1374,7 +1374,8 @@ class GUI_TekkenMovesetEditor():
     def createCancelList(self):
         if self.movelist == None:
             return
-        newCancel = self.movelist['cancels'][0]
+        newCancel = {f:0 for f in cancelFields}
+        newCancem['command'] = 0x8000
         
         self.movelist['cancels'].append(newCancel)
         self.setCancelList(len(self.movelist['cancels']) - 1)
