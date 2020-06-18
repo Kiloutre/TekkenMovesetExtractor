@@ -1155,6 +1155,21 @@ class GroupCancelWindow:
         self.CancelEditor.setItemList(cancelList, cancelId)
         self.setTitle('Group %d' % (cancelId))
         
+def createMenu(root, menuActions, rootMenu=True):
+    newMenu = Menu(root, tearoff=0)
+    for label, command in menuActions:
+        if isinstance(command, list):
+            subMenu = createMenu(newMenu, command, False)
+            newMenu.add_cascade(label=label, menu=subMenu)
+        elif command == "separator":
+            if rootMenu:
+                newMenu.add_command(label='|')
+            else:
+                newMenu.add_separator()
+        else:
+            newMenu.add_command(label=label, command=command)
+    return newMenu
+        
 class GUI_TekkenMovesetEditor():
     def __init__(self, showCharacterSelector=True, mainWindow=True):
         window = Tk() if mainWindow else Toplevel()
@@ -1210,21 +1225,35 @@ class GUI_TekkenMovesetEditor():
         
         self.ReactionListEditor = ReactionListEditor(self, editorFrame, col=1, row=1)
         
+        cancelCreationMenu = [
+            ("Insert new Cancel to list", self.insertNewCancel ),
+            ("Create Cancel-List", self.createCancelList ),
+            ("", "separator" ),
+            ("Copy selected cancel to list", None ),
+            ("Copy Cancel-list", None ),
+        ]
+        
+        creationMenu = [
+            ("Cancel", cancelCreationMenu)
+        ]
+        
+        deletionMenu = [
+            ("Current cancel", self.deleteCurrentCancel),
+        ]
         
         menuActions = [
             ('Toggle character selector', self.Charalist.toggleVisibility),
+            ("", "separator"),
             ("Load to P1", lambda self=self : self.Charalist.loadToPlayer(0) ),
             ("Load to P2", lambda self=self : self.Charalist.loadToPlayer(1) ),
-            ("Insert new Cancel to list", self.insertNewCancel ),
-            ("Create new Cancel List", self.createCancelList ),
-            ("Delete current cancel", self.deleteCurrentCancel ),
+            ("", "separator"),
+            ("New", creationMenu ),
+            ("Delete", deletionMenu ),
         ]
         
+        menu = createMenu(window, menuActions)
+        window.config(menu=menu)
         
-        menubar = Menu(window)
-        for label, command in menuActions:
-            menubar.add_command(label=label, command=command)
-        window.config(menu=menubar)
         
         self.movelist = None
         
@@ -1375,7 +1404,7 @@ class GUI_TekkenMovesetEditor():
         if self.movelist == None:
             return
         newCancel = {f:0 for f in cancelFields}
-        newCancem['command'] = 0x8000
+        newCancel['command'] = 0x8000
         
         self.movelist['cancels'].append(newCancel)
         self.setCancelList(len(self.movelist['cancels']) - 1)
