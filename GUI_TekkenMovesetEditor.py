@@ -1,6 +1,6 @@
 # Python 3.6.5
 
-from tkinter import Tk, Frame, Listbox, Label, Scrollbar, StringVar, Toplevel, Menu
+from tkinter import Tk, Frame, Listbox, Label, Scrollbar, StringVar, Toplevel, Menu, messagebox
 from tkinter.ttk import Button, Entry, Style
 from Addresses import game_addresses, GameClass
 import motbinImport as importLib
@@ -196,7 +196,7 @@ def validateField(type, value):
     if type == 'number':
         return re.match("^-?[0-9]+$", value)
     if type == 'hex' or type == '8hex':
-        return re.match("^(0(x|X))?[0-9A-Za-z]+$", value)
+        return re.match("^0(x|X)[0-9A-Za-z]+$", value)
     if type == 'text':
         return re.match("^[a-zA-Z0-9_\-\(\)]+$", value)
     raise Exception("Unknown type '%s'" % (type))
@@ -534,7 +534,7 @@ class FormEditor:
             self.fieldValue[field] =  getFieldValue(valueType, value)
             self.setLabel(self.lastValidLabel, False)
         else:
-            self.setLabel(self.lastValidLabel + " - Invalid field: " + field, False)
+            self.setLabel("Invalid field: " + field, False)
             self.disableSaveButton()
         
         self.setField(field, value)
@@ -646,7 +646,7 @@ class FormEditor:
         for field, function in items:
             self.fieldLabel[field].config(cursor='hand2', bg='#cce3e1')
             self.fieldLabel[field].bind("<Button-1>", lambda _, self=self, field=field, function=function : function(self.fieldValue[field]) if self.editMode != None else 0 )
-
+            
     def enableDetailsArea(self):
         details = Label(self.container)
         details.pack(side='bottom', fill='x')
@@ -959,7 +959,7 @@ class GroupCancelEditor(FormEditor):
         cancelLen = len(self.itemList)
         
         cancelCount = " %d cancels" % (cancelLen) if cancelLen > 1 else "1 cancel" 
-        self.setLabel("Group Cancel list %d: %s" % (self.baseId, cancelCount))
+        self.setLabel("Group Cancel-list %d: %s" % (self.baseId, cancelCount))
         
         self.navigatorLabel['text'] = "Cancel %d/%d" % (index + 1, cancelLen)
         
@@ -1021,7 +1021,7 @@ class CancelEditor(FormEditor):
         cancelLen = len(self.itemList)
         
         cancelCount = " %d cancels" % (cancelLen) if cancelLen > 1 else "1 cancel" 
-        self.setLabel("Cancel list %d: %s" % (self.baseId, cancelCount))
+        self.setLabel("Cancel-list %d: %s" % (self.baseId, cancelCount))
         
         self.navigatorLabel['text'] = "Cancel %d/%d" % (index + 1, cancelLen)
         
@@ -1134,6 +1134,28 @@ class GroupCancelWindow:
         self.CancelEditor = GroupCancelEditor(root, editorFrame, col=0, row=0)
         self.CancelEditor.resetForm()
         
+        creationMenu = [
+            ("Insert new group-cancel to current list", self.root.insertNewGroupCancel),
+            ("Create group-cancel list", self.root.createGroupCancelList),
+            ("", "separator" ),
+            ("Duplicate current group-cancel list", lambda self=self: self.root.insertNewGroupCancel(copyCurrent=True) ),
+            ("Duplicate current group-cancel list", self.root.copyGroupCancelList),
+        ]
+        
+        deletionMenu = [
+            ("Current group-cancel list", self.root.deleteCurrentGroupCancelList),
+            ("Current group-cancel", self.root.deleteCurrentGroupCancel),
+        ]
+        
+        
+        menuActions = [
+            ("New", creationMenu),
+            ("Delete", deletionMenu),
+        ]
+        
+        menu = createMenu(window, menuActions)
+        window.config(menu=menu)
+        
         self.setCancelList(id)
             
     def setTitle(self, title):
@@ -1166,6 +1188,8 @@ def createMenu(root, menuActions, rootMenu=True):
                 newMenu.add_command(label='|')
             else:
                 newMenu.add_separator()
+        elif command == None:
+            newMenu.add_command(label=label, state="disabled")
         else:
             newMenu.add_command(label=label, command=command)
     return newMenu
@@ -1225,20 +1249,64 @@ class GUI_TekkenMovesetEditor():
         
         self.ReactionListEditor = ReactionListEditor(self, editorFrame, col=1, row=1)
         
-        cancelCreationMenu = [
-            ("Insert new Cancel to list", self.insertNewCancel ),
-            ("Create Cancel-List", self.createCancelList ),
+        moveCreationMenu = [
+            ("Create new empty move", None ),
+            ("Copy current move", None ),
+            ("Copy move from another moveset", None ),
+        ]
+        
+        extrapropCreationMenu = [
+            ("Insert new extra move-prop to current list", None ),
+            ("Create new extra move-prop list", None ),
             ("", "separator" ),
-            ("Copy selected cancel to current list", lambda self=self: self.insertNewCancel(copyCurrent=True) ),
-            ("Copy Cancel-list", self.copyCancelList ),
+            ("Duplicate current extra move-prop", None ),
+            ("Duplicate current extra move-prop list", None ),
+        ]
+        
+        requirementCreationMenu = [
+            ("Insert new requirement to current list", None ),
+            ("Create new requirement list", None ),
+            ("", "separator" ),
+            ("Duplicate current requirement list", None ),
+        ]
+        
+        cancelCreationMenu = [
+            ("Insert new cancel to current list", self.insertNewCancel ),
+            ("Create new cancel-list", self.createCancelList ),
+            ("", "separator" ),
+            ("Duplicate current cancel", lambda self=self: self.insertNewCancel(copyCurrent=True) ),
+            ("Duplicate current cancel-list", self.copyCancelList ),
+        ]
+        
+        hitconditionCreationMenu = [
+            ("Insert new hit-condition to current list", self.insertNewHitCondition ),
+            ("Create new hit-condition list", lambda self=self: self.copyHitconditionList(0) ),
+            ("", "separator" ),
+            ("Duplicate current hit-condition", lambda self=self: self.insertNewHitCondition(copyCurrent=True) ),
+            ("Duplicate current hit-condition list", self.copyHitconditionList ),
         ]
         
         creationMenu = [
-            ("Cancel", cancelCreationMenu)
+            ("Cancel", cancelCreationMenu),
+            ("Hit-condition", hitconditionCreationMenu),
+            ("Move", moveCreationMenu),
+            ("Extra move-property", extrapropCreationMenu),
+            ("Requirement", requirementCreationMenu),
         ]
         
         deletionMenu = [
             ("Current cancel", self.deleteCurrentCancel),
+            ("Current cancel-list", self.deleteCurrentCancelList),
+            ("", "separator"),
+            ("Current hit-condition", None),
+            ("Current hit-condition list", None),
+            ("", "separator"),
+            ("Current move", None),
+            ("", "separator"),
+            ("Current extra move-prop", None),
+            ("Current extra move-prop list", None),
+            ("", "separator"),
+            ("Current requirement", None)
         ]
         
         menuActions = [
@@ -1386,7 +1454,6 @@ class GUI_TekkenMovesetEditor():
     def setConditionList(self, itemId):
         if itemId < 0 or itemId >= len(self.movelist['hit_conditions']):
             return
-        itemList = []
         id = itemId
         endValue = reqListEndval[self.movelist['version']]
         while True:
@@ -1414,11 +1481,31 @@ class GUI_TekkenMovesetEditor():
         id = cancelId
         while self.movelist['cancels'][id]['command'] != 0x8000:
             id += 1
-        cancelList = [cancel for cancel in self.movelist['cancels'][cancelId:id + 1]]
+        cancelList = [cancel.copy() for cancel in self.movelist['cancels'][cancelId:id + 1]]
         
         listIndex = len(self.movelist['cancels'])
         self.movelist['cancels'] += cancelList
         self.setCancelList(listIndex)
+        
+    def deleteCurrentCancelList(self):
+        if self.CancelEditor.editMode == None:
+            return
+        startingId = self.CancelEditor.baseId
+        listLen = len(self.CancelEditor.itemList)
+        
+        title = 'Delete cancel-list %d' % (startingId)
+        message = 'Are you sure you want to delete the cancel-list %d (%d cancels)?\nMove IDs will be properly shifted down.' % (startingId, listLen)
+        result = messagebox.askquestion(title, message, icon='warning')
+        
+        if result == 'yes':
+            self.movelist['cancels'] = self.movelist['cancels'][:startingId] + self.movelist['cancels'][startingId + listLen:]
+        
+            for move in self.movelist['moves']:
+                if move['cancel_idx'] > startingId:
+                    move['cancel_idx'] -= listLen
+            
+            messagebox.showinfo('Return', 'Cancel-list successfully deleted.')
+            self.CancelEditor.resetForm()
         
     def deleteCurrentCancel(self):
         if self.CancelEditor.editMode == None:
@@ -1449,7 +1536,7 @@ class GUI_TekkenMovesetEditor():
         if not copyCurrent:
             newCancel = {f:0 for f in cancelFields}
         else:
-            newCancel = self.movelist['cancels'][insertPoint]
+            newCancel = self.movelist['cancels'][insertPoint].copy()
         
         self.movelist['cancels'].insert(insertPoint, newCancel)
         
@@ -1459,6 +1546,129 @@ class GUI_TekkenMovesetEditor():
         
         self.setCancelList(self.CancelEditor.baseId)
         self.CancelEditor.setItem(index)
+        
+    def createGroupCancelList(self):
+        if self.movelist == None:
+            return
+        newCancel = {f:0 for f in cancelFields}
+        newCancel['command'] = 0x800c
+        
+        self.movelist['group_cancels'].append(newCancel)
+        self.openGroupCancel(len(self.movelist['group_cancels']) - 1)
+        
+    def copyGroupCancelList(self):
+        if self.GroupCancelEditor == None:
+            return
+            
+        cancelId = self.GroupCancelEditor.CancelEditor.baseId
+        id = cancelId
+        while self.movelist['group_cancels'][id]['command'] != 0x800c:
+            id += 1
+        cancelList = [cancel.copy() for cancel in self.movelist['group_cancels'][cancelId:id + 1]]
+        
+        listIndex = len(self.movelist['group_cancels'])
+        self.movelist['group_cancels'] += cancelList
+        self.openGroupCancel(listIndex)
+        
+    def deleteCurrentGroupCancelList(self):
+        if self.GroupCancelEditor == None:
+            return
+        startingId = self.GroupCancelEditor.CancelEditor.baseId
+        listLen = len(self.GroupCancelEditor.CancelEditor.itemList)
+        
+        title = 'Delete group cancel-list %d' % (startingId)
+        message = 'Are you sure you want to delete the group cancel-list %d (%d cancels)?' % (startingId, listLen)
+        result = messagebox.askquestion(title, message, icon='warning')
+        
+        if result == 'yes':
+            self.movelist['group_cancels'] = self.movelist['group_cancels'][:startingId] + self.movelist['group_cancels'][startingId + listLen:]
+        
+            for cancel in self.movelist['cancels']:
+                if cancel['command'] == 0x800b and cancel['move_id'] > startingId:
+                    cancel['move_id'] -= listLen
+            
+            messagebox.showinfo('Return', 'Group cancel-list successfully deleted.')
+            self.GroupCancelEditor.on_close()
+            
+        
+    def deleteCurrentGroupCancel(self):
+        if self.GroupCancelEditor == None:
+            return
+        
+        listIndex = self.GroupCancelEditor.CancelEditor.listIndex
+        index = self.GroupCancelEditor.CancelEditor.id
+        resetForm = (self.movelist['group_cancels'][index]['command'] == 0x800c)
+        self.movelist['group_cancels'].pop(index)
+        
+        for cancel in self.movelist['cancels']:
+            if cancel['command'] == 0x800b and cancel['move_id'] > index:
+                cancel['move_id'] -= 1
+        
+        if not resetForm:
+            self.openGroupCancel(self.GroupCancelEditor.CancelEditor.baseId)
+            self.GroupCancelEditor.CancelEditor.setItem(listIndex)
+        else:
+            self.GroupCancelEditor.CancelEditor.resetForm()
+        
+    def insertNewGroupCancel(self, copyCurrent=False):
+        if self.GroupCancelEditor == None:
+            return
+        
+        index = self.GroupCancelEditor.CancelEditor.listIndex
+        insertPoint = self.GroupCancelEditor.CancelEditor.id
+        
+        if not copyCurrent:
+            newCancel = {f:0 for f in cancelFields}
+        else:
+            newCancel = self.movelist['group_cancels'][insertPoint].copy()
+        
+        self.movelist['group_cancels'].insert(insertPoint, newCancel)
+        
+        for move in self.movelist['moves']:
+            if move['cancel_idx'] > insertPoint:
+                move['cancel_idx'] += 1
+        
+        self.openGroupCancel(self.GroupCancelEditor.CancelEditor.baseId)
+        self.GroupCancelEditor.CancelEditor.setItem(index)
+        
+    def insertNewHitCondition(self, copyCurrent=False):
+        if self.HitConditionEditor.editMode == None:
+            return
+        
+        index = self.HitConditionEditor.listIndex
+        insertPoint = self.HitConditionEditor.id
+        
+        if not copyCurrent:
+            newHitCondition = {f:0 for f in hitConditionFields}
+        else:
+            newHitCondition = self.movelist['hit_conditions'][insertPoint].copy()
+        
+        self.movelist['hit_conditions'].insert(insertPoint, newHitCondition)
+        
+        for move in self.movelist['moves']:
+            if move['hit_condition_idx'] > insertPoint:
+                move['hit_condition_idx'] += 1
+        
+        self.setConditionList(self.HitConditionEditor.baseId)
+        self.HitConditionEditor.setItem(index)
+        
+    def copyHitconditionList(self, forceId=None):
+        if self.HitConditionEditor.editMode == None:
+            return
+            
+        itemId = self.HitConditionEditor.baseId if forceId == None else forceId
+        id = itemId
+        endValue = reqListEndval[self.movelist['version']]
+        while True:
+            reqIdx = self.movelist['hit_conditions'][id]['requirement_idx'] 
+            if self.movelist['requirements'][reqIdx]['req'] == endValue:
+                break
+            id += 1
+        itemList = [item.copy() for item in self.movelist['hit_conditions'][itemId:id + 1]]
+        
+        listIndex = len(self.movelist['hit_conditions'])
+        self.movelist['hit_conditions'] += itemList
+        self.setConditionList(listIndex)
         
     def saveField(self, key, id, field, value):
         if field != None:
