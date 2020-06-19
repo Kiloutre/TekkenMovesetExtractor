@@ -1229,8 +1229,8 @@ class GUI_TekkenMovesetEditor():
             ("Insert new Cancel to list", self.insertNewCancel ),
             ("Create Cancel-List", self.createCancelList ),
             ("", "separator" ),
-            ("Copy selected cancel to list", None ),
-            ("Copy Cancel-list", None ),
+            ("Copy selected cancel to current list", lambda self=self: self.insertNewCancel(copyCurrent=True) ),
+            ("Copy Cancel-list", self.copyCancelList ),
         ]
         
         creationMenu = [
@@ -1358,7 +1358,6 @@ class GUI_TekkenMovesetEditor():
     def setCancelList(self, cancelId):
         if cancelId < 0 or cancelId >= len(self.movelist['cancels']):
             return
-        cancelList = []
         id = cancelId
         while self.movelist['cancels'][id]['command'] != 0x8000:
             id += 1
@@ -1368,7 +1367,6 @@ class GUI_TekkenMovesetEditor():
     def setRequirementList(self, requirementId):
         if requirementId < 0 or requirementId >= len(self.movelist['requirements']):
             return
-        reqList = []
         id = requirementId
         endValue = reqListEndval[self.movelist['version']]
         while self.movelist['requirements'][id]['req'] != endValue:
@@ -1379,7 +1377,6 @@ class GUI_TekkenMovesetEditor():
     def setExtrapropList(self, propId):
         if propId < 0 or propId >= len(self.movelist['extra_move_properties']):
             return
-        propList = []
         id = propId
         while self.movelist['extra_move_properties'][id]['type'] != 0:
             id += 1
@@ -1409,6 +1406,20 @@ class GUI_TekkenMovesetEditor():
         self.movelist['cancels'].append(newCancel)
         self.setCancelList(len(self.movelist['cancels']) - 1)
         
+    def copyCancelList(self):
+        if self.CancelEditor.editMode == None:
+            return
+            
+        cancelId = self.CancelEditor.baseId
+        id = cancelId
+        while self.movelist['cancels'][id]['command'] != 0x8000:
+            id += 1
+        cancelList = [cancel for cancel in self.movelist['cancels'][cancelId:id + 1]]
+        
+        listIndex = len(self.movelist['cancels'])
+        self.movelist['cancels'] += cancelList
+        self.setCancelList(listIndex)
+        
     def deleteCurrentCancel(self):
         if self.CancelEditor.editMode == None:
             return
@@ -1428,13 +1439,17 @@ class GUI_TekkenMovesetEditor():
         else:
             self.CancelEditor.resetForm()
         
-    def insertNewCancel(self):
+    def insertNewCancel(self, copyCurrent=False):
         if self.CancelEditor.editMode == None:
             return
         
-        newCancel = {f:0 for f in cancelFields}
         index = self.CancelEditor.listIndex
         insertPoint = self.CancelEditor.id
+        
+        if not copyCurrent:
+            newCancel = {f:0 for f in cancelFields}
+        else:
+            newCancel = self.movelist['cancels'][insertPoint]
         
         self.movelist['cancels'].insert(insertPoint, newCancel)
         
