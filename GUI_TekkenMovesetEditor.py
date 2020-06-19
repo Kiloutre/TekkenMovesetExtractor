@@ -110,6 +110,16 @@ hitConditionFields = {
     'reaction_list_idx': 'number'
 }
 
+reactionlistExtraFields = [
+    'front_pushback',
+    'back_pushback',
+    'left_side_pushback',
+    'right_side_pushback',
+    'front_ch_pushback',
+    'downed_pushback',
+    'block_pushback'
+]
+
 reactionlistFields = {
     'vertical_pushback': 'number',
     'standing': 'number',
@@ -126,13 +136,13 @@ reactionlistFields = {
     'crouch_block': 'number',
     'wallslump': 'number',
     'downed': 'number',
-    'pushback_idx1': 'number',
-    'pushback_idx2': 'number',
-    'pushback_idx3': 'number',
-    'pushback_idx4': 'number',
-    'pushback_idx5': 'number',
-    'pushback_idx6': 'number',
-    'pushback_idx7': 'number',
+    'front_pushback': 'number',
+    'back_pushback': 'number',
+    'left_side_pushback': 'number',
+    'right_side_pushback': 'number',
+    'front_ch_pushback': 'number',
+    'downed_pushback': 'number',
+    'block_pushback': 'number',
     'u1_1': 'number',
     'u1_2': 'number',
     'u1_3': 'number',
@@ -788,12 +798,12 @@ class ReactionListEditor(FormEditor):
         self.initFields()
         
         self.registerFieldButtons([
-            *[(f, self.root.setPushback) for f in self.fieldTypes if f.startswith('pushback_idx')]
+            *[(f, self.root.setPushback) for f in self.fieldTypes if f in reactionlistExtraFields]
         ])
         
     def save(self):
         if super().save():
-            pushbackFields = [f for f in self.fieldTypes if f.startswith('pushback_idx')]
+            pushbackFields = reactionlistExtraFields
             invalidFields = [f for f in pushbackFields if not validateField('number', self.fieldVar[f].get())]
 
             if len(invalidFields) == 0:
@@ -816,8 +826,9 @@ class ReactionListEditor(FormEditor):
             self.fieldInput[field].config(state='enabled')
             if field in itemData:
                 self.setField(field, itemData[field], True)
+                
         for i, val in enumerate(itemData['pushback_indexes']):
-            self.setField('pushback_idx' + str(i + 1), val, True)
+            self.setField(reactionlistExtraFields[i], val, True)
         for i, val in enumerate(itemData['u1list']):
             self.setField('u1_' + str(i + 1), val, True)
             
