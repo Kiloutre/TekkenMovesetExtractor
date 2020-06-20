@@ -62,6 +62,7 @@ t5_requirements = {
     118: { 't7_id': 151, 'desc': '(ANNA) sTRN_L00F -> sSTEP_01R' },
     124: { 't7_id': 164, 'desc': '(EDDY) Cp_cKAM00_ -> Cp_cr2st00B' },
     125: { 't7_id': 165, 'desc': '(EDDY) Cp_cKAM00_ -> Cp_cr2st00B' },
+    126: { 't7_id': 167, 'desc': '' },
     128: { 't7_id': 182, 'desc': '(PAUL) Esc_st4_y -> wDm_esc_st4_wall' },
     135: { 't7_id': 182, 'desc': '(ANNA) sDw_AIR00_ -> wDm_AirF_00' },
     142: { 't7_id': 216, 'desc': '(ANNA) sDw_AIR00_ -> wDm_AirF_00' },

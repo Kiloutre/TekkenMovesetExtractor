@@ -329,9 +329,9 @@ class CharalistSelector:
         self.visible = False
        
     def show(self):
-        self.root.MovelistSelector.hide()
+        self.root.MoveSelector.hide()
         self.frame.pack(side='left', fill='y')
-        self.root.MovelistSelector.show()
+        self.root.MoveSelector.show()
         self.visible = True
         
     def colorCharacterList(self):
@@ -395,14 +395,14 @@ class CharalistSelector:
         self.filename = filename
         self.last_selection = selection
         
-        self.root.MovelistSelector.setMoves(movelist['moves'], movelist['aliases'])
-        self.root.MovelistSelector.setCharacter(movelist['character_name'])
+        self.root.MoveSelector.setMoves(movelist['moves'], movelist['aliases'])
+        self.root.MoveSelector.setCharacter(movelist['character_name'])
         self.root.movelist = movelist
         self.root.resetForms()
         
         self.hide()
         
-class MovelistSelector:
+class MoveSelector:
     def __init__(self, root, rootFrame):
         self.root = root
         movelistFrame = Frame(rootFrame)
@@ -420,6 +420,20 @@ class MovelistSelector:
         selectedChar = Label(movelistFrame, text="No character selected", bg='#bbb')
         selectedChar.pack(side='bottom', fill='x')
         
+        
+        playMoveFrame = Frame(movelistFrame)
+        playMoveFrame.pack(side='bottom', fill='x')
+        
+            
+        sv = StringVar()
+        sv.trace("w", lambda name, index, mode, sv=sv: self.onMoveidChange(sv))
+        playMoveField = Entry(playMoveFrame, text="Play move", textvariable=sv)
+        playMoveField.pack(side='left')
+        
+        playMoveButton = Button(playMoveFrame, text="Play move ID", command=self.playMove, state="disabled")
+        playMoveButton.pack(side='right')
+        
+        
         movelistSelect = Listbox(movelistFrame, width=30)
         movelistSelect.bind('<<ListboxSelect>>', self.onMoveSelection)
         movelistSelect.pack(side='left', fill='both')
@@ -429,9 +443,46 @@ class MovelistSelector:
         
         movelistSelect.config(yscrollcommand=scrollbar.set)
         
+        self.playMoveId = 0
         self.frame = movelistFrame
         self.selectedChar = selectedChar
         self.movelistSelect = movelistSelect
+        
+        self.playMoveSv = sv
+        self.playMoveButton = playMoveButton
+        
+    def onMoveidChange(self, value):
+        if self.root.movelist == None:
+            return
+            
+        value = value.get()
+        if re.match("[0-9]+", value):
+            moveId = int(value)
+            
+            if moveId >= 0 and moveId < len(self.root.movelist['moves']):
+                self.playMoveId = moveId
+                self.playMoveButton.configure(state="enabled")
+                return
+        
+        self.playMoveButton.configure(state="disabled")
+        
+    def playMove(self):
+        if self.root.movelist == None:
+            return
+        T = importLib.Importer()
+        
+        playerAddr = game_addresses.addr['t7_p1_addr']
+        motbinOffset = game_addresses.addr['t7_motbin_offset']
+        curr_frame_timer_offset = game_addresses.addr['curr_frame_timer_offset']
+        next_move_offset = game_addresses.addr['next_move_offset']
+        
+        moveset = T.readInt(playerAddr + motbinOffset, 8)
+        movelist = T.readInt(moveset + 0x210, 8)
+        
+        moveAddr = movelist + (self.playMoveId * 0xB0)
+        T.writeInt(playerAddr + curr_frame_timer_offset, 1000, 4)
+        T.writeInt(playerAddr + next_move_offset, moveAddr, 8)
+            
        
     def hide(self):
         self.frame.pack_forget()
@@ -447,6 +498,7 @@ class MovelistSelector:
         except:
             pass
         finally:
+            self.playMoveSv.set(str(moveId))
             self.root.setMove(moveId)
             
     def goToCurrentMove(self):
@@ -1219,7 +1271,7 @@ class GUI_TekkenMovesetEditor():
         window.geometry("1280x720")
         
         self.Charalist = CharalistSelector(self, window)
-        self.MovelistSelector = MovelistSelector(self, window)
+        self.MoveSelector = MoveSelector(self, window)
         
         editorFrame = Frame(window)
         editorFrame.pack(side='right', fill='both', expand=1)
@@ -1401,8 +1453,8 @@ class GUI_TekkenMovesetEditor():
             return
         moveData = self.movelist['moves'][moveId]
         self.MoveEditor.setMove(moveData, moveId)
-        self.MovelistSelector.movelistSelect.select_set(moveId)
-        self.MovelistSelector.movelistSelect.see(moveId)
+        self.MoveSelector.movelistSelect.select_set(moveId)
+        self.MoveSelector.movelistSelect.see(moveId)
         
     def setReactionList(self, itemId):
         if itemId < 0 or itemId >= len(self.movelist['reaction_list']):

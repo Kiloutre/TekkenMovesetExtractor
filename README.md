@@ -111,10 +111,12 @@ Administrator rights may be required to import the moveset into memory.
 - Don't force_type the extra move prop that sets opponent move id, look into what the type is used for
 - Look at what function writes MOTA offsets and byteswaps them
 - Dunno if you know already but using Anna's df4 will cause the character's body to spazz out a bit.
+- Build requirements also from group_cancels
 
 - Create tool to view current T7 move data. Cancel list, reactions
 
 Moveset editor:
 - Window to list animations and copy one to another character's folder
 - Fix modifying tag2 movesets, 'if you change the requirement of a move to screw / bound with any tag 2 character, the game insta crashes'
-- MoveId hovers in reaction list?
+- MoveId nmes hovers in reaction list?
+- Reload file button

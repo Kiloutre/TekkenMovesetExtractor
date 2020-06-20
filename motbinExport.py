@@ -144,10 +144,10 @@ structSizes = {
         'Cancel_size': 0x18,
         'ReactionList_size': 0x50,
         'HitCondition_size': 0xC,
-        'ExtraMoveProperty_size': 0xC,
+        'ExtraMoveProperty_size': 0x8,
         'Move_size': 0x4c,
         'Voiceclip_size': 0x4,
-        'InputExtradata_size': 0x8,
+        'InputExtradata_size': 0x4,
         'InputSequence_size': 0x8,
         'Projectile_size': 0x88,
         'ThrowExtra_size': 0xC,
@@ -635,10 +635,10 @@ t5_offsetTable = {
     'movelist_size': { 'offset': 0x1e4, 'size': 4 },
     'voiceclip_list_ptr': { 'offset': 0x1e8, 'size': 4 },
     'voiceclip_list_size': { 'offset': 0x1ec, 'size': 4 },
-    'input_sequence_ptr': { 'offset': None, 'size': 4 }, #unknown
-    'input_sequence_size': { 'offset': None, 'size': 4 }, #unknown
-    'input_extradata_ptr': { 'offset': None, 'size': 4 }, #unknown
-    'input_extradata_size': { 'offset': None, 'size': 4 }, #unknown
+    'input_sequence_ptr': { 'offset': 0x1f0, 'size': 4 }, #unknown
+    'input_sequence_size': { 'offset': 0x1f4, 'size': 4 }, #unknown
+    'input_extradata_ptr': { 'offset': 0x1f8, 'size': 4 }, #unknown
+    'input_extradata_size': { 'offset': 0x1fc, 'size': 4 }, #unknown
     'unknown_parryrelated_list_ptr': { 'offset': None, 'size': 4 }, #unknown
     'unknown_parryrelated_list_size': { 'offset': None, 'size': 4 }, #unknown
     'throw_extras_ptr': { 'offset': None, 'size': 4 }, #unknown
@@ -647,8 +647,8 @@ t5_offsetTable = {
     'throws_size': { 'offset': None, 'size': 4 }, #unknown
     
     'mota_start': { 'offset': 0x240, 'size': None },
-    'aliases': { 'offset': 0x18, 'size': (70, 4) },
-    'aliases2': { 'offset': 0x13e, 'size': (5, 4) },
+    'aliases': { 'offset': 0x18, 'size': (73, 4) },
+    'aliases2': { 'offset': 0x13e, 'size': (37, 2) },
     
     'pushback:val1': { 'offset': 0x0, 'size': 2 },
     'pushback:val2': { 'offset': 0x2, 'size': 2 },
@@ -693,9 +693,9 @@ t5_offsetTable = {
     'hitcondition:damage': { 'offset': 0x4, 'size': 2 },
     'hitcondition:reaction_list_addr': { 'offset': 0x8, 'size': 4 },
     
-    'extramoveprop:type': { 'offset': 0x0, 'size': 4 },
-    'extramoveprop:id': { 'offset': 0x4, 'size': 4 },
-    'extramoveprop:value': { 'offset': 0x8, 'size': 4 },    
+    'extramoveprop:type': { 'offset': 0x0, 'size': 2 },
+    'extramoveprop:id': { 'offset': 0x2, 'size': 2 },
+    'extramoveprop:value': { 'offset': 0x4, 'size': 4 },    
     
     'move:name': { 'offset': 0x0, 'size': 'stringPtr' },
     'move:anim_name': { 'offset': 0x4, 'size': 'stringPtr' },
@@ -733,8 +733,8 @@ t5_offsetTable = {
     
     'voiceclip:value': { 'offset': 0x0, 'size': 4 },
     
-    'inputextradata:u1': { 'offset': 0x0, 'size': 4 },
-    'inputextradata:u2': { 'offset': 0x4, 'size': 4 },
+    'inputextradata:u1': { 'offset': 0x0, 'size': 2 },
+    'inputextradata:u2': { 'offset': 0x2, 'size': 2 },
     
     'inputsequence:u1': { 'offset': 0x1, 'size': 1 },
     'inputsequence:u2': { 'offset': 0x2, 'size': 2 },
@@ -1382,7 +1382,9 @@ class Motbin:
         self.version = versionLabels[self.TekkenVersion]
         self.extraction_date = datetime.now(timezone.utc).__str__()
         self.extraction_path = ''
-
+        
+        self.aliases2 = []
+        
         try:
             readOffsetTable(self, '')
             
@@ -1475,6 +1477,7 @@ class Motbin:
             'date': self.date,
             'fulldate': self.fulldate,
             'aliases': self.aliases,
+            'aliases2': self.aliases2,
             'requirements': self.requirements,
             'cancels': self.cancels,
             'group_cancels': self.group_cancels,

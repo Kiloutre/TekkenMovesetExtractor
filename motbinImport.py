@@ -197,7 +197,13 @@ class Importer:
         for alias in m['aliases']:
             self.writeInt(motbin_ptr + alias_offset, alias, 2)
             alias_offset += 2
-        
+            
+        if 'aliases2' in m:
+            alias_offset = 0xba
+            for alias in m['aliases2']:
+                self.writeInt(motbin_ptr + alias_offset, alias, 2)
+                alias_offset += 2
+            
 def versionMatches(version):
     pos = version.rfind('.')
     exportUpperVersion = version[:pos]
