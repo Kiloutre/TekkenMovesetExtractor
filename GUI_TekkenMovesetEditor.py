@@ -1687,9 +1687,9 @@ class GUI_TekkenMovesetEditor():
         
         self.movelist['group_cancels'].insert(insertPoint, newCancel)
         
-        for move in self.movelist['moves']:
-            if move['cancel_idx'] > insertPoint:
-                move['cancel_idx'] += 1
+        for cancel in self.movelist['cancels']:
+            if cancel['command'] == 0x800b and cancel['move_id'] > insertPoint:
+                cancel['move_id'] -= 1
         
         self.openGroupCancel(self.GroupCancelEditor.CancelEditor.baseId)
         self.GroupCancelEditor.CancelEditor.setItem(index)
