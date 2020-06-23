@@ -1361,8 +1361,8 @@ class GUI_TekkenMovesetEditor():
             ("Current cancel", self.deleteCurrentCancel),
             ("Current cancel-list", self.deleteCurrentCancelList),
             ("", "separator"),
-            ("Current hit-condition", None),
-            ("Current hit-condition list", None),
+            ("Current hit-condition", self.deleteCurrentHitcondition),
+            ("Current hit-condition list", self.deleteCurrentHitconditionList),
             ("", "separator"),
             ("Current move", None),
             ("", "separator"),
@@ -1393,7 +1393,7 @@ class GUI_TekkenMovesetEditor():
             self.updateCharacterlist()
         else:
             self.setCharaFrame.toggleVisibility()
-            
+            7
         self.resetForms()
             
     def setTitle(self, label = ""):
@@ -1925,6 +1925,48 @@ class GUI_TekkenMovesetEditor():
         listIndex = len(self.movelist['hit_conditions'])
         self.movelist['hit_conditions'] += itemList
         self.setConditionList(listIndex)
+        
+    def deleteCurrentHitcondition(self):
+        if self.HitConditionEditor == None:
+            return
+        
+        listIndex = self.HitConditionEditor.listIndex
+        index = self.HitConditionEditor.id
+        endValue = reqListEndval[self.movelist['version']]
+        reqIdx = self.movelist['hit_conditions'][index]['requirement_idx']
+        resetForm = self.movelist['requirements'][reqIdx]['req'] == endValue
+        
+        self.movelist['hit_conditions'].pop(index)
+        
+        for move in self.movelist['moves']:
+            if move['hit_condition_idx'] > index:
+                move['hit_condition_idx'] -= 1
+        
+        if not resetForm:
+            self.setConditionList(self.HitConditionEditor.baseId)
+            self.HitConditionEditor.setItem(listIndex)
+        else:
+            self.HitConditionEditor.resetForm()
+        
+    def deleteCurrentHitconditionList(self):
+        if self.HitConditionEditor.editMode == None:
+            return
+        startingId = self.HitConditionEditor.baseId
+        listLen = len(self.HitConditionEditor.itemList)
+        
+        title = 'Delete hit-condition list %d' % (startingId)
+        message = 'Are you sure you want to delete the hit-condition list %d (%d items)?\nIDs will be properly shifted down.' % (startingId, listLen)
+        result = messagebox.askquestion(title, message, icon='warning')
+        
+        if result == 'yes':
+            self.movelist['hit_condition_idx'] = self.movelist['hit_condition_idx'][:startingId] + self.movelist['hit_condition_idx'][startingId + listLen:]
+        
+            for move in self.movelist['moves']:
+                if move['hit_condition_idx'] > startingId:
+                    move['hit_condition_idx'] -= listLen
+            
+            messagebox.showinfo('Return', 'Hit-condition list successfully deleted.')
+            self.HitConditionEditor.resetForm()
         
     def saveField(self, key, id, field, value):
         if field != None:
