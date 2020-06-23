@@ -1202,7 +1202,7 @@ class GroupCancelWindow:
             ("Insert new group-cancel to current list", self.root.insertNewGroupCancel),
             ("Create group-cancel list", self.root.createGroupCancelList),
             ("", "separator" ),
-            ("Duplicate current group-cancel list", lambda self=self: self.root.insertNewGroupCancel(copyCurrent=True) ),
+            ("Duplicate current group-cancel", lambda self=self: self.root.insertNewGroupCancel(copyCurrent=True) ),
             ("Duplicate current group-cancel list", self.root.copyGroupCancelList),
         ]
         
@@ -1690,7 +1690,7 @@ class GUI_TekkenMovesetEditor():
         
         for cancel in self.movelist['cancels']:
             if cancel['command'] == 0x800b and cancel['move_id'] > insertPoint:
-                cancel['move_id'] -= 1
+                cancel['move_id'] += 1
         
         self.openGroupCancel(self.GroupCancelEditor.CancelEditor.baseId)
         self.GroupCancelEditor.CancelEditor.setItem(index)
