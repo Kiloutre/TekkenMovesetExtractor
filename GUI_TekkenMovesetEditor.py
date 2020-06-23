@@ -1320,11 +1320,11 @@ class GUI_TekkenMovesetEditor():
         ]
         
         extrapropCreationMenu = [
-            ("Insert new extra move-prop to current list", None ),
-            ("Create new extra move-prop list", None ),
+            ("Insert new extra move-prop to current list", self.insertNewExtraprop ),
+            ("Create new extra move-prop list", self.createExtrapropList ),
             ("", "separator" ),
-            ("Duplicate current extra move-prop", None ),
-            ("Duplicate current extra move-prop list", None ),
+            ("Duplicate current extra move-prop", lambda self=self: self.insertNewExtraprop(copyCurrent=True) ),
+            ("Duplicate current extra move-prop list", self.copyExtrapropList ),
         ]
         
         requirementCreationMenu = [
@@ -1367,8 +1367,8 @@ class GUI_TekkenMovesetEditor():
             ("", "separator"),
             ("Current move", None),
             ("", "separator"),
-            ("Current extra move-prop", None),
-            ("Current extra move-prop list", None),
+            ("Current extra move-prop", self.deleteCurrentExtraprop),
+            ("Current extra move-prop list", self.deleteCurrentExtraproplist),
             ("", "separator"),
             ("Current requirement", None)
         ]
@@ -1558,7 +1558,7 @@ class GUI_TekkenMovesetEditor():
         listLen = len(self.CancelEditor.itemList)
         
         title = 'Delete cancel-list %d' % (startingId)
-        message = 'Are you sure you want to delete the cancel-list %d (%d cancels)?\nMove IDs will be properly shifted down.' % (startingId, listLen)
+        message = 'Are you sure you want to delete the cancel-list %d (%d cancels)?\nCancel IDs will be properly shifted down.' % (startingId, listLen)
         result = messagebox.askquestion(title, message, icon='warning')
         
         if result == 'yes':
@@ -1610,6 +1610,91 @@ class GUI_TekkenMovesetEditor():
         
         self.setCancelList(self.CancelEditor.baseId)
         self.CancelEditor.setItem(index)
+        
+        
+        
+    def createExtrapropList(self):
+        if self.movelist == None:
+            return
+        newProp = {f:0 for f in extrapropFields}
+        
+        self.movelist['extra_move_properties'].append(newProp)
+        self.setCancelList(len(self.movelist['extra_move_properties']) - 1)
+        
+    def copyExtrapropList(self):
+        if self.ExtrapropEditor.editMode == None:
+            return
+            
+        baseId = self.ExtrapropEditor.baseId
+        id = baseId
+        while self.movelist['extra_move_properties'][id]['type'] != 0:
+            id += 1
+        propList = [prop.copy() for prop in self.movelist['extra_move_properties'][baseId:id + 1]]
+        
+        listIndex = len(self.movelist['extra_move_properties'])
+        self.movelist['extra_move_properties'] += propList
+        self.setExtrapropList(listIndex)
+        
+    def deleteCurrentExtraproplist(self):
+        if self.ExtrapropEditor.editMode == None:
+            return
+        startingId = self.ExtrapropEditor.baseId
+        listLen = len(self.ExtrapropEditor.itemList)
+        
+        title = 'Delete extra-prop list %d' % (startingId)
+        message = 'Are you sure you want to delete the extra-prop list %d (%d properties)?\nIDs will be properly shifted down.' % (startingId, listLen)
+        result = messagebox.askquestion(title, message, icon='warning')
+        
+        if result == 'yes':
+            self.movelist['extra_move_properties'] = self.movelist['extra_move_properties'][:startingId] + self.movelist['extra_move_properties'][startingId + listLen:]
+        
+            for move in self.movelist['moves']:
+                if move['extra_properties_idx'] > startingId:
+                    move['extra_properties_idx'] -= listLen
+            
+            messagebox.showinfo('Return', 'Extra-prop list successfully deleted.')
+            self.ExtrapropEditor.resetForm()
+        
+    def deleteCurrentExtraprop(self):
+        if self.ExtrapropEditor.editMode == None:
+            return
+        
+        listIndex = self.ExtrapropEditor.listIndex
+        index = self.ExtrapropEditor.id
+        resetForm = (self.movelist['extra_move_properties'][index]['type'] == 0)
+        self.movelist['extra_move_properties'].pop(index)
+        
+        for move in self.movelist['moves']:
+            if move['extra_properties_idx'] > index:
+                move['extra_properties_idx'] -= 1
+        
+        if not resetForm:
+            self.setExtrapropList(self.ExtrapropEditor.baseId)
+            self.ExtrapropEditor.setItem(listIndex)
+        else:
+            self.ExtrapropEditor.resetForm()
+        
+    def insertNewExtraprop(self, copyCurrent=False):
+        if self.ExtrapropEditor.editMode == None:
+            return
+        
+        index = self.ExtrapropEditor.listIndex
+        insertPoint = self.ExtrapropEditor.id
+        
+        if not copyCurrent:
+            newProp = {f:0 for f in extrapropFields}
+        else:
+            newProp = self.movelist['extra_move_properties'][insertPoint].copy()
+        
+        self.movelist['extra_move_properties'].insert(insertPoint, newProp)
+        
+        for move in self.movelist['moves']:
+            if move['extra_properties_idx'] > insertPoint:
+                move['extra_properties_idx'] += 1
+        
+        self.setExtrapropList(self.ExtrapropEditor.baseId)
+        self.ExtrapropEditor.setItem(index)
+        
         
     def createGroupCancelList(self):
         if self.movelist == None:
