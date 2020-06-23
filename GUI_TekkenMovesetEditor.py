@@ -1354,6 +1354,11 @@ class GUI_TekkenMovesetEditor():
             ("Duplicate current reaction-list", lambda self=self: self.createNewReactionlist(copyCurrent=True)  ),
         ]
         
+        pushbackCreationMenu = [
+            ("Create new pushback", self.createNewPushback),
+            ("Duplicate current pushback", lambda self=self: self.createNewPushback(copyCurrent=True)  ),
+        ]
+        
         creationMenu = [
             ("Cancel", cancelCreationMenu),
             ("Hit-condition", hitconditionCreationMenu),
@@ -1361,6 +1366,7 @@ class GUI_TekkenMovesetEditor():
             ("Extra move-property", extrapropCreationMenu),
             ("Requirement", requirementCreationMenu),
             ("Reaction-list", reactionListCreationMenu),
+            ("Pushback", pushbackCreationMenu),
         ]
 
         deletionMenu = [
@@ -1378,7 +1384,9 @@ class GUI_TekkenMovesetEditor():
             ("Current requirement", self.deleteCurrentRequirement),
             ("Current requirement list", self.deleteCurrentRequirementList),
             ("", "separator"),
-            ("Current reaction list", self.deleteReactionList)
+            ("Current reaction list", self.deleteReactionList),
+            ("", "separator"),
+            ("Current pushback", self.deletePushback)
         ]
         
         menuActions = [
@@ -1996,6 +2004,33 @@ class GUI_TekkenMovesetEditor():
                 hitCondition['reaction_list_idx'] -= 1
 
         self.ReactionListEditor.resetForm()
+        
+    def createNewPushback(self, copyCurrent=False):
+        if copyCurrent and self.PushbackEditor.editMode == None:
+            return
+            
+        if not copyCurrent:
+            newPushback = {f:0 for f in pushbackFields}
+        else:
+            newPushback = self.movelist['pushbacks'][self.PushbackEditor.id].copy()
+        
+        itemIndex = len(self.movelist['pushbacks'])
+        self.movelist['pushbacks'].append(newPushback)
+        self.setPushback(itemIndex)
+        
+    def deletePushback(self):
+        if self.PushbackEditor == None:
+            return
+        
+        index = self.PushbackEditor.id
+        self.movelist['pushbacks'].pop(index)
+        
+        for reactionList in self.movelist['reaction_list']:
+            for i, p in enumerate(reactionList['pushback_indexes']):
+                if p > index:
+                    reactionList['pushback_indexes'][i] -= 1
+
+        self.PushbackEditor.resetForm()
         
     def saveField(self, key, id, field, value):
         if field != None:
