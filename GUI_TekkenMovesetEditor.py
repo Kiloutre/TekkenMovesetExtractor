@@ -748,7 +748,6 @@ class HitConditionEditor(FormEditor):
         self.editMode = True
         
         reactionlistId = self.fieldValue['reaction_list_idx']
-        self.root.setReactionList(reactionlistId)
         self.disableSaveButton()
             
 class VoiceclipEditor(FormEditor):
@@ -1241,11 +1240,11 @@ class GroupCancelWindow:
         self.CancelEditor.setItemList(cancelList, cancelId)
         self.setTitle('Group %d' % (cancelId))
         
-def createMenu(root, menuActions, rootMenu=True):
+def createMenu(root, menuActions, validationFunc=None, rootMenu=True):
     newMenu = Menu(root, tearoff=0)
     for label, command in menuActions:
         if isinstance(command, list):
-            subMenu = createMenu(newMenu, command, False)
+            subMenu = createMenu(newMenu, command, validationFunc=validationFunc, rootMenu=False)
             newMenu.add_cascade(label=label, menu=subMenu)
         elif command == "separator":
             if rootMenu:
@@ -1255,7 +1254,8 @@ def createMenu(root, menuActions, rootMenu=True):
         elif command == None:
             newMenu.add_command(label=label, state="disabled")
         else:
-            newMenu.add_command(label=label, command=command)
+            wrappedFunction = lambda validationFunc=validationFunc, command=command : command() if validationFunc() else None
+            newMenu.add_command(label=label, command=wrappedFunction)
     return newMenu
         
 class GUI_TekkenMovesetEditor():
@@ -1349,14 +1349,20 @@ class GUI_TekkenMovesetEditor():
             ("Duplicate current hit-condition list", self.copyHitconditionList ),
         ]
         
+        reactionListCreationMenu = [
+            ("Create new reaction-list", self.createNewReactionlist),
+            ("Duplicate current reaction-list", lambda self=self: self.createNewReactionlist(copyCurrent=True)  ),
+        ]
+        
         creationMenu = [
             ("Cancel", cancelCreationMenu),
             ("Hit-condition", hitconditionCreationMenu),
             ("Move", moveCreationMenu),
             ("Extra move-property", extrapropCreationMenu),
             ("Requirement", requirementCreationMenu),
+            ("Reaction-list", reactionListCreationMenu),
         ]
-        
+
         deletionMenu = [
             ("Current cancel", self.deleteCurrentCancel),
             ("Current cancel-list", self.deleteCurrentCancelList),
@@ -1370,7 +1376,9 @@ class GUI_TekkenMovesetEditor():
             ("Current extra move-prop list", self.deleteCurrentExtraproplist),
             ("", "separator"),
             ("Current requirement", self.deleteCurrentRequirement),
-            ("Current requirement list", self.deleteCurrentRequirementList)
+            ("Current requirement list", self.deleteCurrentRequirementList),
+            ("", "separator"),
+            ("Current reaction list", self.deleteReactionList)
         ]
         
         menuActions = [
@@ -1383,7 +1391,7 @@ class GUI_TekkenMovesetEditor():
             ("Delete", deletionMenu ),
         ]
         
-        menu = createMenu(window, menuActions)
+        menu = createMenu(window, menuActions, validationFunc=self.canEditMoveset)
         window.config(menu=menu)
         
         
@@ -1528,9 +1536,10 @@ class GUI_TekkenMovesetEditor():
         itemList = [item for item in self.movelist['hit_conditions'][itemId:id + 1]]
         self.HitConditionEditor.setItemList(itemList, itemId)
         
+    def canEditMoveset(self):
+        return self.movelist != None
+        
     def createCancelList(self):
-        if self.movelist == None:
-            return
         newCancel = {f:0 for f in cancelFields}
         newCancel['command'] = 0x8000
         
@@ -1612,8 +1621,6 @@ class GUI_TekkenMovesetEditor():
         self.CancelEditor.setItem(index)
         
     def createExtrapropList(self):
-        if self.movelist == None:
-            return
         newProp = {f:0 for f in extrapropFields}
         
         self.movelist['extra_move_properties'].append(newProp)
@@ -1695,8 +1702,6 @@ class GUI_TekkenMovesetEditor():
         self.ExtrapropEditor.setItem(index)
         
     def createRequirementList(self):
-        if self.movelist == None:
-            return
         newProp = {f:0 for f in requirementFields}
         newProp['req'] = reqListEndval[self.movelist['version']]
         
@@ -1775,7 +1780,7 @@ class GUI_TekkenMovesetEditor():
             self.RequirementEditor.resetForm()
         
     def insertNewRequirement(self, copyCurrent=False):
-        if self.RequirementEditor.editMode == None:
+        if copyCurrent == True and self.RequirementEditor.editMode == None:
             return
         
         index = self.RequirementEditor.listIndex
@@ -1803,10 +1808,7 @@ class GUI_TekkenMovesetEditor():
         self.setRequirementList(self.RequirementEditor.baseId)
         self.RequirementEditor.setItem(index)
         
-        
     def createGroupCancelList(self):
-        if self.movelist == None:
-            return
         newCancel = {f:0 for f in cancelFields}
         newCancel['command'] = 0x800c
         
@@ -1830,6 +1832,7 @@ class GUI_TekkenMovesetEditor():
     def deleteCurrentGroupCancelList(self):
         if self.GroupCancelEditor == None:
             return
+            
         startingId = self.GroupCancelEditor.CancelEditor.baseId
         listLen = len(self.GroupCancelEditor.CancelEditor.itemList)
         
@@ -1867,7 +1870,7 @@ class GUI_TekkenMovesetEditor():
             self.GroupCancelEditor.CancelEditor.resetForm()
         
     def insertNewGroupCancel(self, copyCurrent=False):
-        if self.GroupCancelEditor == None:
+        if copyCurrent and self.GroupCancelEditor == None:
             return
         
         index = self.GroupCancelEditor.CancelEditor.listIndex
@@ -1888,7 +1891,7 @@ class GUI_TekkenMovesetEditor():
         self.GroupCancelEditor.CancelEditor.setItem(index)
         
     def insertNewHitCondition(self, copyCurrent=False):
-        if self.HitConditionEditor.editMode == None:
+        if copyCurrent and self.HitConditionEditor.editMode == None:
             return
         
         index = self.HitConditionEditor.listIndex
@@ -1909,7 +1912,7 @@ class GUI_TekkenMovesetEditor():
         self.HitConditionEditor.setItem(index)
         
     def copyHitconditionList(self, forceId=None):
-        if self.HitConditionEditor.editMode == None:
+        if forceId == None and self.HitConditionEditor.editMode == None:
             return
             
         itemId = self.HitConditionEditor.baseId if forceId == None else forceId
@@ -1959,7 +1962,7 @@ class GUI_TekkenMovesetEditor():
         result = messagebox.askquestion(title, message, icon='warning')
         
         if result == 'yes':
-            self.movelist['hit_condition_idx'] = self.movelist['hit_condition_idx'][:startingId] + self.movelist['hit_condition_idx'][startingId + listLen:]
+            self.movelist['hit_conditions'] = self.movelist['hit_conditions'][:startingId] + self.movelist['hit_conditions'][startingId + listLen:]
         
             for move in self.movelist['moves']:
                 if move['hit_condition_idx'] > startingId:
@@ -1967,6 +1970,32 @@ class GUI_TekkenMovesetEditor():
             
             messagebox.showinfo('Return', 'Hit-condition list successfully deleted.')
             self.HitConditionEditor.resetForm()
+        
+    def createNewReactionlist(self, copyCurrent=False):
+        if copyCurrent and self.ReactionListEditor.editMode == None:
+            return
+            
+        if not copyCurrent:
+            newReactionlist = self.movelist['reaction_list'][0].copy()
+        else:
+            newReactionlist = self.movelist['reaction_list'][self.ReactionListEditor.id].copy()
+        
+        itemIndex = len(self.movelist['reaction_list'])
+        self.movelist['reaction_list'].append(newReactionlist)
+        self.setReactionList(itemIndex)
+        
+    def deleteReactionList(self):
+        if self.ReactionListEditor == None:
+            return
+        
+        index = self.ReactionListEditor.id
+        self.movelist['reaction_list'].pop(index)
+        
+        for hitCondition in self.movelist['hit_conditions']:
+            if hitCondition['reaction_list_idx'] > index:
+                hitCondition['reaction_list_idx'] -= 1
+
+        self.ReactionListEditor.resetForm()
         
     def saveField(self, key, id, field, value):
         if field != None:
