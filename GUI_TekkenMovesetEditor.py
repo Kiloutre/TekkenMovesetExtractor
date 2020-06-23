@@ -17,6 +17,7 @@ reqListEndval = {
     'Revolution': 697,
     'Tekken6': 397,
     'Tekken5': 327,
+    'Tekken4': 263,
 }
 
 itemNames = {

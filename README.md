@@ -120,3 +120,4 @@ Moveset editor:
 - Fix modifying tag2 movesets, 'if you change the requirement of a move to screw / bound with any tag 2 character, the game insta crashes'
 - MoveId nmes hovers in reaction list?
 - Reload file button
+- "Find out what cancels into this move" button

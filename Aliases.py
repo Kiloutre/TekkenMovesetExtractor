@@ -3,6 +3,7 @@ from Tag2Aliases import tag2_requirements, tag2_extra_move_properties, tag2_char
 from RevAliases import rev_requirements, getRevExtraprop
 from T6Aliases import t6_requirements, t6_extra_move_properties
 from T5Aliases import t5_requirements, getT5Extraprop
+from T4Aliases import t4_requirements, getT4Extraprop
 
 versionAliases = {
     'Tag2': {
@@ -28,6 +29,10 @@ versionAliases = {
     'Tekken5': {
         'requirements': t5_requirements,
         'extraprop_func': getT5Extraprop #todo
+    },
+    'Tekken4': {
+        'requirements': t4_requirements,
+        'extraprop_func': getT4Extraprop #todo
     },
     'Tekken7': {}
 }

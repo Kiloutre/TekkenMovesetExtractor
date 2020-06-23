@@ -37,6 +37,7 @@ ptrSizes = {
     't6': 4,
     '3d': 4,
     't5': 4,
+    't4': 4,
 }
 
 endians = {
@@ -46,6 +47,7 @@ endians = {
     't6': 'big',
     't5': 'big',
     '3d': 'little',
+    't4': 'little',
 }
 
 swapGameAnimBytes = {
@@ -54,6 +56,7 @@ swapGameAnimBytes = {
     'rev': True,
     't6': True,
     't5': True,
+    't4': False,
     '3d': False
 }
 
@@ -63,6 +66,7 @@ animEndPosFunc = {
     'rev': GetLittleEndianAnimEnd,
     't6': GetLittleEndianAnimEnd,
     't5': GetLittleEndianAnimEnd,
+    't4': GetBigEndianAnimEnd,
     '3d': GetBigEndianAnimEnd,
 }
 
@@ -72,6 +76,7 @@ versionLabels = {
     'rev': 'Revolution',
     't6': 'Tekken6',
     't5': 'Tekken5',
+    't4': 'Tekken4',
     '3d': 'Tekken3D',
 }
 
@@ -146,6 +151,24 @@ structSizes = {
         'HitCondition_size': 0xC,
         'ExtraMoveProperty_size': 0x8,
         'Move_size': 0x4c,
+        'Voiceclip_size': 0x4,
+        'InputExtradata_size': 0x4,
+        'InputSequence_size': 0x8,
+        'Projectile_size': 0x88,
+        'ThrowExtra_size': 0xC,
+        'Throw_size': 0x8,
+        'UnknownParryRelated_size': 0x4
+    },
+    't4': {
+        'Pushback_size': 0xC,
+        'PushbackExtradata_size': 0x2,
+        'Requirement_size': 0x4,
+        'CancelExtradata_size': 0x4,
+        'Cancel_size': 0x14,
+        'ReactionList_size': 0x50,
+        'HitCondition_size': 0xC,
+        'ExtraMoveProperty_size': 0x8,
+        'Move_size': 0x34,
         'Voiceclip_size': 0x4,
         'InputExtradata_size': 0x4,
         'InputSequence_size': 0x8,
@@ -755,17 +778,169 @@ t5_offsetTable = {
     'throwextra:u2': { 'offset': 4, 'size': (4, 2) },
 }
 
+t4_offsetTable = {
+    'character_name': { 'offset': 0x4, 'size': 'invalidStringPtr'},
+    'creator_name': { 'offset': 0x8, 'size': 'invalidStringPtr' },
+    'date': { 'offset': 0xc, 'size': 'stringPtr' },
+    'fulldate': { 'offset': 0x10, 'size': 'stringPtr' },
+    
+    'reaction_list_ptr': { 'offset': 0xdc, 'size': 4 },
+    'reaction_list_size': { 'offset': 0xe0, 'size': 4 },
+    'requirements_ptr': { 'offset': 0xe4, 'size': 4 },
+    'requirement_count': { 'offset': 0xe8, 'size': 4 },
+    'hit_conditions_ptr': { 'offset': 0xec, 'size': 4 },
+    'hit_conditions_size': { 'offset': 0xf0, 'size': 4 },
+    'projectile_ptr': { 'offset': None, 'size': 4 }, #unknown
+    'projectile_size': { 'offset': None, 'size': 4 }, #unknown
+    'pushback_ptr': { 'offset': 0xf4, 'size': 4 },
+    'pushback_list_size': { 'offset': 0xf8, 'size': 4 },
+    'pushback_extradata_ptr': { 'offset': 0xfc, 'size': 4 },
+    'pushback_extradata_size': { 'offset': 0x100, 'size': 4 },
+    'cancel_head_ptr': { 'offset': 0x104, 'size': 4 },  
+    'cancel_list_size': { 'offset': 0x108, 'size': 4 },
+    'group_cancel_head_ptr': { 'offset': 0x10c, 'size': 4 }, 
+    'group_cancel_list_size': { 'offset': 0x110, 'size': 4 }, 
+    'cancel_extradata_head_ptr': { 'offset': None, 'size': 4 }, 
+    'cancel_extradata_list_size': { 'offset': None, 'size': 4 }, 
+    'extra_move_properties_ptr': { 'offset': 0x114, 'size': 4 }, #unknown
+    'extra_move_properties_size': { 'offset': 0x118, 'size': 4 }, #unknown
+    'movelist_head_ptr': { 'offset': 0x11c, 'size': 4 },
+    'movelist_size': { 'offset': 0x120, 'size': 4 },
+    'voiceclip_list_ptr': { 'offset': 0x124, 'size': 4 }, #unknown
+    'voiceclip_list_size': { 'offset': 0x128, 'size': 4 }, #unknown
+    'input_sequence_ptr': { 'offset': None, 'size': 4 }, #unknown
+    'input_sequence_size': { 'offset': None, 'size': 4 }, #unknown
+    'input_extradata_ptr': { 'offset': None, 'size': 4 }, #unknown
+    'input_extradata_size': { 'offset': None, 'size': 4 }, #unknown
+    'unknown_parryrelated_list_ptr': { 'offset': None, 'size': 4 }, #unknown
+    'unknown_parryrelated_list_size': { 'offset': None, 'size': 4 }, #unknown
+    'throw_extras_ptr': { 'offset': None, 'size': 4 }, #unknown
+    'throw_extras_size': { 'offset': None, 'size': 4 }, #unknown
+    'throws_ptr': { 'offset': None, 'size': 4 }, #unknown
+    'throws_size': { 'offset': None, 'size': 4 }, #unknown
+    
+    'mota_start': { 'offset': None, 'size': None },
+    'aliases': { 'offset': 0x14, 'size': (32, 4) },
+    'aliases2': { 'offset': 0x98, 'size': (37, 2) },
+    
+    'pushback:val1': { 'offset': 0x0, 'size': 2 },
+    'pushback:val2': { 'offset': 0x2, 'size': 2 },
+    'pushback:val3': { 'offset': 0x4, 'size': 4 },
+    'pushback:extra_addr': { 'offset': 0x8, 'size': 4 },
+    
+    'pushbackextradata:value': { 'offset': 0x0, 'size': 2 },
+    
+    'requirement:req': { 'offset': 0x0, 'size': 2 },
+    'requirement:param': { 'offset': 0x2, 'size': 2 },
+    
+    'cancelextradata:value': { 'offset': 0x0, 'size': 4 },
+    
+    'cancel:command': { 'offset': 0x0, 'size': 4 },
+    'cancel:requirement_addr': { 'offset': 0x4, 'size': 4 },
+    'cancel:extradata_addr': { 'offset': 0xc, 'size': 4 },
+    'cancel:frame_window_start': { 'offset': 0x10, 'size': 2 },
+    'cancel:frame_window_end': { 'offset': 0x12, 'size': 2 },
+    'cancel:starting_frame': { 'offset': 0x14, 'size': 2 },
+    'cancel:move_id': { 'offset': 0x8, 'size': 2 },
+    'cancel:cancel_option': { 'offset': 0x16, 'size': 2 },
+    
+    'reactionlist:ptr_list': { 'offset': 0x0, 'size': (7, 4) }, #array of 7 variables, each 8 bytes long
+    'reactionlist:u1list': { 'offset': 0x1c, 'size': (6, 2) },  #array of 6 variables, each 2 bytes long
+    'reactionlist:vertical_pushback': { 'offset': 0x30, 'size': 2 },
+    'reactionlist:standing': { 'offset': 0x34, 'size': 2 },
+    'reactionlist:crouch': { 'offset': 0x36, 'size': 2 },
+    'reactionlist:ch': { 'offset': 0x38, 'size': 2 },
+    'reactionlist:crouch_ch': { 'offset': 0x3a, 'size': 2 },
+    'reactionlist:left_side': { 'offset': 0x3c, 'size': 2 },
+    'reactionlist:left_side_crouch': { 'offset': 0x3e, 'size': 2 },
+    'reactionlist:right_side': { 'offset': 0x40, 'size': 2 },
+    'reactionlist:right_side_crouch': { 'offset': 0x42, 'size': 2 },
+    'reactionlist:back': { 'offset': 0x44, 'size': 2 },
+    'reactionlist:back_crouch': { 'offset': 0x46, 'size': 2 },
+    'reactionlist:block': { 'offset': 0x48, 'size': 2 },
+    'reactionlist:crouch_block': { 'offset': 0x4a, 'size': 2 },
+    'reactionlist:wallslump': { 'offset': 0x4c, 'size': 2 },
+    'reactionlist:downed': { 'offset': 0x4e, 'size': 2 },
+    
+    'hitcondition:requirement_addr': { 'offset': 0x0, 'size': 4 },
+    'hitcondition:damage': { 'offset': 0x4, 'size': 2 },
+    'hitcondition:reaction_list_addr': { 'offset': 0x8, 'size': 4 },
+    
+    'extramoveprop:type': { 'offset': 0x0, 'size': 2 },
+    'extramoveprop:id': { 'offset': 0x2, 'size': 2 },
+    'extramoveprop:value': { 'offset': 0x4, 'size': 4 },    
+    
+    'move:name': { 'offset': None, 'size': 'stringPtr' },
+    'move:anim_name': { 'offset': None, 'size': 'stringPtr' },
+    'move:anim_addr': { 'offset': 0x0, 'size': 4 },
+    'move:vuln': { 'offset': 0x4, 'size': 4 },
+    'move:hitlevel': { 'offset': 0x8, 'size': 4 },
+    'move:cancel_addr': { 'offset': 0xc, 'size': 4 },
+    'move:transition': { 'offset': 0x10, 'size': 2 },
+    'move:anim_max_len': { 'offset': 0x1c, 'size': 2 },
+    'move:startup': { 'offset': 0x30, 'size': 2 },
+    'move:recovery': { 'offset': 0x31, 'size': 2 }, #unknown
+    'move:hit_condition_addr': { 'offset': 0x18, 'size': 4 },
+    'move:voiceclip_ptr': { 'offset': 0x20, 'size': 4 },
+    'move:extra_properties_ptr': { 'offset': 0x24, 'size': 4 },
+    'move:hitbox_location': { 'offset': 0x28, 'size': 4, 'endian': 'little' },
+    #'move:u1': { 'offset': 0x18, 'size': 4 },
+    'move:u2': { 'offset': None, 'size': 4 },
+    'move:u3': { 'offset': None, 'size': 4 },
+    'move:u4': { 'offset': None, 'size': 4 },
+    #'move:u5': { 'offset': 0x28, 'size': 4 },
+    'move:u6': { 'offset': None, 'size': 4 },
+    'move:u7': { 'offset': None, 'size': 2 },
+    'move:u8': { 'offset': None, 'size': 2 },
+    'move:u8_2': { 'offset': None, 'size': 2 },
+    'move:u9': { 'offset': None, 'size': 2 },
+    'move:u10': { 'offset': None, 'size': 4 },
+    'move:u11': { 'offset': None, 'size': 4 },
+    'move:u12': { 'offset': None, 'size': 4 },
+    #'move:u13': { 'offset': 0x54 'size': 4 },
+    #'move:u14': { 'offset': 0x58, 'size': 4 },
+    'move:u15': { 'offset': None, 'size': 4 },
+    'move:u16': { 'offset': None, 'size': 2 },
+    'move:u17': { 'offset': None, 'size': 2 },
+    'move:u18': { 'offset': None, 'size': 4 },
+    
+    'voiceclip:value': { 'offset': 0x0, 'size': 4 },
+    
+    'inputextradata:u1': { 'offset': 0x0, 'size': 2 },
+    'inputextradata:u2': { 'offset': 0x2, 'size': 2 },
+    
+    'inputsequence:u1': { 'offset': 0x1, 'size': 1 },
+    'inputsequence:u2': { 'offset': 0x2, 'size': 2 },
+    'inputsequence:u3': { 'offset': 0x0, 'size': 1 },
+    'inputsequence:extradata_addr': { 'offset': 4, 'size': 4 },
+    
+    'throw:u1': { 'offset': 0x0, 'size': 4 },
+    'throw:throwextra_addr': { 'offset': 0x4, 'size': 4 },
+    
+    'unknownparryrelated:value': { 'offset': 0x0, 'size': 4 },
+    
+    'projectile:u1': { 'offset': 0x0, 'size': (48, None) }, # 48 * [0]
+    'projectile:hit_condition_addr': { 'offset': None, 'size': 4 }, #0
+    'projectile:cancel_addr': { 'offset': None, 'size': 4 }, #0
+    'projectile:u2': { 'offset': 0x70, 'size': (28, None) }, # 28 * [0]
+    
+    'throwextra:u1': { 'offset': 0x0, 'size': 4 },
+    'throwextra:u2': { 'offset': 4, 'size': (4, 2) },
+}
+
 offsetTables = {
     't7': t7_offsetTable,
     'tag2': tag2_offsetTable,
     'rev': tag2_offsetTable,
     't6': t6_offsetTable,
     't5': t5_offsetTable,
+    't4': t4_offsetTable,
     '3d': t6_offsetTable,
 }
 
 animHeaders = {
-    't5': b'\x00\x64\x00\x17\x00\x0B\x00\x0B\x00\x05\x00\x07\x00\x07\x00\x07\x00\x0B\x00\x07\x00\x07\x00\x07\x00\x07\x00\x06\x00\x07\x00\x07\x00\x07\x00\x06\x00\x07\x00\x07\x00\x06\x00\x07\x00\x07\x00\x06\x00\x07'
+    't5': b'\x00\x64\x00\x17\x00\x0B\x00\x0B\x00\x05\x00\x07\x00\x07\x00\x07\x00\x0B\x00\x07\x00\x07\x00\x07\x00\x07\x00\x06\x00\x07\x00\x07\x00\x07\x00\x06\x00\x07\x00\x07\x00\x06\x00\x07\x00\x07\x00\x06\x00\x07',
+    #'t4': b'\x64\x00\x17\x00\x0B\x00\x0B\x00\x05\x00\x07\x00\x07\x00\x07\x00\x0B\x00\x07\x00\x07\x00\x07\x00\x07\x00\x06\x00\x07\x00\x07\x00\x07\x00\x06\x00\x07\x00\x07\x00\x06\x00\x07\x00\x07\x00\x06\x00\x07\x00\x46\x00\x00\x00\x03\x00\x03\x54\x42\x3D\x89\xC6\x04\x3C\x2E\x15\x5B\x32\x05\xE1\xDF\x40\x00\x00\x00\x80\xF5\xE5'
 }
 
 characterNameMapping = {
@@ -804,7 +979,28 @@ characterNameMapping = {
         b'\x8bg\x8c\xf5': '[YOSHIMITSU]',
         b'\x83u\x83\x89\x83C\x83A\x83\x93': '[BRYAN]',
         b'[\x83N\x83}]': '[PANDA]'
-    }
+    },
+    't4': {
+        b'\x95\x97\x8a\xd4 \x90m': '[JIN]',
+        b'[\x83G\x83f\x83B\x81E\x83S\x83\x8b\x83h\x81[]': '[EDDY]',
+        b'[ VALE-TUDO ]': '[MARDUK]',
+        b'[ \x83\x8d\x83E ]': '[LAW]',
+        b'[\x89\xd4\x98Y]': '[HWOARANG]',
+        b'[\x83L\x83\x93\x83O]': '[KING]',
+        b'\x8eO\x93\x87 \x95\xbd\x94\xaa': '[HEIHACHI]',
+        b'[\x83N\x83\x8a\x83X\x83e\x83B]': '[CHRISTIE]',
+        b'[\x83|\x81[\x83\x8b]': '[PAUL]',
+        b'[ \x97\x8b \x95\x90\x97\xb4 ]': '[LEI_WULONG]',
+        b'[\x83j\x81[\x83i]': '[NINA]',
+        b'\x83{\x83N\x83T\x81[': '[STEVE_FOX]',
+        b'[ \x8eO\x93\x87 \x88\xea\x94\xaa ]': '[KAZUYA]',
+        b'\x97\xbd \x8b\xc5\x89J': '[LIN_XIAOYU]',
+        b'[ \x97\x9b \x92\xb4\x98T ]': '[LEE]',
+        b'[ \x83W\x83\x85\x83\x8a\x83A ]': '[JULIA]',
+        b'\x8bg\x8c\xf5': '[YOSHIMITSU]',
+        b'\x83u\x83\x89\x83C\x83A\x83\x93': '[BRYAN]',
+        b'[\x83N\x83}]': '[PANDA]'
+    },
 }
  
 def readOffsetTable(self, key=''):
@@ -1103,7 +1299,7 @@ class Cancel:
         readOffsetTable(self, 'cancel')
         
         if self.endian == 'big':
-            if self.TekkenVersion != 't5': #swapping first two ints
+            if self.TekkenVersion != 't5' and self.TekkenVersion != 't4': #swapping first two ints
                 t = self.bToInt(data, 0, 4)
                 t2 = self.bToInt(data, 0x4, 4) 
                 self.command = (t2 << 32) | t
@@ -1391,10 +1587,11 @@ class Motbin:
             mota_start = self.offsetTable['mota_start']['offset']
             self.mota_list = []
             
-            for i in range(12):
-                mota_addr = self.readInt(addr + mota_start + (i * self.ptr_size), self.ptr_size)
-                mota_end_addr = self.readInt(addr + mota_start + ((i + 2) * self.ptr_size), self.ptr_size) if i < 9 else mota_addr + 20
-                self.mota_list.append((mota_addr, mota_end_addr - mota_addr))
+            if mota_start != None:
+                for i in range(12):
+                    mota_addr = self.readInt(addr + mota_start + (i * self.ptr_size), self.ptr_size)
+                    mota_end_addr = self.readInt(addr + mota_start + ((i + 2) * self.ptr_size), self.ptr_size) if i < 9 else mota_addr + 20
+                    self.mota_list.append((mota_addr, mota_end_addr - mota_addr))
                 
             
             if isinstance(self.character_name, bytes):
@@ -1433,10 +1630,13 @@ class Motbin:
         self.parry_related = []
         
     def getCharacterNameFromBytes(self):
+        oldCharName = self.character_name
         if self.TekkenVersion in characterNameMapping:
             self.character_name = characterNameMapping[self.TekkenVersion].get(self.character_name, 'UNKNOWN')
         else:
             self.character_name = 'UNKNOWN'
+        if self.character_name == 'UNKNOWN':
+            print('Unknown character:', oldCharName)
         
     def __eq__(self, other):
         return self.character_name == other.character_name \

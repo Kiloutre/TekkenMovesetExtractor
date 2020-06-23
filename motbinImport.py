@@ -306,7 +306,10 @@ def getMovesetTotalSize(m, folderName):
     
     size = align8Bytes(size)
     for i in range(12):
-        size += os.path.getsize("%s/mota_%d.bin" % (folderName, i))
+        try:
+            size += os.path.getsize("%s/mota_%d.bin" % (folderName, i))
+        except:
+            print("Can't open file '%s/mota_%d.bin'" % (folderName, i))
     
     return size
     
@@ -727,11 +730,15 @@ class MotbinStruct:
         self.align()
         
         for i in range(12):
-            with open("%s/mota_%d.bin" % (self.folderName, i), "rb") as f:
-                motaBytes = f.read()
-                motaAddr = self.curr_ptr
-                self.writeBytes(motaBytes)
-                self.mota_list.append(motaAddr)
+            try:
+                with open("%s/mota_%d.bin" % (self.folderName, i), "rb") as f:
+                    motaBytes = f.read()
+                    motaAddr = self.curr_ptr
+                    self.writeBytes(motaBytes)
+                    self.mota_list.append(motaAddr)
+            except:
+                print("Warning: impossible to import MOTA")
+                break
                 
     def allocateMoves(self):
         self.allocateAnimations()
