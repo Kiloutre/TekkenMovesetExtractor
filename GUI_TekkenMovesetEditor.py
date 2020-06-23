@@ -1323,15 +1323,14 @@ class GUI_TekkenMovesetEditor():
             ("Insert new extra move-prop to current list", self.insertNewExtraprop ),
             ("Create new extra move-prop list", self.createExtrapropList ),
             ("", "separator" ),
-            ("Duplicate current extra move-prop", lambda self=self: self.insertNewExtraprop(copyCurrent=True) ),
             ("Duplicate current extra move-prop list", self.copyExtrapropList ),
         ]
         
         requirementCreationMenu = [
-            ("Insert new requirement to current list", None ),
-            ("Create new requirement list", None ),
+            ("Insert new requirement to current list", self.insertNewRequirement ),
+            ("Create new requirement list", self.createRequirementList ),
             ("", "separator" ),
-            ("Duplicate current requirement list", None ),
+            ("Duplicate current requirement list", self.copyRequirementList ),
         ]
         
         cancelCreationMenu = [
@@ -1370,7 +1369,8 @@ class GUI_TekkenMovesetEditor():
             ("Current extra move-prop", self.deleteCurrentExtraprop),
             ("Current extra move-prop list", self.deleteCurrentExtraproplist),
             ("", "separator"),
-            ("Current requirement", None)
+            ("Current requirement", self.deleteCurrentRequirement),
+            ("Current requirement list", self.deleteCurrentRequirementList)
         ]
         
         menuActions = [
@@ -1611,8 +1611,6 @@ class GUI_TekkenMovesetEditor():
         self.setCancelList(self.CancelEditor.baseId)
         self.CancelEditor.setItem(index)
         
-        
-        
     def createExtrapropList(self):
         if self.movelist == None:
             return
@@ -1683,6 +1681,7 @@ class GUI_TekkenMovesetEditor():
         
         if not copyCurrent:
             newProp = {f:0 for f in extrapropFields}
+            newProp['type'] = 0x8001
         else:
             newProp = self.movelist['extra_move_properties'][insertPoint].copy()
         
@@ -1694,6 +1693,115 @@ class GUI_TekkenMovesetEditor():
         
         self.setExtrapropList(self.ExtrapropEditor.baseId)
         self.ExtrapropEditor.setItem(index)
+        
+    def createRequirementList(self):
+        if self.movelist == None:
+            return
+        newProp = {f:0 for f in requirementFields}
+        newProp['req'] = reqListEndval[self.movelist['version']]
+        
+        self.movelist['requirements'].append(newProp)
+        self.setRequirementList(len(self.movelist['requirements']) - 1)
+        
+    def copyRequirementList(self):
+        if self.RequirementEditor.editMode == None:
+            return
+            
+        baseId = self.RequirementEditor.baseId
+        id = baseId
+        endval = reqListEndval[self.movelist['version']]
+        while self.movelist['requirements'][id]['req'] != endval:
+            id += 1
+        reqList = [req.copy() for req in self.movelist['requirements'][baseId:id + 1]]
+        
+        listIndex = len(self.movelist['requirements'])
+        self.movelist['requirements'] += reqList
+        self.setRequirementList(listIndex)
+        
+    def deleteCurrentRequirementList(self):
+        if self.RequirementEditor.editMode == None:
+            return
+        startingId = self.RequirementEditor.baseId
+        listLen = len(self.RequirementEditor.itemList)
+        
+        title = 'Delete requirement list %d' % (startingId)
+        message = 'Are you sure you want to delete the requirement list %d (%d conditions)?\nIDs will be properly shifted down.' % (startingId, listLen)
+        result = messagebox.askquestion(title, message, icon='warning')
+        
+        if result == 'yes':
+            self.movelist['requirements'] = self.movelist['requirements'][:startingId] + self.movelist['requirements'][startingId + listLen:]
+        
+            for cancel in self.movelist['cancels']:
+                if cancel['requirement_idx'] > startingId:
+                    cancel['requirement_idx'] -= listLen
+                    
+            for cancel in self.movelist['group_cancels']:
+                if cancel['requirement_idx'] > startingId:
+                    cancel['requirement_idx'] -= listLen
+                    
+            for hitCondition in self.movelist['hit_conditions']:
+                if hitCondition['requirement_idx'] > startingId:
+                    hitCondition['requirement_idx'] -= listLen
+            
+            messagebox.showinfo('Return', 'Requirement list list successfully deleted.')
+            self.RequirementEditor.resetForm()
+        
+    def deleteCurrentRequirement(self):
+        if self.RequirementEditor.editMode == None:
+            return
+        
+        listIndex = self.RequirementEditor.listIndex
+        index = self.RequirementEditor.id
+        endval = reqListEndval[self.movelist['version']]
+        resetForm = (self.movelist['requirements'][index]['req'] == endval)
+        self.movelist['requirements'].pop(index)
+        
+        for cancel in self.movelist['cancels']:
+            if cancel['requirement_idx'] > index:
+                cancel['requirement_idx'] -= 1
+                
+        for cancel in self.movelist['group_cancels']:
+            if cancel['requirement_idx'] > index:
+                cancel['requirement_idx'] -= 1
+                
+        for hitCondition in self.movelist['hit_conditions']:
+            if hitCondition['requirement_idx'] > index:
+                hitCondition['requirement_idx'] -= 1
+        
+        if not resetForm:
+            self.setRequirementList(self.RequirementEditor.baseId)
+            self.RequirementEditor.setItem(listIndex)
+        else:
+            self.RequirementEditor.resetForm()
+        
+    def insertNewRequirement(self, copyCurrent=False):
+        if self.RequirementEditor.editMode == None:
+            return
+        
+        index = self.RequirementEditor.listIndex
+        insertPoint = self.RequirementEditor.id
+        
+        if not copyCurrent:
+            newProp = {f:0 for f in requirementFields}
+        else:
+            newProp = self.movelist['requirements'][insertPoint].copy()
+        
+        self.movelist['requirements'].insert(insertPoint, newProp)
+        
+        for cancel in self.movelist['cancels']:
+            if cancel['requirement_idx'] > insertPoint:
+                cancel['requirement_idx'] += 1
+                
+        for cancel in self.movelist['group_cancels']:
+            if cancel['requirement_idx'] > insertPoint:
+                cancel['requirement_idx'] += 1
+                
+        for hitCondition in self.movelist['hit_conditions']:
+            if hitCondition['requirement_idx'] > insertPoint:
+                hitCondition['requirement_idx'] += 1
+        
+        self.setRequirementList(self.RequirementEditor.baseId)
+        self.RequirementEditor.setItem(index)
         
         
     def createGroupCancelList(self):
@@ -1738,7 +1846,6 @@ class GUI_TekkenMovesetEditor():
             
             messagebox.showinfo('Return', 'Group cancel-list successfully deleted.')
             self.GroupCancelEditor.on_close()
-            
         
     def deleteCurrentGroupCancel(self):
         if self.GroupCancelEditor == None:
