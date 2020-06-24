@@ -3,6 +3,7 @@
 from tkinter import Tk, Frame, Listbox, Label, Scrollbar, StringVar, Toplevel, Menu, messagebox
 from tkinter.ttk import Button, Entry, Style
 from Addresses import game_addresses, GameClass
+import copy
 import motbinImport as importLib
 import json
 import os
@@ -353,10 +354,6 @@ class CharalistSelector:
         if len(characterList) == 0:
             self.charaSelect.insert(0, "No moveset...")
         else:
-            colors = [
-                ["#fff", "#eee"], #TTT2
-                ["#eee", "#ddd"]  #T7
-            ]
             for character in characterList: self.charaSelect.insert('end', character)
         self.characterList = characterList
         self.colorCharacterList()
@@ -1166,7 +1163,7 @@ class MoveEditor(FormEditor):
             return
         self.root.setExtrapropList(self.fieldValue['extra_properties_idx'])
         
-def splitFrame(root, split, bg=None):
+def createGrid(root, split, bg=None):
     rowCount = 1 + (split == 'horizontal')
     colCount = 1 + (split == 'vertical')
     newFrame = Frame(root, bg=bg)
@@ -1176,6 +1173,305 @@ def splitFrame(root, split, bg=None):
     for i in range(colCount):
         newFrame.grid_columnconfigure(i, weight=1, uniform='group1' )
     return newFrame
+    
+def splitFrame(root, split):
+    rowCount = 1 + (split == 'horizontal')
+    colCount = 1 + (split == 'vertical')
+    
+    for i in range(rowCount):
+        root.grid_rowconfigure(i, weight=1, uniform='group1' )
+    for i in range(colCount):
+        root.grid_columnconfigure(i, weight=1, uniform='group1' )
+        
+    Frame1 = Frame(root)
+    Frame1.grid(column=0, row=0, sticky='nsew')
+    
+    col, row = int(split == 'vertical'), int(split == 'horizontal')
+    Frame2 = Frame(root)
+    Frame2.grid(column=col, row=row, sticky='nsew')
+    
+    return Frame1, Frame2
+    
+def getCancelList(movelist, cancelId):
+    id = cancelId
+    while movelist['cancels'][id]['command'] != 0x8000:
+        id += 1
+    cancelList = [cancel for cancel in movelist['cancels'][cancelId:id + 1]]
+    return cancelList
+    
+def getRequirementList(movelist, requirementId):
+    id = requirementId
+    endValue = reqListEndval[movelist['version']]
+    while movelist['requirements'][id]['req'] != endValue:
+        id += 1
+    return [req for req in movelist['requirements'][requirementId:id + 1]]
+    
+def getExtrapropList(movelist, baseId):
+    id = baseId
+    while movelist['extra_move_properties'][id]['type'] != 0:
+        id += 1
+    return [prop for prop in movelist['extra_move_properties'][baseId:id + 1]]
+    
+class MoveCopyingWindow:
+    def __init__(self, root):
+        window = Toplevel()
+        self.window = window
+        self.root = root
+        
+        self.window.protocol("WM_DELETE_WINDOW", self.on_close)
+        
+        mainFrame = Frame(window)
+        mainFrame.pack(fill='both', expand=1)
+        for i in range(2):
+            mainFrame.grid_columnconfigure(i, weight=1, uniform="group1")
+        mainFrame.grid_rowconfigure(0, weight=1, uniform="group1")
+        
+        leftFrame, rightFrame = splitFrame(mainFrame, 'vertical')
+        
+        characterListFrame, movelistFrame = splitFrame(leftFrame, 'vertical')
+        
+        window.iconbitmap('InterfaceData/renge.ico')
+        window.geometry("640x720")
+        window.minsize(240, 340)
+        self.setTitle("Copy move from movelist")
+        
+        selectCharacter = Button(characterListFrame, text='Select moveset')
+        selectCharacter['command'] = self.loadCharacterMovelist
+        selectCharacter.pack(side='bottom', fill='x')
+        
+        charaSelect = Listbox(characterListFrame)
+        charaSelect.bind('<<ListboxSelect>>', self.onCharaSelectionChange)
+        charaSelect.pack(side='left', expand=1, fill='both')
+        
+        scrollbar = Scrollbar(characterListFrame, command=charaSelect.yview)
+        scrollbar.pack(side='right', fill='y')
+        
+        charaSelect.config(yscrollcommand=scrollbar.set)
+        
+        
+        selectedChar = Label(movelistFrame, text="No character selected", bg='#bbb')
+        selectedChar.pack(side='bottom', fill='x')
+        
+        movelistSelect = Listbox(movelistFrame)
+        movelistSelect.bind('<<ListboxSelect>>', self.onMoveSelectionChange)
+        movelistSelect.pack(side='left', expand=1, fill='both')
+        
+        scrollbar = Scrollbar(movelistFrame, command=movelistSelect.yview)
+        scrollbar.pack(side='right', fill='y')
+        
+        movelistSelect.config(yscrollcommand=scrollbar.set)
+        
+        
+        moveInfo = Label(rightFrame)
+        moveInfo.pack()
+        
+        importMoveButton = Button(rightFrame, text="Import move", state="disabled")
+        importMoveButton['command'] = self.importMove
+        importMoveButton.pack()
+        
+        self.movelistSelect = movelistSelect
+        self.charaSelect = charaSelect
+        self.moveInfo = moveInfo
+        self.importMoveButton = importMoveButton
+        
+        self.selectedChar = selectedChar
+        self.characterList = []
+        self.selection = None
+        self.selectionIndex = -1
+        self.last_selection = None
+        self.movelist = None
+        self.filename = ""
+        self.selectedMoveIndex = -1
+        
+        self.updateCharacterlist()
+        
+    def loadCharacterMovelist(self):
+        selection = self.selection
+        if selection == None:
+            if self.last_selection == None:
+                return
+            selection = self.last_selection
+        else:
+            self.charaSelect.itemconfig(self.selectionIndex, {'bg': '#a126c7', 'fg': 'white'})
+            
+        self.selectedChar['text'] = selection
+        self.movelist_path = "extracted_chars/" + selection
+        
+        movelist, filename = getMovelist(self.movelist_path)
+        self.last_selection = selection
+        self.movelist = movelist
+        self.filename = filename
+        
+        self.setMoves(movelist['moves'], movelist['aliases'])
+
+    def setMoves(self, moves, aliases):
+        moves = [(i, move) for i, move in enumerate(moves)]
+        self.movelistSelect.delete(0,'end')
+        
+        for moveId, move in moves:
+            text = "%d   %s" % (moveId, move['name'])
+            
+            if moveId in aliases:
+                text += "   (%d)" % (32768 + aliases.index(moveId))
+                
+            self.movelistSelect.insert('end', text)
+            moveColor = getMoveColor(moveId, move, aliases)
+            if moveColor != None:
+                self.movelistSelect.itemconfig(moveId, {'bg': moveColor})
+                
+    def setMove(self, moveId):
+        self.importMoveButton['state'] = 'enabled'
+        move = self.movelist['moves'][moveId]
+        
+        moveText = "Move ID: %d" % (moveId)
+        if moveId in self.movelist['aliases']:
+            moveText += "  (%d)" % (self.movelist['aliases'].index(moveId) + 32768)
+            
+        moveText += "\nName: %s" % (move['name'])
+        moveText += "\nAnimation: %s" % (move['anim_name'])
+        
+        self.moveInfo['text'] = moveText
+        
+    def getRequirements(self, requirementId, dependencies):
+        if requirementId in dependencies['requirements']:
+            return
+        reqList = [c.copy() for c in getRequirementList(self.movelist, requirementId)]
+        dependencies['requirements'][requirementId] = reqList
+        
+    def getExtraproperties(self, extraId, dependencies):
+        if extraId == -1 or extraId in dependencies['extra_move_properties']:
+            return
+        dependencies['extra_move_properties'][extraId] = getExtrapropList(self.movelist, extraId)
+        
+    def getCancelExtra(self, extraId, dependencies):
+        if extraId in dependencies['cancel_extradata']:
+            return
+        dependencies['cancel_extradata'][extraId] = self.movelist['cancel_extradata'][extraId]
+        
+    def getPushbackExtra(self, extraId, dependencies):
+        if extraId in dependencies['pushback_extras']:
+            return
+        dependencies['pushback_extras'][extraId] = self.movelist['pushback_extras'][extraId].copy()
+        
+    def getCancels(self, cancelId, dependencies):
+        if cancelId in dependencies['cancels']:
+            return
+        cancelList = [c.copy() for c in getCancelList(self.movelist, cancelId) if c['command'] != 0x800b]
+        dependencies['cancels'][cancelId] = cancelList
+        
+        for cancel in cancelList:
+            if cancel['command'] == 0x800b:
+                #self.getGroupCancel(cancel['move_id'], dependencies)
+                pass
+            elif cancel['move_id'] < 0x8000:
+                self.getMove(cancel['move_id'], dependencies)
+            self.getRequirements(cancel['requirement_idx'], dependencies)
+            self.getCancelExtra(cancel['extradata_idx'], dependencies)
+        
+    def getMove(self, moveId, dependencies):
+        if moveId in dependencies['moves']:
+            return
+        
+        move = self.movelist['moves'][moveId].copy()
+        dependencies['moves'][moveId] = move
+        self.getCancels(move['cancel_idx'], dependencies)
+        self.getExtraproperties(move['extra_properties_idx'], dependencies)
+        
+    def importMove(self):
+        dependencies = {
+            'moves': {},
+            'cancels': {},
+            'requirements': {},
+            'extra_move_properties': {},
+            'cancel_extradata': {},
+            'pushback_extras': {},
+        }
+        idAliases = copy.deepcopy(dependencies)
+        self.getMove(self.selectedMoveIndex, dependencies)
+        
+        targetMovelist = self.root.movelist
+        
+        for category in dependencies:
+            for item in dependencies[category]:
+                itemData = dependencies[category][item]
+                insertionIndex = len(targetMovelist[category])
+                
+                idAliases[category][item] = insertionIndex
+                
+                if isinstance(itemData, list):
+                    for newItem in itemData: targetMovelist[category].append(newItem)
+                else:
+                    targetMovelist[category].append(itemData)
+                
+        for moveId in dependencies['moves']:
+            move = dependencies['moves'][moveId]
+            move['cancel_idx'] = idAliases['cancels'].get(move['cancel_idx'], -1)
+            move['extra_properties_idx'] = idAliases['extra_move_properties'].get(move['extra_properties_idx'], -1)
+            move['voiceclip_idx'] = -1
+            move['hit_condition_idx'] = -1
+            
+        for cancelId in dependencies['cancels']:
+            for cancel in dependencies['cancels'][cancelId]:
+                cancel['requirement_idx'] = idAliases['requirements'].get(cancel['requirement_idx'], -1)
+                cancel['extradata_idx'] = idAliases['cancel_extradata'].get(cancel['extradata_idx'], -1)
+                cancel['move_id'] = idAliases['moves'].get(cancel['move_id'], -1)
+        
+        self.root.MoveSelector.setMoves(targetMovelist['moves'], self.root.movelist['aliases'])
+        messagebox.showinfo('Imported', 'Data successfully imported')
+        
+    def onMoveSelectionChange(self, event):
+        if self.movelist == None:
+            return
+        w = event.widget
+        try:
+            index = int(w.curselection()[0])
+            self.selectedMoveIndex = int(index)
+            self.setMove(self.selectedMoveIndex)
+        except:
+            self.selectedMoveIndex = -1
+        
+    def onCharaSelectionChange(self, event):
+        if len(self.characterList) == 0:
+            return
+        w = event.widget
+        try:
+            index = int(w.curselection()[0])
+            self.selection = w.get(index)
+            self.selectionIndex = int(index)
+        except:
+            self.selection = None
+            self.selectionIndex = -1
+        
+    def updateCharacterlist(self):
+        self.charaSelect.delete(0, 'end')
+        characterList = getCharacterList()
+        if len(characterList) == 0:
+            self.charaSelect.insert(0, "No moveset...")
+        else:
+            for character in characterList: self.charaSelect.insert('end', character)
+            
+        self.characterList = characterList
+        self.colorCharacterList()
+        
+    def colorCharacterList(self):
+        colors = [
+            ["#fff", "#eee"], #TTT2
+            ["#ddd", "#ddd"]  #T7
+        ]
+        
+        colorPool = 0
+        
+        for i, character in enumerate(self.characterList):
+            color = colors[colorPool][i & 1]
+            self.charaSelect.itemconfig(i, {'bg': color, 'fg': 'black'})
+            
+    def setTitle(self, title):
+        self.window.wm_title(title) 
+        
+    def on_close(self):
+        self.root.MoveCopyingWindow = None
+        self.window.destroy()
+        self.window.update()
     
 class GroupCancelWindow:
     def __init__(self, root, id):
@@ -1280,22 +1576,22 @@ class GUI_TekkenMovesetEditor():
             editorFrame.grid_columnconfigure(i, weight=1, uniform="group1")
             editorFrame.grid_rowconfigure(i, weight=1, uniform="group1")
             
-        topRightFrame = splitFrame(editorFrame, 'vertical')
+        topRightFrame = createGrid(editorFrame, 'vertical')
         topRightFrame.grid(row=0, column=1, sticky="nsew")
             
-        reqAndPropsFrame = splitFrame(topRightFrame, split='horizontal')
+        reqAndPropsFrame = createGrid(topRightFrame, split='horizontal')
         reqAndPropsFrame.grid(row=0, column=1, sticky="nsew")
         
-        bottomLeftFrame = splitFrame(editorFrame, 'vertical')
+        bottomLeftFrame = createGrid(editorFrame, 'vertical')
         bottomLeftFrame.grid(row=1, column=0, sticky="nsew")
         
-        bottomLeftToprow = splitFrame(bottomLeftFrame, 'horizontal',)
+        bottomLeftToprow = createGrid(bottomLeftFrame, 'horizontal')
         bottomLeftToprow.grid(row=0, column=0, sticky="nsew")
         
-        bottomLeftToprow2 = splitFrame(bottomLeftFrame, 'horizontal')
+        bottomLeftToprow2 = createGrid(bottomLeftFrame, 'horizontal')
         bottomLeftToprow2.grid(row=0, column=1, sticky="nsew")
         
-        bottomLeftToprow3 = splitFrame(bottomLeftToprow, 'horizontal')
+        bottomLeftToprow3 = createGrid(bottomLeftToprow, 'horizontal')
         bottomLeftToprow3.grid(row=1, column=0, sticky="nsew")
         
         
@@ -1309,14 +1605,16 @@ class GUI_TekkenMovesetEditor():
         self.PushbackEditor = PushbackEditor(self, bottomLeftToprow, col=0, row=0)
         self.VoiceclipEditor = VoiceclipEditor(self, bottomLeftToprow3, col=0, row=1)
         self.CancelExtraEditor = CancelExtraEditor(self, bottomLeftToprow3, col=0, row=0)
-        self.GroupCancelEditor = None
         
         self.ReactionListEditor = ReactionListEditor(self, editorFrame, col=1, row=1)
+        
+        self.GroupCancelEditor = None
+        self.MoveCopyingWindow = None
         
         moveCreationMenu = [
             ("Create new empty move", None ),
             ("Copy current move", None ),
-            ("Copy move from another moveset", None ),
+            ("Copy move from another moveset", self.openMoveCopyWindow ),
         ]
         
         extrapropCreationMenu = [
@@ -1456,6 +1754,14 @@ class GUI_TekkenMovesetEditor():
             app.window.mainloop()
         else:
             self.GroupCancelEditor.setCancelList(id)
+        
+    def openMoveCopyWindow(self):
+        if self.MoveCopyingWindow == None:
+            app = MoveCopyingWindow(self)
+            self.MoveCopyingWindow = app
+            app.window.mainloop()
+            
+    
         
     def getMoveId(self, moveId):
         return self.movelist['aliases'][moveId - 0x8000] if moveId >= 0x8000 else moveId
