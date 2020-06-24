@@ -1248,7 +1248,7 @@ def createMenu(root, menuActions, validationFunc=None, rootMenu=True):
             newMenu.add_cascade(label=label, menu=subMenu)
         elif command == "separator":
             if rootMenu:
-                newMenu.add_command(label='|')
+                newMenu.add_command(label='|', state='disabled')
             else:
                 newMenu.add_separator()
         elif command == None:

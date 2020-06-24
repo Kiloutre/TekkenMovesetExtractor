@@ -1743,9 +1743,11 @@ class Motbin:
             
         for i, mota in enumerate(self.mota_list):
             mota_addr, len = mota
-            with open("%s/mota_%d.bin" % (path, i), "wb") as f:
-                mota_data = self.readBytes(self.base + mota_addr, len)
-                f.write(mota_data)
+            filePath = "%s/mota_%d.bin" % (path, i)
+            if not os.path.exists(filePath):
+                with open(filePath, "wb") as f:
+                    mota_data = self.readBytes(self.base + mota_addr, len)
+                    f.write(mota_data)
             
         print("Saving animations...")
         animBoundaries = sorted([anim.addr for anim in self.anims])
