@@ -1584,6 +1584,10 @@ class GUI_TekkenMovesetEditor():
             for move in self.movelist['moves']:
                 if move['cancel_idx'] > startingId:
                     move['cancel_idx'] -= listLen
+                
+            for projectile in self.movelist['projectiles']:
+                if projectile['cancel_idx'] > startingId:
+                    projectile['cancel_idx'] -= listLen
             
             messagebox.showinfo('Return', 'Cancel-list successfully deleted.')
             self.CancelEditor.resetForm()
@@ -1600,6 +1604,10 @@ class GUI_TekkenMovesetEditor():
         for move in self.movelist['moves']:
             if move['cancel_idx'] > index:
                 move['cancel_idx'] -= 1
+                
+        for projectile in self.movelist['projectiles']:
+            if projectile['cancel_idx'] > index:
+                projectile['cancel_idx'] -= 1
         
         if not resetForm:
             self.setCancelList(self.CancelEditor.baseId)
@@ -1624,6 +1632,10 @@ class GUI_TekkenMovesetEditor():
         for move in self.movelist['moves']:
             if move['cancel_idx'] > insertPoint:
                 move['cancel_idx'] += 1
+                
+        for projectile in self.movelist['projectiles']:
+            if projectile['cancel_idx'] > insertPoint:
+                projectile['cancel_idx'] += 1
         
         self.setCancelList(self.CancelEditor.baseId)
         self.CancelEditor.setItem(index)
@@ -1915,6 +1927,10 @@ class GUI_TekkenMovesetEditor():
         for move in self.movelist['moves']:
             if move['hit_condition_idx'] > insertPoint:
                 move['hit_condition_idx'] += 1
+                
+        for projectile in self.movelist['projectiles']:
+            if projectile['hit_condition_idx'] > insertPoint:
+                projectile['hit_condition_idx'] += 1
         
         self.setConditionList(self.HitConditionEditor.baseId)
         self.HitConditionEditor.setItem(index)
@@ -1952,6 +1968,10 @@ class GUI_TekkenMovesetEditor():
         for move in self.movelist['moves']:
             if move['hit_condition_idx'] > index:
                 move['hit_condition_idx'] -= 1
+                
+        for projectile in self.movelist['projectiles']:
+            if projectile['hit_condition_idx'] > index:
+                projectile['hit_condition_idx'] -= 1
         
         if not resetForm:
             self.setConditionList(self.HitConditionEditor.baseId)
@@ -1975,6 +1995,10 @@ class GUI_TekkenMovesetEditor():
             for move in self.movelist['moves']:
                 if move['hit_condition_idx'] > startingId:
                     move['hit_condition_idx'] -= listLen
+                
+            for projectile in self.movelist['projectiles']:
+                if projectile['hit_condition_idx'] > startingId:
+                    projectile['hit_condition_idx'] -= listLen
             
             messagebox.showinfo('Return', 'Hit-condition list successfully deleted.')
             self.HitConditionEditor.resetForm()
