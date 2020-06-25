@@ -3,6 +3,7 @@
 from tkinter import Tk, Frame, Listbox, Label, Scrollbar, StringVar, Toplevel, Menu, messagebox
 from tkinter.ttk import Button, Entry, Style
 from Addresses import game_addresses, GameClass
+import shutil
 import copy
 import motbinImport as importLib
 import json
@@ -1199,6 +1200,13 @@ def getCancelList(movelist, cancelId):
     cancelList = [cancel for cancel in movelist['cancels'][cancelId:id + 1]]
     return cancelList
     
+def getGroupCancelList(movelist, cancelId):
+    id = cancelId
+    while movelist['group_cancels'][id]['command'] != 0x800c:
+        id += 1
+    cancelList = [cancel for cancel in movelist['group_cancels'][cancelId:id + 1]]
+    return cancelList
+    
 def getRequirementList(movelist, requirementId):
     id = requirementId
     endValue = reqListEndval[movelist['version']]
@@ -1211,6 +1219,16 @@ def getExtrapropList(movelist, baseId):
     while movelist['extra_move_properties'][id]['type'] != 0:
         id += 1
     return [prop for prop in movelist['extra_move_properties'][baseId:id + 1]]
+    
+def getHitConditionList(movelist, baseId):
+    id = baseId
+    endValue = reqListEndval[movelist['version']]
+    while True:
+        reqIdx = movelist['hit_conditions'][id]['requirement_idx'] 
+        if movelist['requirements'][reqIdx]['req'] == endValue:
+            break
+        id += 1
+    return  [item for item in movelist['hit_conditions'][baseId:id + 1]]
     
 class MoveCopyingWindow:
     def __init__(self, root):
@@ -1348,48 +1366,102 @@ class MoveCopyingWindow:
             return
         dependencies['cancel_extradata'][extraId] = self.movelist['cancel_extradata'][extraId]
         
+    def getVoiceclip(self, id, dependencies):
+        if id in dependencies['voiceclips']:
+            return
+        dependencies['voiceclips'][id] = self.movelist['voiceclips'][id]
+        
     def getPushbackExtra(self, extraId, dependencies):
         if extraId in dependencies['pushback_extras']:
             return
-        dependencies['pushback_extras'][extraId] = self.movelist['pushback_extras'][extraId].copy()
+        dependencies['pushback_extras'][extraId] = self.movelist['pushback_extras'][extraId]
         
-    def getCancels(self, cancelId, dependencies):
+    def getPushback(self, id, dependencies):
+        if id in dependencies['pushbacks']:
+            return
+        dependencies['pushbacks'][id] = self.movelist['pushbacks'][id].copy()
+        self.getPushbackExtra(dependencies['pushbacks'][id]['pushbackextra_idx'], dependencies)
+        
+    def getReactionList(self, id, dependencies):
+        if id in dependencies['reaction_list']:
+            return
+        reactionList = self.movelist['reaction_list'][id].copy()
+        dependencies['reaction_list'][id] = reactionList
+        
+        for pushback in reactionList['pushback_indexes']:
+            self.getPushback(pushback, dependencies)
+            
+        moveKeys = (k for k in reactionList if k != 'vertical_pushback' and k != 'u1list' and k != 'pushback_indexes')
+        for key in moveKeys:
+            if reactionList[key] != 0:
+                self.getMove(reactionList[key], dependencies)
+            
+    def getHitConditions(self, id, dependencies):
+        if id in dependencies['hit_conditions']:
+            return
+        hitConditionList = [c.copy() for c in getHitConditionList(self.movelist, id)]
+        dependencies['hit_conditions'][id] = hitConditionList
+        
+        for hitCondition in hitConditionList:
+            self.getRequirements(hitCondition['requirement_idx'], dependencies)
+            self.getReactionList(hitCondition['reaction_list_idx'], dependencies)
+        
+    def getGroupCancels(self, cancelId, dependencies, recursiveLevel):
+        if cancelId in dependencies['group_cancels']:
+            return
+        cancelList = [c.copy() for c in getGroupCancelList(self.movelist, cancelId)]
+        dependencies['group_cancels'][cancelId] = cancelList
+        
+        for cancel in cancelList:
+            if cancel['move_id'] < 0x8000:
+                self.getMove(cancel['move_id'], dependencies, recursiveLevel + 1)
+            self.getRequirements(cancel['requirement_idx'], dependencies)
+            self.getCancelExtra(cancel['extradata_idx'], dependencies)
+        
+    def getCancels(self, cancelId, dependencies, recursiveLevel):
         if cancelId in dependencies['cancels']:
             return
-        cancelList = [c.copy() for c in getCancelList(self.movelist, cancelId) if c['command'] != 0x800b]
+        cancelList = [c.copy() for c in getCancelList(self.movelist, cancelId)]
         dependencies['cancels'][cancelId] = cancelList
         
         for cancel in cancelList:
             if cancel['command'] == 0x800b:
-                #self.getGroupCancel(cancel['move_id'], dependencies)
-                pass
+                self.getGroupCancels(cancel['move_id'], dependencies, recursiveLevel + 1)
             elif cancel['move_id'] < 0x8000:
-                self.getMove(cancel['move_id'], dependencies)
+                self.getMove(cancel['move_id'], dependencies, recursiveLevel + 1)
             self.getRequirements(cancel['requirement_idx'], dependencies)
             self.getCancelExtra(cancel['extradata_idx'], dependencies)
         
-    def getMove(self, moveId, dependencies):
+    def getMove(self, moveId, dependencies, recursiveLevel=0):
         if moveId in dependencies['moves']:
             return
         
         move = self.movelist['moves'][moveId].copy()
         dependencies['moves'][moveId] = move
-        self.getCancels(move['cancel_idx'], dependencies)
         self.getExtraproperties(move['extra_properties_idx'], dependencies)
+        self.getVoiceclip(move['voiceclip_idx'], dependencies)
+        self.getCancels(move['cancel_idx'], dependencies, recursiveLevel)
+        self.getHitConditions(move['hit_condition_idx'], dependencies)
         
     def importMove(self):
         dependencies = {
             'moves': {},
             'cancels': {},
+            'group_cancelS': {},
             'requirements': {},
             'extra_move_properties': {},
             'cancel_extradata': {},
+            'hit_conditions': {},
+            'reaction_list': {},
+            'pushbacks': {},
             'pushback_extras': {},
+            'voiceclips': {},
         }
         idAliases = copy.deepcopy(dependencies)
         self.getMove(self.selectedMoveIndex, dependencies)
         
         targetMovelist = self.root.movelist
+        moveInsertionIndex = len(targetMovelist['moves'])
         
         for category in dependencies:
             for item in dependencies[category]:
@@ -1407,17 +1479,52 @@ class MoveCopyingWindow:
             move = dependencies['moves'][moveId]
             move['cancel_idx'] = idAliases['cancels'].get(move['cancel_idx'], -1)
             move['extra_properties_idx'] = idAliases['extra_move_properties'].get(move['extra_properties_idx'], -1)
-            move['voiceclip_idx'] = -1
-            move['hit_condition_idx'] = -1
+            move['voiceclip_idx'] = idAliases['voiceclips'].get(move['voiceclip_idx'], -1)
+            move['hit_condition_idx'] = idAliases['hit_conditions'].get(move['hit_condition_idx'], -1)
             
+            anim = move['anim_name']
+            sourcePath = "%s/anim/%s.bin" % (self.movelist_path, anim)
+            targetPath = "%s/anim/%s.bin" % (self.root.Charalist.movelist_path, anim)
+
+            if not os.path.exists(targetPath):
+                shutil.copyfile(sourcePath, targetPath)
+                
         for cancelId in dependencies['cancels']:
             for cancel in dependencies['cancels'][cancelId]:
                 cancel['requirement_idx'] = idAliases['requirements'].get(cancel['requirement_idx'], -1)
                 cancel['extradata_idx'] = idAliases['cancel_extradata'].get(cancel['extradata_idx'], -1)
-                cancel['move_id'] = idAliases['moves'].get(cancel['move_id'], -1)
+                if cancel['command'] != 0x800b:
+                    cancel['move_id'] = idAliases['group_cancels'].get(cancel['move_id'], -1)
+                elif cancel['move_id'] < 0x8000:
+                    cancel['move_id'] = idAliases['moves'].get(cancel['move_id'], -1)
+                
+        for cancelId in dependencies['group_cancels']:
+            for cancel in dependencies['group_cancels'][cancelId]:
+                cancel['requirement_idx'] = idAliases['requirements'].get(cancel['requirement_idx'], -1)
+                cancel['extradata_idx'] = idAliases['cancel_extradata'].get(cancel['extradata_idx'], -1)
+                if cancel['move_id'] < 0x8000:
+                    cancel['move_id'] = idAliases['moves'].get(cancel['move_id'], -1)
         
-        self.root.MoveSelector.setMoves(targetMovelist['moves'], self.root.movelist['aliases'])
+        for hitConditionId in dependencies['hit_conditions']:
+            for hitCondition in dependencies['hit_conditions'][hitConditionId]:
+                hitCondition['requirement_idx'] = idAliases['requirements'].get(hitCondition['requirement_idx'], -1)
+                hitCondition['reaction_list_idx'] = idAliases['reaction_list'].get(hitCondition['reaction_list_idx'], -1)
+        
+        for reactionListId in dependencies['reaction_list']:
+            reactionList = dependencies['reaction_list'][reactionListId]
+            for i, pushback in enumerate(reactionList['pushback_indexes']):
+                reactionList['pushback_indexes'][i] = idAliases['pushbacks'].get(pushback, -1)        
+            moveKeys = (k for k in reactionList if k != 'vertical_pushback' and k != 'u1list' and k != 'pushback_indexes')
+            for k in moveKeys:
+                reactionList[k] = idAliases['moves'].get(reactionList[k], 0)
+                
+        for pushbackId in dependencies['pushbacks']:
+            pushback = dependencies['pushbacks'][pushbackId]
+            pushback['pushbackextra_idx'] = idAliases['pushback_extras'].get(pushback['pushbackextra_idx'], -1)    
+        
         messagebox.showinfo('Imported', 'Data successfully imported')
+        self.root.MoveSelector.setMoves(targetMovelist['moves'], self.root.movelist['aliases'])
+        self.root.setMove(moveInsertionIndex)
         
     def onMoveSelectionChange(self, event):
         if self.movelist == None:
