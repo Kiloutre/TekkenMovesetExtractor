@@ -15,6 +15,7 @@ tag2_window_title_regex = TitleId: [0-9a-fA-F]{8}\-([0-9a-fA-F]{8})  # Defines w
 tag2_playerstruct_size  = 0x2960           # Distance between 2 players addresses
 tag2_motbin_offset      = -0x98
 tag2_chara_id_offset    = -0xCC
+tag2_player_count       = 4
 
 # Tekken Revolution addresses (NPEB01406 01.05)
 rev_process_name       = rpcs3.exe

@@ -1341,12 +1341,22 @@ class MoveCopyingWindow:
         self.importMoveButton['state'] = 'enabled'
         move = self.movelist['moves'][moveId]
         
+        self.moveInfo['text'] = "Loading move %d..." % (moveId)
+        
         moveText = "Move ID: %d" % (moveId)
         if moveId in self.movelist['aliases']:
             moveText += "  (%d)" % (self.movelist['aliases'].index(moveId) + 32768)
             
         moveText += "\nName: %s" % (move['name'])
         moveText += "\nAnimation: %s" % (move['anim_name'])
+        
+        print("Getting dependencies...")
+        dependencies = self.getMoveDependencies(moveId)
+        print("got dependencies...")
+        
+        moveText += "\n\nDependencies:"
+        for category in dependencies:
+            moveText += "\n%s: %d items." % (category, len(dependencies[category].keys()))
         
         self.moveInfo['text'] = moveText
         
@@ -1411,30 +1421,46 @@ class MoveCopyingWindow:
             return
         cancelList = [c.copy() for c in getGroupCancelList(self.movelist, cancelId)]
         dependencies['group_cancels'][cancelId] = cancelList
+        print("getGroupCancels", cancelId, recursiveLevel)
         
         for cancel in cancelList:
-            if cancel['move_id'] < 0x8000:
-                self.getMove(cancel['move_id'], dependencies, recursiveLevel + 1)
             self.getRequirements(cancel['requirement_idx'], dependencies)
             self.getCancelExtra(cancel['extradata_idx'], dependencies)
+            if cancel['move_id'] < 0x8000:
+                self.getMove(cancel['move_id'], dependencies, recursiveLevel + 1)
+            
+        print("getGroupCancelsEND")
         
     def getCancels(self, cancelId, dependencies, recursiveLevel):
         if cancelId in dependencies['cancels']:
             return
+        print("getCancels", cancelId, recursiveLevel)
+        
         cancelList = [c.copy() for c in getCancelList(self.movelist, cancelId)]
         dependencies['cancels'][cancelId] = cancelList
         
         for cancel in cancelList:
-            if cancel['command'] == 0x800b:
-                self.getGroupCancels(cancel['move_id'], dependencies, recursiveLevel + 1)
-            elif cancel['move_id'] < 0x8000:
-                self.getMove(cancel['move_id'], dependencies, recursiveLevel + 1)
+            print("cancelmove:", cancel['move_id'])
             self.getRequirements(cancel['requirement_idx'], dependencies)
+            print("getRequirements")
             self.getCancelExtra(cancel['extradata_idx'], dependencies)
+            print("getCancelExtra")
+            if cancel['command'] == 0x800b:
+                print("Getting group cancel")
+                self.getGroupCancels(cancel['move_id'], dependencies, recursiveLevel + 1)
+                print("Got group cancel")
+            elif cancel['move_id'] < 0x8000:
+                print("Getting move cancel")
+                self.getMove(cancel['move_id'], dependencies, recursiveLevel + 1)
+            print("Next item")
+            
+        print("getCancelsEND")
         
     def getMove(self, moveId, dependencies, recursiveLevel=0):
         if moveId in dependencies['moves']:
             return
+            
+        print("getMove", moveId, recursiveLevel)
         
         move = self.movelist['moves'][moveId].copy()
         dependencies['moves'][moveId] = move
@@ -1442,8 +1468,9 @@ class MoveCopyingWindow:
         self.getVoiceclip(move['voiceclip_idx'], dependencies)
         self.getCancels(move['cancel_idx'], dependencies, recursiveLevel)
         self.getHitConditions(move['hit_condition_idx'], dependencies)
+        print("getMoveEND")
         
-    def importMove(self):
+    def getMoveDependencies(self, moveId):
         dependencies = {
             'moves': {},
             'cancels': {},
@@ -1457,8 +1484,24 @@ class MoveCopyingWindow:
             'pushback_extras': {},
             'voiceclips': {},
         }
-        idAliases = copy.deepcopy(dependencies)
-        self.getMove(self.selectedMoveIndex, dependencies)
+        self.getMove(moveId, dependencies)
+        return dependencies
+        
+    def importMove(self):
+        dependencies = self.getMoveDependencies(self.selectedMoveIndex)
+        idAliases = {
+            'moves': {},
+            'cancels': {},
+            'group_cancelS': {},
+            'requirements': {},
+            'extra_move_properties': {},
+            'cancel_extradata': {},
+            'hit_conditions': {},
+            'reaction_list': {},
+            'pushbacks': {},
+            'pushback_extras': {},
+            'voiceclips': {},
+        }
         
         targetMovelist = self.root.movelist
         moveInsertionIndex = len(targetMovelist['moves'])
@@ -1721,7 +1764,7 @@ class GUI_TekkenMovesetEditor():
         moveCreationMenu = [
             ("Create new empty move", None ),
             ("Copy current move", None ),
-            ("Copy move from another moveset", self.openMoveCopyWindow ),
+            ("Copy move from another moveset (BETA!!!)", self.openMoveCopyWindow ),
         ]
         
         extrapropCreationMenu = [
@@ -1818,7 +1861,7 @@ class GUI_TekkenMovesetEditor():
         self.resetForms()
             
     def setTitle(self, label = ""):
-        title = "TekkenMovesetEditor 0.13-BETA"
+        title = "TekkenMovesetEditor 0.14-BETA"
         if label != "":
             title += " - " + label
         self.window.wm_title(title) 
@@ -1864,6 +1907,7 @@ class GUI_TekkenMovesetEditor():
         
     def openMoveCopyWindow(self):
         if self.MoveCopyingWindow == None:
+            messagebox.showinfo('Warning', 'This feature is in BETA, save your moveset before using it!!!')
             app = MoveCopyingWindow(self)
             self.MoveCopyingWindow = app
             app.window.mainloop()

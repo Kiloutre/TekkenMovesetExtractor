@@ -332,7 +332,11 @@ def exportAll(parent, TekkenVersion):
     exportedMovesets = []
     playerSize = game_addresses.addr[TekkenVersion + '_playerstruct_size']
     
-    for i in range(4):
+    playerCount = 2
+    if TekkenVersion + '_player_count' in game_addresses.addr:
+        playerCount = game_addresses.addr[TekkenVersion + '_player_count']
+    
+    for i in range(playerCount):
         moveset_name = TekkenExporter.getPlayerMovesetName(playerAddr)
         if moveset_name not in exportedMovesets:
             print("Requesting export for %s..." % (moveset_name))
@@ -405,7 +409,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         self.selected_char = None
         self.chara_data = None
         
-        self.wm_title("TekkenMovesetExtractor 1.0.13") 
+        self.wm_title("TekkenMovesetExtractor 1.0.14") 
         self.iconbitmap('InterfaceData/natsumi.ico')
         self.minsize(960, 540)
         self.geometry("960x540")
@@ -504,7 +508,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         TextArea.pack(padx=10, pady=5, fill='both', expand=1)
         
         sys.stdout = TextRedirector(TextArea)
-        #sys.stderr = TextRedirector(TextArea, "err")
+        sys.stderr = TextRedirector(TextArea, "err")
         
     def updateCharacterlist(self):
         self.characterList = getCharacterList()
@@ -593,7 +597,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: All players", ("tag2",), exportAll)
         self.createButton(self.tag2_exportFrame, "Export: Tekken Rev: All players", ("rev",), exportAll)
         self.createButton(self.tag2_exportFrame, "Export: Tekken 6: All players", ("t6",), exportAll)
-        self.createButton(self.tag2_exportFrame, "Export: Tekken 5: All players", ("5",), exportAll)
+        self.createButton(self.tag2_exportFrame, "Export: Tekken 5: All players", ("t5",), exportAll)
         
     def createButton(self, frame, text, const_args, callback, side='top', expand=1):
         exportButton = Button(frame)

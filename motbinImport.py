@@ -81,8 +81,7 @@ class Importer:
             
         if 'export_version' not in m or not versionMatches(m['export_version']):
             print("Error: trying to import outdated moveset, please extract again.")
-            if 'export_version' in m:
-                raise Exception("Moveset version: %s. Importer version: %s." % (m['export_version'], importVersion))
+            raise Exception("Moveset version: %s. Importer version: %s." % (m['export_version'], importVersion))
             
 
         fillAliasesDictonnaries(m['version'])
