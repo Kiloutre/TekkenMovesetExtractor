@@ -2101,7 +2101,7 @@ class GUI_TekkenMovesetEditor():
         newProp = {f:0 for f in extrapropFields}
         
         self.movelist['extra_move_properties'].append(newProp)
-        self.setCancelList(len(self.movelist['extra_move_properties']) - 1)
+        self.setExtrapropList(len(self.movelist['extra_move_properties']) - 1)
         
     def copyExtrapropList(self):
         if self.ExtrapropEditor.editMode == None:
