@@ -45,7 +45,7 @@ globalRequirementsReplace = {
     222: 'copy_nearest', #Character ID
     223: 'copy_nearest', #Character ID
     224: 'copy_nearest', #Character ID
-    9999: 'copy_nearest', #Disable
+    9999: 'copy_nearest', #Used to disable certain requirements reliably
 }
 
 def getHitboxAliases(version, hitbox):
@@ -85,8 +85,6 @@ def getMoveExtrapropAlias(version, type, id, value):
         alias = versionAliases[version]['extra_move_properties'].get(id, None)
         if alias != None:
             id = alias['t7_id']
-            if 'force_type' in alias:
-                type = alias['force_type']
             if 'force_value' in alias:
                 value = alias['value']
     return type, id, value
@@ -118,8 +116,6 @@ class ExtraPropertyFix:
         if not self.matchProperty(property_list[index]):
             return False
     
-        if 'force_type' in self.alias:
-            property_list[index]['type'] = self.alias['force_type']
         if 'value_alias' in self.alias:
             value = property_list[index]['value']
             property_list[index]['value'] = self.alias['value_alias'].get(value, value)

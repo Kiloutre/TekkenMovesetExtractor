@@ -601,7 +601,7 @@ tag2_extra_move_properties = {
     0x81d6: { 't7_id': 0x81f3, 'desc': 'Tag2 projectiles fix timestop (tochange)' },
     0x823c: { 't7_id': 0x8393, 'desc': '(ALISA) Aa_spiral' },
     #0x824e: { 't7_id': 0x83a3, 'desc': 'Tag out (assumption, filled)' },
-    #0x82cd: { 't7_id': 0x8422, 'desc': 'Set Raven clone move id' }, #Unknown t7 ID
+    0x82cd: { 't7_id': 0x82d8, 'desc': 'Set Raven clone move id' }, #Assumption that it works like sugar
 }
 
 tag2_character_fixes = {

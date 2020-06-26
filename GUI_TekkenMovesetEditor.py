@@ -40,7 +40,8 @@ fieldLabels = {
     'u16': 'collision? (u16)',
     'u17': 'distance (u17)',
     'anim_max_len': 'anim_len',
-    'standing': 'default'
+    'standing': 'default',
+    'type': 'starting_frame',
 }
 
 moveFields = {
@@ -690,7 +691,7 @@ class FormEditor:
             container = Frame(self.container)
             container.pack(side='top', anchor='n', fill='both')
 
-            fieldLabel = Label(container, text=field, width=15)
+            fieldLabel = Label(container, text=fieldLabels.get(field, field), width=15)
             fieldLabel.grid(row=0, column=0, pady=2, sticky='w')
             
             sv = StringVar()
