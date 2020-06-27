@@ -13,6 +13,38 @@ from zlib import crc32
 
 charactersPath = "./extracted_chars/"
 
+requirementLabels = {
+    0: 'Always true',
+    881: 'Requirements end',
+    135: 'Death',
+    615: 'Screw',
+    614: 'Juggle',
+}
+
+propertyLabels = {
+    0: 'Properties end',
+    0x842e: 'Hand-stuff',
+    0x829d: 'Hide HUD',
+    0x82d8: 'Set partner\'s move (Sugar)',
+    0x83c3: 'Balconybreak victim: set opponent\'s move',
+    0x83c2: 'Set opponent\'s floor level',
+    0x81d6: 'Timestop for current player',
+    0x8255: 'Use-up screw',
+    0x81d6: 'Move speed% (4096 = 100%)',
+}
+
+def getDetails(itemId, key):
+    tekkenAliasesList = {
+        'requirements': requirementLabels,
+        'extra_move_properties': propertyLabels
+    }
+    
+    description = tekkenAliasesList[key].get(itemId)
+    if description != None and not description.startswith('(') \
+        and description != '' and description != 'AUTO' and description != 'MAPPING':
+        return description
+    return None
+
 reqListEndval = {
     'Tekken7': 881,
     'Tag2': 690,
@@ -187,6 +219,14 @@ fieldsTypes = {
     'cancel_extradata': cancelExtradataFields,
     'voiceclips': voiceclipFields,
 }
+
+def groupByPrefix(strings):
+    stringsByPrefix = {}
+    for string in strings:
+            prefix, suffix = map(str.strip, string.split("_", 1))
+            group = stringsByPrefix.setdefault(prefix, [])
+            group.append(string)
+    return stringsByPrefix
     
 def getCharacterList():
     if not os.path.isdir(charactersPath):
@@ -194,7 +234,13 @@ def getCharacterList():
     folders = [folder for folder in os.listdir(charactersPath) if os.path.isdir(charactersPath + folder)]
     folders = sorted(folders)
     
-    return folders
+    sortedStringList = []
+    
+    testDict = groupByPrefix(folders)
+    for key in sorted(testDict.keys(), reverse=True):
+        for string in testDict[key]: sortedStringList.append(string)
+    
+    return sortedStringList
     
 def getMovelist(path):
     jsonFilename = next(file for file in os.listdir(path) if file.endswith(".json"))
@@ -401,6 +447,8 @@ class CharalistSelector:
         self.root.resetForms()
         
         self.hide()
+        if movelist['version'] != 'Tekken7':
+            messagebox.showwarning('Warning', 'Modifying non-Tekken 7 movesets works, but is not recommended.\nLoad the moveset in Tekken 7 and export it to convert it to the Tekken7 format.\nRequirement and extra-move property will be differents otherwise.')
         
 class MoveSelector:
     def __init__(self, root, rootFrame):
@@ -671,7 +719,7 @@ class FormEditor:
         
     def enableNavigator(self, itemLabel):
         navigatorFrame = Frame(self.container)
-        navigatorFrame.pack(side='bottom', fill='x')
+        navigatorFrame.pack(side='bottom', fill='x', expand=False)
        
         navigatorLabel = Label(navigatorFrame)
         navigatorLabel.pack(side='top')
@@ -711,7 +759,7 @@ class FormEditor:
             
     def enableDetailsArea(self):
         details = Label(self.container)
-        details.pack(side='bottom', fill='x')
+        details.pack(side='bottom', fill='x', padx=0, pady=0)
         self.details = details
             
 class HitConditionEditor(FormEditor):
@@ -913,8 +961,22 @@ class ExtrapropEditor(FormEditor):
         FormEditor.__init__(self, root, rootFrame, 'extra_move_properties', col, row)
         self.setListOnsaveFunction(self.root.setExtrapropList)
         self.enableNavigator(itemLabel='Prop')
+        self.enableDetailsArea()
         
         self.initFields()
+        
+    def setDetails(self):
+        if self.root.movelist['version'] != 'Tekken7':
+            return
+
+        reqId = self.fieldValue['id']
+        description = getDetails(reqId, 'extra_move_properties')
+        
+        if description != None:
+            text = '%x: %s' % (reqId, description)
+        else:
+            text = ''
+        self.details['text'] = text
             
     def setItem(self, index):
         propertyData = self.itemList[index]
@@ -935,6 +997,7 @@ class ExtrapropEditor(FormEditor):
                 self.fieldInput[field].config(state='enabled')
         self.editMode = True
         
+        self.setDetails()
         self.disableSaveButton()
             
 class RequirementEditor(FormEditor):
@@ -947,14 +1010,14 @@ class RequirementEditor(FormEditor):
         self.initFields()
         
     def setDetails(self):
-        return
+        if self.root.movelist['version'] != 'Tekken7':
+            return
+
         reqId = self.fieldValue['req']
-        getDetails = getRequirement if self.root.movelist['version'] == 'Tekken7' else getTag2Requirement
+        description = getDetails(reqId, 'requirements')
         
-        details = getDetails(reqId)
-        
-        if details != None and details['desc'] != 'MAPPING' and not details['desc'].startswith('('):
-            text = '%d: %s' % (reqId, details['desc'])
+        if description != None:
+            text = '%d: %s' % (reqId, description)
         else:
             text = ''
         self.details['text'] = text
@@ -1716,7 +1779,7 @@ class GUI_TekkenMovesetEditor():
         self.setTitle()
         window.iconbitmap('InterfaceData/renge.ico')
         window.minsize(960, 540)
-        window.geometry("1280x720")
+        window.geometry("1280x770")
         
         self.Charalist = CharalistSelector(self, window)
         self.MoveSelector = MoveSelector(self, window)
@@ -1857,8 +1920,8 @@ class GUI_TekkenMovesetEditor():
         if showCharacterSelector:
             self.updateCharacterlist()
         else:
-            self.setCharaFrame.toggleVisibility()
-            7
+            self.Charalist.toggleVisibility()
+            
         self.resetForms()
             
     def setTitle(self, label = ""):
@@ -1911,10 +1974,7 @@ class GUI_TekkenMovesetEditor():
             messagebox.showinfo('Warning', 'This feature is in BETA, save your moveset before using it!!!')
             app = MoveCopyingWindow(self)
             self.MoveCopyingWindow = app
-            app.window.mainloop()
-            
-    
-        
+            app.window.mainloop()        
     def getMoveId(self, moveId):
         return self.movelist['aliases'][moveId - 0x8000] if moveId >= 0x8000 else moveId
         
