@@ -379,7 +379,7 @@ tag2_requirements = {
 }
 
 tag2_extra_move_properties = {
-    0x8193: { 't7_id': 0x8255, 'desc': 'Use up screw/bound' },
+    0x8193: { 't7_id': 0x8255, 'desc': 'Uses up screw/bound' },
     0x8001: { 't7_id': 0x800b, 'desc': 'MAPPING' },
     0x8002: { 't7_id': 0x800b, 'desc': 'MAPPING' },
     0x8003: { 't7_id': 0x8003, 'desc': 'MAPPING' },
@@ -585,8 +585,8 @@ tag2_extra_move_properties = {
     0x82d9: { 't7_id': 0x842c, 'desc': '(ALISA) Aa_runchop' },
     0x82db: { 't7_id': 0x842e, 'desc': 'MAPPING' },
     0x82dc: { 't7_id': 0x842f, 'desc': 'MAPPING' },
-    0x82e9: { 't7_id': 0x843c, 'desc': 'Throw camera2' },
-    0x82ea: { 't7_id': 0x843d, 'desc': 'Throw camera' },
+    0x82e9: { 't7_id': 0x843c, 'desc': 'Throw camera?' },
+    0x82ea: { 't7_id': 0x843d, 'desc': 'Throw camera?2' },
     0x82ec: { 't7_id': 0x843f, 'desc': '(LARS) La_rk00B_n' },
     0x82ed: { 't7_id': 0x84d1, 'desc': 'MAPPING' },
     0x82ee: { 't7_id': 0x8441, 'desc': '(ALISA) Male_Cnt_M1' },
@@ -598,7 +598,7 @@ tag2_extra_move_properties = {
     0x830b: { 't7_id': 0x853d, 'desc': '(ALISA) sDw_AIR00_' },
     0x813c: { 't7_id': 0x81e9, 'desc': 'Wallsplat (wDm_AirF_Up)' },
     0x8146: { 't7_id': 0x81f3, 'desc': 'Dj_beam_01' },
-    0x81d6: { 't7_id': 0x81f3, 'desc': 'Tag2 projectiles fix timestop (tochange)' },
+    0x81d6: { 't7_id': 0x81f3, 'desc': 'MAPPING' }, #Tag2 projectiles fix timestop (tochange)
     0x823c: { 't7_id': 0x8393, 'desc': '(ALISA) Aa_spiral' },
     #0x824e: { 't7_id': 0x83a3, 'desc': 'Tag out (assumption, filled)' },
     0x82cd: { 't7_id': 0x82d8, 'desc': 'Set Raven clone move id' }, #Assumption that it works like sugar

@@ -15,22 +15,62 @@ charactersPath = "./extracted_chars/"
 
 requirementLabels = {
     0: 'Always true',
+    47: 'On block',
+    44: 'On Hit',
+    146: 'Standing on left side',
+    147: 'Standing on right side',
+    155: 'If Ki Charged',
     881: 'Requirements end',
     135: 'Death',
+    256: 'Bryan taunted',
     615: 'Screw',
     614: 'Juggle',
+    641: 'Once per match (Leroy Cane)',
+    176: 'In Max-Mode',
+    628: 'Meter equal or higher',
+    157: 'Rage',
+    217: 'Player character ID',
+    218: 'Player NOT character ID',
+    219: 'Opponent character ID',
+    220: 'Opponent NTO character ID',
+    221: 'Partner character ID',
+    222: 'Partner NOT character ID',
 }
 
 propertyLabels = {
     0: 'Properties end',
+    0x8001: 'Wallsplat VFX',
+    0x800b: 'Ground Ripple VFX',
+    0x802e: 'Hit Spark VFXX',
     0x842e: 'Hand-stuff',
-    0x829d: 'Hide HUD',
+    0x829d: 'Set HUD visibility',
     0x82d8: 'Set partner\'s move (Sugar)',
     0x83c3: 'Balconybreak victim: set opponent\'s move',
     0x83c2: 'Set opponent\'s floor level',
-    0x81d6: 'Timestop for current player',
-    0x8255: 'Use-up screw',
-    0x81d6: 'Move speed% (4096 = 100%)',
+    0x8255: 'Spend screw',
+    0x8272: 'Spend Rage (if juggle)',
+    0x8233: 'Spend Rage (if grounded)',
+    0x81d6: 'Player speed (4096 = 100%)',
+    0x81bd: 'Power Crush',
+    0x8046: 'Power Crush Smoke VFX',
+    0x84c4: 'Play sound',
+    0x84c6: 'Play sound from opponent',
+    0x828b: 'Game speed %',
+    0x8223: 'Inflict self damage',
+    0x806a: 'Inflict damage to opponent',
+    0x821b: 'Enable scaled damage',
+    0x821c: 'Inflict scaled damage to opponent',
+    0x824c: 'AI input',
+    0x8078: 'Give Bryan taunt properties',
+    0x820b: 'Spawn projectile',
+    0x8213: 'Attack destroys projectile',
+    0x8214: 'Attack deflects projectile',
+    0x826a: 'Homing (Left Hand)',
+    0x826b: 'Homing (Right Hand)',
+    0x826c: 'Homing (Left foot)',
+    0x826d: 'Homing (Right Foot)',
+    0x8343: 'Attach item to limb',
+    0x8344: 'Detach item to limb',
 }
 
 def getDetails(itemId, key):
@@ -1726,7 +1766,7 @@ class GroupCancelWindow:
             ("Delete", deletionMenu),
         ]
         
-        menu = createMenu(window, menuActions)
+        menu = createMenu(window, menuActions, validationFunc=self.root.canEditMoveset)
         window.config(menu=menu)
         
         self.setCancelList(id)
@@ -1764,7 +1804,7 @@ def createMenu(root, menuActions, validationFunc=None, rootMenu=True):
         elif command == None:
             newMenu.add_command(label=label, state="disabled")
         else:
-            wrappedFunction = lambda validationFunc=validationFunc, command=command : command() if validationFunc() else None
+            wrappedFunction = lambda validationFunc=validationFunc, command=command : command() if (validationFunc and validationFunc()) else None
             newMenu.add_command(label=label, command=wrappedFunction)
     return newMenu
         
