@@ -32,7 +32,7 @@ requirementLabels = {
     217: 'Player character ID',
     218: 'Player NOT character ID',
     219: 'Opponent character ID',
-    220: 'Opponent NTO character ID',
+    220: 'Opponent NOT character ID',
     221: 'Partner character ID',
     222: 'Partner NOT character ID',
 }
@@ -41,7 +41,7 @@ propertyLabels = {
     0: 'Properties end',
     0x8001: 'Wallsplat VFX',
     0x800b: 'Ground Ripple VFX',
-    0x802e: 'Hit Spark VFXX',
+    0x802e: 'Hit Spark VFX',
     0x842e: 'Hand-stuff',
     0x829d: 'Set HUD visibility',
     0x82d8: 'Set partner\'s move (Sugar)',
@@ -90,7 +90,8 @@ reqListEndval = {
     'Tag2': 690,
     'Revolution': 697,
     'Tekken6': 397,
-    'Tekken5': 327,
+    'Tekken5DR': 327,
+    'Tekken5': 321,
     'Tekken4': 263,
 }
 
@@ -186,7 +187,7 @@ hitConditionFields = {
     'reaction_list_idx': 'number'
 }
 
-reactionlistExtraFields = [
+reactionlistExtraPushbackFields = [
     'front_pushback',
     'back_pushback',
     'left_side_pushback',
@@ -194,6 +195,15 @@ reactionlistExtraFields = [
     'front_ch_pushback',
     'downed_pushback',
     'block_pushback'
+]
+
+reactionlistExtraLaunchFields = [
+    'front_direction',
+    'back_direction',
+    'left_side_direction',
+    'right_side_direction',
+    'front_ch_direction',
+    'downed_direction'
 ]
 
 reactionlistFields = {
@@ -219,12 +229,12 @@ reactionlistFields = {
     'front_ch_pushback': 'number',
     'downed_pushback': 'number',
     'block_pushback': 'number',
-    'u1_1': 'number',
-    'u1_2': 'number',
-    'u1_3': 'number',
-    'u1_4': 'number',
-    'u1_5': 'number',
-    'u1_6': 'number',
+    'front_direction': 'number',
+    'back_direction': 'number',
+    'left_side_direction': 'number',
+    'right_side_direction': 'number',
+    'front_ch_direction': 'number',
+    'downed_direction': 'number'
 }
 
 pushbackFields = {
@@ -260,12 +270,20 @@ fieldsTypes = {
     'voiceclips': voiceclipFields,
 }
 
+folderNameOrder = [
+    't7',
+    'tag2'
+]
+
 def groupByPrefix(strings):
     stringsByPrefix = {}
     for string in strings:
+        if '_' in string:
             prefix, suffix = map(str.strip, string.split("_", 1))
-            group = stringsByPrefix.setdefault(prefix, [])
-            group.append(string)
+        else:
+            prefix, suffix = '', string
+        group = stringsByPrefix.setdefault(prefix, [])
+        group.append(string)
     return stringsByPrefix
     
 def getCharacterList():
@@ -276,9 +294,15 @@ def getCharacterList():
     
     sortedStringList = []
     
-    testDict = groupByPrefix(folders)
-    for key in sorted(testDict.keys(), reverse=True):
-        for string in testDict[key]: sortedStringList.append(string)
+    groupedStrings = groupByPrefix(folders)
+    keyList = sorted(groupedStrings.keys(), reverse=True)
+    
+    for key in folderNameOrder:
+        for string in groupedStrings[key]: sortedStringList.append(string)
+        del groupedStrings[key]
+    
+    for key in groupedStrings:
+        for string in groupedStrings[key]: sortedStringList.append(string)
     
     return sortedStringList
     
@@ -937,24 +961,24 @@ class ReactionListEditor(FormEditor):
         self.initFields()
         
         self.registerFieldButtons([
-            *[(f, self.root.setPushback) for f in self.fieldTypes if f in reactionlistExtraFields]
+            *[(f, self.root.setPushback) for f in self.fieldTypes if f in reactionlistExtraPushbackFields]
         ])
         
     def save(self):
         if super().save():
-            pushbackFields = reactionlistExtraFields
+            pushbackFields = reactionlistExtraPushbackFields
             invalidFields = [f for f in pushbackFields if not validateField('number', self.fieldVar[f].get())]
 
             if len(invalidFields) == 0:
                 pushbackFields = [getFieldValue('number', self.fieldVar[f].get()) for f in pushbackFields]
                 self.root.saveField(self.key, self.id, 'pushback_indexes', pushbackFields)
             
-            u1Fields = [f for f in self.fieldTypes if f.startswith('u1_')]
-            invalidFields = [f for f in u1Fields if not validateField('number', self.fieldVar[f].get())]
+            launchFields = reactionlistExtraLaunchFields
+            invalidFields = [f for f in launchFields if not validateField('number', self.fieldVar[f].get())]
 
             if len(invalidFields) == 0:
-                u1Fields = [getFieldValue('number', self.fieldVar[f].get()) for f in u1Fields]
-                self.root.saveField(self.key, self.id, 'u1list', u1Fields)
+                launchFields = [getFieldValue('number', self.fieldVar[f].get()) for f in launchFields]
+                self.root.saveField(self.key, self.id, 'u1list', launchFields)
             
     def setItem(self, itemData, itemId):
         self.id = itemId
@@ -967,9 +991,9 @@ class ReactionListEditor(FormEditor):
                 self.setField(field, itemData[field], True)
                 
         for i, val in enumerate(itemData['pushback_indexes']):
-            self.setField(reactionlistExtraFields[i], val, True)
+            self.setField(reactionlistExtraPushbackFields[i], val, True)
         for i, val in enumerate(itemData['u1list']):
-            self.setField('u1_' + str(i + 1), val, True)
+            self.setField(reactionlistExtraLaunchFields[i], val, True)
             
         self.editMode = True
         self.disableSaveButton()
@@ -1578,7 +1602,7 @@ class MoveCopyingWindow:
         dependencies = {
             'moves': {},
             'cancels': {},
-            'group_cancelS': {},
+            'group_cancels': {},
             'requirements': {},
             'extra_move_properties': {},
             'cancel_extradata': {},
@@ -1596,7 +1620,7 @@ class MoveCopyingWindow:
         idAliases = {
             'moves': {},
             'cancels': {},
-            'group_cancelS': {},
+            'group_cancels': {},
             'requirements': {},
             'extra_move_properties': {},
             'cancel_extradata': {},

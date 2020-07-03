@@ -592,12 +592,13 @@ class GUI_TekkenMovesetExtractor(Tk):
         for playerid in range(2):
             self.createButton(self.t7_exportFrame, "Export: Tekken 7: Player %d" % (playerid + 1), ("t7", playerid), exportCharacter)
         
-        self.createButton(self.t7_exportFrame, "Export: Tekken 7: All Players", ("t7",), exportAll)
+        self.createButton(self.t7_exportFrame, "Export: Tekken 7: Both Players", ("t7",), exportAll)
         
         self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: All players", ("tag2",), exportAll)
-        self.createButton(self.tag2_exportFrame, "Export: Tekken Rev: All players", ("rev",), exportAll)
-        self.createButton(self.tag2_exportFrame, "Export: Tekken 6: All players", ("t6",), exportAll)
-        self.createButton(self.tag2_exportFrame, "Export: Tekken 5: All players", ("t5",), exportAll)
+        self.createButton(self.tag2_exportFrame, "Export: Tekken Rev: Both players", ("rev",), exportAll)
+        self.createButton(self.tag2_exportFrame, "Export: Tekken 6: Both players", ("t6",), exportAll)
+        self.createButton(self.tag2_exportFrame, "Export: Tekken 5: Both players", ("t5",), exportAll)
+        self.createButton(self.tag2_exportFrame, "Export: Tekken 5 DR: Both players", ("t5dr",), exportAll)
         
     def createButton(self, frame, text, const_args, callback, side='top', expand=1):
         exportButton = Button(frame)

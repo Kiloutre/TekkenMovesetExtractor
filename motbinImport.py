@@ -836,7 +836,7 @@ class MotbinStruct:
     
     def copyMotaOffsets(self, motbin_ptr=None, playerAddr=None):
         if motbin_ptr == None and playerAddr == None:
-            raise Exception("copyMotaOffsets: No valid addres provided")
+            raise Exception("copyMotaOffsets: No valid address provided")
         
         if motbin_ptr == None:
             motbin_ptr = self.importer.readInt(playerAddr + game_addresses.addr['t7_motbin_offset'], 8)

@@ -20,12 +20,9 @@ t6_requirements = {
     61: { 't7_id': 72, 'desc': '(LEI_WULONG) Re_sbDASHFLp -> 32769' },
     104: { 't7_id': 122, 'desc': '(ALISA) dwDWN_00U -> 32774' },
     112: { 't7_id': 130, 'desc': '(DRAGUNOV) Cn_lk00F -> 32769' },
-    117: { 't7_id': 135, 'desc': '(ALISA) dwDWN_00U -> 32771' },
-    143: { 't7_id': 182, 'desc': '(ALISA) sGrd_YC02 -> 32769' },
-    152: { 't7_id': 216, 'desc': '(ALISA) wDm_AirR_00E -> 32769' },
+    117: { 't7_id': 135, 'desc': '(ALISA) dwDWN_00U -> 32771' }, #death again??
     194: { 't7_id': 283, 'desc': '(ALISA) wDm_AirR_00E -> 32769' },
     209: { 't7_id': 329, 'desc': '(BRYAN) Bx_midco_RK -> 32769' },
-    214: { 't7_id': 352, 'desc': '(ALISA) sGrd_YC02 -> 32769' },
     236: { 't7_id': 533, 'desc': '(GANRYU) Sm_SHIKO -> 32769' },
     261: { 't7_id': 552, 'desc': '(ALISA) Aa_kami -> 32769' },
     310: { 't7_id': 604, 'desc': '(EDDY) wDm_Cp_monkey_00 -> 32769' },

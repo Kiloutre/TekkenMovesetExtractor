@@ -3,6 +3,7 @@ from Tag2Aliases import tag2_requirements, tag2_extra_move_properties, tag2_char
 from RevAliases import rev_requirements, getRevExtraprop
 from T6Aliases import t6_requirements, t6_extra_move_properties
 from T5Aliases import t5_requirements, getT5Extraprop
+from T5DRAliases import t5dr_requirements, getT5DRExtraprop
 from T4Aliases import t4_requirements, getT4Extraprop
 
 versionAliases = {
@@ -30,6 +31,10 @@ versionAliases = {
         'requirements': t5_requirements,
         'extraprop_func': getT5Extraprop #todo
     },
+    'Tekken5DR': {
+        'requirements': t5dr_requirements,
+        'extraprop_func': getT5DRExtraprop #todo
+    },
     'Tekken4': {
         'requirements': t4_requirements,
         'extraprop_func': getT4Extraprop #todo
@@ -38,13 +43,6 @@ versionAliases = {
 }
 
 globalRequirementsReplace = {
-    218: 'copy_nearest', #Character ID
-    219: 'copy_nearest', #Character ID
-    220: 'copy_nearest', #Character ID
-    221: 'copy_nearest', #Character ID
-    222: 'copy_nearest', #Character ID
-    223: 'copy_nearest', #Character ID
-    224: 'copy_nearest', #Character ID
     9999: 'copy_nearest', #Used to disable certain requirements reliably
 }
 
