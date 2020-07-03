@@ -308,7 +308,7 @@ def getMovesetTotalSize(m, folderName):
         try:
             size += os.path.getsize("%s/mota_%d.bin" % (folderName, i))
         except:
-            print("Can't open file '%s/mota_%d.bin'" % (folderName, i))
+            pass #print("Can't open file '%s/mota_%d.bin'" % (folderName, i))
     
     return size
     

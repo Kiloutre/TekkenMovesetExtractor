@@ -8,5 +8,6 @@ Both online players must load the same moveset on the same players.
 - [IMPORTER] Allow T7 movesets to use opponent-specific conditions
 - [EDITOR] Rename u1_list to x_direction in reaction list
 - [EDITOR] Fix move copying
+1.0.18 Hotfix: [EDITOR] Fix character list sometimes erroring
 
 --- by kilo ( https://www.youtube.com/c/kiloutre ) ---

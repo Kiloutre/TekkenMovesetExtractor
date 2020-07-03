@@ -295,7 +295,12 @@ fieldsTypes = {
 
 folderNameOrder = [
     't7',
-    'tag2'
+    '7',
+    'tag2',
+    '2',
+    't6',
+    't5',
+    't5dr'
 ]
 
 def groupByPrefix(strings):
@@ -321,8 +326,9 @@ def getCharacterList():
     keyList = sorted(groupedStrings.keys(), reverse=True)
     
     for key in folderNameOrder:
-        for string in groupedStrings[key]: sortedStringList.append(string)
-        del groupedStrings[key]
+        if key in groupedStrings:
+            for string in groupedStrings[key]: sortedStringList.append(string)
+            del groupedStrings[key]
     
     for key in groupedStrings:
         for string in groupedStrings[key]: sortedStringList.append(string)
@@ -2012,7 +2018,7 @@ class GUI_TekkenMovesetEditor():
         self.resetForms()
             
     def setTitle(self, label = ""):
-        title = "TekkenMovesetEditor 0.17-BETA"
+        title = "TekkenMovesetEditor 0.18-BETA"
         if label != "":
             title += " - " + label
         self.window.wm_title(title) 
