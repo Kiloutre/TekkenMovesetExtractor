@@ -298,9 +298,11 @@ folderNameOrder = [
     '7',
     'tag2',
     '2',
+    'rev',
     't6',
     't5',
-    't5dr'
+    't5dr',
+    't4'
 ]
 
 def groupByPrefix(strings):
