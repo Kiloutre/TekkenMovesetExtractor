@@ -5,5 +5,8 @@ Both online players must load the same moveset on the same players.
 
 1.0.17 Changelog:
 - [EXTRACTOR] Added Tekken 5 (not DR) support
+- [IMPORTER] Allow T7 movesets to use opponent-specific conditions
+- [EDITOR] Rename u1_list to x_direction in reaction list
+- [EDITOR] Fix move copying
 
 --- by kilo ( https://www.youtube.com/c/kiloutre ) ---
