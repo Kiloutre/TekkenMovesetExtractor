@@ -736,8 +736,8 @@ class MotbinStruct:
                     self.writeBytes(motaBytes)
                     self.mota_list.append(motaAddr)
             except:
-                print("Warning: impossible to import MOTA")
-                break
+                self.mota_list.append(0)
+                print("Warning: impossible to import MOTA %d", i)
                 
     def allocateMoves(self):
         self.allocateAnimations()
@@ -834,12 +834,16 @@ class MotbinStruct:
         for i, motaAddr in enumerate(self.mota_list):
             self.importer.writeInt(self.motbin_ptr + 0x280 + (i * 8), motaAddr, 8)
     
-    def copyMotaOffsets(self, motbin_ptr=None, playerAddr=None):
-        if motbin_ptr == None and playerAddr == None:
+    def copyMotaOffsets(self, source_motbin_ptr=None, playerAddr=None):
+        if source_motbin_ptr == None and playerAddr == None:
             raise Exception("copyMotaOffsets: No valid address provided")
         
-        if motbin_ptr == None:
-            motbin_ptr = self.importer.readInt(playerAddr + game_addresses.addr['t7_motbin_offset'], 8)
+        if source_motbin_ptr == None:
+            source_motbin_ptr = self.importer.readInt(playerAddr + game_addresses.addr['t7_motbin_offset'], 8)
+    
+        excludedOffsets = [ # Don't copy these offsets from the current player. Put hands stuff in there
+            
+        ]
     
         offsets = [
             (0x280, 8),
@@ -856,9 +860,11 @@ class MotbinStruct:
             (0x2d8, 8)
         ]
         
-        for offset, read_size in offsets:
-            offsetBytes = self.importer.readBytes(motbin_ptr + offset, read_size)
-            self.importer.writeBytes(self.motbin_ptr + offset, offsetBytes)
+        for idx, offsetInfo in enumerate(offsets):
+            if (idx not in excludedOffsets) or self.mota_list[idx] == 0:
+                offset, read_size = offsetInfo
+                offsetBytes = self.importer.readBytes(source_motbin_ptr + offset, read_size)
+                self.importer.writeBytes(self.motbin_ptr + offset, offsetBytes)
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:

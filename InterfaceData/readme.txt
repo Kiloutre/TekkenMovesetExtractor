@@ -3,11 +3,8 @@ Movesets loaded using "Import to P1/P2" will be unloaded after the next loading 
 If you want the moveset to stay constantly, use the "Online Player" buttons, and BEFORE the loading screen.
 Both online players must load the same moveset on the same players.
 
-1.0.17 Changelog:
-- [EXTRACTOR] Added Tekken 5 (not DR) support
-- [IMPORTER] Allow T7 movesets to use opponent-specific conditions
-- [EDITOR] Rename u1_list to x_direction in reaction list
-- [EDITOR] Fix move copying
-1.0.18 Hotfix: [EDITOR] Fix character list sometimes erroring
+1.0.19 Changelog:
+- [EDITOR] Add "First"/"Last" navigation buttons
+- [EDITOR] Add button to create/copy/delete move in current moveset
 
 --- by kilo ( https://www.youtube.com/c/kiloutre ) ---

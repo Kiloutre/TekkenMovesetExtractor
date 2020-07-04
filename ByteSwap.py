@@ -28,38 +28,56 @@ def getAnimationLength(fb):
         return 0xffffffff
 
 def SwapMotaBytes(fb):
-    anim = AnimData(fb)
-    if len(anim.data) >= 4 and bytes(anim.data[0:4]).decode('ascii') == 'MOTA':
+    anim = AnimSwapper(fb)
+    dataLen = len(anim.data)
+    if dataLen >= 4 and bytes(anim.data[0:4]).decode('ascii') == 'MOTA':
+    
         anim.swapBytes(4, 5)
         anim.swapBytes(6, 7)
         
         anim.reverseEndian(8, 4)
         anim.reverseEndian(0xc, 4)
-        iVar1 = anim.bToInt(0xc, 4)
-        uVar2 = iVar1
-        uVar3 = 0
-        if iVar1 != 0:
-            while True:
-                anim.reverseEndian(uVar3 * 4 + 0x14, 4)
-                uVar1 = anim.bToInt(uVar3 * 4 + 0x14, 4)
-                anim.SwapAnimationBytes(offset=uVar1)
-                uVar1 = uVar3 + 1
-                uVar3 = uVar1
-                if uVar1 >= anim.bToInt(0xc, 4):
-                    break
+        animCount = anim.bToInt(0xc, 4)
+        
+        anim.setByte(0x11, 1)
+        
+        swappedList = []
+        
+        for anim_idx in range(animCount):
+            animOffsetAddr = 0x14 + (anim_idx * 4)
+            
+            if animOffsetAddr >= dataLen:
+                continue
+                
+            anim.offset = 0
+            anim.reverseEndian(animOffsetAddr, 4)
+            anim_offset = anim.bToInt(animOffsetAddr, 4)
+            
+            if anim_offset not in swappedList:
+                anim.SwapAnimationBytes(offset=anim_offset)
+                swappedList.append(anim_offset)
+            
         return bytes(anim.data)
     else:
         return fb
 
-class AnimData:
+class AnimSwapper:
     def __init__(self, data):
         self.data = list(data)
         self.offset = 0
+        self.getAnimType()
         
-        if data[0] != 0x64 and data[0] != 0xC8 and (data[0] << 8) & 0xFFFF != 0x64:
-            self.animType = 1 + (data[1] == 0xC8) # 1 = 0x64, 2 = 0xC8
+    def getAnimType(self):
+        firstByte = self.data[self.offset]
+        secondByte = self.data[self.offset + 1]
+        shiftedFirstByte = (firstByte << 8)
+        
+        if firstByte != 0x64 and firstByte != 0xC8 \
+            and shiftedFirstByte != 0x64 and shiftedFirstByte != 0xC8:
+            self.animType = 1 + (secondByte == 0xC8) # 1 = 0x64, 2 = 0xC8
         else:
             self.animType = 0 #Byteswapped already
+        return self.animType
         
     def swapBytes(self, idx1, idx2):
         byte1, byte2 = self.byte(idx1), self.byte(idx2)
@@ -192,17 +210,20 @@ class AnimData:
         
     def SwapAnimationBytes(self, offset=0):
         self.offset = offset
+        self.getAnimType()
+        
         if self.animType == 1:
             retVal = self.Swap64Anim()
         elif self.animType == 2:
             retVal = self.SwapC8Anim()
         else:
             retVal = None
+            
         self.offset = 0
         return retVal
             
 def SwapAnimBytes(animData):
-    animation = AnimData(animData)
+    animation = AnimSwapper(animData)
     return animation.SwapAnimationBytes()
         
 def sadamitsuParse(filename):

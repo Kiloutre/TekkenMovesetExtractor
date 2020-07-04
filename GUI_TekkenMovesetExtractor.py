@@ -4,6 +4,7 @@ from tkinter import Tk, Menu, Frame, Listbox, Label, Text
 from tkinter.ttk import Button
 from re import match
 from Addresses import game_addresses
+import io
 import sys
 import os
 import json
@@ -12,16 +13,38 @@ import threading
 import subprocess 
 import motbinExport as exportLib
 import motbinImport as importLib
+from urllib import request
 from GUI_TekkenMovesetEditor import GUI_TekkenMovesetEditor
 
+extractorVersion = "1.0.19"
+latestRelease = "https://api.github.com/repos/Kiloutre/TekkenMovesetExtractor/releases/latest"
 charactersPath = "./extracted_chars/"
 codeInjectionSize = 256
-
+    
 selfName = os.path.basename(__file__)
 monitorVerificationFrequency   = (2)
 runningMonitors = [None, None]
 creatingMonitor = [False, False]
 codeInjection = None
+
+    
+def getRequestFromURL(url):
+    requestObject = request.Request(
+        url,
+        data=None,
+    )
+    return requestObject
+
+def getLatestReleaseInfo():
+    requestObject = getRequestFromURL(latestRelease)
+    releaseStats = request.urlopen(requestObject).read() 
+    releaseStats = json.load(io.BytesIO(releaseStats))
+    
+    tag_name = releaseStats['tag_name']
+    download_link = releaseStats['zipball_url']
+    description = releaseStats['body']
+    
+    return tag_name, download_link, description
 
 def hexToList(value, bytes_count):
     return [((value >> (b * 8)) & 0xFF) for b in range(bytes_count)]
@@ -409,7 +432,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         self.selected_char = None
         self.chara_data = None
         
-        self.wm_title("TekkenMovesetExtractor 1.0.18") 
+        self.wm_title("TekkenMovesetExtractor " + extractorVersion) 
         self.iconbitmap('InterfaceData/natsumi.ico')
         self.minsize(960, 540)
         self.geometry("960x540")

@@ -1919,18 +1919,22 @@ class Motbin:
             except Exception as e:
                 print("Error extracting animation %s, file will not be created" % (anim.name), file=sys.stderr)
             
+        motaByteswapsIndexes = [
+            0, 1, 2, 3, 4, 6, 8
+        ]
+            
         print("Saving MOTA animations...")
         for i, mota in enumerate(self.mota_list):
             mota_addr, len = mota
             filePath = "%s/mota_%d.bin" % (path, i)
-            if not os.path.exists(filePath) and False:
+            if not os.path.exists(filePath) or True:
                 mota_data = self.readBytes(self.base + mota_addr, len)
+                mota_data_old = mota_data
                 try:
-                    if self.endian != 'little':
+                    if self.endian != 'little' and i in motaByteswapsIndexes:
                         mota_data = SwapMotaBytes(mota_data)
                 except:
-                    print("Error byteswapping MOTA %d, file will not be created." % (i))
-                    continue
+                    print("Error byteswapping MOTA %d, file will not be byteswapped." % (i))
                 with open(filePath, "wb") as f:
                     f.write(mota_data)
             
