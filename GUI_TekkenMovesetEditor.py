@@ -807,10 +807,18 @@ class FormEditor:
         self.disableSaveButton()
         
     def navigateToItem(self, offset):
-        if self.editMode == None or (self.listIndex + offset) < 0 or (self.listIndex + offset) >= len(self.itemList):
+        if self.editMode == None:
+            return
+        if offset == -1:
+            offset = len(self.itemList) + offset
+        if offset < 0 or offset >= len(self.itemList):
             return
         self.disableSaveButton()
-        self.setItem(self.listIndex + offset)
+        self.setItem(offset)
+        
+    def navigateFromItem(self, offset):
+        if self.editMode != None and (self.listIndex + offset) >= 0:
+            self.navigateToItem(self.listIndex + offset)
         
     def enableNavigator(self, itemLabel):
         navigatorFrame = Frame(self.container)
@@ -819,11 +827,24 @@ class FormEditor:
         navigatorLabel = Label(navigatorFrame)
         navigatorLabel.pack(side='top')
         
-        prevButton = Button(navigatorFrame, text="<< Previous %s" % (itemLabel), command=lambda : self.navigateToItem(-1))
-        prevButton.pack(fill='x', side='left', expand=True)
+        buttonsFrame = Frame(navigatorFrame)
+        buttonsFrame.pack(side='bottom', fill='x', expand=False)
+
+        buttonsFrame.grid_rowconfigure(0, weight=1)
+        for i in range(4):
+            buttonsFrame.grid_columnconfigure(i, weight=1)
         
-        nextButton = Button(navigatorFrame, text="Next %s >>" % (itemLabel), command=lambda : self.navigateToItem(1))
-        nextButton.pack(fill='x', side='right', expand=True)
+        prevButton = Button(buttonsFrame, text="< Prev", command=lambda : self.navigateFromItem(-1))
+        prevButton.grid(row=0, column=0)
+        
+        nextButton = Button(buttonsFrame, text="Next >", command=lambda : self.navigateFromItem(1))
+        nextButton.grid(row=0, column=1)
+        
+        firstButton = Button(buttonsFrame, text="First", command=lambda : self.navigateToItem(0))
+        firstButton.grid(row=0, column=2)
+        
+        lastButton = Button(buttonsFrame, text="Last", command=lambda : self.navigateToItem(-1))
+        lastButton.grid(row=0, column=3)
         
         self.navigatorLabel = navigatorLabel
         
