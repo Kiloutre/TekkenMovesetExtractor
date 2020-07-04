@@ -1942,8 +1942,8 @@ class GUI_TekkenMovesetEditor():
         self.MoveCopyingWindow = None
         
         moveCreationMenu = [
-            ("Create new empty move", None ),
-            ("Copy current move", None ),
+            ("Create new empty move", self.createMove ),
+            ("Copy current move", lambda self=self: self.createMove(True)),
             ("Copy move from another moveset (BETA!!!)", self.openMoveCopyWindow ),
         ]
         
@@ -2004,7 +2004,7 @@ class GUI_TekkenMovesetEditor():
             ("Current hit-condition", self.deleteCurrentHitcondition),
             ("Current hit-condition list", self.deleteCurrentHitconditionList),
             ("", "separator"),
-            ("Current move", None),
+            ("Current move", self.deleteMove),
             ("", "separator"),
             ("Current extra move-prop", self.deleteCurrentExtraprop),
             ("Current extra move-prop list", self.deleteCurrentExtraproplist),
@@ -2689,6 +2689,49 @@ class GUI_TekkenMovesetEditor():
                     reactionList['pushback_indexes'][i] -= 1
 
         self.PushbackEditor.resetForm()
+        
+    def deleteMove(self):
+        if self.MoveEditor.editMode == None:
+            return
+            
+        moveId = self.MoveEditor.id
+        self.movelist['moves'].pop(moveId)
+        
+        for cancel in self.movelist['cancels']:
+            if cancel['move_id'] > moveId and cancel['command'] != 0x800b:
+                cancel['move_id'] -= 1
+        
+        for cancel in self.movelist['group_cancels']:
+            if cancel['move_id'] > moveId and cancel['command'] != 0x800c:
+                cancel['move_id'] -= 1
+                
+        for reactionList in self.movelist['reaction_list']:
+            keyList = [key for key in reactionList if key != 'pushback_indexes' and key != 'u1list' and key != 'vertical_pushback']
+            for key in keyList: 
+                if reactionList[key] > moveId:
+                    reactionList[key] -= 1
+                    
+        self.MoveEditor.resetForm()
+        self.MoveSelector.setMoves(self.movelist['moves'], self.movelist['aliases'])
+        
+        
+    def createMove(self, copyCurrent=False):
+        if copyCurrent and self.MoveEditor.editMode == None:
+            return
+        
+        moveId = len(self.movelist['moves'])
+        if copyCurrent:
+            newMove = self.movelist['moves'][self.MoveEditor.id].copy()
+            newMove['name'] = 'COPY_' + newMove['name']
+        else:
+            newMove = {f:(0 if moveFields[f] != 'text' else '') for f in moveFields}
+            newMove['name'] = 'NEW_MOVE_%d' % (moveId)
+            newMove['voiceclip_idx'] = -1
+            newMove['extra_properties_idx'] = -1
+        
+        self.movelist['moves'].append(newMove)
+        self.MoveSelector.setMoves(self.movelist['moves'], self.movelist['aliases'])
+        self.setMove(moveId)
         
     def saveField(self, key, id, field, value):
         if field != None:
