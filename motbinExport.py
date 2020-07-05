@@ -524,8 +524,8 @@ t6_offsetTable = {
     'unknown_parryrelated_list_size': { 'offset': None, 'size': 4 }, #unknown
     'throw_extras_ptr': { 'offset': 0x22c, 'size': 4 },
     'throw_extras_size': { 'offset': 0x230, 'size': 4 },
-    'throws_ptr': { 'offset': 0x224, 'size': 4 },
-    'throws_size': { 'offset': 0x228, 'size': 4 },
+    'throws_ptr': { 'offset': None, 'size': 4 }, #unknown, prob 0x224
+    'throws_size': { 'offset': None, 'size': 4 }, #unknown, prob 0x228
     
     'mota_start': { 'offset': 0x234, 'size': None },
     'aliases': { 'offset': 0x18, 'size': (148, 2) }, #148 aliases of 2 bytes
@@ -621,10 +621,10 @@ t6_offsetTable = {
     'inputsequence:u3': { 'offset': 0x0, 'size': 1 },
     'inputsequence:extradata_addr': { 'offset': 4, 'size': 4 },
     
-    'throw:u1': { 'offset': 0x0, 'size': 4 },
-    'throw:throwextra_addr': { 'offset': 0x4, 'size': 4 },
+    'throw:u1': { 'offset': None, 'size': 4 },
+    'throw:throwextra_addr': { 'offset': None, 'size': 4 },
     
-    'unknownparryrelated:value': { 'offset': 0x0, 'size': 4 },
+    'unknownparryrelated:value': { 'offset': None, 'size': 4 },
     
     'projectile:u1': { 'offset': 0x0, 'size': (48, None) }, # 48 * [0]
     'projectile:hit_condition_addr': { 'offset': None, 'size': 4 }, #0
@@ -1927,7 +1927,7 @@ class Motbin:
         for i, mota in enumerate(self.mota_list):
             mota_addr, len = mota
             filePath = "%s/mota_%d.bin" % (path, i)
-            if not os.path.exists(filePath) or True:
+            if not os.path.exists(filePath):
                 mota_data = self.readBytes(self.base + mota_addr, len)
                 mota_data_old = mota_data
                 try:
