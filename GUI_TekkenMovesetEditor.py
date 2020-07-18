@@ -588,7 +588,8 @@ class MoveSelector:
         
         bottomButtons = [
             ('Save to file', self.root.save),
-            ('Go to current move ID', self.goToCurrentMove)
+            ('Go to 2P move ID', lambda self=self: self.goToCurrentMove(1)),
+            ('Go to 1P move ID', self.goToCurrentMove)
         ]
         
         for label, callback in bottomButtons:
@@ -679,10 +680,10 @@ class MoveSelector:
             self.playMoveSv.set(str(moveId))
             self.root.setMove(moveId)
             
-    def goToCurrentMove(self):
+    def goToCurrentMove(self, playerId = 0):
         if self.root.movelist == None:
             return
-        playerAddress = game_addresses.addr['t7_p1_addr']
+        playerAddress = game_addresses.addr['t7_p1_addr'] + (playerId * game_addresses.addr['t7_playerstruct_size'])
         offset = game_addresses.addr['player_curr_move_offset']
         TekkenGame = GameClass("TekkenGame-Win64-Shipping.exe")
         
