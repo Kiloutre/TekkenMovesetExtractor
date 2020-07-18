@@ -103,13 +103,10 @@ Administrator rights may be required to import the moveset into memory.
 - Delete files before exporting moveset
 - (Jin) Dj tag2 vs DJ tag2, treasure battle, online player buttons, crash on loadscreen
 - Green Ogre 3~4 crash
-- Allow throws using item moves?
 - Rename "group_cancels" to "generic_cancels"
 - Split command in two 4bytes
 - Split attack hitlevel in 2? need to keep the order the same for tag2
 - Check out eliza in tekken revolution for projectile struct
-- Don't force_type the extra move prop that sets opponent move id, look into what the type is used for
-- Look at what function writes MOTA offsets and byteswaps them
 - Dunno if you know already but using Anna's df4 will cause the character's body to spazz out a bit.
 - Build requirements also from group_cancels
 
