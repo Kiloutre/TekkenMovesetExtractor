@@ -12,6 +12,7 @@ import re
 from zlib import crc32
 
 charactersPath = "./extracted_chars/"
+editorVersion = "0.20-BETA"
 
 requirementLabels = {
     0: 'Always true',
@@ -2083,7 +2084,7 @@ class GUI_TekkenMovesetEditor():
         self.resetForms()
             
     def setTitle(self, label = ""):
-        title = "TekkenMovesetEditor 0.19-BETA"
+        title = "TekkenMovesetEditor %s" % (editorVersion)
         if label != "":
             title += " - " + label
         self.window.wm_title(title) 
