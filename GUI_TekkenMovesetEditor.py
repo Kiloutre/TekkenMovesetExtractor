@@ -606,10 +606,10 @@ class MoveSelector:
             
         sv = StringVar()
         sv.trace("w", lambda name, index, mode, sv=sv: self.onMoveidChange(sv))
-        playMoveField = Entry(playMoveFrame, text="Play move", textvariable=sv)
+        playMoveField = Entry(playMoveFrame, textvariable=sv)
         playMoveField.pack(side='left')
         
-        playMoveButton = Button(playMoveFrame, text="Play move ID", command=self.playMove, state="disabled")
+        playMoveButton = Button(playMoveFrame, text="Play move", command=self.playMove, state="disabled")
         playMoveButton.pack(side='right')
         
         

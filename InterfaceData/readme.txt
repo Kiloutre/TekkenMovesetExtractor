@@ -3,5 +3,6 @@ If you want the moveset to stay constantly, use the "Online Player" buttons, and
  1.0.21 Changelog:
 - Add 'Go to' buttons for cancels, group cancels, hit conditions, reaction-lists
 - Add button to list cancels/group_cancels/reaction_list that references the current selected move
+- Add button to go to 2P move id
  
 --- by kilo ( https://www.youtube.com/c/kiloutre ) ---
