@@ -116,8 +116,6 @@ propertyLabels = {
     0x83c2: 'Set opponent\'s floor level',
     0x8343: 'Attach item to limb',
     0x8344: 'Detach item to limb',
-    0x83c4: 'Set 32768 alias',
-    0x83c5: 'Set 32769 alias',
     0x8429: 'Play left hand anim',
     0x842a: 'Play right hand anim',
     0x843c: 'Throw camera',
@@ -128,6 +126,9 @@ propertyLabels = {
     0x8439: 'Rage Art Camera',
     0x8454: 'Something used in Rage Art Camera (?)',
 }
+
+for i in range(0x83c4, 0x83c4 + 148 + 1):
+    propertyLabels[i] = 'Set %d alias' % (i)
 
 def getDetails(itemId, key):
     tekkenAliasesList = {
@@ -1114,6 +1115,12 @@ class ExtrapropEditor(FormEditor):
         
         self.initFields()
         
+    def onchange(self, field, sv):
+        if self.editMode == None:
+            return
+        super().onchange(field, sv)
+        self.setDetails()
+        
     def setDetails(self):
         if self.root.movelist['version'] != 'Tekken7':
             return
@@ -1123,6 +1130,8 @@ class ExtrapropEditor(FormEditor):
         
         if description != None:
             text = '%x: %s' % (reqId, description)
+            if self.fieldValue['type'] == 0x8001:
+                text = '(INSTANT) ' + text
         else:
             text = ''
         self.details['text'] = text
