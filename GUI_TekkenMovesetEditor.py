@@ -16,6 +16,17 @@ editorVersion = "0.21-BETA"
 
 requirementLabels = {
     0: 'Always true',
+    3: 'Throw Hits Forward (Standing)',
+    4: 'Throw Hits Backward (Standing)',
+    5: 'Throw Hits Left Side (Standing)',
+    6: 'Throw Hits Right Side (Standing)',
+    27: 'Throw Hits (Airborne)',
+    7: 'Throw Hits Forward (Crouching)',
+    11: 'Throw Hits Forward (Face Up)',
+    15: 'Throw Hits Forward (Face Down)',
+    16: 'Throw Hits Backward (Face Down)',
+    17: 'Throw Hits Left Side (Face Down)',
+    18: 'Throw Hits Right Side (Face Down)',
     35: 'Opponent distance',
     47: 'On block',
     44: 'On Hit',
@@ -168,6 +179,8 @@ itemNames = {
 }
 
 fieldLabels = {
+    'u10': 'airborne_start',
+    'u11': 'airborne_end',
     'u16': 'collision? (u16)',
     'u17': 'distance (u17)',
     'anim_max_len': 'anim_len',
@@ -178,71 +191,60 @@ fieldLabels = {
 moveFields = {
     'name': 'text',
     'anim_name': 'text',
-    'vuln': 'number',
-    'hitlevel': 'number',
-    'cancel_idx': 'number',
-    'transition': 'number',
-    'anim_max_len': 'number',
-    'hit_condition_idx': 'number',
-    'voiceclip_idx': 'number',
-    'extra_properties_idx': 'number',
+    'vuln': 'int',
+    'hitlevel': 'int',
+    'cancel_idx': 'positive_index',
+    'transition': 'short',
+    'anim_max_len': 'int',
+    'hit_condition_idx': 'positive_index',
+    'voiceclip_idx': 'index',
+    'extra_properties_idx': 'index',
     'hitbox_location': 'hex',
-    'first_active_frame': 'number',
-    'last_active_frame': 'number',
-    'u2': 'number',
-    'u3': 'number',
-    'u4': 'number',
-    'u6': 'number',
-    'u7': 'number',
-    'u8': 'number',
-    'u8_2': 'number',
-    'u9': 'number',
-    'u10': 'number',
-    'u11': 'number',
-    'u12': 'number',
-    'u15': 'number',
-    'u16': 'number',
-    'u18': 'number',
-    'u17': 'number'
+    'first_active_frame': 'int',
+    'last_active_frame': 'int',
+    'u2': 'long',
+    'u3': 'long',
+    'u4': 'long',
+    'u6': 'int',
+    'u7': 'short',
+    'u8': 'short',
+    'u8_2': 'short',
+    'u9': 'int',
+    'u10': 'int',
+    'u11': 'int',
+    'u12': 'int',
+    'u15': 'int',
+    'u16': 'short',
+    'u18': 'short',
+    'u17': 'int'
 }
 
 cancelFields = {
-    'command': 'hex',
-    'extradata_idx': 'number',
-    'requirement_idx': 'number',
-    'frame_window_start': 'number',
-    'frame_window_end': 'number',
-    'starting_frame': 'number',
-    'move_id': 'number',
-    'cancel_option': 'number'
-}
-
-groupCancelFields = {
-    'command': 'hex',
-    'extradata_idx': 'number',
-    'requirement_idx': 'number',
-    'frame_window_start': 'number',
-    'frame_window_end': 'number',
-    'starting_frame': 'number',
-    'move_id': 'number',
-    'cancel_option': 'number'
+    'command': '8b_hex',
+    'extradata_idx': 'positive_index',
+    'requirement_idx': 'positive_index',
+    'frame_window_start': 'int',
+    'frame_window_end': 'int',
+    'starting_frame': 'int',
+    'move_id': 'short',
+    'cancel_option': 'short'
 }
 
 requirementFields = {
-    'req': 'number',
-    'param': 'number'
+    'req': 'int',
+    'param': 'int'
 }
 
 extrapropFields = {
-    'type': 'number',
+    'type': 'int',
     'id': 'hex',
-    'value': 'number'
+    'value': 'int'
 }
 
 hitConditionFields = {
-    'requirement_idx': 'number',
-    'damage': 'number',
-    'reaction_list_idx': 'number'
+    'requirement_idx': 'positive_index',
+    'damage': 'int',
+    'reaction_list_idx': 'positive_index'
 }
 
 reactionlistExtraPushbackFields = [
@@ -265,59 +267,59 @@ reactionlistExtraLaunchFields = [
 ]
 
 reactionlistFields = {
-    'vertical_pushback': 'number',
-    'standing': 'number',
-    'ch': 'number',
-    'crouch': 'number',
-    'crouch_ch': 'number',
-    'left_side': 'number',
-    'left_side_crouch': 'number',
-    'right_side': 'number',
-    'right_side_crouch': 'number',
-    'back': 'number',
-    'back_crouch': 'number',
-    'block': 'number',
-    'crouch_block': 'number',
-    'wallslump': 'number',
-    'downed': 'number',
-    'front_pushback': 'number',
-    'back_pushback': 'number',
-    'left_side_pushback': 'number',
-    'right_side_pushback': 'number',
-    'front_ch_pushback': 'number',
-    'downed_pushback': 'number',
-    'block_pushback': 'number',
-    'front_direction': 'number',
-    'back_direction': 'number',
-    'left_side_direction': 'number',
-    'right_side_direction': 'number',
-    'front_ch_direction': 'number',
-    'downed_direction': 'number'
+    'vertical_pushback': 'int',
+    'standing': 'short',
+    'ch': 'short',
+    'crouch': 'short',
+    'crouch_ch': 'short',
+    'left_side': 'short',
+    'left_side_crouch': 'short',
+    'right_side': 'short',
+    'right_side_crouch': 'short',
+    'back': 'short',
+    'back_crouch': 'short',
+    'block': 'short',
+    'crouch_block': 'short',
+    'wallslump': 'short',
+    'downed': 'short',
+    'front_pushback': 'positive_index',
+    'back_pushback': 'positive_index',
+    'left_side_pushback': 'positive_index',
+    'right_side_pushback': 'positive_index',
+    'front_ch_pushback': 'positive_index',
+    'downed_pushback': 'positive_index',
+    'block_pushback': 'positive_index',
+    'front_direction': 'short',
+    'back_direction': 'short',
+    'left_side_direction': 'short',
+    'right_side_direction': 'short',
+    'front_ch_direction': 'short',
+    'downed_direction': 'short'
 }
 
 pushbackFields = {
-    'val1': 'number',
-    'val2': 'number',
-    'val3': 'number',
-    'pushbackextra_idx': 'number'
+    'val1': 'short',
+    'val2': 'short',
+    'val3': 'int',
+    'pushbackextra_idx': 'positive_index'
 }
 
 pushbackExtradataFields = {
-    'value': 'number',
+    'value': 'short',
 }
 
 cancelExtradataFields = {
-    'value': 'number',
+    'value': 'int',
 }
 
 voiceclipFields = {
-    'value': 'number',
+    'value': 'int',
 }
 
 fieldsTypes = {
     'moves': moveFields,
     'cancels': cancelFields,
-    'group_cancels': groupCancelFields,
+    'group_cancels': cancelFields,
     'requirements': requirementFields,
     'extra_move_properties': extrapropFields,
     'hit_conditions': hitConditionFields,
@@ -383,29 +385,45 @@ def sortKeys(keys):
     return keyList + unknownKeys
         
 def validateField(type, value):
-    if type == 'number':
+    if type == 'short' or type == 'int' or type == 'long' or type == 'positive_index':
+        return re.match("^[0-9]+$", value)
+    if type == 'index':
         return re.match("^-?[0-9]+$", value)
-    if type == 'hex' or type == '8hex':
-        return re.match("^0(x|X)[0-9A-Za-z]+$", value)
+    if type == 'hex' or type == '8b_hex':
+        return re.match("^0(x|X)[0-9A-Fa-f]+$", value)
     if type == 'text':
         return re.match("^[a-zA-Z0-9_\-\(\)]+$", value)
     raise Exception("Unknown type '%s'" % (type))
     
 def getFieldValue(type, value):
-    if type == 'number':
-        return int(value)
+    if type == 'short':
+        return int(value) & 0xFFFF
+    if type == 'int':
+        return int(value) & 0xFFFFFFFF
+    if type == 'long':
+        return int(value) & 0xFFFFFFFFFFFFFFFF
     if type == 'hex':
-        return int(value, 16)
+        return int(value, 16) & 0xFFFFFFFF
+    if type == '8b_hex':
+        return int(value, 16) & 0xFFFFFFFFFFFFFFFF
+    if type == 'index' or type == 'positive_index':
+        return int(value)
     if type == 'text':
         return str(value)
     raise Exception("Unknown type '%s'" % (type))
     
 def formatFieldValue(type, value):
-    if type == 'number':
-        return str(value)
+    if type == 'short':
+        return str(value & 0xFFFF)
+    if type == 'int':
+        return str(value & 0xFFFFFFFF)
+    if type == 'long':
+        return str(value & 0xFFFFFFFFFFFFFFFF)
     if type == 'hex':
-        return "0x%x" % (value)
-    if type == 'text':
+        return "0x%x" % (value & 0xFFFFFFFF)
+    if type =='8b_hex':
+        return "0x%x" % (value & 0xFFFFFFFFFFFFFFFF)
+    if type == 'text' or type == 'index' or type == 'positive_index':
         return str(value)
     raise Exception("Unknown type '%s'" % (type))
 
@@ -791,7 +809,9 @@ class FormEditor:
             valueType = self.fieldTypes[field]
             value = self.fieldVar[field].get()
             if validateField(valueType, value):
-                self.root.saveField(self.key, self.id, field, getFieldValue(valueType, value))
+                fieldValue = getFieldValue(valueType, value)
+                self.root.saveField(self.key, self.id, field, fieldValue)
+                self.setField(field, fieldValue, setFieldValue=True)
             else:
                 print("Invalid field value for '%s'" % (field))
                 

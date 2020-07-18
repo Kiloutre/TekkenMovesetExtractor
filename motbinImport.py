@@ -386,7 +386,7 @@ class MotbinStruct:
             raise
             
         valueAddr = self.curr_ptr
-        self.importer.writeInt(valueAddr, value, bytes_length)
+        self.importer.writeInt(valueAddr, value & (2 ** (8 * bytes_length)) - 1, bytes_length)
         self.curr_ptr += bytes_length
         return valueAddr
         
