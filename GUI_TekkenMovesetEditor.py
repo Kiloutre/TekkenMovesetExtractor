@@ -1129,12 +1129,11 @@ class ExtrapropEditor(FormEditor):
         reqId = self.fieldValue['id']
         description = getDetails(reqId, 'extra_move_properties')
         
+        text = '(INSTANT) ' if self.fieldValue['type'] == 32769 else ''
+        
         if description != None:
-            text = '%x: %s' % (reqId, description)
-            if self.fieldValue['type'] == 0x8001:
-                text = '(INSTANT) ' + text
-        else:
-            text = ''
+            text += '%x: %s' % (reqId, description)
+
         self.details['text'] = text
             
     def setItem(self, index):
