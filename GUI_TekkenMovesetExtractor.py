@@ -190,7 +190,7 @@ class Monitor:
         self.getPlayerAddress()
         
         try:
-            self.moveset = self.Importer.loadMoveset(folderName=(charactersPath + self.selected_char))
+            self.moveset = self.Importer.loadMoveset(folderName=(charactersPath + self.selected_char), charactersPath=charactersPath)
         except Exception as e:
             print(e, file=sys.stderr)
             self.exit()
@@ -330,13 +330,51 @@ def startMonitor(parent, playerId):
     newThread.start()
     runningMonitors[monitorId] = newMonitor
     creatingMonitor[monitorId] = False
+
+folderNameOrder = [
+    't7',
+    '7',
+    'tag2',
+    '2',
+    'rev',
+    't6',
+    't5',
+    't5dr',
+    't4'
+]
+
+def groupByPrefix(strings):
+    stringsByPrefix = {}
+    for string in strings:
+        if '_' in string:
+            prefix, suffix = map(str.strip, string.split("_", 1))
+        else:
+            prefix, suffix = '', string
+        group = stringsByPrefix.setdefault(prefix, [])
+        group.append(string)
+    return stringsByPrefix
     
 def getCharacterList():
     if not os.path.isdir(charactersPath):
         os.mkdir(charactersPath)
+        return []
     folders = [folder for folder in os.listdir(charactersPath) if os.path.isdir(charactersPath + folder)]
+    folders = sorted(folders)
     
-    return sorted(folders)
+    sortedStringList = []
+    
+    groupedStrings = groupByPrefix(folders)
+    keyList = sorted(groupedStrings.keys(), reverse=True)
+    
+    for key in folderNameOrder:
+        if key in groupedStrings:
+            for string in groupedStrings[key]: sortedStringList.append(string)
+            del groupedStrings[key]
+    
+    for key in groupedStrings:
+        for string in groupedStrings[key]: sortedStringList.append(string)
+    
+    return sortedStringList
     
 def exportCharacter(parent, tekkenVersion, playerid, name=''):
     game_addresses.reloadValues()
@@ -386,7 +424,7 @@ def importPlayer(parent, playerId):
         playerAddr += game_addresses.addr['t7_playerstruct_size']
     
     TekkenImporter = importLib.Importer()
-    TekkenImporter.importMoveset(playerAddr, folderPath)
+    TekkenImporter.importMoveset(playerAddr, folderPath, charactersPath=charactersPath)
     print("\nSuccessfully imported %s !" % (parent.selected_char))
         
 class TextRedirector(object):

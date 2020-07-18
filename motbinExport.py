@@ -1911,7 +1911,8 @@ class Motbin:
         animBoundaries = sorted([anim.addr for anim in self.anims])
         for anim in self.anims:
             try:
-                with open ("%s/%s.bin" % (anim_path, anim.name), "wb") as f:
+                filePath = "%s/%s.bin" % (anim_path, anim.name)
+                with open (filePath, "wb") as f:
                     animdata = anim.getData(animBoundaries)
                     if animdata == None:
                         raise 
@@ -1928,8 +1929,12 @@ class Motbin:
             mota_addr, len = mota
             filePath = "%s/mota_%d.bin" % (path, i)
             if not os.path.exists(filePath):
-                mota_data = self.readBytes(self.base + mota_addr, len)
-                mota_data_old = mota_data
+                try:
+                    mota_data = self.readBytes(self.base + mota_addr, len)
+                except:
+                    print("Error getting MOTA %d, file will not be created." % (i))
+                    continue
+                    
                 try:
                     if self.endian != 'little' and i in motaByteswapsIndexes:
                         mota_data = SwapMotaBytes(mota_data)

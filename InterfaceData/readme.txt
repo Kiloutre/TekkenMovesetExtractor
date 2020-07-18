@@ -6,5 +6,6 @@ Both online players must load the same moveset on the same players.
 1.0.19 Changelog:
 - [EDITOR] Add "First"/"Last" navigation buttons
 - [EDITOR] Add button to create/copy/delete move in current moveset
+- [EDITOR & EXTRACTOR] Imported movesets now look for missing animations in nearby folder.
 
 --- by kilo ( https://www.youtube.com/c/kiloutre ) ---

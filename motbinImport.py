@@ -55,8 +55,8 @@ class Importer:
     def allocateMem(self, allocSize):
         return VirtualAllocEx(self.T.handle, 0, allocSize, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE)
                 
-    def importMoveset(self, playerAddr, folderName, moveset=None):
-        moveset = self.loadMoveset(folderName=folderName, moveset=moveset)
+    def importMoveset(self, playerAddr, folderName, moveset=None, charactersPath='extracted_chars/'):
+        moveset = self.loadMoveset(folderName=folderName, moveset=moveset, charactersPath=charactersPath)
         
         motbin_ptr_addr = playerAddr + game_addresses.addr['t7_motbin_offset']
         current_motbin_ptr = self.readInt(motbin_ptr_addr, 8)
@@ -69,7 +69,7 @@ class Importer:
         self.writeInt(motbin_ptr_addr, moveset.motbin_ptr, 8)
         return moveset
         
-    def loadMoveset(self, folderName=None, moveset=None):
+    def loadMoveset(self, folderName=None, moveset=None, charactersPath=None):
         if moveset == None:
             jsonFilename = next(file for file in os.listdir(folderName) if file.endswith(".json"))
             print("Reading %s..." % (jsonFilename))
@@ -88,7 +88,7 @@ class Importer:
             
         ApplyCharacterFixes(m)
             
-        p = MotbinStruct(m, folderName, self)
+        p = MotbinStruct(m, folderName, self, animSearchFolder=charactersPath)
             
         character_name = p.writeString(m['character_name'])
         creator_name = p.writeString(m['creator_name'])
@@ -229,7 +229,7 @@ def reverseBitOrder(number):
 def convertU15(number):
     return (number >> 7) | ((reverseBitOrder(number)) << 24)
     
-def getMovesetTotalSize(m, folderName):
+def getMovesetTotalSize(m, folderName, animInfos):
     size = 0
     size += len(m['character_name']) + 1
     size += len(m['creator_name']) + 1
@@ -266,17 +266,17 @@ def getMovesetTotalSize(m, folderName):
     size = align8Bytes(size)
     size += len(m['voiceclips']) * 0x4
 
-    anim_names = set([move['anim_name'] for move in m['moves']])
     size = align8Bytes(size)
-    for anim_name in anim_names:
-        size += len(anim_name) + 1
+    # size += sum([k for k in animInfos]) + len(animInfos.keys())
+    for anim in animInfos:
+        size += len(anim) + 1
     
     size = align8Bytes(size)
-    for anim_name in anim_names:
-        try:
-            size += os.path.getsize("%s/anim/%s.bin" % (folderName, anim_name))
-        except:
-            print("Anim %s missing, moveset might crash" % (anim_name), file=sys.stderr)
+    for anim in animInfos:
+        if animInfos[anim] != None:
+            size += animInfos[anim]['size']
+        else:
+            print("Anim %s missing, moveset might crash" % (anim), file=sys.stderr)
 
     size = align8Bytes(size)
     for move in m['moves']:
@@ -313,15 +313,18 @@ def getMovesetTotalSize(m, folderName):
     return size
     
 class MotbinStruct:
-    def __init__(self, motbin, folderName, importerObject):
+    def __init__(self, motbin, folderName, importerObject, animSearchFolder):
         self.importer = importerObject
-        allocSize = getMovesetTotalSize(motbin, folderName)
+        self.m = motbin
+        
+        self.folderName = folderName
+        
+        self.loadAnimationInfos(animSearchFolder)
+        allocSize = getMovesetTotalSize(motbin, folderName, self.animMapping)
         head_ptr = self.importer.allocateMem(allocSize)
         
         self.motbin_ptr = self.importer.allocateMem(0x2e0)
         self.importer.writeBytes(self.motbin_ptr, bytes([0] * 0x2e0))
-        
-        self.folderName = folderName
         
         self.m = motbin
         self.size = allocSize
@@ -400,6 +403,32 @@ class MotbinStruct:
             
         self.curr_ptr += offset
         return self.curr_ptr
+        
+    def loadAnimationInfos(self, animSearchFolder):
+        anim_names = set([move['anim_name'] for move in self.m['moves']])
+        animMapping = {anim:None for anim in anim_names}
+        
+        animFolder = "%s/anim" % (self.folderName)
+        existingAnims = [a[:-4] for a in os.listdir(animFolder) if a.endswith('.bin')]
+        
+        searchFolders = [animSearchFolder + '/' + c for c in os.listdir(animSearchFolder) if os.path.isdir(animSearchFolder + c)]
+        
+        for anim in anim_names:
+            if anim not in existingAnims:
+                try:
+                    for char in searchFolders:
+                        folder = "%s/anim" % (char)
+                        if os.path.exists("%s/%s.bin" % (folder, anim)):
+                            size = os.path.getsize('%s/%s.bin' % (folder, anim))
+                            animMapping[anim] = { 'folder': folder, 'size': size }
+                            break
+                except Exception as e:
+                    print(e)
+            else:
+                size = os.path.getsize('%s/%s.bin' % (animFolder, anim))
+                animMapping[anim] = { 'folder': animFolder, 'size': size }
+
+        self.animMapping = animMapping
         
     def getCancelFromId(self, idx):
         if self.cancel_ptr == 0:
@@ -711,17 +740,17 @@ class MotbinStruct:
     def allocateAnimations(self):
         print("Allocating animations...")
         self.animation_names_ptr = self.align()
-        anim_names = set([move['anim_name'] for move in self.m['moves']])
-        self.animation_table = {name:{'name_ptr':self.writeString(name)} for name in anim_names}
+        self.animation_table = {name:{'name_ptr':self.writeString(name)} for name in self.animMapping}
         
         self.animation_ptr = self.align()
-        for name in anim_names:
+        for name in self.animMapping:
             try:
-                with open("%s/anim/%s.bin" % (self.folderName, name), "rb") as f:
+                with open("%s/%s.bin" % (self.animMapping[name]['folder'], name), "rb") as f:
                     self.animation_table[name]['data_ptr'] = self.writeBytes(f.read())
-            except:
+            except Exception as e:
+                print(e)
                 self.animation_table[name]['data_ptr'] = 0
-                print("Warning: animation %s.bin missing from the animation folder, this moveset might crash" % (name), file=sys.stderr)
+                print("Warning: animation %s.bin missing from the anim folder, this moveset might crash" % (name), file=sys.stderr)
                 
     def allocateMota(self):
         if len(self.mota_list) != 0:

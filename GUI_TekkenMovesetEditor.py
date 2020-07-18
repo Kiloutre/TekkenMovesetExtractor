@@ -23,6 +23,7 @@ requirementLabels = {
     146: 'Standing on left side',
     147: 'Standing on right side',
     135: 'Death',
+    144: 'Opponent HP less than',
     155: 'If Ki Charged',
     157: 'Rage',
     176: 'In Max-Mode',
@@ -33,67 +34,99 @@ requirementLabels = {
     221: 'Partner character ID',
     222: 'Partner NOT character ID',
     223: 'Gamemode',
+    225: 'Player is CPU',
     253: 'Bryan taunted',
     256: 'Bryan taunted',
     344: 'Kazuya Devil Form',
+    351: 'Claudio Starburst',
+    563: 'Gamemode',
     609: 'Has item',
-    628: 'Meter equal or higher',
+    629: 'Meter equal or higher',
     614: 'Juggle',
     615: 'Screw',
     641: 'Once per match (Leroy Cane)',
+    830: 'Attack absorption (Armor move)',
     881: 'Requirements end',
+    352: 'Fully charged (?)',
+    308: 'Lucky Chloe RA point check',
+    345: 'Check Lucky Chloe RA points',
+    32963: 'Add lucky chloe points',
     32814: 'Hitsparks',
+    33483: 'Special cancellable on hit/block',
+    33840: 'Devil Wing Stuff?',
+    32957: 'Change devil state',
+    33239: 'Activate speed modifier',
 }
 
 propertyLabels = {
     0: 'Properties end',
     0x8001: 'Wallsplat VFX',
     0x8003: 'Shake camera',
+    0x8007: 'Minimal camera shake',
     0x800b: 'Ground Ripple VFX',
+    0x8046: 'Special VFX (Armored, sparks...)',
+    0x8078: 'Give Bryan taunt properties',
     0x802e: 'Hit Spark VFX',
     0x8036: 'Trail VFX',
     0x803b: 'Play hit spark',
-    0x842e: 'Hand-stuff',
+    0x806a: 'Inflict damage to opponent',
+    0x80bd: 'Kazuya devil mode',
+    0x80c3: 'Give Lucky Chloe RA point',
+    0x81be: 'Rage Art SFX',
+    0x817c: 'Allow player to block',
+    0x81ff: 'Slide player',
+    0x81bd: 'Power Crush',
+    0x81f3: 'Activate laser',
+    0x81f4: 'Disable laser',
+    0x81c2: 'Give meter (signed int)',
+    0x81d6: 'Player speed (4096 = 100%)',
+    0x81db: 'Charge speed',
+    0x81e4: 'Break floor',
+    0x81bf: 'Give Claudio starbust',
+    0x8229: 'EX Effect',
+    0x828c: 'RA freeze',
+    0x828d: 'RA freeze immunity',
+    0x829f: 'Play subtitles',
     0x829d: 'Set HUD visibility',
     0x82d8: 'Set partner\'s move (Sugar)',
-    0x83c3: 'Balconybreak victim: set opponent\'s move',
-    0x83c2: 'Set opponent\'s floor level',
     0x8255: 'Spend screw',
     0x8272: 'Spend Rage (if juggle)',
+    #0x8228: 'Spend Rage (if standing)',
     0x8233: 'Spend Rage (if grounded)',
-    0x81d6: 'Player speed (4096 = 100%)',
-    0x81bd: 'Power Crush',
-    0x8046: 'Special VFX (Armored, sparks...)',
-    0x84c4: 'Play sound',
-    0x84c6: 'Play sound from opponent',
     0x828b: 'Game speed %',
     0x8223: 'Inflict self damage',
-    0x806a: 'Inflict damage to opponent',
     0x821b: 'Enable scaled damage',
     0x821c: 'Inflict scaled damage to opponent',
     0x824c: 'AI input',
-    0x8078: 'Give Bryan taunt properties',
     0x820b: 'Spawn projectile',
+    0x82cb: 'Special Cancellable (?)',
     0x8213: 'Attack destroys projectile',
     0x8214: 'Attack deflects projectile',
     0x826a: 'Homing (Left Hand)',
     0x826b: 'Homing (Right Hand)',
     0x826c: 'Homing (Left foot)',
     0x826d: 'Homing (Right Foot)',
-    0x8343: 'Attach item to limb',
-    0x8344: 'Detach item to limb',
-    0x817c: 'Allow player to block',
-    0x81bf: 'Give Claudio starbust',
     0x8234: 'Rage drive BG effect',
     0x8251: 'Player visibility',
     0x8270: 'Give rage',
     0x8272: 'Spend rage',
     0x82eb: 'Spend one per match move',
     0x82fa: 'Fahkumram skin pulse',
+    0x83c3: 'Balconybreak victim: set opponent\'s move',
+    0x83c2: 'Set opponent\'s floor level',
+    0x8343: 'Attach item to limb',
+    0x8344: 'Detach item to limb',
+    0x83c4: 'Set 32768 alias',
+    0x83c5: 'Set 32769 alias',
     0x8429: 'Play left hand anim',
     0x842a: 'Play right hand anim',
     0x843c: 'Throw camera',
-    0x81ff: 'Slide player',
+    0x842e: 'Hand-stuff',
+    0x84c4: 'Play sound',
+    0x84c6: 'Play sound from opponent',
+    0x8435: 'Cinematic Camera (intro)',
+    0x8439: 'Rage Art Camera',
+    0x8454: 'Something used in Rage Art Camera (?)',
 }
 
 def getDetails(itemId, key):
@@ -199,7 +232,7 @@ requirementFields = {
 }
 
 extrapropFields = {
-    'type': 'hex',
+    'type': 'number',
     'id': 'hex',
     'value': 'number'
 }
@@ -518,7 +551,7 @@ class CharalistSelector:
             return
         playerAddr = game_addresses.addr['t7_p1_addr'] + (playerId * game_addresses.addr['t7_playerstruct_size'])
         TekkenImporter = importLib.Importer()
-        TekkenImporter.importMoveset(playerAddr, self.movelist_path, moveset=self.root.movelist)
+        TekkenImporter.importMoveset(playerAddr, self.movelist_path, moveset=self.root.movelist, charactersPath=charactersPath)
         
     def selectMoveset(self, selection=None):
         selection = self.selection if selection == None else selection
@@ -531,7 +564,7 @@ class CharalistSelector:
             self.colorCharacterList()
             self.charaSelect.itemconfig(self.selectionIndex, {'bg': '#a126c7', 'fg': 'white'})
             
-        self.movelist_path = "extracted_chars/" + selection
+        self.movelist_path = charactersPath + selection
         movelist, filename = getMovelist(self.movelist_path)
         self.filename = filename
         self.last_selection = selection
@@ -1493,7 +1526,7 @@ class MoveCopyingWindow:
             self.charaSelect.itemconfig(self.selectionIndex, {'bg': '#a126c7', 'fg': 'white'})
             
         self.selectedChar['text'] = selection
-        self.movelist_path = "extracted_chars/" + selection
+        self.movelist_path = charactersPath + selection
         
         movelist, filename = getMovelist(self.movelist_path)
         self.last_selection = selection
