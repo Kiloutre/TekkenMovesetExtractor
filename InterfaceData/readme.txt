@@ -1,9 +1,7 @@
 Export a moveset by loading up the target character, then clicking the wanted export button. Movesets loaded using "Import to P1/P2" will be unloaded after the next loading screen.
 If you want the moveset to stay constantly, use the "Online Player" buttons, and BEFORE the loading screen. Both online players must load the same moveset on the same players.
- 1.0.19 Changelog:
-- [EDITOR] Add "First"/"Last" navigation buttons. Add button to create/copy/delete move in current moveset
-- [EDITOR] Change starting_frame type to be integer instead of hexadecimal
-- [EDITOR & EXTRACTOR] Imported movesets now look for missing animations in nearby folder. You do not need to copy animations from other folders anymore! Although it is still recommended.
-- [EXTRACTOR] Sort folders by game release date. Don't re-export animations that already exist in the folder
-1.0.20: [EDITOR] Add 'INSTANT' label to extraproperties that start at 32769. Label every properties that can change aliases. Automatically update properties label when their id are changed.
+ 1.0.21 Changelog:
+- Add 'Go to' buttons for cancels, group cancels, hit conditions, reaction-lists
+- Add button to list cancels/group_cancels/reaction_list that references the current selected move
+ 
 --- by kilo ( https://www.youtube.com/c/kiloutre ) ---

@@ -100,7 +100,6 @@ Administrator rights may be required to import the moveset into memory.
 - Import camera and projectiles for Tekken 7. Lee crashes with Lili or Leo RA.
 - Look into making ttt2 intro and outro end automatically
 - Use opponent for tag2 outros (might not be viable)
-- Delete files before exporting moveset
 - (Jin) Dj tag2 vs DJ tag2, treasure battle, online player buttons, crash on loadscreen
 - Green Ogre 3~4 crash
 - Rename "group_cancels" to "generic_cancels"
@@ -113,7 +112,6 @@ Administrator rights may be required to import the moveset into memory.
 - Create tool to view current T7 move data. Cancel list, reactions
 
 Moveset editor:
-- Window to list animations and copy one to another character's folder
 - Fix modifying tag2 movesets, 'if you change the requirement of a move to screw / bound with any tag 2 character, the game insta crashes'
 - MoveId nmes hovers in reaction list?
 - Reload file button

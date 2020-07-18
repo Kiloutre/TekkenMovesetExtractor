@@ -1,6 +1,6 @@
 # Python 3.6.5
 
-from tkinter import Tk, Frame, Listbox, Label, Scrollbar, StringVar, Toplevel, Menu, messagebox
+from tkinter import Tk, Frame, Listbox, Label, Scrollbar, StringVar, Toplevel, Menu, messagebox, Text, simpledialog
 from tkinter.ttk import Button, Entry, Style
 from Addresses import game_addresses, GameClass
 import shutil
@@ -12,7 +12,7 @@ import re
 from zlib import crc32
 
 charactersPath = "./extracted_chars/"
-editorVersion = "0.20-BETA"
+editorVersion = "0.21-BETA"
 
 requirementLabels = {
     0: 'Always true',
@@ -1845,6 +1845,60 @@ class MoveCopyingWindow:
         self.window.destroy()
         self.window.update()
     
+class MoveReferenceWindow:
+    def __init__(self, root, moveName, moveId, referenceList):
+        window = Toplevel()
+        self.window = window
+        self.root = root
+        
+        window.iconbitmap('InterfaceData/renge.ico')
+        window.geometry("500x500")
+        window.minsize(800, 600)
+        
+        self.setTitle("Reference Finder: Move %s (%d) (%d entries)" % (moveName, moveId, len(referenceList)))
+        self.printReferenceList(moveName, moveId, referenceList)
+            
+    def printReferenceList(self, moveName, moveId, referenceList):
+        TextArea = Text(self.window, wrap="word")
+        
+        scrollbar = Scrollbar(self.window, command=TextArea.yview)
+        scrollbar.pack(side='right', fill='y')
+        
+        TextArea.config(yscrollcommand=scrollbar.set)
+        
+        
+        if len(referenceList) == 0:
+            TextArea.insert("end", "No reference found for move %s (%d)" % (moveName, moveId))
+        else:
+            TextArea.insert("end", "%d entries for move %s (%d):\n\n" % (len(referenceList), moveName, moveId))
+        
+            for reference in referenceList:
+                referenceText = "Type: %s" % (reference['origin'])
+            
+                if len(reference['references']) != 0:
+                    referenceText = '\n' + referenceText
+                
+                if 'list_id' in reference:
+                    referenceText += " | List ID: %d" % (reference['list_id'])
+                    referenceText += " | Item ID: %d (list idx %d)" % (reference['item_id'], reference['item_id'] - reference['list_id'])
+                else:
+                    referenceText += " | Item ID: %d" % (reference['item_id'])
+                    
+                for ref in reference['references']:
+                    referenceText += "\n- Referenced by: " + ref
+                    
+                if len(reference['references']) != 0:
+                    referenceText += '\n'
+                
+                TextArea.insert("end", referenceText + "\n")
+            TextArea.insert("end", "--- %d entries for move %s (%d) ---" % (len(referenceList), moveName, moveId))
+        
+        TextArea.configure(state="disabled")
+        TextArea.pack(padx=10, pady=5, side='left', fill='both', expand=1)
+            
+    def setTitle(self, title):
+        self.window.wm_title(title) 
+    
 class GroupCancelWindow:
     def __init__(self, root, id):
         window = Toplevel()
@@ -1878,10 +1932,9 @@ class GroupCancelWindow:
             ("Current group-cancel", self.root.deleteCurrentGroupCancel),
         ]
         
-        
         menuActions = [
             ("New", creationMenu),
-            ("Delete", deletionMenu),
+            ("Delete", deletionMenu)
         ]
         
         menu = createMenu(window, menuActions, validationFunc=self.root.canEditMoveset)
@@ -2059,6 +2112,18 @@ class GUI_TekkenMovesetEditor():
             ("Current pushback", self.deletePushback)
         ]
         
+        toolsMenu = [
+            ("What cancels into this move", self.listCancelsForMove),
+            ("What reactions use this move", self.listReactionsForMove)
+        ]
+        
+        gotoMenu = [
+            ("Cancel", self.goToCancel),
+            ("Group cancel", self.goToGroupCancel),
+            ("Reaction list", self.goToReactionList),
+            ("Hit-condition list", self.goToHitConditionList),
+        ]
+        
         menuActions = [
             ('Toggle character selector', self.Charalist.toggleVisibility),
             ("", "separator"),
@@ -2067,6 +2132,8 @@ class GUI_TekkenMovesetEditor():
             ("", "separator"),
             ("New", creationMenu ),
             ("Delete", deletionMenu ),
+            ("Tools", toolsMenu ),
+            ("Go to", gotoMenu ),
         ]
         
         menu = createMenu(window, menuActions, validationFunc=self.canEditMoveset)
@@ -2118,6 +2185,108 @@ class GUI_TekkenMovesetEditor():
         self.VoiceclipEditor.resetForm()
         if self.GroupCancelEditor:
             self.GroupCancelEditor.on_close()
+            
+    def goToCancel(self):
+        cancelId = simpledialog.askinteger("Go to Cancel", "Input cancel list id", minvalue=0, maxvalue=len(self.movelist['cancels']) - 1)
+        if cancelId != None:
+            self.setCancelList(cancelId)
+            
+    def goToGroupCancel(self):
+        cancelId = simpledialog.askinteger("Go to Group-Cancel", "Input group-cancel list id", minvalue=0, maxvalue=len(self.movelist['group_cancels']) - 1)
+        if cancelId != None:
+            self.openGroupCancel(cancelId)
+            
+    def goToReactionList(self):
+        reactionListId = simpledialog.askinteger("Go to Reaction-list", "Input reaction-list id", minvalue=0, maxvalue=len(self.movelist['group_cancels']) - 1)
+        if reactionListId != None:
+            self.setReactionList(reactionListId)
+            
+    def goToHitConditionList(self):
+        conditionId = simpledialog.askinteger("Go to Hit-Condition list", "Input hit-condition list id", minvalue=0, maxvalue=len(self.movelist['hit_conditions']) - 1)
+        if conditionId != None:
+            self.setConditionList(conditionId)
+            
+    def listMovesUsingCancel(self, cancelListId, cancelId):
+        for move_id, move in enumerate(self.movelist['moves']):
+            if cancelListId <= move['cancel_idx'] <= cancelId:
+                yield (move_id, move['name'])
+            
+    def listCancelsUsingGroupCancel(self, cancelListId, cancelId):
+        listId = 0
+        for cancel_id, cancel in enumerate(self.movelist['cancels']):
+            if cancel['command'] == 0x800b and cancelListId <= cancel['move_id'] <= cancelId:
+                yield listId, cancel_id
+            elif cancel['command'] == 0x8000:
+                listId = cancel_id + 1
+
+    def listCancelsForMove(self):
+        if self.MoveEditor.editMode == None:
+            return
+            
+        refList = []
+                
+        listId = 0
+        for cancel_id, cancel in enumerate(self.movelist['group_cancels']):
+            if cancel['move_id'] == self.MoveEditor.id:
+                moveReferences = []
+                
+                for cancelListId, cancelId in self.listCancelsUsingGroupCancel(listId, cancel_id):
+                    moveList = [move for move in self.listMovesUsingCancel(cancelListId, cancelId)]
+                    
+                    if len(moveList) != 0:
+                        for move_id, move_name in self.listMovesUsingCancel(cancelListId, cancelId):
+                            moveReferences.append('Move %s (%d) -> Cancel list %d (item %d, idx %d)' % (move_name, move_id, cancelListId, cancelId, cancelId - cancelListId))
+                    else:
+                        moveReferences.append('Cancel list %d (item %d, idx %d)' % (cancelListId, cancelId, cancelId - cancelListId))
+                    
+                refList.append({
+                    'origin': 'group_cancels',
+                    'item_id': cancel_id,
+                    'list_id': listId,
+                    'references': moveReferences
+                })
+            if cancel['command'] == 0x800c:
+                listId = cancel_id + 1
+        
+        listId = 0
+        for cancel_id, cancel in enumerate(self.movelist['cancels']):
+            if cancel['command'] != 0x800b and cancel['move_id'] == self.MoveEditor.id:
+                references = ['Move %s (%d)' % (ref[1], ref[0]) for ref in self.listMovesUsingCancel(listId, cancel_id)]
+                refList.append({
+                    'origin': 'cancels',
+                    'item_id': cancel_id,
+                    'list_id': listId,
+                    'references': references
+                })
+            if cancel['command'] == 0x8000:
+                listId = cancel_id + 1
+        
+        app = MoveReferenceWindow(self, self.movelist['moves'][self.MoveEditor.id]['name'], self.MoveEditor.id, refList)
+        app.window.mainloop()
+
+    def listReactionsForMove(self):
+        if self.MoveEditor.editMode == None:
+            return
+        refList = []
+        
+        for reactionlistId, reactionList in enumerate(self.movelist['reaction_list']):
+            referencesMove = False
+            
+            for field in [f for f in reactionList if f != 'pushback_indexes' and f != 'u1list' and f != 'vertical_pushback']:
+                if reactionList[field] == self.MoveEditor.id:
+                    referencesMove = True
+                    break
+            
+            if referencesMove:
+                references = []
+                refList.append({
+                    'origin': 'reaction_list',
+                    'item_id': reactionlistId,
+                    'references': references
+                })
+        
+        app = MoveReferenceWindow(self, self.movelist['moves'][self.MoveEditor.id]['name'], self.MoveEditor.id, refList)
+        app.window.mainloop()
         
     def openGroupCancel(self, id):
         if self.GroupCancelEditor == None:
