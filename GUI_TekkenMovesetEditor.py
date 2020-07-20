@@ -388,7 +388,7 @@ def validateField(type, value):
     if type == 'short' or type == 'int' or type == 'long' or type == 'positive_index':
         return re.match("^[0-9]+$", value)
     if type == 'index':
-        return re.match("^-?[0-9]+$", value)
+        return value == '-1' or re.match("^?[0-9]+$", value)
     if type == 'hex' or type == '8b_hex':
         return re.match("^0(x|X)[0-9A-Fa-f]+$", value)
     if type == 'text':
@@ -1252,8 +1252,11 @@ class GroupCancelEditor(FormEditor):
             self.details['text'] = '(move_id) group_cancel ' + str(moveId)
         else:
             moveName = self.root.getMoveName(moveId)
-            text =  "Command: " + getCommandStr(command) + "\nMove: " + moveName
-            self.details['text'] = text
+            if moveName != None:
+                text =  "Command: " + getCommandStr(command) + "\nMove: " + moveName
+                self.details['text'] = text
+            else:
+                self.details['text'] = 'Invalid move'
             
     def setItem(self, index):
         cancelData = self.itemList[index]
@@ -1314,8 +1317,11 @@ class CancelEditor(FormEditor):
             self.details['text'] = '(move_id) group_cancel ' + str(moveId)
         else:
             moveName = self.root.getMoveName(moveId)
-            text =  "Command: " + getCommandStr(command) + "\nMove: " + moveName
-            self.details['text'] = text
+            if moveName != None:
+                text =  "Command: " + getCommandStr(command) + "\nMove: " + moveName
+                self.details['text'] = text
+            else:
+                self.details['text'] = 'Invalid move'
             
     def setItem(self, index):
         cancelData = self.itemList[index]
@@ -2322,12 +2328,17 @@ class GUI_TekkenMovesetEditor():
             messagebox.showinfo('Warning', 'This feature is in BETA, save your moveset before using it!!!')
             app = MoveCopyingWindow(self)
             self.MoveCopyingWindow = app
-            app.window.mainloop()        
+            app.window.mainloop()      
+            
     def getMoveId(self, moveId):
-        return self.movelist['aliases'][moveId - 0x8000] if moveId >= 0x8000 else moveId
+        if moveId >= 0x8000 and moveId - 0x8000 < len(self.movelist['aliases']):
+            return self.movelist['aliases'][moveId - 0x8000] 
+        return moveId
         
     def getMoveName(self, moveId):
         moveId = self.getMoveId(moveId)
+        if moveId == None or moveId >= len(self.movelist['moves']):
+            return None
         return self.movelist['moves'][moveId]['name']
         
     def setMove(self, moveId):
@@ -2934,7 +2945,7 @@ class GUI_TekkenMovesetEditor():
                 cancel['move_id'] -= 1
         
         for cancel in self.movelist['group_cancels']:
-            if cancel['move_id'] > moveId and cancel['command'] != 0x800c:
+            if cancel['move_id'] > moveId:
                 cancel['move_id'] -= 1
                 
         for reactionList in self.movelist['reaction_list']:
