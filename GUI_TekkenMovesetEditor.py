@@ -1248,15 +1248,12 @@ class GroupCancelEditor(FormEditor):
         command = self.fieldValue['command']
         moveId = self.fieldValue['move_id']
         
-        if command == 0x800b:
-            self.details['text'] = '(move_id) group_cancel ' + str(moveId)
+        moveName = self.root.getMoveName(moveId)
+        if moveName != None:
+            text =  "Command: " + getCommandStr(command) + "\nMove: " + moveName
+            self.details['text'] = text
         else:
-            moveName = self.root.getMoveName(moveId)
-            if moveName != None:
-                text =  "Command: " + getCommandStr(command) + "\nMove: " + moveName
-                self.details['text'] = text
-            else:
-                self.details['text'] = 'Invalid move'
+            self.details['text'] = 'Invalid move'
             
     def setItem(self, index):
         cancelData = self.itemList[index]
@@ -2214,22 +2211,26 @@ class GUI_TekkenMovesetEditor():
             self.GroupCancelEditor.on_close()
             
     def goToCancel(self):
-        cancelId = simpledialog.askinteger("Go to Cancel", "Input cancel list id", minvalue=0, maxvalue=len(self.movelist['cancels']) - 1)
+        maxvalue = len(self.movelist['cancels']) - 1
+        cancelId = simpledialog.askinteger("Go to Cancel", "Input cancel list id (0 - %d)" % (maxvalue), minvalue=0, maxvalue=maxvalue)
         if cancelId != None:
             self.setCancelList(cancelId)
             
     def goToGroupCancel(self):
-        cancelId = simpledialog.askinteger("Go to Group-Cancel", "Input group-cancel list id", minvalue=0, maxvalue=len(self.movelist['group_cancels']) - 1)
+        maxvalue = len(self.movelist['group_cancels']) - 1
+        cancelId = simpledialog.askinteger("Go to Group-Cancel", "Input group-cancel list id (0 - %d)" % (maxvalue), minvalue=0, maxvalue=maxvalue)
         if cancelId != None:
             self.openGroupCancel(cancelId)
             
     def goToReactionList(self):
-        reactionListId = simpledialog.askinteger("Go to Reaction-list", "Input reaction-list id", minvalue=0, maxvalue=len(self.movelist['group_cancels']) - 1)
+        maxvalue = len(self.movelist['reaction_list']) - 1
+        reactionListId = simpledialog.askinteger("Go to Reaction-list", "Input reaction-list id (0 - %d)" % (maxvalue), minvalue=0, maxvalue=maxvalue)
         if reactionListId != None:
             self.setReactionList(reactionListId)
             
     def goToHitConditionList(self):
-        conditionId = simpledialog.askinteger("Go to Hit-Condition list", "Input hit-condition list id", minvalue=0, maxvalue=len(self.movelist['hit_conditions']) - 1)
+        maxvalue = len(self.movelist['hit_conditions']) - 1
+        conditionId = simpledialog.askinteger("Go to Hit-Condition list", "Input hit-condition list id (0 - %d)" % (maxvalue), minvalue=0, maxvalue=maxvalue)
         if conditionId != None:
             self.setConditionList(conditionId)
             
