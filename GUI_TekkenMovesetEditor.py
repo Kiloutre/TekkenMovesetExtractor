@@ -12,7 +12,7 @@ import re
 from zlib import crc32
 
 charactersPath = "./extracted_chars/"
-editorVersion = "0.22-BETA"
+editorVersion = "0.23-BETA"
 
 requirementLabels = {
     0: 'Always true',
@@ -98,6 +98,8 @@ propertyLabels = {
     0x806a: 'Inflict damage to opponent',
     0x80bd: 'Kazuya devil mode',
     0x80c3: 'Give Lucky Chloe RA point',
+    0x818a: 'Add Tracking/Alignment',
+    0x81a7: 'Align Player To Wall (?)',
     0x81be: 'Rage Art SFX',
     0x817c: 'Allow player to block',
     0x8181: 'Stop pushback',
@@ -130,6 +132,7 @@ propertyLabels = {
     0x82cb: 'Special Cancellable (?)',
     0x8213: 'Attack destroys projectile',
     0x8214: 'Attack deflects projectile',
+    0x824a: 'AI Input (Devil Kazuya reverse transform)',
     0x826a: 'Homing (Left Hand)',
     0x826b: 'Homing (Right Hand)',
     0x826c: 'Homing (Left foot)',
@@ -404,7 +407,7 @@ def validateField(type, value):
     if type == 'short' or type == 'int' or type == 'long' or type == 'positive_index':
         return re.match("^[0-9]+$", value)
     if type == 'index':
-        return value == '-1' or re.match("^?[0-9]+$", value)
+        return value == '-1' or re.match("^[0-9]+$", value)
     if type == 'hex' or type == '8b_hex':
         return re.match("^0(x|X)[0-9A-Fa-f]+$", value)
     if type == 'text':

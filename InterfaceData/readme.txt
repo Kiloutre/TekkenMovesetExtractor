@@ -4,5 +4,6 @@ If you want the moveset to stay constantly, use the "Online Player" buttons, and
 - [EDITOR] Show max value in 'Go to' menus
 - [EDITOR] Fix move deletion that would sometimes break group-cancels
 - [EDITOR] More heavily restrict the data that ccn be written in fields to prevent movesets from breaking
+1.0.23 Hotfix: [EDITOR] Fixed edition of indexes that could equal -1
  
 --- by kilo ( https://www.youtube.com/c/kiloutre ) ---
