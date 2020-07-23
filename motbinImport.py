@@ -409,9 +409,17 @@ class MotbinStruct:
         animMapping = {anim:None for anim in anim_names}
         
         animFolder = "%s/anim" % (self.folderName)
-        existingAnims = [a[:-4] for a in os.listdir(animFolder) if a.endswith('.bin')]
+        try:
+            existingAnims = [a[:-4] for a in os.listdir(animFolder) if a.endswith('.bin')]
+        except:
+            existingAnims = []
         
-        searchFolders = [animSearchFolder + '/' + c for c in os.listdir(animSearchFolder) if os.path.isdir(animSearchFolder + c)]
+        try:
+            prefix = self.folderName.split("\\")[-1].split("//")[-1].split("_")[0] + '_'
+            searchFolders = [animSearchFolder + '/' + c for c in os.listdir(animSearchFolder) if os.path.isdir(animSearchFolder + c) if c.startswith(prefix)]
+            searchFolders += [animSearchFolder + '/' + c for c in os.listdir(animSearchFolder) if os.path.isdir(animSearchFolder + c) if not c.startswith(prefix)]
+        except:
+            searchFolders = [animSearchFolder + '/' + c for c in os.listdir(animSearchFolder) if os.path.isdir(animSearchFolder + c)]
         
         for anim in anim_names:
             if anim not in existingAnims:
@@ -422,8 +430,8 @@ class MotbinStruct:
                             size = os.path.getsize('%s/%s.bin' % (folder, anim))
                             animMapping[anim] = { 'folder': folder, 'size': size }
                             break
-                except Exception as e:
-                    print(e)
+                except:
+                    pass
             else:
                 size = os.path.getsize('%s/%s.bin' % (animFolder, anim))
                 animMapping[anim] = { 'folder': animFolder, 'size': size }
@@ -766,7 +774,7 @@ class MotbinStruct:
                     self.mota_list.append(motaAddr)
             except:
                 self.mota_list.append(0)
-                print("Warning: impossible to import MOTA %d", i)
+                #print("Warning: impossible to import MOTA %d" % (i))
                 
     def allocateMoves(self):
         self.allocateAnimations()
