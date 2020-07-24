@@ -16,7 +16,7 @@ import motbinImport as importLib
 from urllib import request
 from GUI_TekkenMovesetEditor import GUI_TekkenMovesetEditor
 
-extractorVersion = "1.0.23"
+extractorVersion = "1.0.24"
 latestRelease = "https://api.github.com/repos/Kiloutre/TekkenMovesetExtractor/releases/latest"
 charactersPath = "./extracted_chars/"
 codeInjectionSize = 256

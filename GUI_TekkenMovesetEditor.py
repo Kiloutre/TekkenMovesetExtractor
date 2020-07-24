@@ -12,7 +12,7 @@ import re
 from zlib import crc32
 
 charactersPath = "./extracted_chars/"
-editorVersion = "0.23-BETA"
+editorVersion = "0.24-BETA"
 
 requirementLabels = {
     0: 'Always true',
@@ -1005,8 +1005,8 @@ class VoiceclipEditor(FormEditor):
         self.disableSaveButton()
         
     def save(self):
-        if self.editMode == True and validateField('number', self.fieldVar['value'].get()):
-            self.root.saveField(self.key, self.id, None, getFieldValue('number', self.fieldVar['value'].get()))
+        if self.editMode == True and validateField('int', self.fieldVar['value'].get()):
+            self.root.saveField(self.key, self.id, None, getFieldValue('int', self.fieldVar['value'].get()))
             self.disableSaveButton()
             
 class CancelExtraEditor(FormEditor):
@@ -1026,8 +1026,8 @@ class CancelExtraEditor(FormEditor):
         self.disableSaveButton()
         
     def save(self):
-        if self.editMode == True and validateField('number', self.fieldVar['value'].get()):
-            self.root.saveField(self.key, self.id, None, getFieldValue('number', self.fieldVar['value'].get()))
+        if self.editMode == True and validateField('int', self.fieldVar['value'].get()):
+            self.root.saveField(self.key, self.id, None, getFieldValue('int', self.fieldVar['value'].get()))
             self.disableSaveButton()
             
 class PushbackExtraEditor(FormEditor):
@@ -1047,8 +1047,8 @@ class PushbackExtraEditor(FormEditor):
         self.disableSaveButton()
         
     def save(self):
-        if self.editMode == True and validateField('number', self.fieldVar['value'].get()):
-            self.root.saveField(self.key, self.id, None, getFieldValue('number', self.fieldVar['value'].get()))
+        if self.editMode == True and validateField('short', self.fieldVar['value'].get()):
+            self.root.saveField(self.key, self.id, None, getFieldValue('short', self.fieldVar['value'].get()))
             self.disableSaveButton()
             
 class PushbackEditor(FormEditor):
@@ -1094,17 +1094,17 @@ class ReactionListEditor(FormEditor):
     def save(self):
         if super().save():
             pushbackFields = reactionlistExtraPushbackFields
-            invalidFields = [f for f in pushbackFields if not validateField('number', self.fieldVar[f].get())]
+            invalidFields = [f for f in pushbackFields if not validateField('index', self.fieldVar[f].get())]
 
             if len(invalidFields) == 0:
-                pushbackFields = [getFieldValue('number', self.fieldVar[f].get()) for f in pushbackFields]
+                pushbackFields = [getFieldValue('index', self.fieldVar[f].get()) for f in pushbackFields]
                 self.root.saveField(self.key, self.id, 'pushback_indexes', pushbackFields)
             
             launchFields = reactionlistExtraLaunchFields
-            invalidFields = [f for f in launchFields if not validateField('number', self.fieldVar[f].get())]
+            invalidFields = [f for f in launchFields if not validateField('short', self.fieldVar[f].get())]
 
             if len(invalidFields) == 0:
-                launchFields = [getFieldValue('number', self.fieldVar[f].get()) for f in launchFields]
+                launchFields = [getFieldValue('short', self.fieldVar[f].get()) for f in launchFields]
                 self.root.saveField(self.key, self.id, 'u1list', launchFields)
             
     def setItem(self, itemData, itemId):

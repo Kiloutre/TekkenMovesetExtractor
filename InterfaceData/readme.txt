@@ -5,5 +5,6 @@ If you want the moveset to stay constantly, use the "Online Player" buttons, and
 - [EDITOR] Fix move deletion that would sometimes break group-cancels
 - [EDITOR] More heavily restrict the data that ccn be written in fields to prevent movesets from breaking
 1.0.23 Hotfix: [EDITOR] Fixed edition of indexes that could equal -1
+1.0.24 Hotfix: [EDITOR] Fixed edition of pushbacks, cancel extras, voiceclips, reaction list datas
  
 --- by kilo ( https://www.youtube.com/c/kiloutre ) ---
