@@ -12,7 +12,7 @@ import re
 from zlib import crc32
 
 charactersPath = "./extracted_chars/"
-editorVersion = "0.24-BETA"
+editorVersion = "0.25-BETA"
 
 requirementLabels = {
     0: 'Always true',
