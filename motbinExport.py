@@ -229,7 +229,8 @@ t7_offsetTable = {
     'throws_size': { 'offset': 0x278, 'size': 8 },
     
     'mota_start': { 'offset': 0x280, 'size': None },
-    'aliases': { 'offset': 0x28, 'size': (148, 2) }, #148 aliases of 2 bytes
+    'aliases': { 'offset': 0x28, 'size': (148, 2) }, # 112 aliases + 36 ??? of 2 bytes
+    'aliases2': { 'offset': 0x108, 'size': (36, 2) }, # 112 aliases + 36 ??? of 2 bytes
     
     'pushback:val1': { 'offset': 0x0, 'size': 2 },
     'pushback:val2': { 'offset': 0x2, 'size': 2 },
@@ -379,7 +380,8 @@ tag2_offsetTable = {
     'throws_size': { 'offset': 0x1d4, 'size': 4 },
     
     'mota_start': { 'offset': 0x1d8, 'size': None },
-    'aliases': { 'offset': 0x18, 'size': (148, 2) }, #148 aliases of 2 bytes
+    'aliases': { 'offset': 0x18, 'size': (148, 2) }, # 112 aliases + 36 ??? of 2 bytes
+    'aliases2': { 'offset': 0xF8, 'size': (36, 2) }, # 36 ??? of 2 bytes
     
     'pushback:val1': { 'offset': 0x0, 'size': 2 },
     'pushback:val2': { 'offset': 0x2, 'size': 2 },
@@ -529,6 +531,7 @@ t6_offsetTable = {
     
     'mota_start': { 'offset': 0x234, 'size': None },
     'aliases': { 'offset': 0x18, 'size': (148, 2) }, #148 aliases of 2 bytes
+    'aliases2': { 'offset': 0xF8, 'size': (36, 2) }, # 36 ??? of 2 bytes
     
     'pushback:val1': { 'offset': 0x0, 'size': 2 },
     'pushback:val2': { 'offset': 0x2, 'size': 2 },
@@ -1744,8 +1747,6 @@ class Motbin:
         self.version = versionLabels[self.TekkenVersion]
         self.extraction_date = datetime.now(timezone.utc).__str__()
         self.extraction_path = ''
-        
-        self.aliases2 = []
         
         try:
             readOffsetTable(self, '')

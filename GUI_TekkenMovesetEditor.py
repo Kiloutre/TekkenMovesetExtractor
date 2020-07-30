@@ -158,7 +158,7 @@ propertyLabels = {
     0x8454: 'Something used in Rage Art Camera (?)',
 }
 
-for i in range(0x83c4, 0x83c4 + 148 + 1):
+for i in range(0x83c4, 0x83c4 + 112):
     propertyLabels[i] = 'Set %d alias' % (i)
 
 def getDetails(itemId, key):
