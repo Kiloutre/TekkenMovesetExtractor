@@ -16,7 +16,7 @@ def GetBigEndianAnimEnd(data, searchStart):
     return [
         data[searchStart:].find(b'\x00\x64\x00\x17\x00'),
         data[searchStart:].find(b'\x00\x64\x00\x1B\x00'),
-        data[searchStart:].find(b'\x00\xC8\x00\x17'),
+        data[searchStart:].find(b'\x00\xC8\x00\x17\x00'),
         data[searchStart:].find(b'motOrigin'),
         data[searchStart:].find(bytes([0] * 100))
     ]
@@ -25,7 +25,7 @@ def GetLittleEndianAnimEnd(data, searchStart):
     return [
         data[searchStart:].find(b'\x64\x00\x17\x00'),
         data[searchStart:].find(b'\x64\x00\x1B\x00'),
-        data[searchStart:].find(b'\xC8\x00\x17'),
+        data[searchStart:].find(b'\xC8\x00\x17\x00'),
         data[searchStart:].find(b'motOrigin'),
         data[searchStart:].find(bytes([0] * 100))
     ]
