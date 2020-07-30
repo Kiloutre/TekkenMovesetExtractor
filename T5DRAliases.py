@@ -93,6 +93,3 @@ t5dr_requirements = {
     32956: { 't7_id': 33282, 'desc': '(GANRYU) Sm_Lnage_yE -> wDm_Sm_Lnage' },
     33122: { 't7_id': 33998, 'desc': '(ANNA) dm_hara_00L -> sGrd_hara_J' },
 }
-
-def getT5DRExtraprop(type, id, value):
-    return 0, 0, 0

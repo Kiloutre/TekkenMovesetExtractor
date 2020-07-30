@@ -180,6 +180,3 @@ rev_requirements = {
     33503: { 't7_id': 33998, 'desc': '(ALISA) dm_hara_00L -> sGrd_hara_J' },
     33510: { 't7_id': 34108, 'desc': '(ALISA) ym_y00 -> wDm_GndF_00' },
 }
-
-def getRevExtraprop(type, id, value):
-    return 0, 0, 0

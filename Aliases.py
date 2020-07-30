@@ -1,10 +1,14 @@
 
 from Tag2Aliases import tag2_requirements, tag2_extra_move_properties, tag2_character_fixes, getTag2CharIDAliases, tag2_odd_hitbox_aliases, tag2_even_hitbox_aliases
-from RevAliases import rev_requirements, getRevExtraprop
+from RevAliases import rev_requirements
 from T6Aliases import t6_requirements, t6_extra_move_properties
-from T5Aliases import t5_requirements, getT5Extraprop
-from T5DRAliases import t5dr_requirements, getT5DRExtraprop
-from T4Aliases import t4_requirements, getT4Extraprop
+from T5Aliases import t5_requirements
+from T5DRAliases import t5dr_requirements
+from T4Aliases import t4_requirements
+
+
+def disableProp(type, id, value):
+    return 0, 0, 0
 
 versionAliases = {
     'Tag2': {
@@ -17,11 +21,12 @@ versionAliases = {
     },
     'Revolution': {
         'requirements': rev_requirements,
-        'extraprop_func': getRevExtraprop #todo
+        'extraprop_func': disableProp #todo
     },
     'Tekken6': {
         'requirements': t6_requirements,
-        'extra_move_properties': t6_extra_move_properties
+        #'extra_move_properties': t6_extra_move_properties
+        'extraprop_func': disableProp #todo
     },
     'Tekken3D': {
         'requirements': t6_requirements,
@@ -29,15 +34,15 @@ versionAliases = {
     },
     'Tekken5': {
         'requirements': t5_requirements,
-        'extraprop_func': getT5Extraprop #todo
+        'extraprop_func': disableProp #todo
     },
     'Tekken5DR': {
         'requirements': t5dr_requirements,
-        'extraprop_func': getT5DRExtraprop #todo
+        'extraprop_func': disableProp #todo
     },
     'Tekken4': {
         'requirements': t4_requirements,
-        'extraprop_func': getT4Extraprop #todo
+        'extraprop_func': disableProp #todo
     },
     'Tekken7': {}
 }
