@@ -16,7 +16,7 @@ import motbinImport as importLib
 from urllib import request
 from GUI_TekkenMovesetEditor import GUI_TekkenMovesetEditor
 
-extractorVersion = "1.0.25"
+extractorVersion = "1.0.26"
 latestRelease = "https://api.github.com/repos/Kiloutre/TekkenMovesetExtractor/releases/latest"
 charactersPath = "./extracted_chars/"
 codeInjectionSize = 256
@@ -242,7 +242,7 @@ class Monitor:
         
         if codeInjection == None or self.moveset == None:
             return
-        
+            
         offset = ((playerId - 1) * 8)
         self.Importer.writeInt(codeInjection + codeInjectionSize - 0x10 + offset, self.moveset.motbin_ptr, 8)
         self.Importer.writeInt(codeInjection + codeInjectionSize - 0x20 + offset, self.moveset.motbin_ptr, 8)
@@ -274,8 +274,13 @@ class Monitor:
     def monitor(self):
         self.getPlayerAddress(forceWriting = True)
         
+        try:
+            moveset_addr = self.Importer.readInt(self.playerAddr + game_addresses.addr['t7_motbin_offset'])
+            self.moveset.copyMotaOffsets(moveset_addr)
+        except Exception as e:
+            pass
+            
         self.Importer.writeInt(self.playerAddr + game_addresses.addr['t7_motbin_offset'], self.moveset.motbin_ptr, 8)
-        
         prev_charaId = self.getCharacterId()
         self.applyCharacterAliases()
         
