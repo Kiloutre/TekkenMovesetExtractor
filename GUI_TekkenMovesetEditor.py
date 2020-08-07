@@ -1212,12 +1212,19 @@ class RequirementEditor(FormEditor):
             return
 
         reqId = self.fieldValue['req']
-        description = getDetails(reqId, 'requirements')
+        prefix = '%d' % (reqId)
+        key = 'requirements'
+        
+        if reqId >= 0x8000: #extraprop
+            key = 'extra_move_properties'
+            prefix = '%d (prop %x)' % (reqId, reqId)
+            
+        description = getDetails(reqId, key)
         
         if description != None:
-            text = '%d: %s' % (reqId, description)
+            text = prefix + ': ' + description
         else:
-            text = ''
+            text = '' if key == 'requirements' else prefix
         self.details['text'] = text
             
     def setItem(self, index):
