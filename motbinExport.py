@@ -8,6 +8,7 @@ import json
 import os
 import sys
 import re
+import string
 from zlib import crc32
 
 exportVersion = "1.0.0"       
@@ -1799,6 +1800,18 @@ class Motbin:
     def getCharacterNameFromBytes(self):
         oldCharName = self.character_name
         if self.TekkenVersion in characterNameMapping:
+            for name in characterNameMapping[self.TekkenVersion]:
+                try: # Try seeing if we know the first part of the name (So that things like [LAW]_STORY_ may work)
+                    if self.character_name.index(name) == 0:
+                        nameSuffix = self.character_name[len(name):]
+                        printable = set(string.printable)
+                        nameSuffix = ''.join([chr(b) for b in nameSuffix if chr(b) in printable])
+                        nameSuffix = re.sub(' |\\|\]|\[', '_', nameSuffix)
+                        
+                        self.character_name = characterNameMapping[self.TekkenVersion][name] + nameSuffix
+                        return
+                except Exception as e:
+                    pass
             self.character_name = characterNameMapping[self.TekkenVersion].get(self.character_name, 'UNKNOWN')
         else:
             self.character_name = 'UNKNOWN'
