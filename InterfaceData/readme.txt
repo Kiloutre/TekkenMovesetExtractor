@@ -1,7 +1,8 @@
 Export a moveset by loading up the target character, then clicking the wanted export button. Movesets loaded using "Import to P1/P2" will be unloaded after the next loading screen.
 If you want the moveset to stay constantly, use the "Online Player" buttons, and BEFORE the loading screen. Both online players must load the same moveset on the same players.
 
-1.0.27:
-- [IMPORTER] Fix crash after launching a character in movesets that were exported after v1.0.24
+1.0.28:
+- [EXPORTER] Fix T5's storymode cutscenes movesets that always got extracted as "t5_UNKNOWN"
+- [EDITOR] Add extra move property label in requirement list if the requirement is an extra move property
     
 --- by kilo ( https://www.youtube.com/c/kiloutre ) ---
