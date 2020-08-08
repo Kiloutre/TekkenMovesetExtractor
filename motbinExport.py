@@ -1321,6 +1321,17 @@ class Exporter:
             if self.TekkenVersion not in characterNameMapping:
                 return 'UNKNOWN'
             val = self.readInvalidStrPtr(self.base + motbin_ptr + offset)
+            for name in characterNameMapping[self.TekkenVersion]:
+                try: # Try seeing if we know the first part of the name (So that things like [LAW]_STORY_ may work)
+                    if val.index(name) == 0:
+                        nameSuffix = val[len(name):]
+                        printable = set(string.printable)
+                        nameSuffix = ''.join([chr(b) for b in nameSuffix if chr(b) in printable])
+                        nameSuffix = re.sub(' |\\|\]|\[', '_', nameSuffix)
+                        
+                        return characterNameMapping[self.TekkenVersion][name] + nameSuffix
+                except Exception as e:
+                    pass
             return characterNameMapping[self.TekkenVersion].get(val, 'UNKNOWN')
             
     def exportMoveset(self, playerAddress, name=''):
