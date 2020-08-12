@@ -12,7 +12,7 @@ import re
 from zlib import crc32
 
 charactersPath = "./extracted_chars/"
-editorVersion = "0.28-BETA"
+editorVersion = "0.29-BETA"
 
 requirementLabels = {
     0: 'Always true',
@@ -2968,11 +2968,11 @@ class GUI_TekkenMovesetEditor():
         self.movelist['moves'].pop(moveId)
         
         for cancel in self.movelist['cancels']:
-            if cancel['move_id'] > moveId and cancel['command'] != 0x800b:
+            if cancel['move_id'] > moveId and cancel['command'] != 0x800b and cancel['move_id'] < 0x8000:
                 cancel['move_id'] -= 1
         
         for cancel in self.movelist['group_cancels']:
-            if cancel['move_id'] > moveId:
+            if cancel['move_id'] > moveId and cancel['move_id'] < 0x8000:
                 cancel['move_id'] -= 1
                 
         for reactionList in self.movelist['reaction_list']:
