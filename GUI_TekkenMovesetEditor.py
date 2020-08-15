@@ -12,7 +12,7 @@ import re
 from zlib import crc32
 
 charactersPath = "./extracted_chars/"
-editorVersion = "0.29-BETA"
+editorVersion = "0.30-BETA"
 
 requirementLabels = {
     0: 'Always true',
@@ -2815,10 +2815,10 @@ class GUI_TekkenMovesetEditor():
         self.GroupCancelEditor.CancelEditor.setItem(index)
         
     def insertNewHitCondition(self, copyCurrent=False):
-        if copyCurrent and self.HitConditionEditor.editMode == None:
+        if self.HitConditionEditor.editMode == None:
             return
         
-        index = self.HitConditionEditor.listIndex
+        index = self.HitConditionEditor.listIndex if copyCurrent == True else 0
         insertPoint = self.HitConditionEditor.id
         
         if not copyCurrent:
