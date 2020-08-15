@@ -2704,10 +2704,10 @@ class GUI_TekkenMovesetEditor():
             self.RequirementEditor.resetForm()
         
     def insertNewRequirement(self, copyCurrent=False):
-        if copyCurrent == True and self.RequirementEditor.editMode == None:
+        if self.RequirementEditor.editMode == None:
             return
         
-        index = self.RequirementEditor.listIndex
+        index = self.RequirementEditor.listIndex if copyCurrent else 0
         insertPoint = self.RequirementEditor.id
         
         if not copyCurrent:
@@ -2858,7 +2858,7 @@ class GUI_TekkenMovesetEditor():
         self.setConditionList(listIndex)
         
     def deleteCurrentHitcondition(self):
-        if self.HitConditionEditor == None:
+        if self.HitConditionEditor.editMode == None:
             return
         
         listIndex = self.HitConditionEditor.listIndex
@@ -2921,7 +2921,7 @@ class GUI_TekkenMovesetEditor():
         self.setReactionList(itemIndex)
         
     def deleteReactionList(self):
-        if self.ReactionListEditor == None:
+        if self.ReactionListEditor.editMode == None:
             return
         
         index = self.ReactionListEditor.id
@@ -2947,7 +2947,7 @@ class GUI_TekkenMovesetEditor():
         self.setPushback(itemIndex)
         
     def deletePushback(self):
-        if self.PushbackEditor == None:
+        if self.PushbackEditor.editMode == None:
             return
         
         index = self.PushbackEditor.id

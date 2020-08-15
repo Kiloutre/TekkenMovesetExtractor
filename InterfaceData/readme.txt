@@ -5,6 +5,6 @@ If you want the moveset to stay constantly, use the "Online Player" buttons, and
 - [EXPORTER] Fix T5's storymode cutscenes movesets that always got extracted as "t5_UNKNOWN"
 - [EDITOR] Add extra move property label in requirement list if the requirement is an extra move property
 - 1.0.29 Hotfix: [EDITOR] Fix aliased move IDs (>= 32768) that would break when deleting any move in a moveset
-- 1.0.30 Hotfix: [EDITOR] Fix cases where creation of new hit conditions could sometimes fail and throw out an error
+- 1.0.30 Hotfix: [EDITOR] Fix cases where creation and deletion of some items (hit conditions, requirements...) could fail because of invalid security checks
     
 --- by kilo ( https://www.youtube.com/c/kiloutre ) ---
