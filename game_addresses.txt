@@ -70,5 +70,5 @@ td_chara_id_offset    = 0                  # tofind
 player_curr_move_offset = 0x344            # Used by editor
 next_move_offset        = 0xD30            # Used by editor
 curr_frame_timer_offset = 0x1D4            # Used by editor
-code_injection_addr     = 0x140738CDF      # Address that writes on player+motbin_offset, used for online play
+code_injection_addr     = 0x140739D0F      # Address that writes on player+motbin_offset, used for online play
 playerid_starting_ptr   = 0x1434BE100      # Used to find whether local player is 1P or 2P, used for online play

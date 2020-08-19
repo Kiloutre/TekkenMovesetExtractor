@@ -9,6 +9,7 @@ import motbinImport as importLib
 import json
 import os
 import re
+import ctypes
 from zlib import crc32
 
 charactersPath = "./extracted_chars/"
@@ -416,15 +417,15 @@ def validateField(type, value):
     
 def getFieldValue(type, value):
     if type == 'short':
-        return int(value) & 0xFFFF
+        return ctypes.c_ushort(int(value)).value
     if type == 'int':
-        return int(value) & 0xFFFFFFFF
+        return ctypes.c_uint(int(value)).value
     if type == 'long':
-        return int(value) & 0xFFFFFFFFFFFFFFFF
+        return ctypes.c_ulong(int(value)).value
     if type == 'hex':
-        return int(value, 16) & 0xFFFFFFFF
+        return ctypes.c_uint(int(value, 16)).value
     if type == '8b_hex':
-        return int(value, 16) & 0xFFFFFFFFFFFFFFFF
+        return ctypes.c_ulong(int(value, 16)).value
     if type == 'index' or type == 'positive_index':
         return int(value)
     if type == 'text':
@@ -432,16 +433,10 @@ def getFieldValue(type, value):
     raise Exception("Unknown type '%s'" % (type))
     
 def formatFieldValue(type, value):
-    if type == 'short':
-        return str(value & 0xFFFF)
-    if type == 'int':
-        return str(value & 0xFFFFFFFF)
-    if type == 'long':
-        return str(value & 0xFFFFFFFFFFFFFFFF)
-    if type == 'hex':
-        return "0x%x" % (value & 0xFFFFFFFF)
-    if type =='8b_hex':
-        return "0x%x" % (value & 0xFFFFFFFFFFFFFFFF)
+    if type == 'short' or type == 'int' or type == 'long':
+        return str(value)
+    if type == 'hex' or type == '8b_hex':
+        return "0x%x" % (value)
     if type == 'text' or type == 'index' or type == 'positive_index':
         return str(value)
     raise Exception("Unknown type '%s'" % (type))

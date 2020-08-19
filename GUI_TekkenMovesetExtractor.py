@@ -64,6 +64,7 @@ def getSinglePlayerInjection(playerAddr, movesetAddr, importer):
     playerLocation_bytes = hexToList(playerLocation, 4)
     loadedMovesetLocation_bytes = hexToList(loadedMovesetLocation, 4)
     importedMovesetLocation_bytes = hexToList(importedMovesetLocation, 4)
+    codeInjectionEnd = hexToList(game_addresses.addr['code_injection_addr'] + 0xE, 8)
 
     singlePlayerBytecode = [
         0x3B, 0x0c, 0x25, *playerLocation_bytes, #cmp ecx,[location]
@@ -83,9 +84,10 @@ def getSinglePlayerInjection(playerAddr, movesetAddr, importer):
         0x58, #pop rax
         0x59, #pop rcx
         0x48, 0x8b, 0x14, 0x25, *importedMovesetLocation_bytes, #mov rdx,[3f180066]
+        
         0x48, 0x89, 0x91, 0xa0, 0x14, 0x00, 0x00, #mov [rcx+14a0, rdx]
         0x48, 0x89, 0x91, 0xa8, 0x14, 0x00, 0x00, #mov [rcx+14a8, rdx]
-        0xFF, 0x25, 0x00, 0x00, 0x00, 0x00 , 0xEd, 0x8C, 0x73, 0x40, 0x01, 0x00, 0x00, 0x00 #jmp 140738Ced
+        0xFF, 0x25, 0x00, 0x00, 0x00, 0x00, *codeInjectionEnd #jmp
     ]
     
     importer.writeBytes(codeAddr, bytes(singlePlayerBytecode))
@@ -114,6 +116,7 @@ def getBothPlayersInjection(movesetAddr, movesetAddr2, importer):
     loadedMovesetLocation2_bytes = hexToList(loadedMovesetLocation + 8, 4)
     importedMovesetLocation_bytes = hexToList(importedMovesetLocation, 4)
     importedMovesetLocation2_bytes = hexToList(importedMovesetLocation + 8, 4)
+    codeInjectionEnd = hexToList(game_addresses.addr['code_injection_addr'] + 0xE, 8)
 
     twoPlayersBytecode = [
         0x3B, 0x0c, 0x25, *playerLocation_bytes, #cmp ecx,[location]
@@ -154,7 +157,7 @@ def getBothPlayersInjection(movesetAddr, movesetAddr2, importer):
 
         0x48, 0x89, 0x91, 0xa0, 0x14, 0x00, 0x00, #mov [rcx+14a0, rdx]
         0x48, 0x89, 0x91, 0xa8, 0x14, 0x00, 0x00, #mov [rcx+14a8, rdx]
-        0xFF, 0x25, 0x00, 0x00, 0x00, 0x00 , 0xEd, 0x8C, 0x73, 0x40, 0x01, 0x00, 0x00, 0x00 #jmp 140738Ced
+        0xFF, 0x25, 0x00, 0x00, 0x00, 0x00, *codeInjectionEnd #jmp
     ]
     
     importer.writeBytes(codeAddr, bytes(twoPlayersBytecode))
@@ -252,7 +255,7 @@ class Monitor:
         for i in range(3):
             startingAddr = self.Importer.readInt(startingAddr, 8)
             
-        invertPlayers = self.Importer.readInt(startingAddr + 0x60, 4)
+        invertPlayers = self.Importer.readInt(startingAddr + 0x68, 4)
         
         playerId = self.playerId + invertPlayers
         if playerId == 3:
