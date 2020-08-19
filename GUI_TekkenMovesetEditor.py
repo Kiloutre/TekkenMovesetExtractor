@@ -13,7 +13,7 @@ import ctypes
 from zlib import crc32
 
 charactersPath = "./extracted_chars/"
-editorVersion = "0.30-BETA"
+editorVersion = "0.31-BETA"
 
 requirementLabels = {
     0: 'Always true',
