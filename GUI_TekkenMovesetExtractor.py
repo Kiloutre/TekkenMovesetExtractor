@@ -224,8 +224,6 @@ class Monitor:
             0xFF, 0x25, 0, 0, 0, 0, *hexToList(codeAddr, 8)
         ]
         
-        print('Injecting code aat addr %x' % (codeAddr))
-        
         self.Importer.writeBytes(game_addresses.addr['code_injection_addr'], bytes(jmpInstruction))
         
         if otherMonitor != None:
@@ -248,8 +246,6 @@ class Monitor:
         if codeInjection == None or self.moveset == None:
             return
             
-        print('writeMovesetToCode for player %d' % (playerId))
-            
         offset = ((playerId - 1) * 8)
         self.Importer.writeInt(codeInjection + codeInjectionSize - 0x10 + offset, self.moveset.motbin_ptr, 8)
         self.Importer.writeInt(codeInjection + codeInjectionSize - 0x20 + offset, self.moveset.motbin_ptr, 8)
@@ -260,7 +256,6 @@ class Monitor:
             startingAddr = self.Importer.readInt(startingAddr, 8)
             
         invertPlayers = self.Importer.readInt(startingAddr + 0x68, 4)
-        print('InvertPlayers:', (invertPlayers == 1))
         
         playerId = self.playerId + invertPlayers
         if playerId == 3:
