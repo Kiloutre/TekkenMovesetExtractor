@@ -13,7 +13,7 @@ import ctypes
 from zlib import crc32
 
 charactersPath = "./extracted_chars/"
-editorVersion = "0.31-BETA"
+editorVersion = "0.32-BETA"
 
 requirementLabels = {
     0: 'Always true',
@@ -425,7 +425,7 @@ def getFieldValue(type, value):
     if type == 'hex':
         return ctypes.c_uint(int(value, 16)).value
     if type == '8b_hex':
-        return ctypes.c_ulong(int(value, 16)).value
+        return ctypes.c_ulonglong(int(value, 16)).value
     if type == 'index' or type == 'positive_index':
         return int(value)
     if type == 'text':

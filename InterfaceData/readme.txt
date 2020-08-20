@@ -5,5 +5,6 @@ If you want the moveset to stay constantly, use the "Online Player" buttons, and
 - [IMPORTER] Update game_addresses.txt to fix 'Set Online Local/Remote Player' buttons
 Known bugs:
 - Using only 'Set Online Local' OR 'Set Online Remote' alone will always apply the moveset on the same side instead of the same player
+1.0.32 HOTFIX: [EDITOR] Fix edition of cancel commands
     
 --- by kilo ( https://www.youtube.com/c/kiloutre ) ---
