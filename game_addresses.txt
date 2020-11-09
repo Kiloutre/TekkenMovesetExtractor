@@ -1,8 +1,8 @@
 # Tekken 7 addresses and offsets. Changes with updates
 t7_process_name       = TekkenGame-Win64-Shipping.exe
 t7_base               = 0x0
-t7_p1_addr            = 0x1434D2E10
-t7_playerstruct_size  = 0x35B0             # Distance between 2 players addresses
+t7_p1_addr            = 0x1434E00D0
+t7_playerstruct_size  = 0x35F0             # Distance between 2 players addresses
 t7_motbin_offset      = 0x14A0
 t7_chara_id_offset    = 0xD8
 
