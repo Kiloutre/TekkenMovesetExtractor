@@ -38,6 +38,25 @@ R13 in these list is always cemu_base, and cemu_p1_addr will always be the secon
 Once both cemu_base and cemu_p1_addr are at the right value in `game_addresses.txt`, export characters by clicking the Export buttons in the interface.
 cemu_p1_addr only needs to be found once, unless you change the Tag2 version you're using (different region, etc)
 
+# Finding player addresses and structure sizes in Tekken 7
+
+Each Tekken 7 patch changes the addresses of the game_addresses.txt file. You will need correct addresses for the tool to properly function:
+- `t7_p1_addr` and `t7_playerstruct_size` are required for basic import/export. More are needed to get access to the  tool's 'Set Online' functions, but they are hard to get so i will be the one to do it usually. `t7_base` is not needed as far as i know.
+
+Finding the `t7_p1_addr` is similar to Tag2.
+
+First, get your character crouching then pause the game. Using cheat engine, scan for the value `32770` (crouching move id) in the `4 bytes` value type. Make your character stand up, then search for `32769` (standing move id).
+
+Scroll at the bottom of the newfound address list: there should be only one address higher than 140000000, which is the address we're interested in. Right click on it and click "Find out what accesses this address" (make sure your game is unpaused afterward).
+
+![Finding p1_addr](https://i.imgur.com/7jmKv6s.png)
+
+In the new window that opened, you will see a list of instructions that access this address. For example, `cmp [rbx + 0000344]`. `rbx` here is what we're interested in: in order to see its value, you will have to click the corresponding instruction.
+
+The value of `rbx` here is going to be what you must fill in `t7_p1_addr`.
+In order to get `t7_playerstruct_size`: repeat the process for p2, and then substract p1 to p2. For example in my game, p1 is `0x1434E00D0` and p2 is `0x1434E36C0`.
+`0x1434E36C0 - 0x1434E00D0 = 0x35F0`
+
 # Importing through the GUI
 
 Movesets are imported in memory, so you should have the game running if you want to import a moveset.
