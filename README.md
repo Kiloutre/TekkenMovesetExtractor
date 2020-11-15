@@ -40,7 +40,7 @@ cemu_p1_addr only needs to be found once, unless you change the Tag2 version you
 
 # Finding player addresses and structure sizes in Tekken 7
 
-Each Tekken 7 patch changes the addresses of the game_addresses.txt file. You will need correct addresses for the tool to properly function:
+Each Tekken 7 patch changes the addresses of the game_addresses.txt file. If i don't update the tool myself, you will need correct addresses for the tool to properly function:
 - `t7_p1_addr` and `t7_playerstruct_size` are required for basic import/export. More are needed to get access to the  tool's 'Set Online' functions, but they are hard to get so i will be the one to do it usually. `t7_base` is not needed as far as i know.
 
 Finding the `t7_p1_addr` is similar to Tag2.
@@ -55,7 +55,10 @@ In the new window that opened, you will see a list of instructions that access t
 
 The value of `rbx` here is going to be what you must fill in `t7_p1_addr`.
 In order to get `t7_playerstruct_size`: repeat the process for p2, and then substract p1 to p2. For example in my game, p1 is `0x1434E00D0` and p2 is `0x1434E36C0`.
+
 `0x1434E36C0 - 0x1434E00D0 = 0x35F0`
+
+Thus, `t7_playerstruct_size` is `0x3F50`.
 
 # Importing through the GUI
 
