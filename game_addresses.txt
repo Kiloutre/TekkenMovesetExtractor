@@ -1,9 +1,9 @@
 # Tekken 7 addresses and offsets. Changes with updates
 t7_process_name       = TekkenGame-Win64-Shipping.exe
 t7_base               = 0x0
-t7_p1_addr            = 0x1434E00D0
-t7_playerstruct_size  = 0x35F0             # Distance between 2 players addresses
-t7_motbin_offset      = 0x14A0
+t7_p1_addr            = 0x1434E5250
+t7_playerstruct_size  = 0x3620             # Distance between 2 players addresses
+t7_motbin_offset      = 0x14d0
 t7_chara_id_offset    = 0xD8
 
 # Tag2 addresses.
@@ -67,8 +67,10 @@ td_chara_id_offset    = 0                  # tofind
 
 
 # miscellaneous
-player_curr_move_offset = 0x344            # Used by editor
+player_curr_move_offset = 0x350            # Used by editor
 next_move_offset        = 0xD30            # Used by editor
 curr_frame_timer_offset = 0x1D4            # Used by editor
-code_injection_addr     = 0x1407414CF      # Address that writes on player+motbin_offset, used for online play
-playerid_starting_ptr   = 0x1434CB390      # Used to find whether local player is 1P or 2P, used for online play
+code_injection_addr     = 0x14074442F      # Address that writes on player+motbin_offset, used for online play
+playerid_starting_ptr   = 0x1434D0510      # Used to find whether local player is 1P or 2P, used for online play
+#Finding playerid_starting_ptr: Go in training mode as 2p, scan for value on 1. Change to 1P, scan for value on 0. Repeat many times to lower matches to a few hundreds. Do combo, grabs and change outfit & character to keep lowering.
+#Scan repeatedly value between 0 and 1 during loading to filter out the remaining garbage. Then pause the process (slow to 0.00), set all remaining variables to a fringe unique value (e.g. 216246545) and search for the following pointer path that leads to the previous value (68 is last offset!): 0, 0, 68.

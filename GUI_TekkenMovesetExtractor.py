@@ -85,8 +85,8 @@ def getSinglePlayerInjection(playerAddr, movesetAddr, importer):
         0x59, #pop rcx
         0x48, 0x8b, 0x14, 0x25, *importedMovesetLocation_bytes, #mov rdx,[3f180066]
         
-        0x48, 0x89, 0x91, 0xa0, 0x14, 0x00, 0x00, #mov [rcx+14a0, rdx]
-        0x48, 0x89, 0x91, 0xa8, 0x14, 0x00, 0x00, #mov [rcx+14a8, rdx]
+        0x48, 0x89, 0x91, 0xd0, 0x14, 0x00, 0x00, #mov [rcx+14d0, rdx]
+        0x48, 0x89, 0x91, 0xd8, 0x14, 0x00, 0x00, #mov [rcx+14d8, rdx]
         0xFF, 0x25, 0x00, 0x00, 0x00, 0x00, *codeInjectionEnd #jmp
     ]
     
@@ -155,8 +155,8 @@ def getBothPlayersInjection(movesetAddr, movesetAddr2, importer):
         0x59, #pop rcx
         0x48, 0x8b, 0x14, 0x25, *importedMovesetLocation2_bytes, #mov rdx,[3f180066]
 
-        0x48, 0x89, 0x91, 0xa0, 0x14, 0x00, 0x00, #mov [rcx+14a0, rdx]
-        0x48, 0x89, 0x91, 0xa8, 0x14, 0x00, 0x00, #mov [rcx+14a8, rdx]
+        0x48, 0x89, 0x91, 0xd0, 0x14, 0x00, 0x00, #mov [rcx+14d0, rdx]
+        0x48, 0x89, 0x91, 0xd8, 0x14, 0x00, 0x00, #mov [rcx+14d8, rdx]
         0xFF, 0x25, 0x00, 0x00, 0x00, 0x00, *codeInjectionEnd #jmp
     ]
     
@@ -233,8 +233,8 @@ class Monitor:
         if runningMonitors[self.otherMonitorId] == None or forceReset:
             
             originalInstructions = [
-                0x48, 0x89, 0x91, 0xa0, 0x14, 0, 0,
-                0x48, 0x89, 0x91, 0xa8, 0x14, 0, 0,
+                0x48, 0x89, 0x91, 0xd0, 0x14, 0, 0,
+                0x48, 0x89, 0x91, 0xd8, 0x14, 0, 0,
             ]
             self.Importer.writeBytes(game_addresses.addr['code_injection_addr'], bytes(originalInstructions))
         else:
@@ -250,12 +250,15 @@ class Monitor:
         self.Importer.writeInt(codeInjection + codeInjectionSize - 0x10 + offset, self.moveset.motbin_ptr, 8)
         self.Importer.writeInt(codeInjection + codeInjectionSize - 0x20 + offset, self.moveset.motbin_ptr, 8)
         
-    def getPlayerAddress(self, forceWriting = False):
+    def getLocalPlayerSide(self):
         startingAddr = game_addresses.addr['playerid_starting_ptr']
-        for i in range(3):
+        for i in range(3): #2 scans
             startingAddr = self.Importer.readInt(startingAddr, 8)
             
-        invertPlayers = self.Importer.readInt(startingAddr + 0x68, 4)
+        return self.Importer.readInt(startingAddr + 0x68, 4)
+        
+    def getPlayerAddress(self, forceWriting = False):
+        invertPlayers = self.getLocalPlayerSide()
         
         playerId = self.playerId + invertPlayers
         if playerId == 3:
