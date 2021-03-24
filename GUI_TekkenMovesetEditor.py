@@ -641,7 +641,7 @@ class MoveSelector:
         playMoveField = Entry(playMoveFrame, textvariable=sv)
         playMoveField.pack(side='left')
         
-        playMoveButton = Button(playMoveFrame, text="Play move", command=self.playMove, state="disabled")
+        playMoveButton = Button(playMoveFrame, text="Play move (1P)", command=self.playMove, state="disabled")
         playMoveButton.pack(side='right')
         
         
@@ -661,6 +661,7 @@ class MoveSelector:
         
         self.playMoveSv = sv
         self.playMoveButton = playMoveButton
+        self.playMovePid = 0
         
     def onMoveidChange(self, value):
         if self.root.movelist == None:
@@ -682,7 +683,7 @@ class MoveSelector:
             return
         T = importLib.Importer()
         
-        playerAddr = game_addresses.addr['t7_p1_addr']
+        playerAddr = game_addresses.addr['t7_p1_addr'] + (self.playMovePid * game_addresses.addr['t7_playerstruct_size'])
         motbinOffset = game_addresses.addr['t7_motbin_offset']
         curr_frame_timer_offset = game_addresses.addr['curr_frame_timer_offset']
         next_move_offset = game_addresses.addr['next_move_offset']
@@ -715,6 +716,9 @@ class MoveSelector:
     def goToCurrentMove(self, playerId = 0):
         if self.root.movelist == None:
             return
+            
+        self.playMovePid = playerId
+        self.playMoveButton['text'] = "Play move (%dP)" % (playerId + 1)
         playerAddress = game_addresses.addr['t7_p1_addr'] + (playerId * game_addresses.addr['t7_playerstruct_size'])
         offset = game_addresses.addr['player_curr_move_offset']
         TekkenGame = GameClass("TekkenGame-Win64-Shipping.exe")
