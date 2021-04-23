@@ -1351,11 +1351,35 @@ def getAnimEndPos(TekkenVersion, data):
     pos = [p+searchStart for p in pos if p != -1]
     return -1 if len(pos) == 0 else min(pos)
     
+AnimC8OffsetTable = {
+    0x17: 0x64,
+    0x19: 0x6C,
+    0x1B: 0x74,
+    0x1d: 0x7c,
+    0x1f: 0x80,
+    0x21: 0x8c,
+    0x23: 0x94,
+    0x31: 0xcc 
+}
+    
 class AnimData:
     def __init__(self, name, data_addr, parent):
         initTekkenStructure(self, parent, data_addr, 0)
         self.name = name
         self.data = None
+        self.type = None
+        self.length = 0
+        
+    def getLength(self):
+        if self.type == 0xC8:
+            return self.readInt(self.addr + 4, 4)
+        else:
+            return 0
+    
+    def getC8EndPos(self): #t7
+        type = self.readInt(self.addr + (2 if self.endian == 'little' else 3), 1)
+        framesize = type * 0xC
+        return (framesize * self.length) + AnimC8OffsetTable[type]
         
     def findEndingPos(self, maxLen=None):
         read_size = 8192
@@ -1384,9 +1408,14 @@ class AnimData:
                     return maxLen
                 offset += read_size
         return offset
+        
+    def getType(self):
+        return self.readInt(self.addr + (0 if self.endian == 'little' else 1), 1)
                 
     def getData(self, boundaries):
         if self.data == None:
+            self.type = self.getType()
+            self.length = self.getLength()
         
             boundaryAddr = None
             for i, addr in enumerate(boundaries):
@@ -1395,13 +1424,29 @@ class AnimData:
                     
                   
             maxLen = boundaryAddr - self.addr if boundaryAddr != None else None
-            endPos = self.findEndingPos(maxLen)
-                    
-            try:
-                self.data = None if endPos == 0 else self.readBytes(self.addr, endPos)
-            except:
-                print("Error extracting animation " + self.name + ", game might crash with this moveset.", file=sys.stderr)
-                return None
+                  
+            if self.type == 0xc8:
+                endPos = self.getC8EndPos()
+            else:
+                endPos = self.findEndingPos(maxLen)
+            
+            self.data = None
+            
+            if endPos > 0:
+                successfulyRead = False
+                while True:
+                    try:
+                        origEndPos = endPos
+                        endPos = int(endPos * 0.9) #Failsafe in case the animation reaches the end of the allocated area
+                        if endPos == 0: break
+                        self.data = self.readBytes(self.addr, origEndPos)
+                        successfulyRead = True
+                        break
+                    except:
+                        pass
+                if not successfulyRead:
+                    print("Error extracting animation " + self.name + ", game might crash with this moveset.", file=sys.stderr)
+                    return None
                 
             if self.TekkenVersion in animHeaders:
                 self.data = animHeaders[self.TekkenVersion] + self.data

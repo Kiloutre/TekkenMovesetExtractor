@@ -1,0 +1,21 @@
+1. Load an animation in the animation editor
+        
+2. Enable live editing by clicking 'Full anim' OR 'Frame-by-Frame', the current game's animation will be overwritten (use it on the idle animation).
+
+2.a Full anim will play the full animation, changing the animation's data in the animation editor will make the corresponding change live in game
+
+2.b Frame-by-frame allow you to play only a single frame, based on the current frame you are in, in the animation editor. Pressing the Next/Previous frame buttons will update which frame is shown in-game.
+
+3. Lock-In-Place can be enabled to remove any movement-inducing properties from the animation in-game only: that way if your animation has a lot of movement, you can still edit it without constantly resetting the position in-game.
+
+4. Extraction only works on a specific, not much used animation format. You will have a hard time finding animations to extract, most will not be compatible.
+
+
+Extra info:
+
+- Loading an animation in the animation editor while live-editing is enabled will automatically load that new animation in-game
+- If you're gonna preview full anims, it might be a good idea to edit your idle move and idle cancel to match the animation's length
+- You do not need to import any moveset to make use of this tool, it is independent from the MovesetEditor/MovesetExtractor.
+- This is in early stage so the tool is heavily lacking in features. Can't add/remove frames, no limb position preset, can't interpolate. Use "Extract" button to save.
+- Camera tools can be used to view the animation from different angles. You can edit the file cameraPresets.txt freely to add new angles.
+- "Frame-by-Frame" and "Lock-In-Place" will not prevent your character from turning around when the opponent is moving.

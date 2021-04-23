@@ -1,0 +1,7 @@
+#Name,fov,rotx,roty,tilt,x,y,z,heightRelative=1/0
+#heightRelative is optional and is disabled by default
+
+Default,65,-90,0,0,0,340,100
+Default (height relative),65,-90,0,0,0,340,100,1 #Height is relative, allowing this to work even on stage with floorbreaks and all
+,65,-152,-9,0,380,181,150
+ForgottenRealm (relative),65,-130,0,0,217,261,104,1

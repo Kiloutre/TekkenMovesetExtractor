@@ -10,11 +10,12 @@ import os
 import json
 import time
 import threading
-import subprocess 
+import subprocess
 import motbinExport as exportLib
 import motbinImport as importLib
 from urllib import request
 from GUI_TekkenMovesetEditor import GUI_TekkenMovesetEditor
+from GUI_TekkenAnimationEditor import GUI_TekkenAnimationEditor
 
 extractorVersion = "1.0.32"
 latestRelease = "https://api.github.com/repos/Kiloutre/TekkenMovesetExtractor/releases/latest"
@@ -467,6 +468,10 @@ def on_close():
 def openMovesetEditor():
     app = GUI_TekkenMovesetEditor(mainWindow=False)
     app.window.mainloop()
+    
+def openAnimationEditor():
+    app = GUI_TekkenAnimationEditor(mainWindow=False)
+    app.window.mainloop()
         
 class GUI_TekkenMovesetExtractor(Tk):
     def __init__(self):
@@ -474,6 +479,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         
         menubar = Menu(self)
         menubar.add_command(label="Moveset Editor", command=openMovesetEditor)
+        menubar.add_command(label="Animation Editor", command=openAnimationEditor)
         self.config(menu=menubar)
         
         
@@ -681,7 +687,9 @@ class GUI_TekkenMovesetExtractor(Tk):
 
 if __name__ == "__main__":
     if "--editor" in sys.argv:
-        app = GUI_TekkenMovesetEditor()
+        app = GUI_TekkenMovesetEditor().window
+    elif "--animator" in sys.argv:
+        app = GUI_TekkenAnimationEditor().window
     else:
         app = GUI_TekkenMovesetExtractor()
     app.mainloop()
