@@ -1033,7 +1033,7 @@ class GUI_TekkenAnimationEditor():
             
         
     def showExtractable(self):
-        moveList = "Asuka's ff3, DB1, 2 (last hit)\nAnna's RA (once it connects)\nBob/King/AK/Julia's Idle\nLike half of Negan's moveset"
+        moveList = "Asuka's ff3, DB1, 2 (last hit)\nAnna's RA (once it connects)\nBob/King/AK/Julia's Idle\nLike half of Negan's moveset\nAnd more, but this should get you started easily..."
         messagebox.showinfo("Guide", moveList,  parent=self.window)
 
     def showGuide(self):
