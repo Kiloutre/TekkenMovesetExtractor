@@ -7,6 +7,7 @@ import os
 import re
 import struct
 import ctypes
+import math
 
 dataPath = "./AnimationEditor/"
 editorVersion = "0.1"
@@ -43,6 +44,8 @@ groupedFields = [
     9, #Rotation
     12, #Upper Body
     15, #Lower Body
+    21, #Neck stuff
+    24, #Neck stuff
     27, #Right Inner Shoulder
     30, #Right Outer Shoulder
     39, #Left Outer Shoulder
@@ -79,12 +82,12 @@ fieldLabels = {
     18: 'Spine Flexure',
     19: 'Field 20',
     20: 'Field 21',
-    21: 'Field 22',
-    22: 'Field 23',
-    23: 'Field 24',
-    24: 'Field 25',
-    25: 'Field 26',
-    26: 'Field 27',
+    21: 'Neck 22',
+    22: 'Neck 23',
+    23: 'Neck 24',
+    24: 'Neck 25',
+    25: 'Neck 26',
+    26: 'Neck 27',
     27: 'Right Inner Shoulder X',
     28: 'Y',
     29: 'Z',
@@ -126,8 +129,7 @@ fieldLabels = {
     65: 'Left Foot Y',
     66: 'Left Foot Z',
     67: 'Left Leg 68',
-    68: 'Left Leg 69',
-    69: '??????????',
+    68: 'Left Leg 69'
 }
 
 def getColor(key):
@@ -258,7 +260,7 @@ class AnimationSelector:
         animlist.pack(fill='both', expand=1)
         
         buttons = [
-            ("Load animation to editor", self.LoadAnimationToEditor),
+            ("Load selected animation to editor", self.LoadAnimationToEditor),
             ("Extract game animation to file", self.root.ExtractCurrentAnimation),
             ("Duplicate file", self.CopyFile),
         ]
@@ -290,7 +292,9 @@ class AnimationSelector:
         self.selectionIndex = -1
         
     def LoadAnimationToEditor(self):
-        if self.selectionIndex < 0 or self.selectionIndex >= len(self.itemList): return
+        if self.selectionIndex < 0 or self.selectionIndex >= len(self.itemList):
+            messagebox.showinfo('No animation selected', 'You have not selected an animation in the list', parent=self.root.window)
+            return
         filename = self.itemList[self.selectionIndex]
         self.root.LoadAnimation(filename)
         self.colorItemlist()
@@ -485,16 +489,19 @@ class AnimationEditor(BaseFormEditor):
         t.pack(side='top')
 
         
-        FrameGoto = Frame(t)
-        FrameGoto.pack(side='top')
-        currFrameLabel = Label(FrameGoto, text='Frame:', fg=getColor('labelTextColor'), bg=getColor('labelBgColor'))
+        #FrameGoto = Frame(t)
+        #FrameGoto.pack(side='top')
+        currFrameLabel = Label(t, text='Frame:', fg=getColor('labelTextColor'), bg=getColor('labelBgColor'))
         currFrameLabel.pack(side='left')
         
         sv = StringVar()
         sv.trace("w", lambda name, index, mode, sv=sv: self.onFrameInput(sv))
-        fieldInput = Entry(FrameGoto, textvariable=sv)
+        fieldInput = Entry(t, textvariable=sv)
         fieldInput.pack(side='left')
         
+        separatorLabel = Label(t, text=' | ', fg=getColor('labelTextColor'), bg=getColor('labelBgColor'))
+        #separatorLabel.grid(column=3, row=0)
+        separatorLabel.pack(side='left')
         
         prevFrameButton = Button(t, fg=getColor('buttonTextColor'), bg=getColor('buttonBGColor'), text='< Previous ', command=lambda : self.setFrame(self.currentFrame - 1))
         prevFrameButton.pack(side='left')
@@ -543,6 +550,7 @@ class AnimationEditor(BaseFormEditor):
                     color = getFieldColor(fieldId, groupIndex)
                 
                 newField = FieldEditor(self, fieldContainer, fieldId, color)
+                newField.setTitle(fieldLabels.get(fieldId, "Field %d" % (fieldId + 1)))
                 self.fields.append(newField)
         
         self.fieldCount = len(self.fields)
@@ -578,7 +586,7 @@ class AnimationEditor(BaseFormEditor):
         for i in range(self.fieldCount):
             actualFieldId = i + self.currentField
             if actualFieldId < self.Animation.field_count:
-                value = "%.3f" % self.Animation.getField(self.currentFrame, actualFieldId)
+                value = ("%01.3f" % self.Animation.getField(self.currentFrame, actualFieldId)).rstrip('0').rstrip('.')
                 if float(value) == 0 and value[0] == "-": value = value[1:]
                 self.fields[i].setValue(value, enable=True)
                 self.fields[i].setTitle(fieldLabels.get(actualFieldId, "Field %d" % (actualFieldId + 1)))
@@ -669,6 +677,9 @@ class LiveEditor:
         
     def writeFloat(self, addr, value):
         self.T.writeBytes(addr, struct.pack('f', value))
+        
+    def readFloat(self, addr):
+        return struct.unpack('f', self.T.readBytes(addr, 4))[0]
         
     def getCurrentAnimationAddr(self):
         currmoveAddr = self.T.readInt(self.playerAddress + 0x220, 8)
@@ -790,9 +801,6 @@ class LiveEditor:
             currAddr = self.T.readInt(currAddr + ptr, 8)
         return currAddr
         
-    def getPlayerHeight(self):
-        return struct.unpack('f', self.T.readBytes(self.playerAddress + 0x1B0, 4))[0]
-        
     def lockCamera(self):
         if not self.startIfNeeded(): return
         self.T.writeBytes(0x148B56F30, bytes([0x90] * 8))
@@ -809,23 +817,76 @@ class LiveEditor:
         self.T.writeBytes(0x1416A2A40, bytes([0xF2, 0x0F, 0x11, 0x87, 0xF8, 0x03, 0x0, 0x0]))
         self.T.writeBytes(0x1416a2a5b, bytes([0x89, 0x87, 0, 0x04, 0, 0]))
         
+    def getCameraAddr(self):
+        return self.readPointerPath(0x14377FCF0, [0x30, 0x418])
+        
     def setCameraPos(self, id):
         if not self.startIfNeeded(): return
-        camAddr = self.readPointerPath(0x1434d4020, [0x158, 0xE0])
+        camAddr = self.getCameraAddr()
         
-        cameraPreset = self.root.cameraPresets[id]
+        cam = self.root.cameraPresets[id]
         #self.writeFloat(camAddr + 0, 0) #aspect ratio
-        self.writeFloat(camAddr + 0x39C, cameraPreset['fov']) #FOV
-        self.writeFloat(camAddr + 0x408, cameraPreset['rotx']) #rotx
-        self.writeFloat(camAddr + 0x404, cameraPreset['roty']) #roty
-        self.writeFloat(camAddr + 0x40C, cameraPreset['tilt']) #tilt
-        self.writeFloat(camAddr + 0x3F8, cameraPreset['x']) #x
-        self.writeFloat(camAddr + 0x3FC, cameraPreset['y']) #y
+        self.writeFloat(camAddr + 0x39C, cam['fov']) #FOV
+        self.writeFloat(camAddr + 0x404, cam['roty']) #roty
+        self.writeFloat(camAddr + 0x40C, cam['tilt']) #tilt
         
-        if cameraPreset['heightRelative']:
-            self.writeFloat(camAddr + 0x400, (self.getPlayerHeight() / 10) + cameraPreset['z']) #y
+        if cam['relative'] == 1: #Height-relativity
+            self.writeFloat(camAddr + 0x408, cam['rotx']) #rotx
+            self.writeFloat(camAddr + 0x3F8, cam['x']) #x
+            self.writeFloat(camAddr + 0x3FC, cam['y']) #y
+            self.writeFloat(camAddr + 0x400, (self.getPlayerHeight()) + cam['z']) #y
+        elif cam['relative'] == 2: #Fullpos relativity (rotation included)
+            fullAngle = (math.pi * 2)
+            playerPos = self.getPlayerPos()
+            playerRot = self.getPlayerRot() * (fullAngle / 65535)
+            
+            distance = math.sqrt(cam['x'] **2 + cam['y'] ** 2)
+            camAngle = math.atan2(cam['y'], cam['x'])
+            
+            finalAngle = (camAngle - playerRot)
+            
+            newx = (distance) * math.cos(finalAngle)
+            newy = (distance) * math.sin(finalAngle)
+            
+            camRotx = (cam['rotx'] - (self.getPlayerRot() * (360/ 65535))) % 360
+            self.writeFloat(camAddr + 0x408, camRotx) #rotx
+            self.writeFloat(camAddr + 0x3F8, newx + playerPos['x']) #x
+            self.writeFloat(camAddr + 0x3FC, newy + playerPos['y']) #y
+            self.writeFloat(camAddr + 0x400, playerPos['z'] + cam['z']) #y
         else:
-            self.writeFloat(camAddr + 0x400, cameraPreset['z']) #z
+            self.writeFloat(camAddr + 0x408, cam['rotx']) #rotx
+            self.writeFloat(camAddr + 0x3F8, cam['x']) #x
+            self.writeFloat(camAddr + 0x3FC, cam['y']) #y
+            self.writeFloat(camAddr + 0x400, cam['z']) #z
+            
+    def getCameraPos(self):
+        if not self.startIfNeeded(): return None
+        camAddr = self.getCameraAddr()
+        return {
+            'fov': self.readFloat(camAddr + 0x39C),
+            'rotx': self.readFloat(camAddr + 0x408),
+            'roty': self.readFloat(camAddr + 0x404),
+            'tilt': self.readFloat(camAddr + 0x40C),
+            'x': self.readFloat(camAddr + 0x3F8),
+            'y': self.readFloat(camAddr + 0x3FC),
+            'z': self.readFloat(camAddr + 0x400)
+        }
+        
+    def getPlayerHeight(self):
+        return self.getPlayerFloorheight() + self.readFloat(self.playerAddress + 0xE4) / 10
+        
+    def getPlayerFloorheight(self):
+        return self.readFloat(self.playerAddress + 0x1B0) / 10
+        
+    def getPlayerPos(self):
+        return {
+            'x': self.readFloat(self.playerAddress + 0xE8) / 10,
+            'y': -(self.readFloat(self.playerAddress + 0xE0) / 10),
+            'z': self.getPlayerHeight(),
+        }
+        
+    def getPlayerRot(self):
+        return self.T.readInt(self.playerAddress + 0xEE, 2)
         
 class GUI_TekkenAnimationEditor():
     def __init__(self, mainWindow=True):
@@ -859,10 +920,20 @@ class GUI_TekkenAnimationEditor():
         self.TekkenGame = None
         self.LiveEditor = LiveEditor(self)
         
+        self.buildMenu()
+        
+    def buildMenu(self):
         cameraActionsMenu = [
             ("Lock-Camera", self.LiveEditor.lockCamera),
             ("Unlock-Camera", self.LiveEditor.unlockCamera),
+            ("Save Camera pos", self.saveCamera),
+            ("Reload presets", self.buildMenu),
             ("", "separator"),
+        ]
+        
+        frameActionMenu = [
+            ("Add (current position)", self.addFrame),
+            ("Remove (current position)", self.removeFrame),
         ]
         
         self.cameraPresets = self.getPresetList()
@@ -873,11 +944,21 @@ class GUI_TekkenAnimationEditor():
         menuActions = [
             ("Guide", self.showGuide),
             ("Extractable anims", self.showExtractable),
+            #("Frame", frameActionMenu),
             ("Camera tools", cameraActionsMenu)
         ]
         
-        menu = createMenu(window, menuActions)
-        window.config(menu=menu)
+        menu = createMenu(self.window, menuActions)
+        self.window.config(menu=menu)
+        
+    def removeFrame(self):
+        self.buildMenu()
+        if not self.AnimationEditor.Animation: return
+        pass
+        
+    def addFrame(self):
+        if not self.AnimationEditor.Animation: return
+        pass
         
     def getPresetList(self):
         presetList = []
@@ -897,13 +978,59 @@ class GUI_TekkenAnimationEditor():
                         'x': float(fields[5]),
                         'y': float(fields[6]),
                         'z': float(fields[7]),
-                        'heightRelative': len(fields) >= 9 and fields[8] == '1'
+                        'relative': int(fields[8]) if len(fields) >= 9 else 0
                     })
                 except Exception as e:
                     print("Error parsing a line in cameraPresets.txt")
                     continue
         
         return presetList
+        
+    def saveCamera(self):
+        data = self.LiveEditor.getCameraPos()
+        playerPos = self.LiveEditor.getPlayerPos()
+        playerRot = self.LiveEditor.getPlayerRot()
+        
+        cam = data.copy()
+        cam['relative'] = 2
+        
+        if cam['relative'] == 1:
+            cam['z'] -= playerPos['z'] #Relative player height
+        elif cam['relative'] == 2:
+            diffx = cam['x'] - playerPos['x']
+            diffy = cam['y'] - playerPos['y']
+            
+            fullAngle = (math.pi * 2)
+            playerAngle = playerRot * (fullAngle / 65535)
+            
+            distance = math.sqrt(diffx **2 + diffy ** 2)
+            angle = math.atan2(diffx, diffy)
+            
+            finalAngle = (angle - playerAngle)
+            
+            newy = (distance) * math.cos(finalAngle)
+            newx = (distance) * math.sin(finalAngle)
+            
+            cam['rotx'] = (cam['rotx'] + (playerRot * (360/ 65535))) % 360
+            cam['x'] = newx
+            cam['y'] = newy
+            cam['z'] -= playerPos['z'] #Relative player height
+        
+        for k in cam:
+            if isinstance(cam[k], float):
+                cam[k] = ("%01.3f" % cam[k]).rstrip('0').rstrip('.')
+                if float(cam[k]) == 0 and cam[k][0] == '-': cam[k] = cam[k][1:]
+                
+        presetName = ''
+        
+        while len(presetName) == 0:
+            presetName = simpledialog.askstring("Preset name", "What will be the preset name?", parent=self.window, initialvalue = ('New Preset %d' % (len(self.cameraPresets) + 1)))
+            if presetName == None: return
+        
+        with open(dataPath + "cameraPresets.txt", "a") as f:
+            f.write("\n" + presetName + ', ' + ', '.join([str(cam[k]) for k in cam]))
+        self.buildMenu()
+            
         
     def showExtractable(self):
         moveList = "Asuka's ff3, DB1, 2 (last hit)\nAnna's RA (once it connects)\nBob/King/AK/Julia's Idle\nLike half of Negan's moveset"

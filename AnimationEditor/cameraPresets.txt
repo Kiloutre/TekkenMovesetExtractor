@@ -1,7 +1,16 @@
-#Name,fov,rotx,roty,tilt,x,y,z,heightRelative=1/0
-#heightRelative is optional and is disabled by default
+#Name,fov,rotx,roty,tilt,x,y,z,relative=0
+#y = foreground/background, x = forward/backward, in most normal stages  the default player pos is y 0 x -1000
+#z = height
+#relative is optional and is disabled (0) by default
+#relative = 1 will make the position relative to the player's height only
+#relative = 2 will make the position relative to the full player's position, factoring-in the player rotation
 
-Default,65,-90,0,0,0,340,100
-Default (height relative),65,-90,0,0,0,340,100,1 #Height is relative, allowing this to work even on stage with floorbreaks and all
-,65,-152,-9,0,380,181,150
-ForgottenRealm (relative),65,-130,0,0,217,261,104,1
+Default, 65, 270.0, 0, 0, 100, 340, 117, 2
+Default (Right Side), 65, 90.00, 0, 0, 100., -340, 117, 2
+Face character, 65, 180, -10, 0, 350, 0, 163, 2
+Face Back, 65, 0, -8, 0, -350, 2, 163, 2
+Angle1, 65, 232, -1.2, 0, 310, 229, 119, 2
+Angle2, 65, 128, -1.2, 0, 280, -228.934, 119, 2
+Angle3, 65, 202.01, 5, 0, 318.364, 79.536, 94.25, 2
+Ground View, 100, 207, 16, 0, 199.451, 90.78, 47, 2
+Ground View 2, 100, 153, 16, 0, 199.451, -90.78, 47, 2

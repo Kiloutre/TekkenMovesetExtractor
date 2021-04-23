@@ -5,5 +5,7 @@ If you want the moveset to stay constantly, use the "Online Player" buttons, and
 1.0.32.5:
 [IMPORTER] Fix 'Set Online' button after latest small patch
 [ANIMATOR] Add animation editor, extracted animations are stored in the "AnimationEditor" folder
+1.0.32.6:
+[ANIMATOR] Fix camera tools
     
 --- by kilo ( https://www.youtube.com/c/kiloutre ) ---
