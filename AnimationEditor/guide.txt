@@ -1,15 +1,14 @@
-1. Load an animation in the animation editor
+1. Extract an animation from the game. Extraction only works on a specific, not much used animation format. You will have a hard time finding animations to extract, most will not be compatible, a list of compatible one is provided in the menu bar.
         
-2. Enable live editing by clicking 'Full anim' OR 'Frame-by-Frame', the current game's animation will be overwritten (use it on the idle animation).
+2. Select an animation from the list and load it into the editor
+        
+3. Enable live editing by clicking 'Full anim' OR 'Frame-by-Frame', the current game's animation will be overwritten (use it on the idle animation).
 
-2.a Full anim will play the full animation, changing the animation's data in the animation editor will make the corresponding change live in game
+3.a Full anim will play the full animation, changing the animation's data in the animation editor will make the corresponding change live in game
 
-2.b Frame-by-frame allow you to play only a single frame, based on the current frame you are in, in the animation editor. Pressing the Next/Previous frame buttons will update which frame is shown in-game.
+3.b Frame-by-frame allow you to play only a single frame, based on the current frame you are in, in the animation editor. Pressing the Next/Previous frame buttons will update which frame is shown in-game.
 
-3. Lock-In-Place can be enabled to remove any movement-inducing properties from the animation in-game only: that way if your animation has a lot of movement, you can still edit it without constantly resetting the position in-game.
-
-4. Extraction only works on a specific, not much used animation format. You will have a hard time finding animations to extract, most will not be compatible.
-
+4. Lock-In-Place can be enabled to remove any movement-inducing properties from the animation in-game only: that way if your animation has a lot of movement, you can still edit it without constantly resetting the position in-game.
 
 Extra info:
 
