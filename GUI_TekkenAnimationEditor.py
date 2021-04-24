@@ -8,6 +8,7 @@ import re
 import struct
 import ctypes
 import math
+import pyperclip
 
 dataPath = "./AnimationEditor/"
 editorVersion = "0.1"
@@ -32,6 +33,15 @@ colors = {
         'groupColor4': '#ab3a8f',
         'groupColor5': '#c42929',
         'groupColor6': '#b88c2e',
+        'framelistEven': "#555",
+        'framelistOdd': "#666",
+        'framelistHighlight': "#6f755a",
+        'framelistLabelEven': "#333",
+        'framelistLabelOdd': "#444",
+        'framelistLabelText': "#aaa",
+        'framelistMarked': "#7e3eb0",
+        'framelistInBetweenEven': "#5880bf",
+        'framelistInBetweenOdd': "#506b96"
     },
     'default': {
         'labelBgColor': '#ddd'
@@ -132,6 +142,25 @@ fieldLabels = {
     68: 'Left Leg 69'
 }
 
+class Interpolation:
+    def linear(timefactor):
+        return timefactor
+        
+    def easeIn(timefactor):
+        return timefactor * timefactor
+        
+    def easeOut(timefactor):
+        return 1 - math.pow(1 - timefactor, 2)
+        
+    def easeInOut(timefactor):
+        return (2 * timefactor * timefactor) if timefactor < 0.5 else (1 - pow(-2 * timefactor + 2, 2) / 2)
+        
+    def easeInExpo(timefactor):
+        return 0 if timefactor == 0 else math.pow(2, 10 * timefactor - 10)
+        
+    def easeOutExpo(timefactor):
+        return 1 if timefactor == 1 else pow(2, -10 * timefactor)
+
 def getColor(key):
     isDark = True
     return colors['dark' if isDark else 'default'].get(key, '#fff')
@@ -174,11 +203,10 @@ class Animation:
         self.offset = self.getOffset()
         self.frame_size = self.getFramesize()
         self.field_count = int(self.frame_size / 4)
-        self.size = self.calculateSize()
         self.recalculateSize() #Crop or add missing bytes if needed
         
     def recalculateSize(self):
-        pastSize = self.size
+        pastSize = len(self.data)
         self.size = self.calculateSize()
         if self.size > pastSize:
             self.data += [0] * (self.size - pastSize)
@@ -249,6 +277,65 @@ class Animation:
             raise
         self.writeFloat(value, self.offset + (frame * self.frame_size) + (4 * fieldId))
         
+    def addFrames(self, count, position=-1, interpolate=False):
+        if count <= 0: return
+        if position == -1: position = self.length
+                 
+        self.length += count
+        self.writeInt(self.length, 4)
+        self.recalculateSize()
+        
+        for frame in range(self.length - 1, position + count - 1, -1): # Shift values to the right if needed
+            for fieldId in range(self.field_count):
+                value = self.getField(frame - count, fieldId)
+                self.setField(value, frame, fieldId)
+        
+        if interpolate:
+            if position == 0:
+                for fieldId in range(self.field_count):
+                    value = self.getField(position + count, fieldId)
+                    for i in range(count):
+                        self.setField(value, position + i, fieldId)
+            else:
+                self.interpolateBetweenFrames(position - 1, position + count)
+    
+    def removeFrame(self, position=-1):
+        if position == -1: position = self.length
+        
+        for frame in range(position, self.length - 1): # Shift values to the left if needed
+            for fieldId in range(self.field_count):
+                value = self.getField(frame + 1, fieldId)
+                self.setField(value, frame, fieldId)
+        
+        self.length -= 1
+        self.writeInt(self.length, 4)
+        self.recalculateSize()
+    
+    def removeFrames(self, count, position=-1):
+        if count <= 0 or count >= self.length: return
+        if position == -1: position = (self.length - count + 1)
+        
+        for frame in range(position, self.length - count):
+            for fieldId in range(self.field_count):
+                value = self.getField(frame + count, fieldId)
+                self.setField(value, frame, fieldId)
+        
+        self.length -= count
+        self.writeInt(self.length, 4)
+        self.recalculateSize()
+        
+    def interpolateBetweenFrames(self, frame1, frame2):     
+        diff = frame2 - frame1
+        if diff == 1: return
+        
+        for fieldId in range(self.field_count):
+            value1 = self.getField(frame1, fieldId)
+            value2 = self.getField(frame2, fieldId)
+            for i in range(1, diff):
+                valueDiff = value2 - value1
+                newValue = value1 +  (valueDiff * Interpolation.linear(i / diff)) 
+                self.setField(newValue, frame1 + i, fieldId)
+        
 class AnimationSelector:
     def __init__(self, root, rootFrame):
         self.root = root
@@ -260,8 +347,8 @@ class AnimationSelector:
         animlist.pack(fill='both', expand=1)
         
         buttons = [
-            ("Load selected animation to editor", self.LoadAnimationToEditor),
-            ("Extract game animation to file", self.root.ExtractCurrentAnimation),
+            ("Load selected to editor", self.LoadAnimationToEditor),
+            ("Extract game animation", self.root.ExtractCurrentAnimation),
             ("Duplicate file", self.CopyFile),
         ]
         
@@ -288,7 +375,6 @@ class AnimationSelector:
         self.frame = mainFrame
         
         self.itemList = []
-        self.visible = True
         self.selectionIndex = -1
         
     def LoadAnimationToEditor(self):
@@ -315,22 +401,12 @@ class AnimationSelector:
     def SetLiveEditingButtonText(self):
         self.liveButtons[0]['text'] = 'Full anim [ON]' if self.root.fullanimEditing else 'Full anim [OFF]'
         self.liveButtons[1]['text'] = 'Frame-by-Frame [ON]' if self.root.frameByFrameEditing else 'Frame-by-Frame [OFF]'
-        
-    def toggleVisibility(self):
-        if self.visible:
-            self.hide()
-        else:
-            self.show()
        
     def hide(self):
         self.frame.pack_forget()
-        self.visible = False
        
     def show(self):
-        #self.root.MoveSelector.hide()
         self.frame.pack(side='left', fill='y')
-        #self.root.MoveSelector.show()
-        self.visible = True
         
     def colorItemlist(self):
         colors = [
@@ -402,11 +478,11 @@ class BaseFormEditor:
         container.grid(row=row, column=col, sticky="nsew")
         #container.pack_propagate(False)
         
-        label = Label(container, bg=getColor('labelBgColor'), fg=getColor('labelTextColor'))
-        label.pack(side='top', fill='x')
-        
         content = Frame(container, bg=getColor('BG'))
         content.pack(side='top', fill='both', expand=True)
+        
+        label = Label(container, bg=getColor('labelBgColor'), fg=getColor('labelTextColor'))
+        label.pack(side='top', fill='x')
         
         self.container = content
         self.label = label
@@ -451,9 +527,8 @@ class FieldEditor:
         self.sv.set(newval)
         self.editingEnabled = True
         
-        if enable: 
-            self.fieldInput.config(state='enabled')
-            self.editingEnabled = True
+        if enable: self.enable()
+        else: self.disable()
         
     def onchange(self):
         if not self.editingEnabled: return
@@ -462,6 +537,14 @@ class FieldEditor:
         
     def setTitle(self, text):
         self.label['text'] = text
+        
+    def enable(self):
+        self.fieldInput.config(state='enabled')
+        self.editingEnabled = True
+    
+    def disable(self):
+        self.fieldInput.config(state='disabled')
+        self.editingEnabled = False
         
     def resetForm(self):
         self.setValue('')
@@ -484,10 +567,55 @@ def getFieldColor(fieldId, groupIndex):
 class AnimationEditor(BaseFormEditor):
     def __init__(self, root, rootFrame):
         BaseFormEditor.__init__(self, root, rootFrame, title="No animation loaded")
+        self.Animation = None
+        self.keyframes = []
         
-        t = Frame(self.container, bg=getColor('BG'))
-        t.pack(side='top')
-
+        self.fields = []
+        
+        for i in range(9):
+            fieldContainer = Frame(self.container, bg=getColor('BG'))
+            fieldContainer.pack(side='top', fill='both', pady=4)
+            
+            for x in range(8):
+                fieldId = i * 8 + x
+                
+                if fieldId >= 69: break
+                
+                color = None
+                groupIndex = getFieldGroupIndex(fieldId)
+                if groupIndex > -1:
+                    color = getFieldColor(fieldId, groupIndex)
+                
+                newField = FieldEditor(self, fieldContainer, fieldId, color)
+                newField.setTitle(fieldLabels.get(fieldId, "Field %d" % (fieldId + 1)))
+                self.fields.append(newField)
+        
+        self.fieldCount = len(self.fields)
+        
+        self.framelist = []
+        self.framelistLabels = []
+        self.framelistLength = 43
+        
+        framelistContainer = Frame(self.container, bg=getColor('labelBgColor'))
+        framelistContainer.pack(side='top', fill='x')
+        
+        framelistLabelContainer = Frame(self.container, bg=getColor('labelBgColor'))
+        framelistLabelContainer.pack(side='top', fill='x')
+        
+        for i in range(self.framelistLength):
+            newLabel = Label(framelistContainer)
+            newLabel.bind("<Button-1>", lambda event, self=self, i=i: self.onLabelClick(i))
+            newLabel.pack(side='left')
+            self.framelist.append(newLabel) #empty cube
+            
+            newLabel = Label(framelistLabelContainer)
+            newLabel.bind("<Button-1>", lambda event, self=self, i=i: self.onLabelClick(i))
+            newLabel.pack(side='left')
+            self.framelistLabels.append(newLabel) #Text
+            
+        
+        t = Frame(self.container, bg=getColor('labelBgColor'))
+        t.pack(side='top', fill='x')
         
         #FrameGoto = Frame(t)
         #FrameGoto.pack(side='top')
@@ -533,28 +661,145 @@ class AnimationEditor(BaseFormEditor):
         nextFrameButton.pack(side='left')
         #nextFrameButton.grid(column=6, row=0)
         
-        self.fields = []
-        
-        for i in range(9):
-            fieldContainer = Frame(self.container, bg=getColor('BG'))
-            fieldContainer.pack(side='top', fill='both', pady=10)
-            
-            for x in range(8):
-                fieldId = i * 8 + x
-                
-                if fieldId >= 69: break
-                
-                color = None
-                groupIndex = getFieldGroupIndex(fieldId)
-                if groupIndex > -1:
-                    color = getFieldColor(fieldId, groupIndex)
-                
-                newField = FieldEditor(self, fieldContainer, fieldId, color)
-                newField.setTitle(fieldLabels.get(fieldId, "Field %d" % (fieldId + 1)))
-                self.fields.append(newField)
-        
-        self.fieldCount = len(self.fields)
+        self.updateFramelist()
         self.reset()
+        
+    def getKeyframeType(self, frame):
+        keyframeLen = len(self.keyframes)
+        for i, f in enumerate(self.keyframes):
+            if frame < f: return 0 #Regular frame
+            if frame == f: return 1 # Type 2: marked frame
+            if frame > f and (i + 1 != keyframeLen) and frame < self.keyframes[i + 1]: return 2 # In-between
+        return 0
+        
+    def interpolateMarkedFrame(self, frame):
+        interpolated = False
+        keyframeIndex = self.keyframes.index(frame)
+        
+        if keyframeIndex > 0:
+            self.Animation.interpolateBetweenFrames(self.keyframes[keyframeIndex - 1], frame) #interpolate in
+            interpolated = True
+            
+        if keyframeIndex < (len(self.keyframes) - 1):
+            self.Animation.interpolateBetweenFrames(frame, self.keyframes[keyframeIndex + 1]) #interpolate out
+            interpolated = True
+            
+        return interpolated
+        
+    def unmarkKeyframe(self):
+        if not self.currentFrame in self.keyframes: return False
+        
+        self.keyframes.pop(self.keyframes.index(self.currentFrame))
+        
+        self.setFrame(self.currentFrame)
+        self.updateFramelist()
+        return
+        
+    def markKeyframe(self):
+        if self.currentFrame in self.keyframes: return False
+        
+        self.keyframes.append(self.currentFrame)
+        self.keyframes.sort()
+        
+        self.setFrame(self.currentFrame)
+        self.updateFramelist()
+        return self.interpolateMarkedFrame(self.currentFrame)
+        
+    def addFrames(self, count):
+        self.Animation.addFrames(count, position=self.currentFrame, interpolate=True)
+        
+        if len(self.keyframes) >= 1:
+            #Shift keyframes up
+            for i, k in enumerate(self.keyframes):
+                if k >= self.currentFrame: self.keyframes[i] += count
+                
+            
+            #Re-interpolate keyframes that were affected by the shifting
+            keyframeLen = len(self.keyframes)
+            for i, k in enumerate(self.keyframes):
+                if (i + 1) < keyframeLen and self.keyframes[i + 1] >= self.currentFrame:
+                    self.Animation.interpolateBetweenFrames(k, self.keyframes[i + 1])
+                else: break
+        
+        self.updateFramelist()
+        self.setTitleInfo()
+        self.setFrame(self.currentFrame)
+        
+    def removeFrames(self, count):
+        for k in self.keyframes:
+            #remove keyframes caught in the range
+            if self.currentFrame <= k < self.currentFrame + count:
+                self.keyframes.pop(self.keyframes.index(k))
+            
+        self.Animation.removeFrames(count, position=self.currentFrame)
+            
+        if len(self.keyframes) >= 1:
+            #Shift keyframes down
+            for i, k in enumerate(self.keyframes):
+                if k >= self.currentFrame: self.keyframes[i] -= count
+                
+            keyframeLen = len(self.keyframes)
+            for i, k in enumerate(self.keyframes):
+                if (i + 1) < keyframeLen and self.keyframes[i + 1] >= self.currentFrame:
+                    self.Animation.interpolateBetweenFrames(k, self.keyframes[i + 1])
+                else: break
+        
+        if self.currentFrame >= self.Animation.length: self.currentFrame = self.Animation.length
+        
+        self.updateFramelist()
+        self.setTitleInfo()
+        self.setFrame(self.currentFrame)
+        
+    def updateFramelist(self):
+        framelistOffset = self.getFramelistOffset()
+        animLength = self.framelistLength if not self.Animation else self.Animation.length
+        for i in range(self.framelistLength):
+            frame = i + framelistOffset
+            labelText = "%03d" % (frame + 1)
+           
+            self.framelist[i]['text'] = labelText
+            self.framelistLabels[i]['text'] = labelText
+            
+            if frame >= animLength:
+                self.framelist[i]['fg'] = getColor('BG')
+                self.framelist[i]['bg'] = getColor('BG')
+                self.framelistLabels[i]['fg'] = getColor('BG')
+                self.framelistLabels[i]['bg'] = getColor('BG')
+            else:
+                self.framelistLabels[i]['fg'] = getColor('framelistLabelText')
+                
+                
+                keyframeType = self.getKeyframeType(frame)
+                
+                if keyframeType == 1: #Marked
+                    self.framelist[i]['bg'] = getColor('framelistMarked')
+                elif keyframeType == 2: #In-between
+                    self.framelist[i]['bg'] = getColor('framelistInBetweenEven' if i & 1 == 0 else 'framelistInBetweenOdd')
+                else:
+                    self.framelist[i]['bg'] = getColor('framelistEven' if i & 1 == 0 else 'framelistOdd')
+                    
+                self.framelist[i]['fg'] = self.framelist[i]['bg']
+                    
+                if self.Animation and frame == self.currentFrame:
+                    self.framelistLabels[i]['bg'] = getColor('framelistHighlight')
+                else:
+                    self.framelistLabels[i]['bg'] = getColor('framelistLabelEven' if frame & 1 == 0 else 'framelistLabelOdd')
+            
+        
+    def getFramelistOffset(self):
+        if not self.Animation: return 0
+        if self.Animation.length <= self.framelistLength: return 0
+        
+        middleFrame = int(self.framelistLength / 2)
+        
+        if self.currentFrame - middleFrame >= 0: # clear in-between opportunity
+            return self.currentFrame - middleFrame
+            
+        return 0
+        
+    def onLabelClick(self, labelId):
+        if self.Animation == None: return
+        self.setFrame(labelId + self.getFramelistOffset())
         
     def onFrameInput(self, sv):
         value = sv.get()
@@ -569,12 +814,17 @@ class AnimationEditor(BaseFormEditor):
         if isFloat(value):
             actualFieldId = fieldId + self.currentField
             self.Animation.setField(float(value), self.currentFrame, actualFieldId)
-            self.root.onFieldChange(self.currentFrame, actualFieldId, value)
+            if self.getKeyframeType(self.currentFrame) == 0:
+                self.root.onFieldChange(self.currentFrame, actualFieldId, value)
+            else: #Marked frame
+                self.interpolateMarkedFrame(self.currentFrame)
+                self.root.onMarkedFieldChange()
         
     def setField(self, newField):
         if self.Animation == None or newField > (self.Animation.field_count - self.fieldCount) or newField < 0: return
         self.currentField = newField
-        self.currFieldLabel['text'] = "Field %d/%d" % (newField + 1, self.Animation.field_count)
+        fieldLabel = "Field %d - %d /%d" % (newField + 1, newField + self.fieldCount, self.Animation.field_count)
+        self.currFieldLabel['text'] = fieldLabel
         self.setFrame(self.currentFrame)
         
     def setFrame(self, newFrame):
@@ -588,10 +838,18 @@ class AnimationEditor(BaseFormEditor):
             if actualFieldId < self.Animation.field_count:
                 value = ("%01.3f" % self.Animation.getField(self.currentFrame, actualFieldId)).rstrip('0').rstrip('.')
                 if float(value) == 0 and value[0] == "-": value = value[1:]
-                self.fields[i].setValue(value, enable=True)
+                
+                enabled = self.getKeyframeType(self.currentFrame) != 2 #notAnInbetween
+                self.fields[i].setValue(value, enable=enabled)
                 self.fields[i].setTitle(fieldLabels.get(actualFieldId, "Field %d" % (actualFieldId + 1)))
             else:
                 self.fields[i].resetForm()
+                
+        self.updateFramelist()
+        
+    def setTitleInfo(self):
+        info = "  |  Length: %d frames  |  Bone per frame: %d  |  Size: %d bytes (%d KB)" % (self.Animation.length, self.Animation.field_count, self.Animation.size, self.Animation.size / 1000)
+        self.setTitle("Editing: " + self.animationName + info)
         
     def LoadAnimation(self, filename):
         self.reset()
@@ -602,25 +860,30 @@ class AnimationEditor(BaseFormEditor):
             return False
         
         self.animationName = filename
-        info = "  |  Length: %d frames  |  Bone per frame: %d  |  Size: %d bytes (%d KB)" % (self.Animation.length, self.Animation.field_count, self.Animation.size, self.Animation.size / 1000)
-        self.setTitle("Editing: " + filename + info)
+        self.setTitleInfo()
         self.setFrame(0)
-        self.currFieldLabel['text'] = "Field 1/%d" % (self.Animation.field_count)
+        fieldLabel = "Field 1 - %d /%d" % (self.fieldCount, self.Animation.field_count)
+        self.currFieldLabel['text'] = fieldLabel
         return True
         
     def reset(self):
+        self.keyframes = []
         self.Animation = None
         self.animationName = None
         self.currentFrame = 0
         self.currentField = 0
         self.currFrameLabel['text'] = 'Frame 0/0'
-        self.currFieldLabel['text'] = 'Field 0/0'
+        self.currFieldLabel['text'] = 'Field 1 - %d /0' % (self.fieldCount)
+        self.updateFramelist()
         
 class LiveEditor:
     def __init__(self, root):
         self.root = root
-        self.playerAddress = game_addresses.addr['t7_p1_addr']
         self.stop()
+        self.setPlayerAddress(0)
+       
+    def setPlayerAddress(self, playerId):
+        self.playerAddress = game_addresses.addr['t7_p1_addr'] + (playerId * game_addresses.addr['t7_playerstruct_size'])
         
     def setAnimation(self, anim):
         self.Animation = anim
@@ -746,6 +1009,7 @@ class LiveEditor:
         
         self.writeLoadedAnimBytes()
         self.T.writeInt(currmoveAddr + 0x10, animationAddr, 8)
+        self.T.writeInt(currmoveAddr + 0x68, anim.length, 4)
         
         if freeAddr != None:
             self.freeMem(freeAddr, freeSize)
@@ -772,8 +1036,8 @@ class LiveEditor:
         
         length = self.Animation.length if singleFrame == False else 1
         
+        baseOffset = self.lastAllocation + self.Animation.offset
         for i in range(length):
-            baseOffset = self.lastAllocation + self.Animation.offset
             
             for offset in Animation.movementOffsets:
                 self.T.writeBytes(baseOffset + offset, bytes([0] * 4))
@@ -853,14 +1117,13 @@ class LiveEditor:
             self.writeFloat(camAddr + 0x3F8, newx + playerPos['x']) #x
             self.writeFloat(camAddr + 0x3FC, newy + playerPos['y']) #y
             self.writeFloat(camAddr + 0x400, playerPos['z'] + cam['z']) #y
-        else:
+        else: #absolute
             self.writeFloat(camAddr + 0x408, cam['rotx']) #rotx
             self.writeFloat(camAddr + 0x3F8, cam['x']) #x
             self.writeFloat(camAddr + 0x3FC, cam['y']) #y
             self.writeFloat(camAddr + 0x400, cam['z']) #z
             
     def getCameraPos(self):
-        if not self.startIfNeeded(): return None
         camAddr = self.getCameraAddr()
         return {
             'fov': self.readFloat(camAddr + 0x39C),
@@ -888,6 +1151,21 @@ class LiveEditor:
     def getPlayerRot(self):
         return self.T.readInt(self.playerAddress + 0xEE, 2)
         
+    def forceMoveLoop(self):
+        if not self.CheckRunning(): return False
+        currmoveAddr = self.T.readInt(self.playerAddress + 0x220, 8)
+        cancelAddr = self.T.readInt(currmoveAddr + 0x20)
+        
+        while self.T.readInt(cancelAddr, 8) != 0x8000:
+            cancelAddr += 0x28
+            
+        currmoveId = self.T.readInt(self.playerAddress + 0x350, 4)
+        self.T.writeInt(currmoveAddr + 0x54, currmoveId, 2)
+        self.T.writeInt(cancelAddr + 0x18, self.Animation.length, 4) #frame window start
+        self.T.writeInt(cancelAddr + 0x1c, 32769, 4) #frame window end
+        self.T.writeInt(cancelAddr + 0x20, self.Animation.length, 4) #starting frame
+        self.T.writeInt(cancelAddr + 0x24, currmoveId, 2) #write current move id to cancel move id
+        
 class GUI_TekkenAnimationEditor():
     def __init__(self, mainWindow=True):
         window = Tk() if mainWindow else Toplevel()
@@ -898,19 +1176,20 @@ class GUI_TekkenAnimationEditor():
         
         self.setTitle()
         window.iconbitmap('InterfaceData/komari.ico')
-        window.minsize(960, 540)
-        window.geometry("1280x770")
+        window.geometry("1163x539")
+        self.setWindowSize(1163, 539)
         
         self.AnimationSelector = AnimationSelector(self, window) #Side menu
         self.AnimationSelector.updateItemlist()
         
         editorFrame = Frame(window, bg=getColor('BG')) #Main frale
-        editorFrame.pack(side='right', fill='both', expand=1)
+        editorFrame.pack(side='left', fill='both', expand=1)
         editorFrame.grid_columnconfigure(0, weight=1, uniform="group1")
         editorFrame.grid_rowconfigure(0, weight=1, uniform="group1")
         
         self.AnimationEditor = AnimationEditor(self, editorFrame)
         
+        self.editorFrame = editorFrame
         self.liveEditing = False
         self.lockInPlace = False
         self.fullanimEditing = False
@@ -927,13 +1206,17 @@ class GUI_TekkenAnimationEditor():
             ("Lock-Camera", self.LiveEditor.lockCamera),
             ("Unlock-Camera", self.LiveEditor.unlockCamera),
             ("Save Camera pos", self.saveCamera),
+            ("Save Camera pos (absolute)", lambda self=self:self.saveCamera(0)),
             ("Reload presets", self.buildMenu),
             ("", "separator"),
         ]
         
         frameActionMenu = [
-            ("Add (current position)", self.addFrame),
-            ("Remove (current position)", self.removeFrame),
+            ("Add (at current position)", self.addMultipleFrames),
+            ("Remove (from current position)", self.removeMultipleFrames),
+            ("", "separator"),
+            ("Mark keyframe (linear)", self.markKeyframe),
+            ("Unmark keyframe", self.AnimationEditor.unmarkKeyframe),
         ]
         
         self.cameraPresets = self.getPresetList()
@@ -941,24 +1224,134 @@ class GUI_TekkenAnimationEditor():
             name = "Position %d" % (i + 1) if p['name'] == '' else p['name']
             cameraActionsMenu.append((name, lambda self=self,i=i: self.LiveEditor.setCameraPos(i) ))
         
+        otherToolsMenu = [
+            ("Set target as 1P", lambda self=self:self.LiveEditor.setPlayerAddress(0)),
+            ("Set target as 2P", lambda self=self:self.LiveEditor.setPlayerAddress(1)),
+            ("", "separator"),
+            ("Copy frame to clipboard", self.copyFrameToClipboard),
+            ("Paste frame data from clipboard", self.pasteFrameFromClipboard),
+            ("", "separator"),
+            ("Make current move loop into itself", self.forceCurrmoveLoop),
+        ]
+        
         menuActions = [
             ("Guide", self.showGuide),
             ("Extractable anims", self.showExtractable),
-            #("Frame", frameActionMenu),
-            ("Camera tools", cameraActionsMenu)
+            ("Frame tools", frameActionMenu),
+            ("Camera tools", cameraActionsMenu),
+            ("Other tools", otherToolsMenu),
+            ("Toggle left-menu display", self.toggleLeftMenuDisplay)
         ]
         
+        self.leftMenuDisplay = True
         menu = createMenu(self.window, menuActions)
         self.window.config(menu=menu)
         
-    def removeFrame(self):
-        self.buildMenu()
-        if not self.AnimationEditor.Animation: return
-        pass
+    def removeMultipleFrames(self):
+        if not self.AnimationEditor.Animation:
+            self.message("Error", "You have to load an animation before being able to remove frames")
+            return
+
+        frameCount = simpledialog.askinteger("Frame count", "How many frames do you want to remove?", parent=self.window, initialvalue=1)
+        try:
+            frameCount = int(frameCount)
+            if frameCount <= 0: raise
+        except:
+            self.message("Error", "Invalid frame count: not adding")
+            return
+            
+        if self.AnimationEditor.Animation.length - frameCount <= 0:
+            self.message("Error", "Error, removing too many frames")
+            return
+                
+        self.AnimationEditor.removeFrames(frameCount)
+        if self.liveEditing: self.LoadLiveAnimation() #todo: no need to re-allocate
         
-    def addFrame(self):
-        if not self.AnimationEditor.Animation: return
-        pass
+    def addMultipleFrames(self):
+        if not self.AnimationEditor.Animation:
+            self.message("Error", "You have to load an animation before being able to add frames")
+            return
+            
+        frameCount = simpledialog.askinteger("Frame count", "How many frames do you want to add?", parent=self.window, initialvalue=0)
+        try:
+            frameCount = int(frameCount)
+            if frameCount <= 0: raise
+        except:
+            self.message("Error", "Invalid frame count: not adding")
+            return
+                
+        self.AnimationEditor.addFrames(frameCount)
+        if self.liveEditing: self.LoadLiveAnimation() #todo: no need to re-allocate
+        
+    def setWindowSize(self, width, height):
+        self.window.minsize(width, height)
+        self.window.maxsize(width, height)
+        
+    def toggleLeftMenuDisplay(self):
+        self.leftMenuDisplay = not self.leftMenuDisplay
+        if not self.leftMenuDisplay:
+            self.AnimationSelector.hide()
+            self.setWindowSize(1026, 539)
+        else:
+            self.setWindowSize(1163, 539)
+            self.hideEditor()
+            self.AnimationSelector.show()
+            self.showEditor()
+        
+    def showEditor(self):
+        self.editorFrame.pack(side='left', fill='both', expand=1)
+        
+    def hideEditor(self):
+        self.editorFrame.pack_forget()
+        
+    def copyFrameToClipboard(self):
+        if not self.AnimationEditor.Animation:
+            self.message("Error", "You have to load an animation before being able to copy")
+            return
+        
+        floatList = [self.AnimationEditor.Animation.getField(self.AnimationEditor.currentFrame, f) for f in range(self.AnimationEditor.Animation.field_count)]
+
+        for i in range(len(floatList)):
+            floatList[i] = ("%01.3f" % floatList[i]).rstrip('0').rstrip('.')
+            if float(floatList[i]) == 0 and floatList[i][0] == '-': floatList[i] = floatList[i][1:]
+        
+        pyperclip.copy(",".join(floatList))
+        self.message("Copied", "Frame data successfuly copied")
+        
+    def pasteFrameFromClipboard(self):
+        if not self.AnimationEditor.Animation:
+            self.message("Error", "You have to load an animation before being able to paste data")
+            return
+            
+        if self.AnimationEditor.getKeyframeType(self.AnimationEditor.currentFrame) == 2:
+            self.message("Error", "You cannot paste data into an in-between")
+            return
+            
+        animData = pyperclip.paste()
+        try:
+            for i, f in enumerate(animData.split(",")):
+                self.AnimationEditor.onFieldChange(i, f)
+            self.AnimationEditor.setFrame(self.AnimationEditor.currentFrame)
+            pyperclip.copy()
+        except Exception as e:
+            self.message("Error", "Error pasting animation data: invalid data?")
+            return
+        
+    def markKeyframe(self):
+        interpolated = self.AnimationEditor.markKeyframe()
+        if not interpolated: return
+        
+        if self.liveEditing and self.fullanimEditing:
+            self.LiveEditor.writeLoadedAnimBytes()
+        
+    def message(self, title, message):
+        messagebox.showinfo(title, message, parent=self.window)
+        
+    def forceCurrmoveLoop(self):
+        if not self.AnimationEditor.Animation or not self.LiveEditor.lastAllocation or not self.LiveEditor.CheckRunning(): 
+            self.message("Error", "Load an animation in-game before clicking this button")
+            return
+        self.LiveEditor.forceMoveLoop()
         
     def getPresetList(self):
         presetList = []
@@ -986,13 +1379,17 @@ class GUI_TekkenAnimationEditor():
         
         return presetList
         
-    def saveCamera(self):
+    def saveCamera(self, relative=2):
+        if not self.LiveEditor.startIfNeeded():
+            self.message("Error", "Could not open process")
+            return
+            
         data = self.LiveEditor.getCameraPos()
         playerPos = self.LiveEditor.getPlayerPos()
         playerRot = self.LiveEditor.getPlayerRot()
         
         cam = data.copy()
-        cam['relative'] = 2
+        cam['relative'] = relative
         
         if cam['relative'] == 1:
             cam['z'] -= playerPos['z'] #Relative player height
@@ -1071,6 +1468,10 @@ class GUI_TekkenAnimationEditor():
     def onFrameChange(self, newFrame):
         if not self.frameByFrameEditing: return
         self.LiveEditor.writeSingleFrameBytes(newFrame)
+        
+    def onMarkedFieldChange(self):
+        if self.LiveEditor.CheckRunning():
+            self.LiveEditor.writeLoadedAnimBytes()
         
     def onFieldChange(self, frame, fieldId, value):
         if not self.liveEditing or not self.LiveEditor.CheckRunning():
