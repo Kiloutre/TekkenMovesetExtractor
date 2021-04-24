@@ -933,11 +933,12 @@ class LiveEditor:
         self.T = None
         self.lastAllocation = None
         self.lastAllocationSize = 0
+        self.allocations = []
         
     def allocateMem(self, allocSize):
         return VirtualAllocEx(self.T.handle, 0, allocSize, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE)
         
-    def freeMem(self, addr, size):
+    def freeMem(self, addr):
         return VirtualFreeEx(self.T.handle, addr, 0, MEM_RELEASE) != None
         
     def writeFloat(self, addr, value):
@@ -999,6 +1000,20 @@ class LiveEditor:
         else:
             self.writeSingleFrameBytes(self.root.AnimationEditor.currentFrame)
         
+    def registerAllocation(self, addr, target):
+        self.allocations.append((addr, target))
+        
+    def freePastAllocations(self):
+        i = 0
+        while i < len(self.allocations):
+            addr, target = self.allocations[i]
+            try:
+                if not self.T.readInt(target, 8) == addr:
+                    raise
+                i += 1
+            except:
+                self.freeMem(addr)
+                self.allocations.pop(i)
         
     def loadAnimInMemory(self, anim):
         if not self.startIfNeeded(): return None
@@ -1006,9 +1021,6 @@ class LiveEditor:
         currmoveAddr = self.T.readInt(self.playerAddress + 0x220, 8)
         
         animationAddr = self.allocateMem(anim.size)
-        freeAddr, freeSize = None, None
-        if self.isLastAllocationValid():
-            freeAddr, freeSize = self.lastAllocation, self.lastAllocationSize
         
         self.lastAllocation = animationAddr
         self.lastAllocationSize = anim.size
@@ -1017,8 +1029,8 @@ class LiveEditor:
         self.T.writeInt(currmoveAddr + 0x10, animationAddr, 8)
         self.T.writeInt(currmoveAddr + 0x68, anim.length, 4)
         
-        if freeAddr != None:
-            self.freeMem(freeAddr, freeSize)
+        self.freePastAllocations()
+        self.registerAllocation(animationAddr, currmoveAddr + 0x10)
         
         return animationAddr
         
