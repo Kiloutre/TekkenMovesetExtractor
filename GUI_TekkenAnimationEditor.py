@@ -36,6 +36,7 @@ colors = {
         'framelistEven': "#555",
         'framelistOdd': "#666",
         'framelistHighlight': "#6f755a",
+        'framelistHighlightText': "white",
         'framelistLabelEven': "#333",
         'framelistLabelOdd': "#444",
         'framelistLabelText': "#aaa",
@@ -766,7 +767,6 @@ class AnimationEditor(BaseFormEditor):
                 self.framelistLabels[i]['fg'] = getColor('BG')
                 self.framelistLabels[i]['bg'] = getColor('BG')
             else:
-                self.framelistLabels[i]['fg'] = getColor('framelistLabelText')
                 
                 
                 keyframeType = self.getKeyframeType(frame)
@@ -781,8 +781,10 @@ class AnimationEditor(BaseFormEditor):
                 self.framelist[i]['fg'] = self.framelist[i]['bg']
                     
                 if self.Animation and frame == self.currentFrame:
+                    self.framelistLabels[i]['fg'] = getColor('framelistHighlightText')
                     self.framelistLabels[i]['bg'] = getColor('framelistHighlight')
                 else:
+                    self.framelistLabels[i]['fg'] = getColor('framelistLabelText')
                     self.framelistLabels[i]['bg'] = getColor('framelistLabelEven' if frame & 1 == 0 else 'framelistLabelOdd')
             
         
@@ -989,10 +991,14 @@ class LiveEditor:
         
     def writeLoadedAnimBytes(self, singleFrameOfData=False):
         if self.lastAllocation == None: return
+        
         if singleFrameOfData == False:
             self.T.writeBytes(self.lastAllocation, bytes(self.Animation.data))
+            if self.root.lockInPlace:
+                self.writeLockInPlaceBytes()
         else:
-            self.T.writeBytes(self.lastAllocation, bytes(self.Animation.data[:self.Animation.offset + self.Animation.frame_size]))
+            self.writeSingleFrameBytes(self.root.AnimationEditor.currentFrame)
+        
         
     def loadAnimInMemory(self, anim):
         if not self.startIfNeeded(): return None
@@ -1231,7 +1237,7 @@ class GUI_TekkenAnimationEditor():
             ("Copy frame to clipboard", self.copyFrameToClipboard),
             ("Paste frame data from clipboard", self.pasteFrameFromClipboard),
             ("", "separator"),
-            ("Make current move loop into itself", self.forceCurrmoveLoop),
+            #("Make current move loop into itself", self.forceCurrmoveLoop),
         ]
         
         menuActions = [
@@ -1253,6 +1259,7 @@ class GUI_TekkenAnimationEditor():
             return
 
         frameCount = simpledialog.askinteger("Frame count", "How many frames do you want to remove?", parent=self.window, initialvalue=1)
+        if frameCount == None: return
         try:
             frameCount = int(frameCount)
             if frameCount <= 0: raise
@@ -1273,6 +1280,7 @@ class GUI_TekkenAnimationEditor():
             return
             
         frameCount = simpledialog.askinteger("Frame count", "How many frames do you want to add?", parent=self.window, initialvalue=0)
+        if frameCount == None: return
         try:
             frameCount = int(frameCount)
             if frameCount <= 0: raise
@@ -1327,13 +1335,12 @@ class GUI_TekkenAnimationEditor():
             self.message("Error", "You cannot paste data into an in-between")
             return
             
-        animData = pyperclip.paste()
         try:
             for i, f in enumerate(animData.split(",")):
                 self.AnimationEditor.onFieldChange(i, f)
             self.AnimationEditor.setFrame(self.AnimationEditor.currentFrame)
-            pyperclip.copy()
         except Exception as e:
+            print(e)
             self.message("Error", "Error pasting animation data: invalid data?")
             return
         
@@ -1471,7 +1478,7 @@ class GUI_TekkenAnimationEditor():
         
     def onMarkedFieldChange(self):
         if self.LiveEditor.CheckRunning():
-            self.LiveEditor.writeLoadedAnimBytes()
+            self.LiveEditor.writeLoadedAnimBytes(singleFrameOfData=self.frameByFrameEditing)
         
     def onFieldChange(self, frame, fieldId, value):
         if not self.liveEditing or not self.LiveEditor.CheckRunning():
