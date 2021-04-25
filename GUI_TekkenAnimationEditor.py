@@ -148,12 +148,11 @@ fieldLabels = {
 
 class Interpolation:
     def getFunction(type1, type2):
-        if type1 == 5 or type2 == 5: return Interpolation.easeInOut 
         if (type1 == 4 or type1 == 5) and (type2 == 3 or type2 == 5): #left frame is easeOut, right frame is easeIn
             return Interpolation.easeInOut 
         
-        if type1 == 4 or type1 == 5: return Interpolation.easeIn
-        if type2 == 3 or type2 == 5: return Interpolation.easeOut
+        if type1 == 3 or type1 == 5: return Interpolation.easeIn
+        if type2 == 4 or type2 == 5: return Interpolation.easeOut
         
         return Interpolation.linear
         
@@ -768,7 +767,7 @@ class AnimationEditor(BaseFormEditor):
             oldDict = self.keyframesTypes.copy()
             self.keyframesTypes = {}
             #Shift keyframes down
-            for i, k in enumerate(reversed(self.keyframes)):
+            for i, k in enumerate(self.keyframes):
                 if k >= self.currentFrame:
                     self.keyframes[i] -= count
                     self.keyframesTypes[k - count] = oldDict[k]
