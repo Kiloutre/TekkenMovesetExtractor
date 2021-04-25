@@ -5,7 +5,7 @@ If you want the moveset to stay constantly, use the "Online Player" buttons, and
 1.0.32.5:
 [IMPORTER] Fix 'Set Online' button after latest small patch
 [ANIMATOR] Add animation editor, extracted animations are stored in the "AnimationEditor" folder
-1.0.32.6 - 1.0.32.7:
-[ANIMATOR] Fix camera tools, feature to add/remove frames, allow keyframes to be marked (interpolation!), and more
+1.0.32.6 - 1.0.32.8:
+[ANIMATOR] Fix camera tools, feature to add/remove frames, allow keyframes to be marked (interpolation!), animator bugfixes and more
     
 --- by kilo ( https://www.youtube.com/c/kiloutre ) ---
