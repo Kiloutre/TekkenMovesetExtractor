@@ -300,18 +300,6 @@ class Animation:
             else:
                 self.interpolateBetweenFrames(position - 1, position + count)
     
-    def removeFrame(self, position=-1):
-        if position == -1: position = self.length
-        
-        for frame in range(position, self.length - 1): # Shift values to the left if needed
-            for fieldId in range(self.field_count):
-                value = self.getField(frame + 1, fieldId)
-                self.setField(value, frame, fieldId)
-        
-        self.length -= 1
-        self.writeInt(self.length, 4)
-        self.recalculateSize()
-    
     def removeFrames(self, count, position=-1):
         if count <= 0 or count >= self.length: return
         if position == -1: position = (self.length - count + 1)
@@ -343,9 +331,17 @@ class AnimationSelector:
         mainFrame = Frame(rootFrame)
         mainFrame.pack(side='left', fill='y')
         
-        animlist = Listbox(mainFrame, bg=getColor('ListBGColor'))
+        listFrame = Frame(mainFrame)
+        listFrame.pack(fill='both', expand=1)
+        
+        animlist = Listbox(listFrame, bg=getColor('ListBGColor'))
         animlist.bind('<<ListboxSelect>>', self.onSelectionChange)
-        animlist.pack(fill='both', expand=1)
+        animlist.pack(side='left', fill='both', expand=1)
+        
+        scrollbar = Scrollbar(listFrame, command=animlist.yview)
+        scrollbar.pack(side='right', fill='y')
+        
+        animlist.config(yscrollcommand=scrollbar.set)
         
         buttons = [
             ("Load selected to editor", self.LoadAnimationToEditor),
@@ -430,7 +426,7 @@ class AnimationSelector:
             self.animlist.insert(0, "No animation...")
             self.animlist.itemconfig(0, {'fg': getColor('listItemText')})
         else:
-            for anim in animationList: self.animlist.insert('end', anim)
+            for anim in animationList: self.animlist.insert('end', anim[:-4])
         self.itemList = animationList
         self.colorItemlist()
 
@@ -745,7 +741,8 @@ class AnimationEditor(BaseFormEditor):
                     self.Animation.interpolateBetweenFrames(k, self.keyframes[i + 1])
                 else: break
         
-        if self.currentFrame >= self.Animation.length: self.currentFrame = self.Animation.length
+        if self.currentFrame >= self.Animation.length:
+            self.currentFrame = self.Animation.length - 1
         
         self.updateFramelist()
         self.setTitleInfo()
@@ -1347,6 +1344,7 @@ class GUI_TekkenAnimationEditor():
             self.message("Error", "You cannot paste data into an in-between")
             return
             
+        animData = pyperclip.paste()
         try:
             for i, f in enumerate(animData.split(",")):
                 self.AnimationEditor.onFieldChange(i, f)
