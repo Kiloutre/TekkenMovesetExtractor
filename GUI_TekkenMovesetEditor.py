@@ -2063,14 +2063,17 @@ class GUI_TekkenMovesetEditor():
         try:
             with open("InterfaceData/editorRequirements.txt", "r") as f:
                 for line in f:
-                    val, label = line.split(",")
+                    commaPos = line.find(',')
+                    val, label = line[:commaPos], line[commaPos + 1:]
                     requirementLabels[int(val)] = label
         except Exception as e:
+            print(e)
             pass
         try:
             with open("InterfaceData/editorProperties.txt", "r") as f:
                 for line in f:
-                    val, label = line.split(",")
+                    commaPos = line.find(',')
+                    val, label = line[:commaPos], line[commaPos + 1:]
                     propertyLabels[int(val, 16)] = label
         except:
             pass
