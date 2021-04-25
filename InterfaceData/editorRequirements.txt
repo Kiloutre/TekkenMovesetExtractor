@@ -1,0 +1,91 @@
+0,Always true
+2,Attack hits
+3,Throw Hits Forward (Standing)
+4,Throw Hits Backward (Standing)
+5,Throw Hits Left Side (Standing)
+6,Throw Hits Right Side (Standing)
+7,Throw Hits Forward (Crouching)
+11,Throw Hits Forward (Face Up)
+12,Throw Hits Backward (Face Up)
+13,Throw Hits Left Side (Face Up)
+14,Throw Hits Right Side (Face Up)
+15,Throw Hits Forward (Face Down)
+16,Throw Hits Backward (Face Down)
+17,Throw Hits Left Side (Face Down)
+18,Throw Hits Right Side (Face Down)
+27,Throw Hits (Airborne)
+35,Opponent distance
+44,On Hit
+47,On block
+48,On whiff
+66,Standing (?)
+72,Backturned
+73,Not Backturned
+126,Opponent downed
+127,Opponent on their feet
+130,Counterhit
+131,Pressed ONLY LP (1)
+132,Pressed ONLY RP (2)
+133,Pressed ONLY LP+RP (1+2)
+135,On death
+139,Player HP check (direct)
+143,Player HP check (percentage)
+144,Opponent HP less than
+146,Standing on left side
+147,Standing on right side
+155,If Ki Charged
+157,Rage
+176,In Max-Mode
+182,Near Wall
+217,Player character ID
+218,Player NOT character ID
+219,Opponent character ID
+220,Opponent NOT character ID
+221,Partner character ID
+222,Partner NOT character ID
+223,Gamemode
+225,Player is CPU
+253,Bryan taunted
+256,Bryan taunted
+308,Lucky Chloe RA point check
+344,Kazuya Devil Form
+345,Check Lucky Chloe RA points
+351,Claudio Starburst
+352,Fully charged (?)
+359,Character specific flag
+361,Combo route
+552,Random number generator (uniform)
+553,Random number generator (weighted)
+558,Story Battle
+559,Story Battle number
+563,Gamemode
+607,Opponent is Airborne
+608,Opponent is Grounded
+609,Has item
+614,Juggle
+615,Screw
+629,Meter equal or higher
+634,Treasure Battle Special Match
+639,Parry Zoom
+641,Once per match (Leroy Cane)
+813,Parry high
+814,Parry mid
+815,Parry low
+816,Parry high and mid
+817,Parry group
+830,Attack absorption (Power Crush)
+863,Parry high
+864,Parry mid
+865,Parry low
+866,Parry high and mid
+871,Parry high
+872,Parry mid
+873,Parry low
+874,Parry high and mid
+881,Requirements end
+32814,Hitsparks
+32957,Change devil state
+32963,Add lucky chloe points
+33239,Activate speed modifier
+33483,Special cancellable on hit/block
+33840,Devil Wing Stuff?

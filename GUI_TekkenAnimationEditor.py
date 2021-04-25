@@ -131,7 +131,7 @@ fieldLabels = {
     53: 'Right Hip Z',
     54: 'Right Knee Extension',
     55: 'Right Foot X',
-    56: 'Right Leg Y',
+    56: 'Right Foot Y',
     57: 'Right Foot Z',
     58: 'Right Leg 58',
     59: 'Right Leg 59',
@@ -148,10 +148,12 @@ fieldLabels = {
 
 class Interpolation:
     def getFunction(type1, type2):
-        if type1 == 5 or type2 == 5: return Interpolation.easeInOut
-        if type1 == 3 and type2 == 4: return Interpolation.easeInOut
-        if type2 == 4: return Interpolation.easeOut
-        if type1 == 3: return Interpolation.easeIn
+        if type1 == 5 or type2 == 5: return Interpolation.easeInOut 
+        if (type1 == 4 or type1 == 5) and (type2 == 3 or type2 == 5): #left frame is easeOut, right frame is easeIn
+            return Interpolation.easeInOut 
+        
+        if type1 == 4 or type1 == 5: return Interpolation.easeIn
+        if type2 == 3 or type2 == 5: return Interpolation.easeOut
         
         return Interpolation.linear
         
@@ -1072,13 +1074,12 @@ class LiveEditor:
         
     def resetLockInPlaceBytes(self, singleFrame = False):
         if self.lastAllocation == None: return
-        print('writeLockInPlaceBytes')
-
         length = self.Animation.length if singleFrame == False else 1
         
+        baseOffset = self.lastAllocation + self.Animation.offset
+        baseLocalOffset = self.Animation.offset
+        
         for i in range(length):
-            baseOffset = self.lastAllocation + self.Animation.offset
-            baseLocalOffset = self.Animation.offset
             
             for offset in Animation.movementOffsets:
                 self.T.writeBytes(baseOffset + offset, bytes(self.Animation.data[baseLocalOffset + offset:baseLocalOffset + offset + 4]))
@@ -1088,8 +1089,6 @@ class LiveEditor:
         
     def writeLockInPlaceBytes(self, singleFrame = False):
         if self.lastAllocation == None: return
-        print('writeLockInPlaceBytes')
-        
         length = self.Animation.length if singleFrame == False else 1
         
         baseOffset = self.lastAllocation + self.Animation.offset

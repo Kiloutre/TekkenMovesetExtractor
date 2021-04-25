@@ -15,149 +15,8 @@ from zlib import crc32
 charactersPath = "./extracted_chars/"
 editorVersion = "0.32-BETA"
 
-requirementLabels = {
-    0: 'Always true',
-    3: 'Throw Hits Forward (Standing)',
-    4: 'Throw Hits Backward (Standing)',
-    5: 'Throw Hits Left Side (Standing)',
-    6: 'Throw Hits Right Side (Standing)',
-    7: 'Throw Hits Forward (Crouching)',
-    11: 'Throw Hits Forward (Face Up)',
-    12: 'Throw Hits Backward (Face Up)',
-    13: 'Throw Hits Left Side (Face Up)',
-    14: 'Throw Hits Right Side (Face Up)',
-    15: 'Throw Hits Forward (Face Down)',
-    16: 'Throw Hits Backward (Face Down)',
-    17: 'Throw Hits Left Side (Face Down)',
-    18: 'Throw Hits Right Side (Face Down)',
-    27: 'Throw Hits (Airborne)',
-    35: 'Opponent distance',
-    47: 'On block',
-    44: 'On Hit',
-    66: 'Standing (?)',
-    72: 'Backturned (?)',
-    126: 'Opponent downed',
-    130: 'Counterhit',
-    131: 'Pressed ONLY LP (1)',
-    132: 'Pressed ONLY RP (2)',
-    133: 'Pressed ONLY LP+RP (1+2)',
-    146: 'Standing on left side',
-    147: 'Standing on right side',
-    135: 'Death',
-    144: 'Opponent HP less than',
-    155: 'If Ki Charged',
-    157: 'Rage',
-    176: 'In Max-Mode',
-    182: 'Near Wall',
-    558: 'Story Battle',
-    634: 'Treasure Battle Special Match',
-    217: 'Player character ID',
-    218: 'Player NOT character ID',
-    219: 'Opponent character ID',
-    220: 'Opponent NOT character ID',
-    221: 'Partner character ID',
-    222: 'Partner NOT character ID',
-    223: 'Gamemode',
-    225: 'Player is CPU',
-    253: 'Bryan taunted',
-    256: 'Bryan taunted',
-    344: 'Kazuya Devil Form',
-    351: 'Claudio Starburst',
-    563: 'Gamemode',
-    609: 'Has item',
-    629: 'Meter equal or higher',
-    614: 'Juggle',
-    615: 'Screw',
-    641: 'Once per match (Leroy Cane)',
-    830: 'Attack absorption (Armor move)',
-    881: 'Requirements end',
-    352: 'Fully charged (?)',
-    308: 'Lucky Chloe RA point check',
-    345: 'Check Lucky Chloe RA points',
-    32963: 'Add lucky chloe points',
-    32814: 'Hitsparks',
-    33483: 'Special cancellable on hit/block',
-    33840: 'Devil Wing Stuff?',
-    32957: 'Change devil state',
-    33239: 'Activate speed modifier',
-}
-
-propertyLabels = {
-    0: 'Properties end',
-    0x8001: 'Wallsplat VFX',
-    0x8003: 'Shake camera',
-    0x8009: 'Heavycamera shake',
-    0x8007: 'Minimal camera shake',
-    0x800b: 'Ground Ripple VFX',
-    0x8046: 'Special VFX (Armored, sparks...)',
-    0x8078: 'Give Bryan taunt properties',
-    0x802e: 'Hit Spark VFX',
-    0x8036: 'Trail VFX',
-    0x8039: 'Play hit spark (opponent)',
-    0x803b: 'Play hit spark',
-    0x803d: 'Heavy Hit Sparks',
-    0x806a: 'Inflict damage to opponent',
-    0x80bd: 'Kazuya devil mode',
-    0x80c3: 'Give Lucky Chloe RA point',
-    0x818a: 'Add Tracking/Alignment',
-    0x81a7: 'Align Player To Wall (?)',
-    0x81be: 'Rage Art SFX',
-    0x817c: 'Allow player to block',
-    0x8181: 'Stop pushback',
-    0x81ff: 'Slide player',
-    0x81bd: 'Power Crush',
-    0x81f3: 'Activate laser',
-    0x81f4: 'Disable laser',
-    0x81c2: 'Give meter (signed int)',
-    0x81d6: 'Player speed (4096 = 100%)',
-    0x81db: 'Charge speed',
-    0x81e0: 'Blending (?)',
-    0x81e4: 'Break floor',
-    0x81bf: 'Give Claudio starbust',
-    0x8229: 'EX Effect',
-    0x828c: 'RA freeze',
-    0x828d: 'RA freeze immunity',
-    0x829f: 'Play subtitles',
-    0x829d: 'Set HUD visibility',
-    0x82d8: 'Set partner\'s move (Sugar)',
-    0x8255: 'Spend screw',
-    0x8272: 'Spend Rage (if juggle)',
-    #0x8228: 'Spend Rage (if standing)',
-    0x8233: 'Spend Rage (if grounded)',
-    0x828b: 'Game speed %',
-    0x8223: 'Inflict self damage',
-    0x821b: 'Enable scaled damage',
-    0x821c: 'Inflict scaled damage to opponent',
-    0x824c: 'AI input',
-    0x820b: 'Spawn projectile',
-    0x82cb: 'Special Cancellable (?)',
-    0x8213: 'Attack destroys projectile',
-    0x8214: 'Attack deflects projectile',
-    0x824a: 'AI Input (Devil Kazuya reverse transform)',
-    0x826a: 'Homing (Left Hand)',
-    0x826b: 'Homing (Right Hand)',
-    0x826c: 'Homing (Left foot)',
-    0x826d: 'Homing (Right Foot)',
-    0x8234: 'Rage drive BG effect',
-    0x8251: 'Player visibility',
-    0x8270: 'Give rage',
-    0x8272: 'Spend rage',
-    0x82eb: 'Spend one per match move',
-    0x82fa: 'Fahkumram skin pulse',
-    0x83c3: 'Balconybreak victim: set opponent\'s move',
-    0x83c2: 'Set opponent\'s floor level',
-    0x8343: 'Attach item to limb',
-    0x8344: 'Detach item to limb',
-    0x8429: 'Play left hand anim',
-    0x842a: 'Play right hand anim',
-    0x843c: 'Throw camera',
-    0x842e: 'Hand-stuff',
-    0x84c4: 'Play sound',
-    0x84c6: 'Play sound from opponent',
-    0x8435: 'Cinematic Camera (intro)',
-    0x8439: 'Rage Art Camera',
-    0x8454: 'Something used in Rage Art Camera (?)',
-}
+requirementLabels = {}
+propertyLabels = {}
 
 for i in range(0x83c4, 0x83c4 + 112):
     propertyLabels[i] = 'Set %d alias' % (i)
@@ -2196,7 +2055,25 @@ class GUI_TekkenMovesetEditor():
         else:
             self.Charalist.toggleVisibility()
             
+        self.loadLabels()
         self.resetForms()
+        
+    def loadLabels(self):
+        global requirementLabels, propertyLabels
+        try:
+            with open("InterfaceData/editorRequirements.txt", "r") as f:
+                for line in f:
+                    val, label = line.split(",")
+                    requirementLabels[int(val)] = label
+        except Exception as e:
+            pass
+        try:
+            with open("InterfaceData/editorProperties.txt", "r") as f:
+                for line in f:
+                    val, label = line.split(",")
+                    propertyLabels[int(val, 16)] = label
+        except:
+            pass
             
     def setTitle(self, label = ""):
         title = "TekkenMovesetEditor %s" % (editorVersion)

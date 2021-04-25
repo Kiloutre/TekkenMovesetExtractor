@@ -1,0 +1,96 @@
+0x0,Properties end
+0x8001,Lightest camera shake
+0x8003,Moderate camera shake
+0x8007,Minimal camera shake
+0x8009,Heavy camera shake
+0x800b,Ground Ripple
+0x8012,Fire effect
+0x801b,Rage Drive VFX
+0x802e,Hit Spark on self
+0x8036,Trail VFX
+0x8038,Stage VFX
+0x8039,Play hit spark (opponent)
+0x803b,Play hit spark
+0x803d,Heavy Hit Sparks
+0x803f,Heavy spark w/ chara hit spark
+0x8046,Special VFX (Armored, sparks...)
+0x806a,Inflict damage to opponent
+0x8078,Give Bryan taunt properties
+0x80bd,Kazuya devil mode
+0x80c3,Give Lucky Chloe RA point
+0x817c,Allow player to block
+0x8181,Stop pushback
+0x818a,Add Tracking/Alignment
+0x818c,Change player status/vulnerability
+0x81a7,Align Player To Wall (?)
+0x81bd,Power Crush
+0x81be,Rage Art SFX
+0x81bf,Give Claudio starbust
+0x81c2,Give meter (signed int)
+0x81c7,Fill meter
+0x81c8,Skip move frame
+0x81d4,Force move on opponent
+0x81d5,Force move on opponent
+0x81d6,Player speed (4096 = 100%)
+0x81d7,Activate Speed modifier
+0x81db,Charge speed
+0x81e0,Blending (?)
+0x81e4,Break floor
+0x81e8,Pushback-related
+0x81f3,Activate laser
+0x81f4,Disable laser
+0x81ff,Slide player
+0x820b,Spawn projectile
+0x8213,Attack destroys projectile
+0x8214,Attack deflects projectile
+0x821b,Enable scaled damage
+0x821c,Inflict scaled damage to opponent
+0x8223,Inflict self damage
+0x8226,2D Jump Height
+0x8229,EX Effect
+0x8233,Spend Rage (if grounded)
+0x8234,Rage drive BG effect
+0x824a,AI Input (Devil Kazuya reverse transform)
+0x824c,AI input
+0x8251,Player visibility
+0x8255,Spend screw
+0x826a,Homing (Left Hand)
+0x826b,Homing (Right Hand)
+0x826c,Homing (Left foot)
+0x826d,Homing (Right Foot)
+0x8270,ctivate rage
+0x8272,Spend rage
+0x828b,Game speed %
+0x828c,RA freeze
+0x828d,RA freeze immunity
+0x829d,Set HUD visibility
+0x829f,Play subtitles
+0x82ae,Noctis warp effect
+0x82c8,Use fake frame advantage
+0x82c9,Use fake startup frame
+0x82cb,Special Cancellable (?)
+0x82d8,Set partner's move (Sugar)
+0x82eb,Spend one per match move
+0x82fa,Fahkumram skin pulse
+0x8343,Attach item to limb
+0x8344,Detach item to limb
+0x83c2,Set opponent's floor level
+0x83c3,Set opponent's move
+0x8426,Both Hands Mot Data
+0x8429,Left hand Mot Data
+0x842a,Right hand Mot Data
+0x842d,Play both hand anim
+0x842e,Play left hand anim
+0x842f,Play right hand anim
+0x8435,Cinematic Camera (intro)
+0x8439,Rage Art Camera Left Side
+0x843a,Rage Art Camera Right Side
+0x843c,Throw camera
+0x8454,Something used in Rage Art Camera (?)
+0x84c1,Play facial anim
+0x84c2,Play facial anim sequence
+0x84c3,Play system sound
+0x84c4,Play player sound
+0x84c6,Play opponent sound
+0x84ca,Announcer says 'Fight'
+0x84cb,Play attach audio
