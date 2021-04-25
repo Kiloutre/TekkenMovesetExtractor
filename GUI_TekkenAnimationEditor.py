@@ -40,7 +40,10 @@ colors = {
         'framelistLabelEven': "#333",
         'framelistLabelOdd': "#444",
         'framelistLabelText': "#aaa",
-        'framelistMarked': "#7e3eb0",
+        'framelistMarked1': "#7e3eb0", #Linear
+        'framelistMarked2': "#4b9636", #Ease-in
+        'framelistMarked3': "#ab2929", #Ease-out
+        'framelistMarked4': "#ba9234", #Ease-in-out
         'framelistInBetweenEven': "#5880bf",
         'framelistInBetweenOdd': "#506b96"
     },
@@ -128,7 +131,7 @@ fieldLabels = {
     53: 'Right Hip Z',
     54: 'Right Knee Extension',
     55: 'Right Foot X',
-    56: 'Right Foot Y',
+    56: 'Right Leg Y',
     57: 'Right Foot Z',
     58: 'Right Leg 58',
     59: 'Right Leg 59',
@@ -137,13 +140,21 @@ fieldLabels = {
     62: 'Left Hip Z',
     63: 'Left Knee Extension',
     64: 'Left Foot X',
-    65: 'Left Foot Y',
+    65: 'Left Leg Y',
     66: 'Left Foot Z',
     67: 'Left Leg 68',
     68: 'Left Leg 69'
 }
 
 class Interpolation:
+    def getFunction(type1, type2):
+        if type1 == 5 or type2 == 5: return Interpolation.easeInOut
+        if type1 == 3 and type2 == 4: return Interpolation.easeInOut
+        if type2 == 4: return Interpolation.easeOut
+        if type1 == 3: return Interpolation.easeIn
+        
+        return Interpolation.linear
+        
     def linear(timefactor):
         return timefactor
         
@@ -313,16 +324,18 @@ class Animation:
         self.writeInt(self.length, 4)
         self.recalculateSize()
         
-    def interpolateBetweenFrames(self, frame1, frame2):     
+    def interpolateBetweenFrames(self, frame1, frame2, type1=2, type2=2):     
         diff = frame2 - frame1
         if diff == 1: return
+        
+        interpolationFunction = Interpolation.getFunction(type1, type2)
         
         for fieldId in range(self.field_count):
             value1 = self.getField(frame1, fieldId)
             value2 = self.getField(frame2, fieldId)
             for i in range(1, diff):
                 valueDiff = value2 - value1
-                newValue = value1 +  (valueDiff * Interpolation.linear(i / diff)) 
+                newValue = value1 +  (valueDiff * interpolationFunction(i / diff))
                 self.setField(newValue, frame1 + i, fieldId)
         
 class AnimationSelector:
@@ -566,6 +579,7 @@ class AnimationEditor(BaseFormEditor):
         BaseFormEditor.__init__(self, root, rootFrame, title="No animation loaded")
         self.Animation = None
         self.keyframes = []
+        self.keyframesTypes = {}
         
         self.fields = []
         
@@ -658,45 +672,59 @@ class AnimationEditor(BaseFormEditor):
         nextFrameButton.pack(side='left')
         #nextFrameButton.grid(column=6, row=0)
         
-        self.updateFramelist()
         self.reset()
         
     def getKeyframeType(self, frame):
         keyframeLen = len(self.keyframes)
         for i, f in enumerate(self.keyframes):
             if frame < f: return 0 #Regular frame
-            if frame == f: return 1 # Type 2: marked frame
-            if frame > f and (i + 1 != keyframeLen) and frame < self.keyframes[i + 1]: return 2 # In-between
+            if frame == f: return self.keyframesTypes[frame] # Type 2 or higher: marked frame
+            if frame > f and (i + 1 != keyframeLen) and frame < self.keyframes[i + 1]: return 1 # In-between
         return 0
+        
+    def reinterpolateEverything(self):
+        for i in range(len(self.keyframes) - 1):
+            self.interpolateBetweenFrames(self.keyframes[i], self.keyframes[i + 1])
+        
+    def interpolateBetweenFrames(self, frame1, frame2):
+        self.Animation.interpolateBetweenFrames(frame1, frame2, self.keyframesTypes[frame1], self.keyframesTypes[frame2])
         
     def interpolateMarkedFrame(self, frame):
         interpolated = False
         keyframeIndex = self.keyframes.index(frame)
         
         if keyframeIndex > 0:
-            self.Animation.interpolateBetweenFrames(self.keyframes[keyframeIndex - 1], frame) #interpolate in
+            self.interpolateBetweenFrames(self.keyframes[keyframeIndex - 1], frame) #interpolate in
             interpolated = True
             
         if keyframeIndex < (len(self.keyframes) - 1):
-            self.Animation.interpolateBetweenFrames(frame, self.keyframes[keyframeIndex + 1]) #interpolate out
+            self.interpolateBetweenFrames(frame, self.keyframes[keyframeIndex + 1]) #interpolate in
             interpolated = True
             
         return interpolated
         
     def unmarkKeyframe(self):
         if not self.currentFrame in self.keyframes: return False
+        interpolated = False
         
-        self.keyframes.pop(self.keyframes.index(self.currentFrame))
+        keyframeIndex = self.keyframes.index(self.currentFrame)
+        self.keyframes.pop(keyframeIndex)
+        
+        if keyframeIndex < (len(self.keyframes)):
+            self.interpolateBetweenFrames(self.keyframes[keyframeIndex - 1], self.keyframes[keyframeIndex]) #interpolate out
+            interpolated = True
         
         self.setFrame(self.currentFrame)
         self.updateFramelist()
-        return
+        return interpolated
         
-    def markKeyframe(self):
-        if self.currentFrame in self.keyframes: return False
+    def markKeyframe(self, type=2):
+        if self.currentFrame in self.keyframes and self.keyframesTypes[self.currentFrame] == type: return False
         
-        self.keyframes.append(self.currentFrame)
-        self.keyframes.sort()
+        if self.currentFrame not in self.keyframes:
+            self.keyframes.append(self.currentFrame)
+            self.keyframes.sort()
+        self.keyframesTypes[self.currentFrame] = type
         
         self.setFrame(self.currentFrame)
         self.updateFramelist()
@@ -707,18 +735,22 @@ class AnimationEditor(BaseFormEditor):
         
         if len(self.keyframes) >= 1:
             #Shift keyframes up
+            oldDict = self.keyframesTypes.copy()
+            self.keyframesTypes = {}
             for i, k in enumerate(self.keyframes):
-                if k >= self.currentFrame: self.keyframes[i] += count
-                
+                if k >= self.currentFrame:
+                    self.keyframes[i] += count
+                    self.keyframesTypes[k + count] = oldDict[k]
+                else:
+                    self.keyframesTypes[k] = oldDict[k]
             
             #Re-interpolate keyframes that were affected by the shifting
             keyframeLen = len(self.keyframes)
             for i, k in enumerate(self.keyframes):
                 if (i + 1) < keyframeLen and self.keyframes[i + 1] >= self.currentFrame:
-                    self.Animation.interpolateBetweenFrames(k, self.keyframes[i + 1])
+                    self.interpolateBetweenFrames(k, self.keyframes[i + 1])
                 else: break
         
-        self.updateFramelist()
         self.setTitleInfo()
         self.setFrame(self.currentFrame)
         
@@ -731,26 +763,32 @@ class AnimationEditor(BaseFormEditor):
         self.Animation.removeFrames(count, position=self.currentFrame)
             
         if len(self.keyframes) >= 1:
+            oldDict = self.keyframesTypes.copy()
+            self.keyframesTypes = {}
             #Shift keyframes down
-            for i, k in enumerate(self.keyframes):
-                if k >= self.currentFrame: self.keyframes[i] -= count
+            for i, k in enumerate(reversed(self.keyframes)):
+                if k >= self.currentFrame:
+                    self.keyframes[i] -= count
+                    self.keyframesTypes[k - count] = oldDict[k]
+                else:
+                    self.keyframesTypes[k] = oldDict[k]
                 
             keyframeLen = len(self.keyframes)
             for i, k in enumerate(self.keyframes):
                 if (i + 1) < keyframeLen and self.keyframes[i + 1] >= self.currentFrame:
-                    self.Animation.interpolateBetweenFrames(k, self.keyframes[i + 1])
+                    self.interpolateBetweenFrames(k, self.keyframes[i + 1])
                 else: break
         
         if self.currentFrame >= self.Animation.length:
             self.currentFrame = self.Animation.length - 1
         
-        self.updateFramelist()
         self.setTitleInfo()
         self.setFrame(self.currentFrame)
         
     def updateFramelist(self):
         framelistOffset = self.getFramelistOffset()
         animLength = self.framelistLength if not self.Animation else self.Animation.length
+        
         for i in range(self.framelistLength):
             frame = i + framelistOffset
             labelText = "%03d" % (frame + 1)
@@ -768,9 +806,9 @@ class AnimationEditor(BaseFormEditor):
                 
                 keyframeType = self.getKeyframeType(frame)
                 
-                if keyframeType == 1: #Marked
-                    self.framelist[i]['bg'] = getColor('framelistMarked')
-                elif keyframeType == 2: #In-between
+                if keyframeType >= 2: #Marked
+                    self.framelist[i]['bg'] = getColor('framelistMarked' + str(keyframeType - 1))
+                elif keyframeType == 1: #In-between
                     self.framelist[i]['bg'] = getColor('framelistInBetweenEven' if i & 1 == 0 else 'framelistInBetweenOdd')
                 else:
                     self.framelist[i]['bg'] = getColor('framelistEven' if i & 1 == 0 else 'framelistOdd')
@@ -813,7 +851,7 @@ class AnimationEditor(BaseFormEditor):
         if isFloat(value):
             actualFieldId = fieldId + self.currentField
             self.Animation.setField(float(value), self.currentFrame, actualFieldId)
-            if self.getKeyframeType(self.currentFrame) == 0:
+            if self.getKeyframeType(self.currentFrame) == 0: #Regular frame, is cool
                 self.root.onFieldChange(self.currentFrame, actualFieldId, value)
             else: #Marked frame
                 self.interpolateMarkedFrame(self.currentFrame)
@@ -838,7 +876,7 @@ class AnimationEditor(BaseFormEditor):
                 value = ("%01.3f" % self.Animation.getField(self.currentFrame, actualFieldId)).rstrip('0').rstrip('.')
                 if float(value) == 0 and value[0] == "-": value = value[1:]
                 
-                enabled = self.getKeyframeType(self.currentFrame) != 2 #notAnInbetween
+                enabled = self.getKeyframeType(self.currentFrame) != 1 #notAnInbetween
                 self.fields[i].setValue(value, enable=enabled)
                 self.fields[i].setTitle(fieldLabels.get(actualFieldId, "Field %d" % (actualFieldId + 1)))
             else:
@@ -867,6 +905,7 @@ class AnimationEditor(BaseFormEditor):
         
     def reset(self):
         self.keyframes = []
+        self.keyframesTypes = {}
         self.Animation = None
         self.animationName = None
         self.currentFrame = 0
@@ -1033,6 +1072,7 @@ class LiveEditor:
         
     def resetLockInPlaceBytes(self, singleFrame = False):
         if self.lastAllocation == None: return
+        print('writeLockInPlaceBytes')
 
         length = self.Animation.length if singleFrame == False else 1
         
@@ -1048,6 +1088,7 @@ class LiveEditor:
         
     def writeLockInPlaceBytes(self, singleFrame = False):
         if self.lastAllocation == None: return
+        print('writeLockInPlaceBytes')
         
         length = self.Animation.length if singleFrame == False else 1
         
@@ -1231,6 +1272,9 @@ class GUI_TekkenAnimationEditor():
             ("Remove (from current position)", self.removeMultipleFrames),
             ("", "separator"),
             ("Mark keyframe (linear)", self.markKeyframe),
+            ("Mark keyframe (ease in)", lambda self=self: self.markKeyframe(3)),
+            ("Mark keyframe (ease out)", lambda self=self: self.markKeyframe(4)),
+            ("Mark keyframe (ease in-out)", lambda self=self: self.markKeyframe(5)),
             ("Unmark keyframe", self.AnimationEditor.unmarkKeyframe),
         ]
         
@@ -1246,6 +1290,9 @@ class GUI_TekkenAnimationEditor():
             ("Copy frame to clipboard", self.copyFrameToClipboard),
             ("Paste frame data from clipboard", self.pasteFrameFromClipboard),
             ("", "separator"),
+            ("Copy keyframe list to clipboard", self.copyKeyframesToClipboard),
+            ("Paste keyframe list from clipboard", self.pasteKeyframesFromClipboard),
+            #("", "separator"),
             #("Make current move loop into itself", self.forceCurrmoveLoop),
         ]
         
@@ -1321,6 +1368,42 @@ class GUI_TekkenAnimationEditor():
     def hideEditor(self):
         self.editorFrame.pack_forget()
         
+    def copyKeyframesToClipboard(self):
+        if not self.AnimationEditor.Animation:
+            self.message("Error", "You have to load an animation before being able to copy keyframes")
+            return
+       
+        keyframeList = ["%d;%d" % ((f, self.AnimationEditor.keyframesTypes[f])) for f in self.AnimationEditor.keyframes]
+        
+        pyperclip.copy(",".join(keyframeList))
+        self.message("Copied", "Keyframe list successfuly copied")
+        
+    def pasteKeyframesFromClipboard(self):
+        if not self.AnimationEditor.Animation:
+            self.message("Error", "You have to load an animation before being able to paste data")
+            return
+            
+        keyframeData = pyperclip.paste().strip()
+        
+        try:
+            keyframeData = [k for k in keyframeData.split(",")]
+            keyframeData = [x.split(";") for x in keyframeData]
+            keyframeData = [(int(frame), int(type)) for frame, type in keyframeData]
+            self.AnimationEditor.keyframes = []
+            self.AnimationEditor.keyframesTypes = {}
+            for frame, type in keyframeData:
+                if frame >= self.AnimationEditor.Animation.length:
+                    self.message("Error", "Keyframe list longer than animation, not pasting entire list.")
+                    break
+                self.AnimationEditor.keyframes.append(frame)
+                self.AnimationEditor.keyframesTypes[frame] = type
+            self.AnimationEditor.reinterpolateEverything()
+        except Exception as e:
+            print(e)
+            self.message("Error", "Error pasting keyframe list: invalid data?")
+            return
+        self.AnimationEditor.setFrame(self.AnimationEditor.currentFrame)
+        
     def copyFrameToClipboard(self):
         if not self.AnimationEditor.Animation:
             self.message("Error", "You have to load an animation before being able to copy")
@@ -1340,25 +1423,27 @@ class GUI_TekkenAnimationEditor():
             self.message("Error", "You have to load an animation before being able to paste data")
             return
             
-        if self.AnimationEditor.getKeyframeType(self.AnimationEditor.currentFrame) == 2:
+        if self.AnimationEditor.getKeyframeType(self.AnimationEditor.currentFrame) == 1:
             self.message("Error", "You cannot paste data into an in-between")
             return
             
-        animData = pyperclip.paste()
+        animData = pyperclip.paste().strip()
         try:
             for i, f in enumerate(animData.split(",")):
                 self.AnimationEditor.onFieldChange(i, f)
             self.AnimationEditor.setFrame(self.AnimationEditor.currentFrame)
         except Exception as e:
-            print(e)
             self.message("Error", "Error pasting animation data: invalid data?")
             return
         
-    def markKeyframe(self):
-        interpolated = self.AnimationEditor.markKeyframe()
-        if not interpolated: return
+    def unmarkKeyframe():
+        interpolated = self.AnimationEditor.unmarkKeyframe()
+        if interpolated and self.liveEditing and self.fullanimEditing:
+            self.LiveEditor.writeLoadedAnimBytes()
         
-        if self.liveEditing and self.fullanimEditing:
+    def markKeyframe(self, type=2):
+        interpolated = self.AnimationEditor.markKeyframe(type)
+        if interpolated and self.liveEditing and self.fullanimEditing:
             self.LiveEditor.writeLoadedAnimBytes()
         
     def message(self, title, message):
