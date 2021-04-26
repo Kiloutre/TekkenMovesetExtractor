@@ -13,6 +13,10 @@
 16,Throw Hits Backward (Face Down)
 17,Throw Hits Left Side (Face Down)
 18,Throw Hits Right Side (Face Down)
+19,Attack to Throw (Forward)
+20,Attack to Throw (Backward)
+21,Attack to Throw (Left Side)
+22,Attack to Throw (Right Side)
 27,Throw Hits (Airborne)
 35,Opponent distance
 44,On Hit
@@ -42,9 +46,9 @@
 218,Player NOT character ID
 219,Opponent character ID
 220,Opponent NOT character ID
-221,Player character model
-222,Opponent character model  
-223,Opponent ID
+221,Partner character ID
+222,Partner NOT character ID 
+223,Gamemode
 225,Player is CPU
 253,Bryan taunted
 256,Bryan taunted
@@ -58,7 +62,7 @@
 552,Random number generator (uniform)
 553,Random number generator (weighted)
 558,Story Battle
-559,Story Battle number
+559,Story Battle Number
 563,Gamemode
 607,Opponent is Airborne
 608,Opponent is Not Airborne
