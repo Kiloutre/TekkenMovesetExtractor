@@ -352,10 +352,14 @@ class AnimationSelector:
         animlist.bind('<<ListboxSelect>>', self.onSelectionChange)
         animlist.pack(side='left', fill='both', expand=1)
         
-        scrollbar = Scrollbar(listFrame, command=animlist.yview)
-        scrollbar.pack(side='right', fill='y')
+        vertscrollbar = Scrollbar(listFrame, command=animlist.yview)
+        vertscrollbar.pack(side='right', fill='y')
         
-        animlist.config(yscrollcommand=scrollbar.set)
+        horiscrollbar = Scrollbar(mainFrame, command=animlist.xview, orient='horizontal')
+        horiscrollbar.pack(fill='x')
+        
+        animlist.config(yscrollcommand=vertscrollbar.set)
+        animlist.config(xscrollcommand=horiscrollbar.set)
         
         buttons = [
             ("Load selected to editor", self.LoadAnimationToEditor),

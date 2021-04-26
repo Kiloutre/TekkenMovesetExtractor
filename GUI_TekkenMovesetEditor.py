@@ -27,11 +27,7 @@ def getDetails(itemId, key):
         'extra_move_properties': propertyLabels
     }
     
-    description = tekkenAliasesList[key].get(itemId)
-    if description != None and not description.startswith('(') \
-        and description != '' and description != 'AUTO' and description != 'MAPPING':
-        return description
-    return None
+    return tekkenAliasesList[key].get(itemId)
 
 reqListEndval = {
     'Tekken7': 881,
@@ -1083,6 +1079,7 @@ class RequirementEditor(FormEditor):
             text = prefix + ': ' + description
         else:
             text = '' if key == 'requirements' else prefix
+            
         self.details['text'] = text
             
     def setItem(self, index):
@@ -2064,16 +2061,15 @@ class GUI_TekkenMovesetEditor():
             with open("InterfaceData/editorRequirements.txt", "r") as f:
                 for line in f:
                     commaPos = line.find(',')
-                    val, label = line[:commaPos], line[commaPos + 1:]
+                    val, label = line[:commaPos], line[commaPos + 1:].strip()
                     requirementLabels[int(val)] = label
-        except Exception as e:
-            print(e)
+        except:
             pass
         try:
             with open("InterfaceData/editorProperties.txt", "r") as f:
                 for line in f:
                     commaPos = line.find(',')
-                    val, label = line[:commaPos], line[commaPos + 1:]
+                    val, label = line[:commaPos], line[commaPos + 1:].strip()
                     propertyLabels[int(val, 16)] = label
         except:
             pass
