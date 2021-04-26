@@ -12,7 +12,7 @@
 0x801b,Rage Drive VFX
 0x802e,Hit Spark on self
 0x8036,Trail VFX
-0x8038,Special Trial VFX
+0x8038,Special Trail VFX
 0x8039,Play hit spark (opponent)
 0x803b,Play hit spark
 0x803d,Heavy Hit Sparks
