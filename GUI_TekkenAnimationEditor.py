@@ -11,6 +11,7 @@ import math
 import pyperclip
 
 dataPath = "./AnimationEditor/"
+dataPath2 = "./InterfaceData/"
 editorVersion = "0.1"
         
 colors = {
@@ -180,6 +181,7 @@ def getColor(key):
     
 def getAnimationList():
     if not os.path.isdir(dataPath):
+        os.mkdir(dataPath)
         return []
     return [file for file in os.listdir(dataPath) if not os.path.isdir(dataPath + file) and file.endswith(".bin")]
      
@@ -291,12 +293,14 @@ class Animation:
         self.writeFloat(value, self.offset + (frame * self.frame_size) + (4 * fieldId))
         
     def addFrames(self, count, position=-1, interpolate=False):
-        if count <= 0: return
-        if position == -1: position = self.length
+        if count <= 0 or position <= 0: return
+        if position == -1 or position > self.length: position = self.length
                  
         self.length += count
         self.writeInt(self.length, 4)
         self.recalculateSize()
+        
+        
         
         for frame in range(self.length - 1, position + count - 1, -1): # Shift values to the right if needed
             for fieldId in range(self.field_count):
@@ -310,7 +314,7 @@ class Animation:
                     for i in range(count):
                         self.setField(value, position + i, fieldId)
             else:
-                self.interpolateBetweenFrames(position - 1, position + count)
+                self.interpolateBetweenFrames(position - 1, position + count, maxSourceFrame=(self.length - count - 1))
     
     def removeFrames(self, count, position=-1):
         if count <= 0 or count >= self.length: return
@@ -325,15 +329,19 @@ class Animation:
         self.writeInt(self.length, 4)
         self.recalculateSize()
         
-    def interpolateBetweenFrames(self, frame1, frame2, type1=2, type2=2):     
+    def interpolateBetweenFrames(self, frame1, frame2, type1=2, type2=2, maxSourceFrame=None):
         diff = frame2 - frame1
         if diff == 1: return
+        
+        if maxSourceFrame == None: maxSourceFrame = (self.length - 1 )
+        sourceFrame1 = frame1 if frame1 <= maxSourceFrame else maxSourceFrame
+        sourceFrame2 = frame2 if frame2 <= maxSourceFrame else maxSourceFrame
         
         interpolationFunction = Interpolation.getFunction(type1, type2)
         
         for fieldId in range(self.field_count):
-            value1 = self.getField(frame1, fieldId)
-            value2 = self.getField(frame2, fieldId)
+            value1 = self.getField(sourceFrame1, fieldId)
+            value2 = self.getField(sourceFrame2, fieldId)
             for i in range(1, diff):
                 valueDiff = value2 - value1
                 newValue = value1 +  (valueDiff * interpolationFunction(i / diff))
@@ -364,7 +372,7 @@ class AnimationSelector:
         buttons = [
             ("Load selected to editor", self.LoadAnimationToEditor),
             ("Extract game animation", self.root.ExtractCurrentAnimation),
-            ("Duplicate file", self.CopyFile),
+            ("Save file", self.root.saveFile),
         ]
         
         for label, callback in buttons:
@@ -400,7 +408,7 @@ class AnimationSelector:
         self.root.LoadAnimation(filename)
         self.colorItemlist()
         
-    def CopyFile(self):
+    def CopyFile(self): #currently unused
         if self.selectionIndex < 0 or self.selectionIndex >= len(self.itemList): return
         filename = self.itemList[self.selectionIndex]
         newFilename = filename[:-4] + "_new.bin"
@@ -691,6 +699,15 @@ class AnimationEditor(BaseFormEditor):
         for i in range(len(self.keyframes) - 1):
             self.interpolateBetweenFrames(self.keyframes[i], self.keyframes[i + 1])
         
+    def reinterpolateSpecificFrame(self, frame):
+        for i in range(0, len(self.keyframes) - 1):
+            frame1, frame2 = self.keyframes[i], self.keyframes[i+1]
+            if frame1 < frame <= frame2:
+                self.interpolateBetweenFrames(frame1, frame2)
+                return
+            if frame < frame2:
+                return
+        
     def interpolateBetweenFrames(self, frame1, frame2):
         self.Animation.interpolateBetweenFrames(frame1, frame2, self.keyframesTypes[frame1], self.keyframesTypes[frame2])
         
@@ -735,29 +752,26 @@ class AnimationEditor(BaseFormEditor):
         self.updateFramelist()
         return self.interpolateMarkedFrame(self.currentFrame)
         
-    def addFrames(self, count):
-        self.Animation.addFrames(count, position=self.currentFrame, interpolate=True)
+    def addFrames(self, count, position=None):
+        if position == None: position = self.currentFrame
+        self.Animation.addFrames(count, position=position, interpolate=True)
         
         if len(self.keyframes) >= 1:
             #Shift keyframes up
             oldDict = self.keyframesTypes.copy()
             self.keyframesTypes = {}
             for i, k in enumerate(self.keyframes):
-                if k >= self.currentFrame:
+                if k >= position:
                     self.keyframes[i] += count
                     self.keyframesTypes[k + count] = oldDict[k]
                 else:
                     self.keyframesTypes[k] = oldDict[k]
             
             #Re-interpolate keyframes that were affected by the shifting
-            keyframeLen = len(self.keyframes)
-            for i, k in enumerate(self.keyframes):
-                if (i + 1) < keyframeLen and self.keyframes[i + 1] >= self.currentFrame:
-                    self.interpolateBetweenFrames(k, self.keyframes[i + 1])
-                else: break
+            self.reinterpolateSpecificFrame(position)
         
         self.setTitleInfo()
-        self.setFrame(self.currentFrame)
+        self.setFrame(self.currentFrame) #We don't use position on purpose here
         
     def removeFrames(self, count):
         for k in self.keyframes:
@@ -778,11 +792,8 @@ class AnimationEditor(BaseFormEditor):
                 else:
                     self.keyframesTypes[k] = oldDict[k]
                 
-            keyframeLen = len(self.keyframes)
-            for i, k in enumerate(self.keyframes):
-                if (i + 1) < keyframeLen and self.keyframes[i + 1] >= self.currentFrame:
-                    self.interpolateBetweenFrames(k, self.keyframes[i + 1])
-                else: break
+            #Re-interpolate keyframes that were affected by the shifting
+            self.reinterpolateSpecificFrame(self.currentFrame)
         
         if self.currentFrame >= self.Animation.length:
             self.currentFrame = self.Animation.length - 1
@@ -1029,7 +1040,7 @@ class LiveEditor:
         with open(dataPath + name + '.bin', 'wb') as f:
             f.write(bytes(extractedAnim.data))
             
-        self.root.onAnimationExtraction()
+        self.root.onAnimationSave()
         
     def writeLoadedAnimBytes(self, singleFrameOfData=False):
         if self.lastAllocation == None: return
@@ -1233,7 +1244,7 @@ class GUI_TekkenAnimationEditor():
         boldButtonStyle.configure("Bold.TButton", font = ('Sans','10','bold'))
         
         self.setTitle()
-        window.iconbitmap('InterfaceData/komari.ico')
+        window.iconbitmap(dataPath2 + 'komari.ico')
         window.geometry("1163x539")
         self.setWindowSize(1163, 539)
         
@@ -1270,7 +1281,8 @@ class GUI_TekkenAnimationEditor():
         ]
         
         frameActionMenu = [
-            ("Add (at current position)", self.addMultipleFrames),
+            ("Add (current position)", self.addMultipleFrames),
+            ("Add (current position+1)", lambda self=self: self.addMultipleFrames(offset=1)),
             ("Remove (from current position)", self.removeMultipleFrames),
             ("", "separator"),
             ("Mark keyframe (linear)", self.markKeyframe),
@@ -1294,7 +1306,8 @@ class GUI_TekkenAnimationEditor():
             ("", "separator"),
             ("Copy keyframe list to clipboard", self.copyKeyframesToClipboard),
             ("Paste keyframe list from clipboard", self.pasteKeyframesFromClipboard),
-            #("", "separator"),
+            ("", "separator"),
+            ("Update animation list", self.AnimationSelector.updateItemlist),
             #("Make current move loop into itself", self.forceCurrmoveLoop),
         ]
         
@@ -1332,7 +1345,7 @@ class GUI_TekkenAnimationEditor():
         self.AnimationEditor.removeFrames(frameCount)
         if self.liveEditing: self.LoadLiveAnimation() #todo: no need to re-allocate
         
-    def addMultipleFrames(self):
+    def addMultipleFrames(self, offset=0):
         if not self.AnimationEditor.Animation:
             self.message("Error", "You have to load an animation before being able to add frames")
             return
@@ -1346,7 +1359,7 @@ class GUI_TekkenAnimationEditor():
             self.message("Error", "Invalid frame count: not adding")
             return
                 
-        self.AnimationEditor.addFrames(frameCount)
+        self.AnimationEditor.addFrames(frameCount, position=self.AnimationEditor.currentFrame+offset)
         if self.liveEditing: self.LoadLiveAnimation() #todo: no need to re-allocate
         
     def setWindowSize(self, width, height):
@@ -1370,6 +1383,27 @@ class GUI_TekkenAnimationEditor():
     def hideEditor(self):
         self.editorFrame.pack_forget()
         
+    def saveFile(self):
+        if not self.AnimationEditor.Animation:
+            self.message("Error", "You have to load an animation before being able to save it")
+            return
+            
+        fileName = ''
+        initialValue = self.AnimationEditor.animationName[:-4]
+        while len(fileName) == 0:
+            fileName = simpledialog.askstring("Preset name", "What will be the file name? (do NOT add .bin at the end)", parent=self.window, initialvalue=initialValue)
+            if fileName == None: return
+            
+        filePath = dataPath + fileName + '.bin'
+        with open(filePath, 'wb') as f:
+            f.write(bytes(self.AnimationEditor.Animation.data))
+            self.message("Error", "File successfully saved at path: " + filePath)
+            self.AnimationEditor.animationName = fileName + '.bin'
+            self.AnimationEditor.setTitleInfo()
+            self.onAnimationSave()
+            return
+        self.message("Error", "File could not be saved")
+            
     def copyKeyframesToClipboard(self):
         if not self.AnimationEditor.Animation:
             self.message("Error", "You have to load an animation before being able to copy keyframes")
@@ -1451,7 +1485,7 @@ class GUI_TekkenAnimationEditor():
     def message(self, title, message):
         messagebox.showinfo(title, message, parent=self.window)
         
-    def forceCurrmoveLoop(self):
+    def forceCurrmoveLoop(self): #Currently unused
         if not self.AnimationEditor.Animation or not self.LiveEditor.lastAllocation or not self.LiveEditor.CheckRunning(): 
             self.message("Error", "Load an animation in-game before clicking this button")
             return
@@ -1460,7 +1494,7 @@ class GUI_TekkenAnimationEditor():
     def getPresetList(self):
         presetList = []
         
-        with open(dataPath + "cameraPresets.txt", "r") as f:
+        with open(dataPath2 + "cameraPresets.txt", "r") as f:
             for line in f:
                 try:
                     line = line.split("#")[0].strip()
@@ -1528,7 +1562,7 @@ class GUI_TekkenAnimationEditor():
             presetName = simpledialog.askstring("Preset name", "What will be the preset name?", parent=self.window, initialvalue = ('New Preset %d' % (len(self.cameraPresets) + 1)))
             if presetName == None: return
         
-        with open(dataPath + "cameraPresets.txt", "a") as f:
+        with open(dataPath2 + "cameraPresets.txt", "a") as f:
             f.write("\n" + presetName + ', ' + ', '.join([str(cam[k]) for k in cam]))
         self.buildMenu()
             
@@ -1538,7 +1572,7 @@ class GUI_TekkenAnimationEditor():
         messagebox.showinfo("Guide", moveList,  parent=self.window)
 
     def showGuide(self):
-        with open(dataPath + "guide.txt", "r") as f:
+        with open(dataPath2 + "animatorGuide.txt", "r") as f:
             messagebox.showinfo("Guide", f.read(),  parent=self.window)
         
     def LoadAnimation(self, filename):
@@ -1566,7 +1600,7 @@ class GUI_TekkenAnimationEditor():
             else:
                 self.LiveEditor.resetLockInPlaceBytes()
         
-    def onAnimationExtraction(self):
+    def onAnimationSave(self):
         self.AnimationSelector.updateItemlist()
         
     def onFrameChange(self, newFrame):
