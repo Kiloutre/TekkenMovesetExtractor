@@ -1,0 +1,511 @@
+0x2,d/b
+0x4,d
+0x6,d/b | d
+0x8,d/f
+0xa,d/b | d/f
+0xc,d | d/f
+0xe,d/b | d | d/f
+0x10,b
+0x12,d/b | b
+0x14,d | b
+0x16,d/b | d | b
+0x18,d/f | b
+0x1a,d/b | d/f | b
+0x1c,d | d/f | b
+0x1e,d/b | d | d/f | b
+0x20,N
+0x22,d/b | N
+0x24,d | N
+0x26,d/b | d | N
+0x28,d/f | N
+0x2a,d/b | d/f | N
+0x2c,d | d/f | N
+0x2e,d/b | d | d/f | N
+0x30,b | N
+0x32,d/b | b | N
+0x34,d | b | N
+0x36,d/b | d | b | N
+0x38,d/f | b | N
+0x3a,d/b | d/f | b | N
+0x3c,d | d/f | b | N
+0x3e,d/b | d | d/f | b | N
+0x40,f
+0x42,d/b | f
+0x44,d | f
+0x46,d/b | d | f
+0x48,d/f | f
+0x4a,d/b | d/f | f
+0x4c,d | d/f | f
+0x4e,d/b | d | d/f | f
+0x50,b | f
+0x52,d/b | b | f
+0x54,d | b | f
+0x56,d/b | d | b | f
+0x58,d/f | b | f
+0x5a,d/b | d/f | b | f
+0x5c,d | d/f | b | f
+0x5e,d/b | d | d/f | b | f
+0x60,N | f
+0x62,d/b | N | f
+0x64,d | N | f
+0x66,d/b | d | N | f
+0x68,d/f | N | f
+0x6a,d/b | d/f | N | f
+0x6c,d | d/f | N | f
+0x6e,d/b | d | d/f | N | f
+0x70,b | N | f
+0x72,d/b | b | N | f
+0x74,d | b | N | f
+0x76,d/b | d | b | N | f
+0x78,d/f | b | N | f
+0x7a,d/b | d/f | b | N | f
+0x7c,d | d/f | b | N | f
+0x7e,d/b | d | d/f | b | N | f
+0x80,u/b
+0x82,d/b | u/b
+0x84,d | u/b
+0x86,d/b | d | u/b
+0x88,d/f | u/b
+0x8a,d/b | d/f | u/b
+0x8c,d | d/f | u/b
+0x8e,d/b | d | d/f | u/b
+0x90,b | u/b
+0x92,d/b | b | u/b
+0x94,d | b | u/b
+0x96,d/b | d | b | u/b
+0x98,d/f | b | u/b
+0x9a,d/b | d/f | b | u/b
+0x9c,d | d/f | b | u/b
+0x9e,d/b | d | d/f | b | u/b
+0xa0,N | u/b
+0xa2,d/b | N | u/b
+0xa4,d | N | u/b
+0xa6,d/b | d | N | u/b
+0xa8,d/f | N | u/b
+0xaa,d/b | d/f | N | u/b
+0xac,d | d/f | N | u/b
+0xae,d/b | d | d/f | N | u/b
+0xb0,b | N | u/b
+0xb2,d/b | b | N | u/b
+0xb4,d | b | N | u/b
+0xb6,d/b | d | b | N | u/b
+0xb8,d/f | b | N | u/b
+0xba,d/b | d/f | b | N | u/b
+0xbc,d | d/f | b | N | u/b
+0xbe,d/b | d | d/f | b | N | u/b
+0xc0,f | u/b
+0xc2,d/b | f | u/b
+0xc4,d | f | u/b
+0xc6,d/b | d | f | u/b
+0xc8,d/f | f | u/b
+0xca,d/b | d/f | f | u/b
+0xcc,d | d/f | f | u/b
+0xce,d/b | d | d/f | f | u/b
+0xd0,b | f | u/b
+0xd2,d/b | b | f | u/b
+0xd4,d | b | f | u/b
+0xd6,d/b | d | b | f | u/b
+0xd8,d/f | b | f | u/b
+0xda,d/b | d/f | b | f | u/b
+0xdc,d | d/f | b | f | u/b
+0xde,d/b | d | d/f | b | f | u/b
+0xe0,N | f | u/b
+0xe2,d/b | N | f | u/b
+0xe4,d | N | f | u/b
+0xe6,d/b | d | N | f | u/b
+0xe8,d/f | N | f | u/b
+0xea,d/b | d/f | N | f | u/b
+0xec,d | d/f | N | f | u/b
+0xee,d/b | d | d/f | N | f | u/b
+0xf0,b | N | f | u/b
+0xf2,d/b | b | N | f | u/b
+0xf4,d | b | N | f | u/b
+0xf6,d/b | d | b | N | f | u/b
+0xf8,d/f | b | N | f | u/b
+0xfa,d/b | d/f | b | N | f | u/b
+0xfc,d | d/f | b | N | f | u/b
+0xfe,d/b | d | d/f | b | N | f | u/b
+0x100,u
+0x102,d/b | u
+0x104,d | u
+0x106,d/b | d | u
+0x108,d/f | u
+0x10a,d/b | d/f | u
+0x10c,d | d/f | u
+0x10e,d/b | d | d/f | u
+0x110,b | u
+0x112,d/b | b | u
+0x114,d | b | u
+0x116,d/b | d | b | u
+0x118,d/f | b | u
+0x11a,d/b | d/f | b | u
+0x11c,d | d/f | b | u
+0x11e,d/b | d | d/f | b | u
+0x120,N | u
+0x122,d/b | N | u
+0x124,d | N | u
+0x126,d/b | d | N | u
+0x128,d/f | N | u
+0x12a,d/b | d/f | N | u
+0x12c,d | d/f | N | u
+0x12e,d/b | d | d/f | N | u
+0x130,b | N | u
+0x132,d/b | b | N | u
+0x134,d | b | N | u
+0x136,d/b | d | b | N | u
+0x138,d/f | b | N | u
+0x13a,d/b | d/f | b | N | u
+0x13c,d | d/f | b | N | u
+0x13e,d/b | d | d/f | b | N | u
+0x140,f | u
+0x142,d/b | f | u
+0x144,d | f | u
+0x146,d/b | d | f | u
+0x148,d/f | f | u
+0x14a,d/b | d/f | f | u
+0x14c,d | d/f | f | u
+0x14e,d/b | d | d/f | f | u
+0x150,b | f | u
+0x152,d/b | b | f | u
+0x154,d | b | f | u
+0x156,d/b | d | b | f | u
+0x158,d/f | b | f | u
+0x15a,d/b | d/f | b | f | u
+0x15c,d | d/f | b | f | u
+0x15e,d/b | d | d/f | b | f | u
+0x160,N | f | u
+0x162,d/b | N | f | u
+0x164,d | N | f | u
+0x166,d/b | d | N | f | u
+0x168,d/f | N | f | u
+0x16a,d/b | d/f | N | f | u
+0x16c,d | d/f | N | f | u
+0x16e,d/b | d | d/f | N | f | u
+0x170,b | N | f | u
+0x172,d/b | b | N | f | u
+0x174,d | b | N | f | u
+0x176,d/b | d | b | N | f | u
+0x178,d/f | b | N | f | u
+0x17a,d/b | d/f | b | N | f | u
+0x17c,d | d/f | b | N | f | u
+0x17e,d/b | d | d/f | b | N | f | u
+0x180,u/b | u
+0x182,d/b | u/b | u
+0x184,d | u/b | u
+0x186,d/b | d | u/b | u
+0x188,d/f | u/b | u
+0x18a,d/b | d/f | u/b | u
+0x18c,d | d/f | u/b | u
+0x18e,d/b | d | d/f | u/b | u
+0x190,b | u/b | u
+0x192,d/b | b | u/b | u
+0x194,d | b | u/b | u
+0x196,d/b | d | b | u/b | u
+0x198,d/f | b | u/b | u
+0x19a,d/b | d/f | b | u/b | u
+0x19c,d | d/f | b | u/b | u
+0x19e,d/b | d | d/f | b | u/b | u
+0x1a0,N | u/b | u
+0x1a2,d/b | N | u/b | u
+0x1a4,d | N | u/b | u
+0x1a6,d/b | d | N | u/b | u
+0x1a8,d/f | N | u/b | u
+0x1aa,d/b | d/f | N | u/b | u
+0x1ac,d | d/f | N | u/b | u
+0x1ae,d/b | d | d/f | N | u/b | u
+0x1b0,b | N | u/b | u
+0x1b2,d/b | b | N | u/b | u
+0x1b4,d | b | N | u/b | u
+0x1b6,d/b | d | b | N | u/b | u
+0x1b8,d/f | b | N | u/b | u
+0x1ba,d/b | d/f | b | N | u/b | u
+0x1bc,d | d/f | b | N | u/b | u
+0x1be,d/b | d | d/f | b | N | u/b | u
+0x1c0,f | u/b | u
+0x1c2,d/b | f | u/b | u
+0x1c4,d | f | u/b | u
+0x1c6,d/b | d | f | u/b | u
+0x1c8,d/f | f | u/b | u
+0x1ca,d/b | d/f | f | u/b | u
+0x1cc,d | d/f | f | u/b | u
+0x1ce,d/b | d | d/f | f | u/b | u
+0x1d0,b | f | u/b | u
+0x1d2,d/b | b | f | u/b | u
+0x1d4,d | b | f | u/b | u
+0x1d6,d/b | d | b | f | u/b | u
+0x1d8,d/f | b | f | u/b | u
+0x1da,d/b | d/f | b | f | u/b | u
+0x1dc,d | d/f | b | f | u/b | u
+0x1de,d/b | d | d/f | b | f | u/b | u
+0x1e0,N | f | u/b | u
+0x1e2,d/b | N | f | u/b | u
+0x1e4,d | N | f | u/b | u
+0x1e6,d/b | d | N | f | u/b | u
+0x1e8,d/f | N | f | u/b | u
+0x1ea,d/b | d/f | N | f | u/b | u
+0x1ec,d | d/f | N | f | u/b | u
+0x1ee,d/b | d | d/f | N | f | u/b | u
+0x1f0,b | N | f | u/b | u
+0x1f2,d/b | b | N | f | u/b | u
+0x1f4,d | b | N | f | u/b | u
+0x1f6,d/b | d | b | N | f | u/b | u
+0x1f8,d/f | b | N | f | u/b | u
+0x1fa,d/b | d/f | b | N | f | u/b | u
+0x1fc,d | d/f | b | N | f | u/b | u
+0x1fe,d/b | d | d/f | b | N | f | u/b | u
+0x200,u/f
+0x202,d/b | u/f
+0x204,d | u/f
+0x206,d/b | d | u/f
+0x208,d/f | u/f
+0x20a,d/b | d/f | u/f
+0x20c,d | d/f | u/f
+0x20e,d/b | d | d/f | u/f
+0x210,b | u/f
+0x212,d/b | b | u/f
+0x214,d | b | u/f
+0x216,d/b | d | b | u/f
+0x218,d/f | b | u/f
+0x21a,d/b | d/f | b | u/f
+0x21c,d | d/f | b | u/f
+0x21e,d/b | d | d/f | b | u/f
+0x220,N | u/f
+0x222,d/b | N | u/f
+0x224,d | N | u/f
+0x226,d/b | d | N | u/f
+0x228,d/f | N | u/f
+0x22a,d/b | d/f | N | u/f
+0x22c,d | d/f | N | u/f
+0x22e,d/b | d | d/f | N | u/f
+0x230,b | N | u/f
+0x232,d/b | b | N | u/f
+0x234,d | b | N | u/f
+0x236,d/b | d | b | N | u/f
+0x238,d/f | b | N | u/f
+0x23a,d/b | d/f | b | N | u/f
+0x23c,d | d/f | b | N | u/f
+0x23e,d/b | d | d/f | b | N | u/f
+0x240,f | u/f
+0x242,d/b | f | u/f
+0x244,d | f | u/f
+0x246,d/b | d | f | u/f
+0x248,d/f | f | u/f
+0x24a,d/b | d/f | f | u/f
+0x24c,d | d/f | f | u/f
+0x24e,d/b | d | d/f | f | u/f
+0x250,b | f | u/f
+0x252,d/b | b | f | u/f
+0x254,d | b | f | u/f
+0x256,d/b | d | b | f | u/f
+0x258,d/f | b | f | u/f
+0x25a,d/b | d/f | b | f | u/f
+0x25c,d | d/f | b | f | u/f
+0x25e,d/b | d | d/f | b | f | u/f
+0x260,N | f | u/f
+0x262,d/b | N | f | u/f
+0x264,d | N | f | u/f
+0x266,d/b | d | N | f | u/f
+0x268,d/f | N | f | u/f
+0x26a,d/b | d/f | N | f | u/f
+0x26c,d | d/f | N | f | u/f
+0x26e,d/b | d | d/f | N | f | u/f
+0x270,b | N | f | u/f
+0x272,d/b | b | N | f | u/f
+0x274,d | b | N | f | u/f
+0x276,d/b | d | b | N | f | u/f
+0x278,d/f | b | N | f | u/f
+0x27a,d/b | d/f | b | N | f | u/f
+0x27c,d | d/f | b | N | f | u/f
+0x27e,d/b | d | d/f | b | N | f | u/f
+0x280,u/b | u/f
+0x282,d/b | u/b | u/f
+0x284,d | u/b | u/f
+0x286,d/b | d | u/b | u/f
+0x288,d/f | u/b | u/f
+0x28a,d/b | d/f | u/b | u/f
+0x28c,d | d/f | u/b | u/f
+0x28e,d/b | d | d/f | u/b | u/f
+0x290,b | u/b | u/f
+0x292,d/b | b | u/b | u/f
+0x294,d | b | u/b | u/f
+0x296,d/b | d | b | u/b | u/f
+0x298,d/f | b | u/b | u/f
+0x29a,d/b | d/f | b | u/b | u/f
+0x29c,d | d/f | b | u/b | u/f
+0x29e,d/b | d | d/f | b | u/b | u/f
+0x2a0,N | u/b | u/f
+0x2a2,d/b | N | u/b | u/f
+0x2a4,d | N | u/b | u/f
+0x2a6,d/b | d | N | u/b | u/f
+0x2a8,d/f | N | u/b | u/f
+0x2aa,d/b | d/f | N | u/b | u/f
+0x2ac,d | d/f | N | u/b | u/f
+0x2ae,d/b | d | d/f | N | u/b | u/f
+0x2b0,b | N | u/b | u/f
+0x2b2,d/b | b | N | u/b | u/f
+0x2b4,d | b | N | u/b | u/f
+0x2b6,d/b | d | b | N | u/b | u/f
+0x2b8,d/f | b | N | u/b | u/f
+0x2ba,d/b | d/f | b | N | u/b | u/f
+0x2bc,d | d/f | b | N | u/b | u/f
+0x2be,d/b | d | d/f | b | N | u/b | u/f
+0x2c0,f | u/b | u/f
+0x2c2,d/b | f | u/b | u/f
+0x2c4,d | f | u/b | u/f
+0x2c6,d/b | d | f | u/b | u/f
+0x2c8,d/f | f | u/b | u/f
+0x2ca,d/b | d/f | f | u/b | u/f
+0x2cc,d | d/f | f | u/b | u/f
+0x2ce,d/b | d | d/f | f | u/b | u/f
+0x2d0,b | f | u/b | u/f
+0x2d2,d/b | b | f | u/b | u/f
+0x2d4,d | b | f | u/b | u/f
+0x2d6,d/b | d | b | f | u/b | u/f
+0x2d8,d/f | b | f | u/b | u/f
+0x2da,d/b | d/f | b | f | u/b | u/f
+0x2dc,d | d/f | b | f | u/b | u/f
+0x2de,d/b | d | d/f | b | f | u/b | u/f
+0x2e0,N | f | u/b | u/f
+0x2e2,d/b | N | f | u/b | u/f
+0x2e4,d | N | f | u/b | u/f
+0x2e6,d/b | d | N | f | u/b | u/f
+0x2e8,d/f | N | f | u/b | u/f
+0x2ea,d/b | d/f | N | f | u/b | u/f
+0x2ec,d | d/f | N | f | u/b | u/f
+0x2ee,d/b | d | d/f | N | f | u/b | u/f
+0x2f0,b | N | f | u/b | u/f
+0x2f2,d/b | b | N | f | u/b | u/f
+0x2f4,d | b | N | f | u/b | u/f
+0x2f6,d/b | d | b | N | f | u/b | u/f
+0x2f8,d/f | b | N | f | u/b | u/f
+0x2fa,d/b | d/f | b | N | f | u/b | u/f
+0x2fc,d | d/f | b | N | f | u/b | u/f
+0x2fe,d/b | d | d/f | b | N | f | u/b | u/f
+0x300,u | u/f
+0x302,d/b | u | u/f
+0x304,d | u | u/f
+0x306,d/b | d | u | u/f
+0x308,d/f | u | u/f
+0x30a,d/b | d/f | u | u/f
+0x30c,d | d/f | u | u/f
+0x30e,d/b | d | d/f | u | u/f
+0x310,b | u | u/f
+0x312,d/b | b | u | u/f
+0x314,d | b | u | u/f
+0x316,d/b | d | b | u | u/f
+0x318,d/f | b | u | u/f
+0x31a,d/b | d/f | b | u | u/f
+0x31c,d | d/f | b | u | u/f
+0x31e,d/b | d | d/f | b | u | u/f
+0x320,N | u | u/f
+0x322,d/b | N | u | u/f
+0x324,d | N | u | u/f
+0x326,d/b | d | N | u | u/f
+0x328,d/f | N | u | u/f
+0x32a,d/b | d/f | N | u | u/f
+0x32c,d | d/f | N | u | u/f
+0x32e,d/b | d | d/f | N | u | u/f
+0x330,b | N | u | u/f
+0x332,d/b | b | N | u | u/f
+0x334,d | b | N | u | u/f
+0x336,d/b | d | b | N | u | u/f
+0x338,d/f | b | N | u | u/f
+0x33a,d/b | d/f | b | N | u | u/f
+0x33c,d | d/f | b | N | u | u/f
+0x33e,d/b | d | d/f | b | N | u | u/f
+0x340,f | u | u/f
+0x342,d/b | f | u | u/f
+0x344,d | f | u | u/f
+0x346,d/b | d | f | u | u/f
+0x348,d/f | f | u | u/f
+0x34a,d/b | d/f | f | u | u/f
+0x34c,d | d/f | f | u | u/f
+0x34e,d/b | d | d/f | f | u | u/f
+0x350,b | f | u | u/f
+0x352,d/b | b | f | u | u/f
+0x354,d | b | f | u | u/f
+0x356,d/b | d | b | f | u | u/f
+0x358,d/f | b | f | u | u/f
+0x35a,d/b | d/f | b | f | u | u/f
+0x35c,d | d/f | b | f | u | u/f
+0x35e,d/b | d | d/f | b | f | u | u/f
+0x360,N | f | u | u/f
+0x362,d/b | N | f | u | u/f
+0x364,d | N | f | u | u/f
+0x366,d/b | d | N | f | u | u/f
+0x368,d/f | N | f | u | u/f
+0x36a,d/b | d/f | N | f | u | u/f
+0x36c,d | d/f | N | f | u | u/f
+0x36e,d/b | d | d/f | N | f | u | u/f
+0x370,b | N | f | u | u/f
+0x372,d/b | b | N | f | u | u/f
+0x374,d | b | N | f | u | u/f
+0x376,d/b | d | b | N | f | u | u/f
+0x378,d/f | b | N | f | u | u/f
+0x37a,d/b | d/f | b | N | f | u | u/f
+0x37c,d | d/f | b | N | f | u | u/f
+0x37e,d/b | d | d/f | b | N | f | u | u/f
+0x380,u/b | u | u/f
+0x382,d/b | u/b | u | u/f
+0x384,d | u/b | u | u/f
+0x386,d/b | d | u/b | u | u/f
+0x388,d/f | u/b | u | u/f
+0x38a,d/b | d/f | u/b | u | u/f
+0x38c,d | d/f | u/b | u | u/f
+0x38e,d/b | d | d/f | u/b | u | u/f
+0x390,b | u/b | u | u/f
+0x392,d/b | b | u/b | u | u/f
+0x394,d | b | u/b | u | u/f
+0x396,d/b | d | b | u/b | u | u/f
+0x398,d/f | b | u/b | u | u/f
+0x39a,d/b | d/f | b | u/b | u | u/f
+0x39c,d | d/f | b | u/b | u | u/f
+0x39e,d/b | d | d/f | b | u/b | u | u/f
+0x3a0,N | u/b | u | u/f
+0x3a2,d/b | N | u/b | u | u/f
+0x3a4,d | N | u/b | u | u/f
+0x3a6,d/b | d | N | u/b | u | u/f
+0x3a8,d/f | N | u/b | u | u/f
+0x3aa,d/b | d/f | N | u/b | u | u/f
+0x3ac,d | d/f | N | u/b | u | u/f
+0x3ae,d/b | d | d/f | N | u/b | u | u/f
+0x3b0,b | N | u/b | u | u/f
+0x3b2,d/b | b | N | u/b | u | u/f
+0x3b4,d | b | N | u/b | u | u/f
+0x3b6,d/b | d | b | N | u/b | u | u/f
+0x3b8,d/f | b | N | u/b | u | u/f
+0x3ba,d/b | d/f | b | N | u/b | u | u/f
+0x3bc,d | d/f | b | N | u/b | u | u/f
+0x3be,d/b | d | d/f | b | N | u/b | u | u/f
+0x3c0,f | u/b | u | u/f
+0x3c2,d/b | f | u/b | u | u/f
+0x3c4,d | f | u/b | u | u/f
+0x3c6,d/b | d | f | u/b | u | u/f
+0x3c8,d/f | f | u/b | u | u/f
+0x3ca,d/b | d/f | f | u/b | u | u/f
+0x3cc,d | d/f | f | u/b | u | u/f
+0x3ce,d/b | d | d/f | f | u/b | u | u/f
+0x3d0,b | f | u/b | u | u/f
+0x3d2,d/b | b | f | u/b | u | u/f
+0x3d4,d | b | f | u/b | u | u/f
+0x3d6,d/b | d | b | f | u/b | u | u/f
+0x3d8,d/f | b | f | u/b | u | u/f
+0x3da,d/b | d/f | b | f | u/b | u | u/f
+0x3dc,d | d/f | b | f | u/b | u | u/f
+0x3de,d/b | d | d/f | b | f | u/b | u | u/f
+0x3e0,N | f | u/b | u | u/f
+0x3e2,d/b | N | f | u/b | u | u/f
+0x3e4,d | N | f | u/b | u | u/f
+0x3e6,d/b | d | N | f | u/b | u | u/f
+0x3e8,d/f | N | f | u/b | u | u/f
+0x3ea,d/b | d/f | N | f | u/b | u | u/f
+0x3ec,d | d/f | N | f | u/b | u | u/f
+0x3ee,d/b | d | d/f | N | f | u/b | u | u/f
+0x3f0,b | N | f | u/b | u | u/f
+0x3f2,d/b | b | N | f | u/b | u | u/f
+0x3f4,d | b | N | f | u/b | u | u/f
+0x3f6,d/b | d | b | N | f | u/b | u | u/f
+0x3f8,d/f | b | N | f | u/b | u | u/f
+0x3fa,d/b | d/f | b | N | f | u/b | u | u/f
+0x3fc,d | d/f | b | N | f | u/b | u | u/f
+0x3fe,d/b | d | d/f | b | N | f | u/b | u | u/f

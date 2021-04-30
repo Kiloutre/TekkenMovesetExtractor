@@ -2,7 +2,7 @@
 
 from tkinter import Tk, Frame, Listbox, Label, Scrollbar, StringVar, Toplevel, Menu, messagebox, Text, simpledialog, Button
 from tkinter.ttk import Entry, Style
-from Addresses import game_addresses, GameClass, VirtualAllocEx, VirtualFreeEx, MEM_RESERVE, MEM_COMMIT, PAGE_EXECUTE_READWRITE, VirtualFreeEx, MEM_DECOMMIT, MEM_RELEASE
+from Addresses import game_addresses, GameClass, VirtualAllocEx, VirtualFreeEx, MEM_RESERVE, MEM_COMMIT, PAGE_EXECUTE_READWRITE, MEM_DECOMMIT, MEM_RELEASE
 import os
 import re
 import struct

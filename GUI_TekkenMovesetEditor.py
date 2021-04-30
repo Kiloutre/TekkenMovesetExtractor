@@ -17,6 +17,7 @@ editorVersion = "0.32-BETA"
 
 requirementLabels = {}
 propertyLabels = {}
+commandLabels = {}
 
 for i in range(0x83c4, 0x83c4 + 112):
     propertyLabels[i] = 'Set %d alias' % (i)
@@ -327,19 +328,24 @@ def getCommandStr(commandBytes):
     for i in range(1, 5):
         if inputBits & (1 << (i - 1)):
             inputs += "+%d" % (i)
-
-    direction =  {
-        (0): "",
-        (1 << 1): "D/B",
-        (1 << 2): "D",
-        (1 << 3): "D/F",
-        (1 << 4): "B",
-        (1 << 6): "F",
-        (1 << 7): "U/B",
-        (1 << 8): "U",
-        (1 << 9): "U/F",
-        (1 << 15): "[AUTO]",
-    }.get(directionBits, "UNKNOWN")
+    
+    
+    if directionBits in commandLabels:
+        direction = '(%s)' % commandLabels[directionBits]
+    else:
+        direction =  {
+            (0): "",
+            (1 << 1): "D/B",
+            (1 << 2): "D",
+            (1 << 3): "D/F",
+            (1 << 4): "B",
+            (1 << 6): "F",
+            (1 << 7): "U/B",
+            (1 << 8): "U",
+            (1 << 9): "U/F",
+            (1 << 15): "[AUTO]",
+        }.get(directionBits, "UNKNOWN")
+    
         
     if direction == "" and inputs != "":
         return inputs[1:]
@@ -2056,7 +2062,7 @@ class GUI_TekkenMovesetEditor():
         self.resetForms()
         
     def loadLabels(self):
-        global requirementLabels, propertyLabels
+        global requirementLabels, propertyLabels, commandLabels
         try:
             with open("InterfaceData/editorRequirements.txt", "r") as f:
                 for line in f:
@@ -2071,6 +2077,14 @@ class GUI_TekkenMovesetEditor():
                     commaPos = line.find(',')
                     val, label = line[:commaPos], line[commaPos + 1:].strip()
                     propertyLabels[int(val, 16)] = label
+        except:
+            pass
+        try:
+            with open("InterfaceData/editorCommands.txt", "r") as f:
+                for line in f:
+                    commaPos = line.find(',')
+                    val, label = line[:commaPos], line[commaPos + 1:].strip()
+                    commandLabels[int(val, 16)] = label
         except:
             pass
             
