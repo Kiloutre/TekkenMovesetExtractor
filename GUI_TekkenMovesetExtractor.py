@@ -539,7 +539,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         targetDir = os.path.dirname(os.path.abspath(__file__)) + "\\"
         
         createShortcut(targetDir + "TekkenMovesetEditor.lnk", targetDir + "TekkenMovesetExtractor.exe", targetDir, targetDir + "InterfaceData\\renge.ico", "--editor")
-        createShortcut(targetDir + "TekkenCameraAnimator.lnk", targetDir + "TekkenMovesetExtractor.exe", targetDir, targetDir + "InterfaceData\\komari.ico", "-camera")
+        createShortcut(targetDir + "TekkenCameraAnimator.lnk", targetDir + "TekkenMovesetExtractor.exe", targetDir, targetDir + "InterfaceData\\komari.ico", "--camera")
         createShortcut(targetDir + "TekkenAnimationEditor.lnk", targetDir + "TekkenMovesetExtractor.exe", targetDir, targetDir + "InterfaceData\\hotaru.ico", "--animator")
             
         messagebox.showinfo("Created", "Shortcuts for the moveset editor, camera animator and the animation editor have been created!\nYou may move them as you please.", parent=self)
