@@ -988,7 +988,6 @@ class AnimationEditor(BaseFormEditor):
                 
     def resetFrame(self):
         for field in self.fields: field.resetForm()
-        self.preDelayCheckbox.configure(state="disabled")
         self.disablePlayback()
         self.currentFrame = 0
         self.framelist.delete(0, 'end')
@@ -1002,6 +1001,7 @@ class AnimationEditor(BaseFormEditor):
         self.easingSelect.configure(state="disabled")
         self.interpolationSelect.configure(state="disabled")
         self.groupnameEntry.configure(state="disabled")
+        self.preDelayCheckbox.configure(state="disabled")
         self.currentFrame = 0
         self.currentGroup = 0
         self.group = None
