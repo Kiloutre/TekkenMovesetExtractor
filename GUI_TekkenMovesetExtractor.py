@@ -1,6 +1,6 @@
 # Python 3.6.5
 
-from tkinter import Tk, Menu, Frame, Listbox, Label, Text
+from tkinter import Tk, Menu, Frame, Listbox, Label, Text, messagebox
 from tkinter.ttk import Button
 from re import match
 from Addresses import game_addresses
@@ -10,12 +10,14 @@ import os
 import json
 import time
 import threading
-import subprocess
+import ctypes
 import motbinExport as exportLib
 import motbinImport as importLib
+from win32com.client import Dispatch
 from urllib import request
 from GUI_TekkenMovesetEditor import GUI_TekkenMovesetEditor
 from GUI_TekkenAnimationEditor import GUI_TekkenAnimationEditor
+from GUI_TekkenCameraAnimator import GUI_TekkenCameraAnimator
 
 extractorVersion = "1.0.32"
 latestRelease = "https://api.github.com/repos/Kiloutre/TekkenMovesetExtractor/releases/latest"
@@ -28,6 +30,14 @@ runningMonitors = [None, None]
 creatingMonitor = [False, False]
 codeInjection = None
 
+def createShortcut(path, target='', wDir='', icon='', args=''):
+    shell = Dispatch('WScript.Shell')
+    shortcut = shell.CreateShortCut(path)
+    shortcut.Targetpath = target
+    shortcut.WorkingDirectory = wDir
+    if args != '': shortcut.Arguments = args
+    if icon != '': shortcut.IconLocation = icon
+    shortcut.save()
     
 def getRequestFromURL(url):
     requestObject = request.Request(
@@ -472,6 +482,10 @@ def openMovesetEditor():
 def openAnimationEditor():
     app = GUI_TekkenAnimationEditor(mainWindow=False)
     app.window.mainloop()
+    
+def openCameraAnimator():
+    app = GUI_TekkenCameraAnimator(mainWindow=False)
+    app.window.mainloop()
         
 class GUI_TekkenMovesetExtractor(Tk):
     def __init__(self):
@@ -480,6 +494,8 @@ class GUI_TekkenMovesetExtractor(Tk):
         menubar = Menu(self)
         menubar.add_command(label="Moveset Editor", command=openMovesetEditor)
         menubar.add_command(label="Animation Editor", command=openAnimationEditor)
+        menubar.add_command(label="Camera Animator", command=openCameraAnimator)
+        menubar.add_command(label="Create shortcuts", command=self.createShortcuts)
         self.config(menu=menubar)
         
         
@@ -518,7 +534,16 @@ class GUI_TekkenMovesetExtractor(Tk):
                 for line in f: print(line)
         except:
             pass
+        
+    def createShortcuts(self):
+        targetDir = os.path.dirname(os.path.abspath(__file__)) + "\\"
+        
+        createShortcut(targetDir + "TekkenMovesetEditor.lnk", targetDir + "TekkenMovesetExtractor.exe", targetDir, targetDir + "InterfaceData\\renge.ico", "--editor")
+        createShortcut(targetDir + "TekkenCameraAnimator.lnk", targetDir + "TekkenMovesetExtractor.exe", targetDir, targetDir + "InterfaceData\\komari.ico", "-camera")
+        createShortcut(targetDir + "TekkenAnimationEditor.lnk", targetDir + "TekkenMovesetExtractor.exe", targetDir, targetDir + "InterfaceData\\hotaru.ico", "--animator")
             
+        messagebox.showinfo("Created", "Shortcuts for the moveset editor, camera animator and the animation editor have been created!\nYou may move them as you please.", parent=self)
+        
     def setMonitorButton(self, button, active):
         text = 'Local' if button == 0 else 'Remote'
         if active:
@@ -687,9 +712,15 @@ class GUI_TekkenMovesetExtractor(Tk):
 
 if __name__ == "__main__":
     if "--editor" in sys.argv:
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('kilo.TekkenMovesetEditor')
         app = GUI_TekkenMovesetEditor().window
     elif "--animator" in sys.argv:
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('kilo.TekkenAnimationEditor')
         app = GUI_TekkenAnimationEditor().window
+    elif "--camera" in sys.argv:
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('kilo.TekkenCameraAnimator')
+        app = GUI_TekkenCameraAnimator().window
     else:
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('kilo.TekkenMovesetExtractor')
         app = GUI_TekkenMovesetExtractor()
     app.mainloop()

@@ -1136,22 +1136,22 @@ class LiveEditor:
         
     def lockCamera(self):
         if not self.startIfNeeded(): return
-        self.T.writeBytes(0x148B56F30, bytes([0x90] * 8))
-        self.T.writeBytes(0x1416A2A4E, bytes([0x90] * 8))
-        self.T.writeBytes(0x1416A2A65, bytes([0x90] * 6))
-        self.T.writeBytes(0x1416A2A40, bytes([0x90] * 8))
-        self.T.writeBytes(0x1416a2a5b, bytes([0x90] * 6))
+        self.T.writeBytes(game_addresses.addr['camera_code_injection2'], bytes([0x90] * 8))
+        self.T.writeBytes(game_addresses.addr['camera_code_injection'] + 0xE, bytes([0x90] * 8))
+        self.T.writeBytes(game_addresses.addr['camera_code_injection'] + 0x25, bytes([0x90] * 6))
+        self.T.writeBytes(game_addresses.addr['camera_code_injection'], bytes([0x90] * 8))
+        self.T.writeBytes(game_addresses.addr['camera_code_injection'] + 0x1B, bytes([0x90] * 6))
         
     def unlockCamera(self):
         if not self.startIfNeeded(): return
-        self.T.writeBytes(0x148B56F30, bytes([0xF3, 0x0f, 0x11, 0x89, 0x9c, 0x03, 000, 0x0]))
-        self.T.writeBytes(0x1416A2A4E, bytes([0xF2, 0x0f, 0x11, 0x87, 0x04, 0x04, 0x0, 0x0]))
-        self.T.writeBytes(0x1416A2A65, bytes([0x89, 0x87, 0x0c, 0x04, 0x0, 0x0]))
-        self.T.writeBytes(0x1416A2A40, bytes([0xF2, 0x0F, 0x11, 0x87, 0xF8, 0x03, 0x0, 0x0]))
-        self.T.writeBytes(0x1416a2a5b, bytes([0x89, 0x87, 0, 0x04, 0, 0]))
+        self.T.writeBytes(game_addresses.addr['camera_code_injection2'], bytes([0xF3, 0x0f, 0x11, 0x89, 0x9c, 0x03, 000, 0x0]))
+        self.T.writeBytes(game_addresses.addr['camera_code_injection'] + 0xE, bytes([0xF2, 0x0f, 0x11, 0x87, 0x04, 0x04, 0x0, 0x0]))
+        self.T.writeBytes(game_addresses.addr['camera_code_injection'] + 0x25, bytes([0x89, 0x87, 0x0c, 0x04, 0x0, 0x0]))
+        self.T.writeBytes(game_addresses.addr['camera_code_injection'], bytes([0xF2, 0x0F, 0x11, 0x87, 0xF8, 0x03, 0x0, 0x0]))
+        self.T.writeBytes(game_addresses.addr['camera_code_injection'] + 0x1B, bytes([0x89, 0x87, 0, 0x04, 0, 0]))
         
     def getCameraAddr(self):
-        return self.readPointerPath(0x14377FCF0, [0x30, 0x418])
+        return self.readPointerPath(game_addresses.addr['camera_starting_ptr'], [0x30, 0x418])
         
     def setCameraPos(self, id):
         if not self.startIfNeeded(): return

@@ -67,11 +67,19 @@ td_chara_id_offset    = 0                  # tofind
 
 
 # miscellaneous
-player_curr_move_addr_offset = 0x220            # Used by Animator
-player_curr_move_offset      = 0x350            # Used by editor
-next_move_offset             = 0xD60            # Used by editor
-curr_frame_timer_offset      = 0x1D4            # Used by editor
+player_curr_move_addr_offset = 0x220            # Used by Animator to overwrite current address
+player_curr_move_offset      = 0x350            # Used by editor to force a move to play
+next_move_offset             = 0xD60            # Used by editor to force a move to play
+curr_frame_timer_offset      = 0x1D4            # Used by editor to force a move to play
 code_injection_addr          = 0x14074418F      # Address that writes on player+motbin_offset, used for online play
 playerid_starting_ptr        = 0x1434D0510      # Used to find whether local player is 1P or 2P, used for online play
 #Finding playerid_starting_ptr: Go in training mode as 2p, scan for value on 1. Change to 1P, scan for value on 0. Repeat many times to lower matches to a few hundreds. Do combo, grabs and change outfit & character to keep lowering.
 #Scan repeatedly value between 0 and 1 during loading to filter out the remaining garbage. Then pause the process (slow to 0.00), set all remaining variables to a fringe unique value (e.g. 216246545) and search for the following pointer path that leads to the previous value (68 is last offset!): 0, 0, 68.
+
+# -- Camera animator --
+frame_counter          = 0x1434C8460
+input_buffer           = 0x14343C808
+camera_starting_ptr    = 0x14377FCF0
+input_code_injection   = 0x145038ea8
+camera_code_injection  = 0x1416A2A40
+camera_code_injection2 = 0x148B56F30

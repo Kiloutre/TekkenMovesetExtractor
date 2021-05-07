@@ -2900,6 +2900,6 @@ class GUI_TekkenMovesetEditor():
         
 
 if __name__ == "__main__":
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('kilo.TekkenMovesetEditor')
     app = GUI_TekkenMovesetEditor()
     app.window.mainloop()
-    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('kilo.TekkenMovesetEditor')
