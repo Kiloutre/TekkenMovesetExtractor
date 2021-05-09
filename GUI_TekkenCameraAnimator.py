@@ -1,6 +1,6 @@
 # Python 3.6.5
 
-from tkinter import Tk, Frame, Listbox, Label, Scrollbar, StringVar, Toplevel, Menu, messagebox, Text, simpledialog, Button, Checkbutton
+from tkinter import Tk, Frame, Listbox, Label, Scrollbar, StringVar, Toplevel, Menu, messagebox, Text, simpledialog, Button, Checkbutton, Canvas
 from tkinter.ttk import Entry, Style, OptionMenu
 from Addresses import game_addresses, GameClass, VirtualAllocEx, VirtualFreeEx, MEM_RESERVE, MEM_COMMIT, PAGE_EXECUTE_READWRITE, MEM_DECOMMIT, MEM_RELEASE
 from time import sleep
@@ -109,6 +109,8 @@ interpolationTypes = {
     0: "Linear",
     2: "Nearest",
     1: "Bézier Curve",
+    4: "Bézier + Circular X/Y",
+    #3: "Catmull-Rom",
 }
 interpolationTypes2 = {interpolationTypes[k]:k for k in interpolationTypes}
 
@@ -177,6 +179,58 @@ def CreateToolTip(widget, text):
     widget.bind('<Enter>', enter)
     widget.bind('<Leave>', leave)
     
+class Point:
+    def __init__(self, x, y = None):
+        
+        if isinstance(x, Point):
+            self.x = x.x
+            self.y = x.y
+        elif isinstance(x, dict):
+            self.x = x['x']
+            self.y = x['y']
+        elif isinstance(x, float) and isinstance(y, float):
+            self.x = x
+            self.y = y
+        else:
+            self.x = 0
+            self.y = 0
+        
+    def __add__(self, other):
+        if isinstance(other, Point):
+            return Point(self.x + other.x, self.y + other.y)
+        else:
+            return Point(self.x + other, self.y + other)
+        
+    def __sub__(self, other):
+        if isinstance(other, Point):
+            return Point(self.x - other.x, self.y - other.y)
+        else:
+            return Point(self.x - other, self.y - other)
+        
+    def __mul__(self, other):
+        if isinstance(other, Point):
+            return Point(self.x * other.x, self.y * other.y)
+        else:
+            return Point(self.x * other, self.y * other)
+        2
+    def __truediv__(self, other):
+        if isinstance(other, Point):
+            otherX = 1 if other.x == 0 else other.x #Failsafes
+            otherY = 1 if other.y == 0 else other.y
+            return Point(self.x / otherX, self.y / otherY)
+        else:
+            if other == 0: return Point(1, 1) #Failsafe
+            return Point(self.x / other, self.y / other)
+      
+    def __str__(self):
+        return "Point(%0.3f, %0.3f)," % (self.x, self.y)
+      
+    def dist(self, other):
+        return math.sqrt((self.x - other.x) ** 2 + (self.y - other.y) ** 2)
+    
+    def getXY(self):
+        return self.x, self.y
+    
 class Interpolation:
     def getEasing(id):
         return {
@@ -203,6 +257,8 @@ class Interpolation:
             0: Interpolation.linearCurveValue,
             1: Interpolation.getBezierCurveValue,
             2: Interpolation.nearestInterpolation,
+            #3: Interpolation.catmullRom,
+            4: Interpolation.circularInterpolation,
         }[id]
 
     def linear(x):
@@ -273,6 +329,44 @@ class Interpolation:
             points = [Interpolation.interpolateLine(points[i], points[i + 1], t) for i in range(0, len(points) - 1)]
         return points[0]
         
+    """
+    def singledrag(p0, p1, p2, p4, t):
+        tension = 0.5
+        s = 2 * tension
+        
+        m0 = (p2 - p0) / s
+        m1 = (p2 - p0) / s
+        
+        c = 2*t**3 - 3*t**2
+        c0 = c + 1
+        c1 = t**3 - 2*t**2 + t
+        c2 = -c
+        c3 = t**3 - t**2
+        
+        return p0 * c0 + m0 * c1 + p1 * c2 + m1 * c3
+    
+    def catmullRom(points, t):
+        npoints = [Point(p) for p in points]
+        pointsLen = len(points)
+        idx = (pointsLen - 1) * t
+        remainder = idx % 1
+        idx = int(idx)
+    
+        if idx + 1 >= pointsLen:
+            return points[-1]
+        
+        p0 = npoints[idx + 0]
+        p1 = npoints[idx + 1]
+        p2 = npoints[(idx + 2) if (idx + 2 < pointsLen) else idx]
+        p3 = npoints[(idx + 3) if (idx + 3 < pointsLen) else ((idx + 2) if (idx + 2 < pointsLen) else idx)]
+        
+        catmullResult = Interpolation.singledrag(p0, p1, p2, p3, remainder)
+        bezierResult = Interpolation.getBezierCurveValue(points, t)
+        bezierResult['x'] = catmullResult.x
+        bezierResult['y'] = catmullResult.y
+        return bezierResult
+    """
+        
     def linearCurveValue(points, t):
         pointsLen = len(points)
         idx = (pointsLen - 1) * t
@@ -289,59 +383,145 @@ class Interpolation:
             idx = int(idx)
             return Interpolation.interpolateLine(points[idx], points[idx + 1], remainder)
     
-    """
-    def CurveInterpolation2(points, frameCount):
-        tension = 0.5
-        
-        tStep = 1 / frameCount
-        for p in range(1, len(points) - 2):
-            p0 = Point(points[p-1])
-            v1 = p1 = Point(points[p])
-            v2 = p2 = Point(points[p+1])
-            p3 = Point(points[p+2])
+    def lli8(x1, y1, x2, y2, x3, y3, x4, y4):
+        nx =  (x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)
+        ny = (x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)
+        d = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
+        return Point(nx, ny) / d
+    
+    def getCircleFromThreePoints(a, b, c):
+        halfpi = math.pi / 2
 
-            s = 2 * tension
-            dv1 = (p2-p0) / s
-            dv2 = (p3-p1) / s
+        d1 = (b - a)
+        d2 = (c - b)
 
-            t = 0
-            while t <= 1:
-                c0 = pow(2*t, 3) - pow(3*t, 2) + 1
-                c1 = pow(t, 3) - pow(2*t, 2) + t
-                c2 = pow(-2*t, 3) + pow(3*t, 2)
-                c3 = pow(t, 3) - pow(t, 2)
+        d1p = Point(d1.x * math.cos(halfpi) - d1.y * math.sin(halfpi),
+                d1.x * math.sin(halfpi) + d1.y * math.cos(halfpi))
+        d2p = Point(d2.x * math.cos(halfpi) - d2.y * math.sin(halfpi),
+                d2.x * math.sin(halfpi) + d2.y * math.cos(halfpi))
                 
-                yield ((v1 * c0) + (dv1 * c1) + (v2 * c2) + (dv2 * c3)).data
-                t += tStep
-        
-    def CurveInterpolation(points, t):
-        tension = 0.5
-        p = 1
-        
-        p0 = Point(points[p-1])
-        v1 = p1 = Point(points[p])
-        v2 = p2 = Point(points[p+1])
-        p3 = Point(points[p+2])
+        m1 = (a + b)/2
+        m2 = (b + c)/2
 
-        s = 2 * tension
-        dv1 = (p2-p0) / s
-        dv2 = (p3-p1) / s
-
-        c0 = pow(2*t, 3) - pow(3*t, 2) + 1
-        c1 = pow(t, 3) - pow(2*t, 2) + t
-        c2 = pow(-2*t, 3) + pow(3*t, 2)
-        c3 = pow(t, 3) - pow(t, 2)
+        m1n = m1 + d1p
+        m2n = m2 + d2p
         
-        result = (v1 * c0) + (dv1 * c1) + (v2 * c2) + (dv2 * c3)
+        center = Interpolation.lli8(m1.x, m1.y, m1n.x, m1n.y, m2.x, m2.y, m2n.x, m2n.y)
+        size = center.dist(a)
+            
+        startAngle = math.atan2(*(a - center).getXY())
+        midAngle = math.atan2(*(b - center).getXY())
+        endAngle = math.atan2(*(c - center).getXY())
         
-        return result.data
-    """
+        return center, size, startAngle, midAngle, endAngle
+    
+    def circularInterpolation(points, t):
+        pointsLen = len(points)
+        idx = (pointsLen - 1) * t
+        remainder = idx % 1
+        idx = int(idx)
+        
+        if (idx + 2 < pointsLen) and (idx >= 0):
+            a = Point(points[idx])
+            b = Point(points[idx+1])
+            c = Point(points[idx+2])
+            circle, size, s, e, e2 = Interpolation.getCircleFromThreePoints(a, b, c)
+        elif (idx + 1 < pointsLen) and (idx > 0):
+            a = Point(points[idx - 1])
+            b = Point(points[idx + 0])
+            c = Point(points[idx + 1])
+            circle, size, s, e, e2 = Interpolation.getCircleFromThreePoints(a, b, c)
+            s, e = e, e2
+        else:
+            return points[-1] #Todo: extrapolate properly
+        
+        diff = ((e - s) + math.pi) % (math.pi * 2) - math.pi
+        diff = diff * remainder
+        
+        y = math.cos(s + diff) * size
+        x = math.sin(s + diff) * size
+        
+        resPoint = Interpolation.getBezierCurveValue(points, t)
+        resPoint['x'] = x + circle.x
+        resPoint['y'] = y + circle.y
+        return resPoint
     
     def nearestInterpolation(points, t):
         pointsLen = len(points)
         idx = pointsLen * t
         remainder = idx % 1
         return points[int(idx + 1 if ((idx % 1) >= 0.5 and idx + 1 < pointsLen) else idx)]
+        
+class Animation:
+    def __init__(self, filename):
+        self.filename = filename
+        self.name = filename[:-4]
+        self.groups = []
+        self.cachedGroups = []
+        
+        with open(dataPath + filename, "r") as f:
+            group = None
+            for line in f:
+                line = line.strip()
+                if len(line) == 0 or line.startswith("#"): continue
+                if re.match("^\[.*,( ?[0-9]+,){4} ?[0-9]+\]$", line):
+                    groupData = line[1:-1].split(",")
+                    group = {
+                        'name': groupData[0],
+                        'duration': int(groupData[1]),
+                        'delay': int(groupData[2]),
+                        'interpolation': int(groupData[3]),
+                        'easing': int(groupData[4]),
+                        'pre_delay_pos': int(groupData[5]),
+                        'length': 0,
+                        'frames': []
+                    }
+                    self.groups.append(group)
+                    self.cachedGroups.append(None)
+                else:
+                    line = line.split(',')
+                    group['frames'].append({field:getValueFromType(fieldTypes[field], line[i]) for i, field in enumerate(frameFields)})
+                    group['length'] += 1
+        
+    def calculateCachedFrames(self, startingGroup=0, singleGroup=False):
+        end = startingGroup + 1 if singleGroup else len(self.groups)
+        
+        for i, group in enumerate(self.groups[startingGroup:end]):
+            if self.cachedGroups[startingGroup + i] == None:
+                easingFunction = Interpolation.getEasing(group['easing'])
+                interpolationFunction = Interpolation.getInterpolation(group['interpolation'])
+                if group['length']> 0:
+                    frames = [interpolationFunction(group['frames'], easingFunction(idx / group['duration'])) for idx in range(group['duration'])]
+                else:
+                    frames = []
+                self.cachedGroups[startingGroup + i] = {'frames': frames, 'length': len(frames), 'delay': group['delay'], 'duration': group['duration'], 'pre_delay_pos': group['pre_delay_pos']}
+            
+        return self.cachedGroups[startingGroup:end]
+        
+    def getValue(self, group, field, frame):
+        return self.groups[group]['frames'][frame][field]
+        
+    def setValue(self, group, field, frame, value):
+        self.groups[group]['frames'][frame][field] = value
+        if field != 'name': self.cachedGroups[group] = None
+        
+    def addGroup(self, groupdata, position):
+        self.groups.insert(position, groupdata)
+        self.cachedGroups.insert(position, None)
+        
+    def removeGroup(self, position):
+        self.groups.pop(position)
+        self.cachedGroups.pop(position)
+        
+    def addFrame(self, group, framedata, position):
+        self.groups[group]['frames'].insert(position, framedata)
+        self.groups[group]['length'] += 1
+        self.cachedGroups[group] = None
+        
+    def removeFrame(self, group, position):
+        self.groups[group]['frames'].pop(position)
+        self.groups[group]['length'] -= 1
+        self.cachedGroups[group] = None
         
 def getColor(key):
     isDark = True
@@ -541,93 +721,7 @@ class BaseFormEditor:
     def setTitle(self, text):
         self.label['text'] = text
         #self.label['font'] = 'TkDefaultFont 9'
-     
-class Point:
-    def __init__(self, data):
-        self.data = {k:data[k] for k in dataFields}
-            
-    def __add__(self, other):
-        return Point({k:self.data[k] + other.data[k] for k in dataFields} if isinstance(other, Point) else {k:self.data[k] + other for k in dataFields})
-        
-    def __sub__(self, other):
-        return Point({k:self.data[k] - other.data[k] for k in dataFields} if isinstance(other, Point) else {k:self.data[k] - other for k in dataFields})
-        
-    def __mul__(self, other):
-        return Point({k:self.data[k] * other.data[k] for k in dataFields} if isinstance(other, Point) else {k:self.data[k] * other for k in dataFields})
-        
-    def __truediv__(self, other):
-        return Point({k:self.data[k] / other.data[k] for k in dataFields} if isinstance(other, Point) else {k:self.data[k] / other for k in dataFields})      
-      
-class Animation:
-    def __init__(self, filename):
-        self.filename = filename
-        self.name = filename[:-4]
-        self.groups = []
-        self.cachedGroups = []
-        
-        with open(dataPath + filename, "r") as f:
-            group = None
-            for line in f:
-                line = line.strip()
-                if len(line) == 0 or line.startswith("#"): continue
-                if re.match("^\[.*,( ?[0-9]+,){4} ?[0-9]+\]$", line):
-                    groupData = line[1:-1].split(",")
-                    group = {
-                        'name': groupData[0],
-                        'duration': int(groupData[1]),
-                        'delay': int(groupData[2]),
-                        'interpolation': int(groupData[3]),
-                        'easing': int(groupData[4]),
-                        'pre_delay_pos': int(groupData[5]),
-                        'length': 0,
-                        'frames': []
-                    }
-                    self.groups.append(group)
-                    self.cachedGroups.append(None)
-                else:
-                    line = line.split(',')
-                    group['frames'].append({field:getValueFromType(fieldTypes[field], line[i]) for i, field in enumerate(frameFields)})
-                    group['length'] += 1
-        
-    def calculateCachedFrames(self, startingGroup=0, singleGroup=False):
-        end = startingGroup + 1 if singleGroup else len(self.groups)
-        
-        for i, group in enumerate(self.groups[startingGroup:end]):
-            if self.cachedGroups[startingGroup + i] == None:
-                easingFunction = Interpolation.getEasing(group['easing'])
-                interpolationFunction = Interpolation.getInterpolation(group['interpolation'])
-                if group['length']> 0:
-                    frames = [interpolationFunction(group['frames'], easingFunction(idx / group['duration'])) for idx in range(group['duration'])]
-                else:
-                    frames = []
-                self.cachedGroups[startingGroup + i] = {'frames': frames, 'length': len(frames), 'delay': group['delay'], 'duration': group['duration'], 'pre_delay_pos': group['pre_delay_pos']}
-            
-        return self.cachedGroups[startingGroup:end]
-        
-    def getValue(self, group, field, frame):
-        return self.groups[group]['frames'][frame][field]
-        
-    def setValue(self, group, field, frame, value):
-        self.groups[group]['frames'][frame][field] = value
-        if field != 'name': self.cachedGroups[group] = None
-        
-    def addGroup(self, groupdata, position):
-        self.groups.insert(position, groupdata)
-        self.cachedGroups.insert(position, None)
-        
-    def removeGroup(self, position):
-        self.groups.pop(position)
-        self.cachedGroups.pop(position)
-        
-    def addFrame(self, group, framedata, position):
-        self.groups[group]['frames'].insert(position, framedata)
-        self.groups[group]['length'] += 1
-        self.cachedGroups[group] = None
-        
-    def removeFrame(self, group, position):
-        self.groups[group]['frames'].pop(position)
-        self.groups[group]['length'] -= 1
-        self.cachedGroups[group] = None
+
         
 class FieldEditor:
     def __init__(self, root, rootFrame, fieldId, color=None):
@@ -794,7 +888,7 @@ class AnimationEditor(BaseFormEditor):
         
         fieldsFrame = Frame(topRight, bg=getColor('BG'))
         fieldsFrame.pack()
-        self.keyframeLabel = Label(fieldsFrame,  text='Keyframe 0/0', bg=getColor('BG'), fg=getColor('labelTextColor'))
+        self.keyframeLabel = Label(fieldsFrame, bg=getColor('BG'), fg=getColor('labelTextColor'), text='Keyframe 0/0')
         self.keyframeLabel.pack(side='top', pady=(0, 3))
         
         self.fields = []
@@ -803,9 +897,13 @@ class AnimationEditor(BaseFormEditor):
         for i, field in enumerate(frameFields):
             if (i % fieldPerLine) == 0:
                 fieldFrame = Frame(fieldsFrame, bg=getColor('BG'))
-                fieldFrame.pack(anchor='w')
+                fieldFrame.pack(anchor='w', expand=1, fill='both')
                 
-            if field == 'dof': continue
+            if field == 'dof': # We skip that one
+                #newButton = Button(fieldFrame, bg=getColor('buttonBGColor'), fg=getColor('buttonTextColor'), text='Visualize path')
+                #newButton['command'] = self.visualizeGroup
+                #newButton.pack(anchor='center')
+                continue
                 
             newField = FieldEditor(self, fieldFrame, field, color=getColor('groupColor' + str(int(i / fieldPerLine))))
             newField.setTitle(fieldLabels[field])
@@ -917,6 +1015,38 @@ class AnimationEditor(BaseFormEditor):
             'name': groupnameVar,
         }
         self.reset()
+        
+    def visualizeGroup(self):
+        if self.group == None: return
+        cachedGroup = self.Animation.calculateCachedFrames(self.currentGroup, True)[0]
+        master = Toplevel()
+
+        maxX = max(frame['x'] for frame in cachedGroup['frames'])
+        minX = min(frame['x'] for frame in cachedGroup['frames'])
+        maxY = max(frame['y'] for frame in cachedGroup['frames'])
+        minY = min(frame['y'] for frame in cachedGroup['frames'])
+        
+        print("Starting print")
+        for i, frame in enumerate(cachedGroup['frames']):
+            print(i, frame['x'], frame['y'])
+        print("Done")
+        
+        print(minX, maxX, minY, maxY)
+        
+        diff = abs(maxX - minX) if abs(maxX - minX) <= abs(maxY - minY) else abs(maxY - minY)
+        windowSize = 1080
+        zoomLevel = (windowSize / diff) * 0.8
+        offsetX = minX - (diff / 4)
+        offsetY = minY - (diff / 4)
+        w = Canvas(master, width=windowSize, height=windowSize, bg=getColor('BG'))
+        w.pack()
+
+        for frame in cachedGroup['frames']:
+            x = (frame['x'] - offsetX) * zoomLevel
+            y = (frame['y'] - offsetX) * zoomLevel
+            w.create_oval(x - 1, y - 1, x + 1, y + 1, fill='white')
+
+        master.mainloop()
         
     def setControlEnabled(self, enabled):
         self.liveControlButton.configure(state=("normal" if enabled else "disabled"))
@@ -1154,9 +1284,6 @@ class AnimationEditor(BaseFormEditor):
             self.grouplist.insert('end', group['name'])
             
         self.recolorGroupList()
-        
-    def openAdvancedSettings(self): #todo
-        pass
         
     def LoadAnimation(self, anim):
         self.reset()
@@ -1590,7 +1717,7 @@ class GUI_TekkenCameraAnimator():
         self.LiveEditor.liveControl = False
         self.AnimationEditor.previewButton['text'] = '[OFF] Live preview'
         self.AnimationEditor.enablePlayback()
-        
+
     def toggleLivePreview(self):
         if not self.LiveEditor.startIfNeeded(): return messagebox.showinfo('Error', 'Cannot open tekken process', parent=self.window)
         result = self.LiveEditor.toggleLivePreview() 
