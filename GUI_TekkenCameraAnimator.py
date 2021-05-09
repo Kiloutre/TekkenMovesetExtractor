@@ -1416,7 +1416,7 @@ class LiveEditor:
         self.root = root
         self.stop()
         
-    def stop(self):
+    def stop(self, exiting=False):
         self.camAddr = None
         self.inputbuffer = None
         self.T = None
@@ -1424,6 +1424,7 @@ class LiveEditor:
         self.runningAnimation = False
         self.liveEditing = False
         self.liveControl = False
+        self.exiting = exiting
         
     def startIfNeeded(self):
         if self.T == None:
@@ -1547,19 +1548,20 @@ class LiveEditor:
         self.lockCamera()
         self.getInputBufferAddr()
         self.nopInputsCode()
-        #try:
-        frameHeld = 0
-        while self.liveControl:
-            inputs = self.getInputs()
-            if len(inputs) != 0:
-                frameHeld = self.moveCamera(self.getCameraPos(), inputs, frameHeld)
-            elif frameHeld > 0:
-                frameHeld -= 4
-            self.waitSingleFrame()
-        #except:
-        #    self.liveControl = False
+        try:
+            frameHeld = 0
+            while self.liveControl:
+                inputs = self.getInputs()
+                if len(inputs) != 0:
+                    frameHeld = self.moveCamera(self.getCameraPos(), inputs, frameHeld)
+                elif frameHeld > 0:
+                    frameHeld -= 4
+                self.waitSingleFrame()
+        except:
+            self.liveControl = False
+            
+        if not self.exiting: self.root.AnimationEditor.liveControlButton['text'] = '[OFF] Live control'       
         self.resetInputsCode()
-        self.root.AnimationEditor.liveControlButton['text'] = '[OFF] Live control'            
         
     def playAnimation(self, groups):
         self.runningAnimation = True
@@ -1578,11 +1580,11 @@ class LiveEditor:
                     if self.runningAnimation == False: raise
                     self.setCameraPos(f)
                     self.waitFrame(1)
-        except Exception as e:
-            pass
-        self.root.AnimationEditor.setControlEnabled(True)
-        self.root.AnimationEditor.enablePlayback()
-        self.runningAnimation = False
+        except:
+            self.runningAnimation = False
+        if not self.exiting:
+            self.root.AnimationEditor.enablePlayback()
+            self.root.AnimationEditor.setControlEnabled(True)
         
     def lockCamera(self):
         if not self.startIfNeeded(): return
@@ -1679,7 +1681,7 @@ class LiveEditor:
         currFrame = self.T.readInt(game_addresses.addr['frame_counter'], 4)
         targetFrame = currFrame + amount
         while currFrame < targetFrame:
-            if currFrame < 10:
+            if currFrame < 10 or self.runningAnimation == False:
                 raise
             currFrame = self.T.readInt(game_addresses.addr['frame_counter'], 4)
         
@@ -1742,8 +1744,8 @@ class GUI_TekkenCameraAnimator():
     def on_close(self):
         try: self.LiveEditor.resetInputsCode()
         except: pass
-        self.LiveEditor.stop()
-        os._exit(0)
+        self.LiveEditor.stop(exiting=True)
+        self.window.destroy()
         
     def onAnimModification(self, dataModification=False):
         self.AnimationSelector.setSaveButtonEnabled(True)
