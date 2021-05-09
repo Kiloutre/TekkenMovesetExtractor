@@ -11,6 +11,7 @@ import struct
 import ctypes
 import math
 import pyperclip
+from scipy import interpolate
 
 dataPath = "./CameraAnimations/"
 dataPath2 = "./InterfaceData/"
@@ -109,8 +110,10 @@ interpolationTypes = {
     0: "Linear",
     2: "Nearest",
     1: "Bézier Curve",
+    5: "Bézier + Spline X/Y",
+    3: "Bézier + Spline X/Y/Z",
     4: "Bézier + Circular X/Y",
-    #3: "Catmull-Rom",
+    #6: "Catmull-Rom",
 }
 interpolationTypes2 = {interpolationTypes[k]:k for k in interpolationTypes}
 
@@ -257,8 +260,10 @@ class Interpolation:
             0: Interpolation.linearCurveValue,
             1: Interpolation.getBezierCurveValue,
             2: Interpolation.nearestInterpolation,
-            #3: Interpolation.catmullRom,
+            3: Interpolation.splineInterpolation,
+            5: lambda points, t: Interpolation.splineInterpolation(points, t, withZ=False),
             4: Interpolation.circularInterpolation,
+            #6: Interpolation.catmullRom,
         }[id]
 
     def linear(x):
@@ -328,6 +333,26 @@ class Interpolation:
         while len(points) > 1:
             points = [Interpolation.interpolateLine(points[i], points[i + 1], t) for i in range(0, len(points) - 1)]
         return points[0]
+        
+    def splineInterpolation(points, t, withZ=True):
+        bezier = Interpolation.getBezierCurveValue(points, t)
+        
+        try:
+            x = [p['x'] for p in points]
+            y = [p['y'] for p in points]
+            z = [p['z'] for p in points]
+            
+            tck, u = interpolate.splprep([x, y, z], s=0, per=False)
+            xi, yi, zi = interpolate.splev([t], tck)
+            
+            bezier['x'] = xi[0]
+            bezier['y'] = yi[0]
+            if withZ:
+                bezier['z'] = zi[0]
+        except:
+            pass
+
+        return bezier
         
     """
     def singledrag(p0, p1, p2, p4, t):
@@ -1015,38 +1040,64 @@ class AnimationEditor(BaseFormEditor):
             'name': groupnameVar,
         }
         self.reset()
-        
-    def visualizeGroup(self):
-        if self.group == None: return
+        self.canvas = None
+    
+    """
+    def updateCanvas(self):
+        if self.canvas == None: return
+        windowSize = 500
+        self.canvas.delete("all")
         cachedGroup = self.Animation.calculateCachedFrames(self.currentGroup, True)[0]
-        master = Toplevel()
-
+        
         maxX = max(frame['x'] for frame in cachedGroup['frames'])
         minX = min(frame['x'] for frame in cachedGroup['frames'])
         maxY = max(frame['y'] for frame in cachedGroup['frames'])
         minY = min(frame['y'] for frame in cachedGroup['frames'])
         
+        """
         print("Starting print")
         for i, frame in enumerate(cachedGroup['frames']):
             print(i, frame['x'], frame['y'])
         print("Done")
+        """
         
-        print(minX, maxX, minY, maxY)
+        diffX = abs(maxX - minX)
+        diffY = abs(maxY - minY)
+        biggestDiff = diffX if diffX > diffY else diffY
+        zoomLevel = (windowSize / biggestDiff) * 0.90
+        offsetX = minX * 1.10
+        offsetY = minY * 1.10
+        print("X:", diffX, "; Y:", diffY, "; Windowsize:", windowSize, "; Zoom:", zoomLevel)
+        print("Minx:", minX, "; Miny:", minY)
+        print("Maxx:", maxX, "; Maxy:", maxY)
+        print("OffsetX:", offsetY, "; OffsetY:", offsetY)
         
-        diff = abs(maxX - minX) if abs(maxX - minX) <= abs(maxY - minY) else abs(maxY - minY)
-        windowSize = 1080
-        zoomLevel = (windowSize / diff) * 0.8
-        offsetX = minX - (diff / 4)
-        offsetY = minY - (diff / 4)
-        w = Canvas(master, width=windowSize, height=windowSize, bg=getColor('BG'))
-        w.pack()
+        
+        self.canvas.create_oval(0, 0, 5, 5, fill="white")
+        self.canvas.create_oval(windowSize - 5, windowSize - 5, windowSize, windowSize, fill="blue")
 
-        for frame in cachedGroup['frames']:
+        pointSize = 5
+        color1 = (3, 252, 53)
+        color2 = (252, 3, 3)
+        diff = [color2[i] - color1[i] for i in range(3)]
+        for i, frame in enumerate(cachedGroup['frames']):
+            t = i / len(cachedGroup['frames'])
             x = (frame['x'] - offsetX) * zoomLevel
-            y = (frame['y'] - offsetX) * zoomLevel
-            w.create_oval(x - 1, y - 1, x + 1, y + 1, fill='white')
-
+            y = (frame['y'] - offsetY) * zoomLevel
+            newColor = "".join(["%02x" % int(color1[n] + diff[n] * t) for n in range(3)])
+            self.canvas.create_oval(x - pointSize, y - pointSize, x + pointSize, y + pointSize, fill=("#" + newColor))
+        
+    def visualizeGroup(self):
+        if self.group == None: return
+        master = Toplevel()
+        windowSize = 500
+        self.canvas = Canvas(master, width=windowSize, height=windowSize, bg=getColor('BG'))
+        self.canvas.pack()
+        
+        self.updateCanvas()
+        master.focus_force()
         master.mainloop()
+    """
         
     def setControlEnabled(self, enabled):
         self.liveControlButton.configure(state=("normal" if enabled else "disabled"))
@@ -1338,6 +1389,8 @@ class AnimationEditor(BaseFormEditor):
         else:
             self.enabledEditing = True
             self.resetFrame()
+            
+        self.updateCanvas()
             
     def setFrame(self, index):
         self.enabledEditing = False
