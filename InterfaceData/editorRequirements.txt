@@ -38,6 +38,8 @@
 144,Opponent HP less than
 146,Standing on left side
 147,Standing on right side
+148,On ground (right side)
+149,On ground (left side)
 155,If Ki Charged
 157,Rage
 176,Geese in Max-Mode
@@ -53,6 +55,7 @@
 253,Bryan taunted
 256,Bryan taunted
 308,Lucky Chloe RA point check
+329,Move Value check
 344,Kazuya Devil Form
 345,Check Lucky Chloe RA points
 351,Claudio Starburst
@@ -64,6 +67,7 @@
 558,Story Battle
 559,Story Battle Number
 563,Gamemode
+573,Check Stage ID
 607,Opponent is Airborne
 608,Opponent is Not Airborne
 609,Has item
@@ -79,6 +83,10 @@
 816,Parry high and mid
 817,Parry group
 830,Attack absorption (Power Crush)
+859,Parry high (special)
+860,Parry mid (special)
+861,Parry low (special)
+862,Parry high and mid (special)
 863,Parry high
 864,Parry mid
 865,Parry low
