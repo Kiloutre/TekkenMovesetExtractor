@@ -110,8 +110,8 @@ interpolationTypes = {
     0: "Linear",
     2: "Nearest",
     1: "Bézier Curve",
-    5: "Bézier + Spline X/Y",
-    3: "Bézier + Spline X/Y/Z",
+    3: "Bézier + Spline X/Y",
+    5: "Bézier + Spline X/Y/Z",
     4: "Bézier + Circular X/Y",
     #6: "Catmull-Rom",
 }
@@ -261,7 +261,7 @@ class Interpolation:
             1: Interpolation.getBezierCurveValue,
             2: Interpolation.nearestInterpolation,
             3: Interpolation.splineInterpolation,
-            5: lambda points, t: Interpolation.splineInterpolation(points, t, withZ=False),
+            5: lambda points, t: Interpolation.splineInterpolation(points, t, withZ=True),
             4: Interpolation.circularInterpolation,
             #6: Interpolation.catmullRom,
         }[id]
@@ -334,7 +334,7 @@ class Interpolation:
             points = [Interpolation.interpolateLine(points[i], points[i + 1], t) for i in range(0, len(points) - 1)]
         return points[0]
         
-    def splineInterpolation(points, t, withZ=True):
+    def splineInterpolation(points, t, withZ=False):
         bezier = Interpolation.getBezierCurveValue(points, t)
         
         try:
@@ -1054,12 +1054,6 @@ class AnimationEditor(BaseFormEditor):
         maxY = max(frame['y'] for frame in cachedGroup['frames'])
         minY = min(frame['y'] for frame in cachedGroup['frames'])
         
-        """
-        print("Starting print")
-        for i, frame in enumerate(cachedGroup['frames']):
-            print(i, frame['x'], frame['y'])
-        print("Done")
-        """
         
         diffX = abs(maxX - minX)
         diffY = abs(maxY - minY)
@@ -1390,7 +1384,7 @@ class AnimationEditor(BaseFormEditor):
             self.enabledEditing = True
             self.resetFrame()
             
-        self.updateCanvas()
+        #self.updateCanvas()
             
     def setFrame(self, index):
         self.enabledEditing = False
