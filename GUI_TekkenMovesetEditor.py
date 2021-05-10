@@ -553,7 +553,7 @@ class MoveSelector:
         movelist = T.readInt(moveset + 0x210, 8)
         
         moveAddr = movelist + (self.playMoveId * 0xB0)
-        T.writeInt(playerAddr + curr_frame_timer_offset, 1000, 4)
+        T.writeInt(playerAddr + curr_frame_timer_offset, 99999, 4)
         T.writeInt(playerAddr + next_move_offset, moveAddr, 8)
             
        

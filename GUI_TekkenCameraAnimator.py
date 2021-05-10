@@ -1484,12 +1484,13 @@ class LiveEditor:
         
         if frameHeld > 260:
             if frameHeld > 300: frameHeld = 300
-            distance += ((frameHeld - 230))
+            distance += ((frameHeld - 230)) / 2
         elif frameHeld > 30:
             distance += ((frameHeld - 30) / 6) if frameHeld <= 90 else ((90 - 30) / 6)
             
         if rotational:
             rotationalDistance = (distance / 10)
+            if rotationalDistance > 2: rotationalDistance = 2
             if '1' in inputs:
                 if up:
                     camPos['roty'] += rotationalDistance
@@ -1543,6 +1544,7 @@ class LiveEditor:
         self.T.writeBytes(game_addresses.addr['input_code_injection'], bytes([0x31, 0xC0, 0x90, 0x90])) # xor eax, eax ; nop; nop
         
     def resetInputsCode(self):
+        if not self.T: return
         self.T.writeBytes(game_addresses.addr['input_code_injection'], bytes([0x8B, 0x44, 0x81, 0x20])) # mov eax,[rcx+rax*4+20]
         
     def liveControlLoop(self):
@@ -1689,10 +1691,11 @@ class LiveEditor:
             currFrame = self.T.readInt(game_addresses.addr['frame_counter'], 4)
         
     def waitSingleFrame(self):
+        #sleep(1/60)
+        #return
         currFrame = self.T.readInt(game_addresses.addr['frame_counter'], 4)
         originalFrame = currFrame
         while currFrame == originalFrame:
-            sleep(0.0001)
             if not self.liveControl: return
             currFrame = self.T.readInt(game_addresses.addr['frame_counter'], 4)
 
@@ -1772,7 +1775,10 @@ class GUI_TekkenCameraAnimator():
         
     def openTekkenProcess(self):
         if not self.LiveEditor.startIfNeeded():
-            messagebox.showinfo('Error', 'Cannot open tekken process', parent=self.window)
+            message = 'Cannot open tekken process.'
+            if not ctypes.windll.shell32.IsUserAnAdmin():
+                message += '\nOpening Tekken\'s process might require administrator rights.'
+            messagebox.showinfo('Error', message, parent=self.window)
             return False
         return True
 
