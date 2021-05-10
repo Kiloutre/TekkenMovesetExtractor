@@ -21,9 +21,12 @@
 0x8046,Special VFX (Armored, sparks...)
 0x806a,Inflict damage to opponent
 0x8078,Give Bryan taunt properties
+0x807c,Move Value Store (uses req 329)
 0x80bd,Kazuya devil mode
 0x80c3,Give Lucky Chloe RA point
-0x80c5,Move Value Store (2D cancel)
+0x80c5,Move Value Store (2D cancel|uses req 346)
+0x80ed,Store Combo Route Value
+0x8106,Activate Flag
 0x817c,Allow player to block
 0x817d,Give CH property
 0x8181,Stop pushback
@@ -87,14 +90,17 @@
 0x8428,Both Hands Mot Data
 0x8429,Left hand Mot Data
 0x842a,Right hand Mot Data
+0x842b,Left hand Mot Related(?)
+0x842c,Right hand Mot Related(?)
 0x842d,Play both hand anim
 0x842e,Play left hand anim
 0x842f,Play right hand anim
 0x8430,Devil Kazuya wing animations
-0x8435,Cinematic Camera (intro)
+0x8435,Cinematic Camera (intro/outro)
 0x8439,Rage Art Camera Left Side
 0x843a,Rage Art Camera Right Side
 0x843c,Throw camera
+0x843d,Rage Art camera related(?)
 0x8442,Camera Zoom Focal Point
 0x8443,Camera Zoom Effect
 0x8454,Something used in Rage Art Camera (?)
