@@ -1397,7 +1397,8 @@ class AnimationEditor(BaseFormEditor):
         self.recolorFrameList()
         self.enabledEditing = True
         self.root.onFrameChange()
-        self.enablePlayback()
+        if not self.root.LiveEditor.runningAnimation:
+            self.enablePlayback()
         
     def getFrame(self):
         return None if (self.group == None or self.group['length'] == 0) else self.group['frames'][self.currentFrame]
@@ -1581,9 +1582,11 @@ class LiveEditor:
                     self.setCameraPos(f)
                     self.waitFrame(1)
         except:
-            self.runningAnimation = False
+            pass
+        self.runningAnimation = False
         if not self.exiting:
-            self.root.AnimationEditor.enablePlayback()
+            if self.root.AnimationEditor.getFrame() != None:
+                self.root.AnimationEditor.enablePlayback()
             self.root.AnimationEditor.setControlEnabled(True)
         
     def lockCamera(self):
@@ -1766,9 +1769,15 @@ class GUI_TekkenCameraAnimator():
         self.LiveEditor.liveControl = False
         self.AnimationEditor.previewButton['text'] = '[OFF] Live preview'
         self.AnimationEditor.enablePlayback()
+        
+    def openTekkenProcess(self):
+        if not self.LiveEditor.startIfNeeded():
+            messagebox.showinfo('Error', 'Cannot open tekken process', parent=self.window)
+            return False
+        return True
 
     def toggleLivePreview(self):
-        if not self.LiveEditor.startIfNeeded(): return messagebox.showinfo('Error', 'Cannot open tekken process', parent=self.window)
+        if not self.openTekkenProcess(): return
         result = self.LiveEditor.toggleLivePreview() 
         frameData = self.AnimationEditor.getFrame()
         self.AnimationEditor.previewButton['text'] = "[%s] Live preview" % ("ON" if result else "OFF")
@@ -1777,7 +1786,7 @@ class GUI_TekkenCameraAnimator():
             self.LiveEditor.setCameraPos(frameData)
         
     def toggleLiveControl(self):
-        if not self.LiveEditor.startIfNeeded(): return messagebox.showinfo('Error', 'Cannot open tekken process', parent=self.window)
+        if not self.openTekkenProcess(): return
         result = self.LiveEditor.toggleLiveControl() 
         self.AnimationEditor.liveControlButton['text'] = "[%s] Live control" % ("ON" if result else "OFF")
         if result:
@@ -1807,7 +1816,7 @@ class GUI_TekkenCameraAnimator():
                 
             
     def PlayAnimation(self, startingGroup=0, singleGroup=False):
-        if not self.LiveEditor.startIfNeeded(): return messagebox.showinfo('Error', 'Cannot open tekken process', parent=self.window)
+        if not self.openTekkenProcess(): return
         if self.LiveEditor.runningAnimation: return messagebox.showinfo('Error', 'An animation is already playing', parent=self.window)
         
         self.AnimationEditor.disablePlayback()
