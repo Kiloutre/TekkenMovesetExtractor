@@ -1010,8 +1010,8 @@ class AnimationEditor(BaseFormEditor):
         self.reset()
         self.canvas = None
         self.canvasWindow = None
-        self.canvasWindowDefaultWidth = 500
-        self.canvasWindowDefaultHeight = 500
+        self.canvasWindowDefaultWidth = 400
+        self.canvasWindowDefaultHeight = 400
         
     def getGroupToCanvasData(self):
         if self.group == None or self.group['length'] == 0: return [], [], 0, 0
@@ -1069,13 +1069,12 @@ class AnimationEditor(BaseFormEditor):
         
     def updateCanvas(self):
         if self.canvas == None: return
+        self.canvas.delete("all")
         
         canvasData, keyframes, keyframeCount, interpolationType = self.getGroupToCanvasData()
-        if canvasData == []: return
+        if canvasData == [] or keyframeCount == 0: return
         canvasDataLen = len(canvasData)
         keyframeWeight = int(canvasDataLen / (keyframeCount - 1))
-        
-        self.canvas.delete("all")
         
         for i, data in enumerate(canvasData):
             x, y, color = data
@@ -1100,6 +1099,7 @@ class AnimationEditor(BaseFormEditor):
         
         master = Toplevel()
         master.protocol("WM_DELETE_WINDOW", self.closeCanvas)
+        master.bind("<Configure>", self.onCanvasResize)
         
         self.canvas = Canvas(master, width=self.canvasWindowWidth, height=self.canvasWindowHeight, bg=getColor('BG'))
         self.canvas.pack(fill='both', expand=True)
@@ -1108,6 +1108,15 @@ class AnimationEditor(BaseFormEditor):
         self.canvasWindow = master
         master.focus_force()
         master.mainloop()
+        
+    def onCanvasResize(self, event):
+        if self.canvasWindow == None: return
+        width = event.width
+        height = event.height
+        if width != self.canvasWindowWidth or height != self.canvasWindowHeight and width > 0 and height > 0:
+            self.canvasWindowWidth = width
+            self.canvasWindowHeight = height
+            self.updateCanvas()
         
     def closeCanvas(self):
         self.canvasWindow.destroy()
@@ -1285,10 +1294,10 @@ class AnimationEditor(BaseFormEditor):
             messagebox.showinfo("Error", "Error pasting frame data", parent=self.root.window)
             return
         self.Animation.addFrame(self.currentGroup, newFrame, self.currentFrame + 1)
-        self.updateCanvas()
         self.updateFrameList()
         self.setFrame(self.currentFrame + 1 if self.group['length'] > (self.currentFrame + 1) else self.currentFrame)
         self.root.onAnimModification(True)
+        self.updateCanvas()
         
     def addFrame(self, fromGame = False):
         if self.Animation == None: return
@@ -1308,10 +1317,10 @@ class AnimationEditor(BaseFormEditor):
         framedata['name'] = "New frame %d" % (self.group['length'] + 1)
         
         self.Animation.addFrame(self.currentGroup, framedata, self.currentFrame + 1)
-        self.updateCanvas()
         self.updateFrameList()
         self.setFrame(self.currentFrame + 1 if self.group['length'] > (self.currentFrame + 1) else self.currentFrame)
         self.root.onAnimModification(True)
+        self.updateCanvas()
         
     def removeFrame(self):
         if self.Animation == None: return
