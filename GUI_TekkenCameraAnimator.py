@@ -342,7 +342,7 @@ class Interpolation:
             y = [p['y'] for p in points]
             z = [p['z'] for p in points]
             
-            tck, u = interpolate.splprep([x, y, z], s=0, per=False)
+            tck, u = interpolate.splprep([x, y, z], s=0)
             xi, yi, zi = interpolate.splev([t], tck)
             
             bezier['x'] = xi[0]
@@ -353,44 +353,6 @@ class Interpolation:
             pass
 
         return bezier
-        
-    """
-    def singledrag(p0, p1, p2, p4, t):
-        tension = 0.5
-        s = 2 * tension
-        
-        m0 = (p2 - p0) / s
-        m1 = (p2 - p0) / s
-        
-        c = 2*t**3 - 3*t**2
-        c0 = c + 1
-        c1 = t**3 - 2*t**2 + t
-        c2 = -c
-        c3 = t**3 - t**2
-        
-        return p0 * c0 + m0 * c1 + p1 * c2 + m1 * c3
-    
-    def catmullRom(points, t):
-        npoints = [Point(p) for p in points]
-        pointsLen = len(points)
-        idx = (pointsLen - 1) * t
-        remainder = idx % 1
-        idx = int(idx)
-    
-        if idx + 1 >= pointsLen:
-            return points[-1]
-        
-        p0 = npoints[idx + 0]
-        p1 = npoints[idx + 1]
-        p2 = npoints[(idx + 2) if (idx + 2 < pointsLen) else idx]
-        p3 = npoints[(idx + 3) if (idx + 3 < pointsLen) else ((idx + 2) if (idx + 2 < pointsLen) else idx)]
-        
-        catmullResult = Interpolation.singledrag(p0, p1, p2, p3, remainder)
-        bezierResult = Interpolation.getBezierCurveValue(points, t)
-        bezierResult['x'] = catmullResult.x
-        bezierResult['y'] = catmullResult.y
-        return bezierResult
-    """
         
     def linearCurveValue(points, t):
         pointsLen = len(points)
@@ -832,7 +794,8 @@ class AnimationEditor(BaseFormEditor):
         self.Animation = None
         
         left, right = splitFrame(self.container, 'vertical')
-        topRight, bottomRight = splitFrame(right, 'horizontal')
+        topRight, bottomRight = right, right
+        #topRight, bottomRight = splitFrame(right, 'horizontal')
         farLeft, left = splitFrame(left, 'vertical')
         
         left['padx'] = 2
@@ -885,8 +848,8 @@ class AnimationEditor(BaseFormEditor):
         groupsHeader = Frame(farLeft, bg=getColor('BG'))
         groupsHeader.pack(side='top', pady=(0, 3), fill='x')
         
-        keyframeLabel = Label(groupsHeader,  text='Groups:', bg=getColor('BG'), fg=getColor('labelTextColor'))
-        keyframeLabel.pack(side='left')
+        groupLabel = Label(groupsHeader,  text='Groups:', bg=getColor('BG'), fg=getColor('labelTextColor'))
+        groupLabel.pack(side='left')
         
         groupOrderDown = Button(groupsHeader, bg=getColor('buttonBGColor'), fg=getColor('buttonTextColor'), text='↓')
         groupOrderDown['command'] = lambda self=self: self.reorderGroup(1)
@@ -913,8 +876,8 @@ class AnimationEditor(BaseFormEditor):
         
         fieldsFrame = Frame(topRight, bg=getColor('BG'))
         fieldsFrame.pack()
-        self.keyframeLabel = Label(fieldsFrame, bg=getColor('BG'), fg=getColor('labelTextColor'), text='Keyframe 0/0')
-        self.keyframeLabel.pack(side='top', pady=(0, 3))
+        #self.keyframeLabel = Label(fieldsFrame, bg=getColor('BG'), fg=getColor('labelTextColor'), text='Keyframe 0/0')
+        #self.keyframeLabel.pack(side='top', pady=(0, 3))
         
         self.fields = []
         fieldFrame = None
@@ -925,9 +888,6 @@ class AnimationEditor(BaseFormEditor):
                 fieldFrame.pack(anchor='w', expand=1, fill='both')
                 
             if field == 'dof': # We skip that one
-                #newButton = Button(fieldFrame, bg=getColor('buttonBGColor'), fg=getColor('buttonTextColor'), text='Visualize path')
-                #newButton['command'] = self.visualizeGroup
-                #newButton.pack(anchor='center')
                 continue
                 
             newField = FieldEditor(self, fieldFrame, field, color=getColor('groupColor' + str(int(i / fieldPerLine))))
@@ -940,7 +900,7 @@ class AnimationEditor(BaseFormEditor):
         groupFrame.pack(pady=(0, 35))
         
         groupSettingsLabel = Label(groupFrame,  text='Group settings:', bg=getColor('BG'), fg=getColor('labelTextColor'))
-        groupSettingsLabel.pack(side='top', pady=(0, 3))
+        groupSettingsLabel.pack(side='top', pady=3)
         
         groupnameFrame = Frame(groupFrame, bg=getColor('BG'))
         groupnameFrame.pack(side='top', pady=(0, 10))
@@ -1002,8 +962,13 @@ class AnimationEditor(BaseFormEditor):
         self.delayEntry = w
         
         
+        newButton = Button(groupFrame, bg=getColor('buttonBGColor'), fg=getColor('buttonTextColor'), text='Visualize X/Y movement')
+        newButton['command'] = self.visualizeGroup
+        newButton.pack(pady=(15, 0))
+        
+        
         toolsFrame = Frame(bottomRight, bg=getColor('BG'))
-        toolsFrame.pack()
+        toolsFrame.pack(side='bottom')
         
         playAnimButton = Button(toolsFrame, text="Play from group", bg=getColor('buttonBGColor'), fg=getColor('buttonTextColor'))
         playAnimButton['command'] = lambda self=self: self.root.PlayAnimation(self.currentGroup)
@@ -1041,12 +1006,11 @@ class AnimationEditor(BaseFormEditor):
         }
         self.reset()
         self.canvas = None
-    
-    """
-    def updateCanvas(self):
-        if self.canvas == None: return
-        windowSize = 500
-        self.canvas.delete("all")
+        self.canvasWindowSize = 500
+        
+    def getGroupToCanvasData(self):
+        if self.group == None or self.group['length'] == 0: return []
+        windowSize = self.canvasWindowSize
         cachedGroup = self.Animation.calculateCachedFrames(self.currentGroup, True)[0]
         
         maxX = max(frame['x'] for frame in cachedGroup['frames'])
@@ -1054,44 +1018,67 @@ class AnimationEditor(BaseFormEditor):
         maxY = max(frame['y'] for frame in cachedGroup['frames'])
         minY = min(frame['y'] for frame in cachedGroup['frames'])
         
-        
         diffX = abs(maxX - minX)
-        diffY = abs(maxY - minY)
-        biggestDiff = diffX if diffX > diffY else diffY
-        zoomLevel = (windowSize / biggestDiff) * 0.90
-        offsetX = minX * 1.10
-        offsetY = minY * 1.10
-        print("X:", diffX, "; Y:", diffY, "; Windowsize:", windowSize, "; Zoom:", zoomLevel)
-        print("Minx:", minX, "; Miny:", minY)
-        print("Maxx:", maxX, "; Maxy:", maxY)
-        print("OffsetX:", offsetY, "; OffsetY:", offsetY)
+        diffY = abs(maxY - minY) if maxY != minY else maxY
+        biggestDiff = max(diffX, diffY)
+        zoomLevel = (windowSize / biggestDiff) * 0.80 if biggestDiff != 0 else 1
+    
+        offsetX = (windowSize - (diffX * zoomLevel)) / 2
+        offsetY = (windowSize - (diffY * zoomLevel)) / 2
         
-        
-        self.canvas.create_oval(0, 0, 5, 5, fill="white")
-        self.canvas.create_oval(windowSize - 5, windowSize - 5, windowSize, windowSize, fill="blue")
-
-        pointSize = 5
         color1 = (3, 252, 53)
         color2 = (252, 3, 3)
         diff = [color2[i] - color1[i] for i in range(3)]
+        
+        canvasPoints = []
+        frameCount = len(cachedGroup['frames'])
         for i, frame in enumerate(cachedGroup['frames']):
-            t = i / len(cachedGroup['frames'])
-            x = (frame['x'] - offsetX) * zoomLevel
-            y = (frame['y'] - offsetY) * zoomLevel
+            t = i / frameCount
+            x = (frame['x'] - min(0, minX)) * zoomLevel + offsetX
+            y = (frame['y'] - min(0, minY)) * zoomLevel + offsetY
             newColor = "".join(["%02x" % int(color1[n] + diff[n] * t) for n in range(3)])
-            self.canvas.create_oval(x - pointSize, y - pointSize, x + pointSize, y + pointSize, fill=("#" + newColor))
+            canvasPoints.append((x, y, "#" + newColor))
+            
+        keyframes = []
+        for i, frame in enumerate(self.group['frames']):
+            t = i / len(self.group['frames'])
+            
+            x = (frame['x'] - min(0, minX)) * zoomLevel + offsetX
+            y = (frame['y'] - min(0, minY)) * zoomLevel + offsetY
+            
+            newColor = "".join(["%02x" % int(color1[n] + diff[n] * t) for n in range(3)])
+            keyframes.append((x, y, "#" + newColor))
+           
+        return canvasPoints, keyframes, self.group['length'], self.group['interpolation']
+        
+    def updateCanvas(self):
+        if self.canvas == None: return
+        
+        canvasData, keyframes, keyframeCount, interpolationType = self.getGroupToCanvasData()
+        canvasDataLen = len(canvasData)
+        keyframeWeight = int(canvasDataLen / (keyframeCount - 1))
+        
+        self.canvas.delete("all")
+        
+        for i, data in enumerate(canvasData):
+            x, y, color = data
+            
+            if (i + 1 == canvasDataLen) or (i % keyframeWeight) == 0: #Keyframe
+                x, y, color = keyframes[int((i + 1) / keyframeWeight)]
+                pointSize = 5 if (i + 1 == canvasDataLen or i == 0) else 4
+                self.canvas.create_oval(x - pointSize, y - pointSize, x + pointSize, y + pointSize, fill=color)
+            elif interpolationType != 2: #Nearest = no line
+                self.canvas.create_line(x, y, canvasData[i + 1][0], canvasData[i + 1][1], fill=color)
         
     def visualizeGroup(self):
         if self.group == None: return
         master = Toplevel()
-        windowSize = 500
-        self.canvas = Canvas(master, width=windowSize, height=windowSize, bg=getColor('BG'))
-        self.canvas.pack()
+        self.canvas = Canvas(master, width=self.canvasWindowSize, height=self.canvasWindowSize, bg=getColor('BG'))
+        self.canvas.pack(fill='both', expand=True)
         
         self.updateCanvas()
         master.focus_force()
         master.mainloop()
-    """
         
     def setControlEnabled(self, enabled):
         self.liveControlButton.configure(state=("normal" if enabled else "disabled"))
@@ -1157,6 +1144,7 @@ class AnimationEditor(BaseFormEditor):
                     else:
                         self.group[field] = easingTypes2[value] if field == 'easing' else interpolationTypes2[value]
                         self.Animation.cachedGroups[self.currentGroup] = None
+                        self.updateCanvas()
                     self.root.onAnimModification()
                 except:
                     pass
@@ -1383,13 +1371,12 @@ class AnimationEditor(BaseFormEditor):
         else:
             self.enabledEditing = True
             self.resetFrame()
-            
-        #self.updateCanvas()
+        self.updateCanvas()
             
     def setFrame(self, index):
         self.enabledEditing = False
         self.framelist.selection_clear(0, 'end')
-        self.keyframeLabel['text'] = 'Keyframe %d/%d' % (index + 1, self.group['length'])
+        #self.keyframeLabel['text'] = 'Keyframe %d/%d' % (index + 1, self.group['length'])
         for field in self.fields:
             value = getStringValueFromType(fieldTypes[field.fieldId], self.Animation.getValue(self.currentGroup, field.fieldId, index))
             field.setValue(value)
