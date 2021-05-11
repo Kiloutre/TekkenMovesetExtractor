@@ -21,6 +21,7 @@ degToRad = (math.pi * 2) / 360
 colors = {
     'dark': {
         'BG': '#222',
+        'lighterBG': '#333',
         'labelBgColor': '#333',
         'listItemEvenBG': "#555",
         'listItemOddBG': "#666",
@@ -39,20 +40,7 @@ colors = {
         'groupColor3': '#36248f',
         'groupColor4': '#ab3a8f',
         'groupColor5': '#c42929',
-        'groupColor6': '#b88c2e',
-        'framelistEven': "#555",
-        'framelistOdd': "#666",
-        'framelistHighlight': "#6f755a",
-        'framelistHighlightText': "white",
-        'framelistLabelEven': "#333",
-        'framelistLabelOdd': "#444",
-        'framelistLabelText': "#aaa",
-        'framelistMarked1': "#7e3eb0", #Linear
-        'framelistMarked2': "#4b9636", #Ease-in
-        'framelistMarked3': "#ab2929", #Ease-out
-        'framelistMarked4': "#ba9234", #Ease-in-out
-        'framelistInBetweenEven': "#5880bf",
-        'framelistInBetweenOdd': "#506b96"
+        'groupColor6': '#b88c2e'
     },
     'default': {
         'labelBgColor': '#ddd'
@@ -116,6 +104,13 @@ interpolationTypes = {
     #6: "Catmull-Rom",
 }
 interpolationTypes2 = {interpolationTypes[k]:k for k in interpolationTypes}
+
+relativityTypes = {
+    0: "None",
+    1: "P1 Pos",
+    2: "P1 Pos & Rotation"
+}
+relativityTypes2 = {relativityTypes[k]:k for k in relativityTypes}
 
 easingTypes = {
     0: "Linear",
@@ -463,9 +458,12 @@ class Animation:
                         'interpolation': int(groupData[3]),
                         'easing': int(groupData[4]),
                         'pre_delay_pos': int(groupData[5]),
+                        'relativity': 0,
                         'length': 0,
                         'frames': []
                     }
+                    if len(groupData) > 6:
+                        group['relativity'] = int(groupData[6])
                     self.groups.append(group)
                     self.cachedGroups.append(None)
                 else:
@@ -484,8 +482,15 @@ class Animation:
                     frames = [interpolationFunction(group['frames'], easingFunction(idx / (group['duration']))) for idx in range(group['duration'])]
                 else:
                     frames = []
-                self.cachedGroups[startingGroup + i] = {'frames': frames, 'length': len(frames), 'delay': group['delay'], 'duration': group['duration'], 'pre_delay_pos': group['pre_delay_pos']}
-            
+                self.cachedGroups[startingGroup + i] = {
+                    'frames': frames, 
+                    'length': len(frames),
+                    'delay': group['delay'],
+                    'duration': group['duration'],
+                    'pre_delay_pos': group['pre_delay_pos'],
+                    'relativity': group['relativity'],
+                }
+                
         return self.cachedGroups[startingGroup:end]
         
     def getValue(self, group, field, frame):
@@ -899,16 +904,16 @@ class AnimationEditor(BaseFormEditor):
             self.fields.append(newField)
             
         
-        groupFrame = Frame(bottomRight, bg=getColor('BG'))
-        groupFrame.pack(pady=(0, 35))
+        groupFrame = Frame(bottomRight, bg=getColor('lighterBG'))
+        groupFrame.pack(fill='both')
         
-        groupSettingsLabel = Label(groupFrame,  text='Group settings:', bg=getColor('BG'), fg=getColor('labelTextColor'))
-        groupSettingsLabel.pack(side='top', pady=3)
+        groupSettingsLabel = Label(groupFrame,  text='Group settings:', bg=getColor('lighterBG'), fg=getColor('labelTextColor'))
+        groupSettingsLabel.pack(side='top')
         
-        groupnameFrame = Frame(groupFrame, bg=getColor('BG'))
+        groupnameFrame = Frame(groupFrame, bg=getColor('lighterBG'))
         groupnameFrame.pack(side='top', pady=(0, 10))
         
-        groupnameLabel = Label(groupnameFrame,  text='Name:', bg=getColor('BG'), fg=getColor('labelTextColor'))
+        groupnameLabel = Label(groupnameFrame,  text='Name:', bg=getColor('lighterBG'), fg=getColor('labelTextColor'))
         groupnameLabel.pack(side='left', padx=(0, 7))
         groupnameVar = StringVar()
         groupnameVar.trace("w", lambda name, index, mode, groupnameVar=groupnameVar: self.onFieldChange('groupname', groupnameVar.get()))
@@ -916,17 +921,17 @@ class AnimationEditor(BaseFormEditor):
         w.pack(side='left', padx=(0, 7))
         self.groupnameEntry = w
         
-        preDelayLabel = Label(groupnameFrame,  text='Set pos before delay:', bg=getColor('BG'), fg=getColor('labelTextColor'))
+        preDelayLabel = Label(groupnameFrame,  text='Set pos before delay:', bg=getColor('lighterBG'), fg=getColor('labelTextColor'))
         preDelayLabel.pack(side='left', padx=(0, 7))
-        preDelayCheckbox = Checkbutton(groupnameFrame, bg=getColor('BG'))
+        preDelayCheckbox = Checkbutton(groupnameFrame, bg=getColor('lighterBG'))
         preDelayCheckbox['command'] = self.toggleSetPosBeforeDelay
         preDelayCheckbox.pack(side='left')
         self.preDelayCheckbox = preDelayCheckbox
         
-        interpolationOptions = Frame(groupFrame, bg=getColor('BG'))
+        interpolationOptions = Frame(groupFrame, bg=getColor('lighterBG'))
         interpolationOptions.pack(side='top', pady=(0, 10))
         
-        interpolationLabel = Label(interpolationOptions,  text='Interpolation:', bg=getColor('BG'), fg=getColor('labelTextColor'))
+        interpolationLabel = Label(interpolationOptions,  text='Interpolation:', bg=getColor('lighterBG'), fg=getColor('labelTextColor'))
         interpolationLabel.pack(side='left', padx=(0, 7))
         OPTIONS = [interpolationTypes[k] for k in interpolationTypes]
         interpolationVar = StringVar()
@@ -935,7 +940,7 @@ class AnimationEditor(BaseFormEditor):
         w.pack(side='left', padx=(0, 7))
         self.interpolationSelect = w
         
-        easingLabel = Label(interpolationOptions,  text='Easing:', bg=getColor('BG'), fg=getColor('labelTextColor'))
+        easingLabel = Label(interpolationOptions,  text='Easing:', bg=getColor('lighterBG'), fg=getColor('labelTextColor'))
         easingLabel.pack(side='left', padx=(0, 7))
         OPTIONS = [easingTypes[k] for k in easingTypes]
         easingVar = StringVar()
@@ -944,10 +949,10 @@ class AnimationEditor(BaseFormEditor):
         w.pack(side='left', padx=(0, 15))
         self.easingSelect = w
         
-        lengthOptions = Frame(groupFrame, bg=getColor('BG'))
+        lengthOptions = Frame(groupFrame, bg=getColor('lighterBG'))
         lengthOptions.pack(side='top')
         
-        lengthLabel = Label(lengthOptions,  text='Duration (frames):', bg=getColor('BG'), fg=getColor('labelTextColor'))
+        lengthLabel = Label(lengthOptions,  text='Duration (frames):', bg=getColor('lighterBG'), fg=getColor('labelTextColor'))
         lengthLabel.pack(side='left', padx=(0, 6))
         
         lengthVar = StringVar()
@@ -956,7 +961,7 @@ class AnimationEditor(BaseFormEditor):
         w.pack(side='left', padx=(0, 6))
         self.lengthEntry = w
         
-        delayLabel = Label(lengthOptions,  text='Delay (frames):', bg=getColor('BG'), fg=getColor('labelTextColor'))
+        delayLabel = Label(lengthOptions,  text='Delay (frames):', bg=getColor('lighterBG'), fg=getColor('labelTextColor'))
         delayLabel.pack(side='left', padx=(0, 6))
         delayVar = StringVar()
         delayVar.trace("w", lambda name, index, mode, delayVar=delayVar: self.onFieldChange('delay', delayVar.get()))
@@ -965,9 +970,25 @@ class AnimationEditor(BaseFormEditor):
         self.delayEntry = w
         
         
-        newButton = Button(groupFrame, bg=getColor('buttonBGColor'), fg=getColor('buttonTextColor'), text='Visualize X/Y movement')
-        newButton['command'] = self.visualizeGroup
-        newButton.pack(pady=(15, 0))
+        extraGroupTools = Frame(groupFrame, bg=getColor('lighterBG'))
+        extraGroupTools.pack(pady=(10, 3))
+        
+        visualizeButton = Button(extraGroupTools, bg=getColor('buttonBGColor'), fg=getColor('buttonTextColor'), text='Visualize X/Y movement')
+        visualizeButton['command'] = self.visualizeGroup
+        visualizeButton.pack(side='left', padx=(0, 3))
+        
+        relativityLabel = Label(extraGroupTools,  text='Relativity:', bg=getColor('lighterBG'), fg=getColor('labelTextColor'))
+        relativityLabel.pack(side='left', padx=(0, 7))
+        OPTIONS = [relativityTypes[k] for k in relativityTypes]
+        relativityVar = StringVar()
+        relativityVar.trace("w", lambda name, index, mode, relativityVar=relativityVar: self.onFieldChange('relativity', relativityVar.get()))
+        w = OptionMenu(extraGroupTools, relativityVar, OPTIONS[0], *OPTIONS)
+        w.pack(side='left', padx=(0, 7))
+        self.relativitySelect = w
+        
+        #advancedSettingsButton = Button(extraGroupTools, bg=getColor('buttonBGColor'), fg=getColor('buttonTextColor'), text='Advanced group settings')
+        #advancedSettingsButton['command'] = self.openAdvancedSettings
+        #advancedSettingsButton.pack(side='left')
         
         
         toolsFrame = Frame(bottomRight, bg=getColor('BG'))
@@ -1006,12 +1027,15 @@ class AnimationEditor(BaseFormEditor):
             'duration': lengthVar,
             'delay': delayVar,
             'name': groupnameVar,
+            'relativity': relativityVar,
         }
+        
         self.reset()
         self.canvas = None
         self.canvasWindow = None
         self.canvasWindowDefaultWidth = 400
         self.canvasWindowDefaultHeight = 400
+        self.advancedWindow = None
         
     def getGroupToCanvasData(self):
         if self.group == None or self.group['length'] == 0: return [], [], 0, 0
@@ -1087,13 +1111,13 @@ class AnimationEditor(BaseFormEditor):
                 self.canvas.create_oval(x - pointSize, y - pointSize, x + pointSize, y + pointSize, fill=color)
         
     def visualizeGroup(self):
-        if self.group == None: return
         if self.canvasWindow != None:
             self.canvasWindow.deiconify()
             self.canvasWindow.focus_force()
             self.updateCanvas()
             return
-            
+        if self.group == None: return
+        
         self.canvasWindowWidth = self.canvasWindowDefaultWidth
         self.canvasWindowHeight = self.canvasWindowDefaultHeight
         
@@ -1108,6 +1132,33 @@ class AnimationEditor(BaseFormEditor):
         self.canvasWindow = master
         master.focus_force()
         master.mainloop()
+        
+    def openAdvancedSettings(self):
+        if self.advancedWindow != None:
+            self.advancedWindow.deiconify()
+            self.advancedWindow.focus_force()
+            return
+        if self.group == None: return
+        
+        master = Toplevel(bg=getColor('lighterBG'))
+        master.focus_force()
+        master.protocol("WM_DELETE_WINDOW", self.closeAdvancedWindow)
+        
+        relativityLabel = Label(master,  text='Relativity:', bg=getColor('lighterBG'), fg=getColor('labelTextColor'))
+        relativityLabel.pack(side='left', padx=(0, 7))
+        OPTIONS = [relativityTypes[k] for k in relativityTypes]
+        relativityVar = StringVar()
+        relativityVar.trace("w", lambda name, index, mode, relativityVar=relativityVar: self.onFieldChange('relativity', relativityVar.get()))
+        w = OptionMenu(master, relativityVar, OPTIONS[0], *OPTIONS)
+        w.pack(side='left', padx=(0, 7))
+        self.relativitySelect = w
+        
+        self.advancedWindow = master
+        master.mainloop()
+        
+    def closeAdvancedWindow(self):
+        self.advancedWindow.destroy()
+        self.advancedWindow = None
         
     def onCanvasResize(self, event):
         if self.canvasWindow == None: return
@@ -1169,7 +1220,8 @@ class AnimationEditor(BaseFormEditor):
                 self.framelist.delete(self.currentFrame)
                 self.framelist.insert(self.currentFrame, value)
                 self.framelist.itemconfig(self.currentFrame, {'fg': getColor('listSelectedItem'), 'bg': getColor('listSelectedItemBG')})
-                
+            else:
+                self.updateCanvas()
             self.Animation.setValue(self.currentGroup, field, self.currentFrame, value)
             self.root.onAnimModification(True)
         else:
@@ -1190,7 +1242,12 @@ class AnimationEditor(BaseFormEditor):
                             self.grouplist.itemconfig(self.currentGroup, {'fg': getColor('listSelectedItem'), 'bg': getColor('listSelectedItemBG')})
                             self.group['name'] = value
                     else:
-                        self.group[field] = easingTypes2[value] if field == 'easing' else interpolationTypes2[value]
+                        selectDicts = {
+                            'easing': easingTypes2,
+                            'interpolation': interpolationTypes2,
+                            'relativity': relativityTypes2,
+                        }
+                        self.group[field] = selectDicts[field][value]
                         self.discardCache()
                     self.root.onAnimModification()
                 except:
@@ -1211,6 +1268,7 @@ class AnimationEditor(BaseFormEditor):
         self.easingSelect.configure(state="disabled")
         self.interpolationSelect.configure(state="disabled")
         self.groupnameEntry.configure(state="disabled")
+        self.relativitySelect.configure(state="disabled")
         self.preDelayCheckbox.configure(state="disabled")
         self.currentFrame = 0
         self.currentGroup = 0
@@ -1227,6 +1285,7 @@ class AnimationEditor(BaseFormEditor):
         self.setFrame(self.currentFrame + order)
         self.updateFrameList()
         self.recolorFrameList()
+        self.root.onAnimModification()
         
     def reorderGroup(self, order):
         if self.Animation == None or self.group == None: return
@@ -1240,6 +1299,7 @@ class AnimationEditor(BaseFormEditor):
         self.setGroup(self.currentGroup + order)
         self.updateGroupList()
         self.recolorGroupList()
+        self.root.onAnimModification()
         
     def addGroup(self):
         if self.Animation == None: return
@@ -1312,7 +1372,7 @@ class AnimationEditor(BaseFormEditor):
                 framedata = { 'fov': 65, 'dof': 0, 'x': 0, 'y': 0, 'z': 0, 'rotx': 0, 'roty': 0, 'tilt': 0}
         else:
             if not self.root.LiveEditor.startIfNeeded(): return
-            framedata = self.root.LiveEditor.getCameraPos()
+            framedata = self.root.LiveEditor.getCameraPos(1)
             
         framedata['name'] = "New frame %d" % (self.group['length'] + 1)
         
@@ -1403,6 +1463,7 @@ class AnimationEditor(BaseFormEditor):
         self.easingSelect.configure(state="enabled")
         self.interpolationSelect.configure(state="enabled")
         self.groupnameEntry.configure(state="enabled")
+        self.relativitySelect.configure(state="enabled")
         self.recolorGroupList()
         self.updateFrameList()
         
@@ -1411,6 +1472,7 @@ class AnimationEditor(BaseFormEditor):
         self.fieldVars['duration'].set(self.group['duration'])
         self.fieldVars['delay'].set(self.group['delay'])
         self.fieldVars['name'].set(self.group['name'])
+        self.fieldVars['relativity'].set(relativityTypes[self.group['relativity']])
         
         self.preDelayCheckbox.configure(state="normal")
         if self.group['pre_delay_pos'] == 0:
@@ -1439,7 +1501,7 @@ class AnimationEditor(BaseFormEditor):
             self.enablePlayback()
         
     def getFrame(self):
-        return None if (self.group == None or self.group['length'] == 0) else self.group['frames'][self.currentFrame]
+        return (None, None) if (self.group == None or self.group['length'] == 0) else (self.group['frames'][self.currentFrame], self.group['relativity'])
 
 def matrixMult(mat, b):
     result = [[0] * 3] *3
@@ -1453,6 +1515,7 @@ def matrixMult(mat, b):
 class LiveEditor:
     def __init__(self, root):
         self.root = root
+        self.playerAddress = game_addresses.addr['t7_p1_addr']
         self.stop()
         
     def stop(self, exiting=False):
@@ -1619,13 +1682,13 @@ class LiveEditor:
                     self.waitFrame(g['delay'])
                 for f in g['frames']:
                     if self.runningAnimation == False: raise
-                    self.setCameraPos(f)
+                    self.setCameraPos(f, g['relativity'])
                     self.waitFrame(1)
         except:
             pass
         self.runningAnimation = False
         if not self.exiting:
-            if self.root.AnimationEditor.getFrame() != None:
+            if self.root.AnimationEditor.getFrame()[0] != None:
                 self.root.AnimationEditor.enablePlayback()
             self.root.AnimationEditor.setControlEnabled(True)
         
@@ -1649,54 +1712,50 @@ class LiveEditor:
         self.camAddr = self.readPointerPath(game_addresses.addr['camera_starting_ptr'], [0x30, 0x418])
         return self.camAddr
         
-    def setCameraPos(self, cam):
+    def setCameraPos(self, cam, relative=0):
         camAddr = self.camAddr
-        #self.writeFloat(camAddr + 0, 0) #aspect ratio
-        self.writeFloat(camAddr + 0x39C, cam['fov']) #FOV
-        #self.writeFloat(camAddr + , cam['dof']) #FOV
-        self.writeFloat(camAddr + 0x404, cam['roty']) #roty
-        self.writeFloat(camAddr + 0x408, cam['rotx']) #rotx
-        self.writeFloat(camAddr + 0x40C, cam['tilt']) #tilt
-        self.writeFloat(camAddr + 0x3F8, cam['x']) #x
-        self.writeFloat(camAddr + 0x3FC, cam['y']) #y
-        self.writeFloat(camAddr + 0x400, cam['z']) #z
-            
-        """
-        if cam['relative'] == 1: #Height-relativity
-            self.writeFloat(camAddr + 0x408, cam['rotx']) #rotx
-            self.writeFloat(camAddr + 0x3F8, cam['x']) #x
-            self.writeFloat(camAddr + 0x3FC, cam['y']) #y
-            self.writeFloat(camAddr + 0x400, (self.getPlayerHeight()) + cam['z']) #y
-        elif cam['relative'] == 2: #Fullpos relativity (rotation included)
+        
+        rotx = cam['rotx']
+        roty = cam['roty']
+        x = cam['x']
+        y = cam['y']
+        z = cam['z']
+        
+        if relative == 1: #Pos relativity
+            playerPos = self.getPlayerPos()
+            x += playerPos['x']
+            y += playerPos['y']
+            z += playerPos['z']
+        elif relative == 2: #Pos & rot relativity
             fullAngle = (math.pi * 2)
             playerPos = self.getPlayerPos()
             playerRot = self.getPlayerRot() * (fullAngle / 65535)
             
-            distance = math.sqrt(cam['x'] **2 + cam['y'] ** 2)
-            camAngle = math.atan2(cam['y'], cam['x'])
+            distance = math.sqrt(x ** 2 + y ** 2)
+            camAngle = math.atan2(y, x)
             
             finalAngle = (camAngle - playerRot)
             
             newx = (distance) * math.cos(finalAngle)
             newy = (distance) * math.sin(finalAngle)
             
-            camRotx = (cam['rotx'] - (self.getPlayerRot() * (360/ 65535))) % 360
-            self.writeFloat(camAddr + 0x408, camRotx) #rotx
-            self.writeFloat(camAddr + 0x3F8, newx + playerPos['x']) #x
-            self.writeFloat(camAddr + 0x3FC, newy + playerPos['y']) #y
-            self.writeFloat(camAddr + 0x400, playerPos['z'] + cam['z']) #y
-        else: #absolute
+            rotx = (rotx - (self.getPlayerRot() * (360/ 65535))) % 360
+            x = newx + playerPos['x']
+            y = newy + playerPos['y']
+            z += playerPos['z']
         
-            self.writeFloat(camAddr + 0x408, cam['rotx']) #rotx
-            self.writeFloat(camAddr + 0x3F8, cam['x']) #x
-            self.writeFloat(camAddr + 0x3FC, cam['y']) #y
-            self.writeFloat(camAddr + 0x400, cam['z']) #z
-        """
+        self.writeFloat(camAddr + 0x39C, cam['fov']) #FOV
+        self.writeFloat(camAddr + 0x404, roty) #roty
+        self.writeFloat(camAddr + 0x408, rotx) #rotx
+        self.writeFloat(camAddr + 0x40C, cam['tilt']) #tilt
+        self.writeFloat(camAddr + 0x3F8, x) #x
+        self.writeFloat(camAddr + 0x3FC, y) #y
+        self.writeFloat(camAddr + 0x400, z) #z
             
-    def getCameraPos(self):
+    def getCameraPos(self, relative=0):
         if not self.startIfNeeded(): return
         camAddr = self.getCameraAddr()
-        return {
+        cam = {
             'fov': self.readFloat(camAddr + 0x39C),
             'dof': 0,
             'rotx': self.readFloat(camAddr + 0x408),
@@ -1707,18 +1766,50 @@ class LiveEditor:
             'z': self.readFloat(camAddr + 0x400)
         }
         
+        if relative == 1: #Pos
+            cam['x'] -= playerPos['x']
+            cam['y'] -= playerPos['y']
+            cam['z'] -= playerPos['z']
+        elif relative == 2: #Pos & rot
+            playerPos = self.getPlayerPos()
+            playerRot = self.getPlayerRot()
+            
+            diffx = cam['x'] - playerPos['x']
+            diffy = cam['y'] - playerPos['y']
+            
+            fullAngle = (math.pi * 2)
+            playerAngle = playerRot * (fullAngle / 65535)
+            
+            distance = math.sqrt(diffx **2 + diffy ** 2)
+            angle = math.atan2(diffx, diffy)
+            
+            finalAngle = (angle - playerAngle)
+            
+            newy = (distance) * math.cos(finalAngle)
+            newx = (distance) * math.sin(finalAngle)
+            
+            cam['rotx'] = (cam['rotx'] + (playerRot * (360/ 65535))) % 360
+            cam['x'] = newx
+            cam['y'] = newy
+            cam['z'] -= playerPos['z'] #Relative player height
+        
+        return cam
+        
     def getPlayerHeight(self):
-        return self.getPlayerFloorheight() + self.readFloat(self.playerAddress + 0xE4) / 10
+        return self.getPlayerFloorheight() + self.readFloat(self.playerAddress + 0xF8) / 10
         
     def getPlayerFloorheight(self):
         return self.readFloat(self.playerAddress + 0x1B0) / 10
         
     def getPlayerPos(self):
         return {
-            'x': self.readFloat(self.playerAddress + 0xE8) / 10,
-            'y': -(self.readFloat(self.playerAddress + 0xE0) / 10),
+            'x': self.readFloat(self.playerAddress + 0xFC) / 10,
+            'y': -(self.readFloat(self.playerAddress + 0xF4) / 10),
             'z': self.getPlayerHeight(),
         }
+        
+    def getPlayerRot(self):
+        return self.T.readInt(self.playerAddress + 0xEE, 2)
         
     def waitFrame(self, amount):
         currFrame = self.T.readInt(game_addresses.addr['frame_counter'], 4)
@@ -1797,7 +1888,7 @@ class GUI_TekkenCameraAnimator():
         if self.LiveEditor.liveEditing and not self.LiveEditor.runningAnimation:
             self.LiveEditor.lockCamera()
             if self.LiveEditor.running:
-                self.LiveEditor.setCameraPos(self.AnimationEditor.getFrame())
+                self.LiveEditor.setCameraPos(*self.AnimationEditor.getFrame())
             else:
                 self.AnimationEditor.previewButton['text'] = '[OFF] Live preview'
         
@@ -1821,11 +1912,11 @@ class GUI_TekkenCameraAnimator():
     def toggleLivePreview(self):
         if not self.openTekkenProcess(): return
         result = self.LiveEditor.toggleLivePreview() 
-        frameData = self.AnimationEditor.getFrame()
+        frameData, relativity = self.AnimationEditor.getFrame()
         self.AnimationEditor.previewButton['text'] = "[%s] Live preview" % ("ON" if result else "OFF")
         if result and frameData != None:
             self.LiveEditor.lockCamera()
-            self.LiveEditor.setCameraPos(frameData)
+            self.LiveEditor.setCameraPos(frameData, relativity)
         
     def toggleLiveControl(self):
         if not self.openTekkenProcess(): return
@@ -1839,7 +1930,7 @@ class GUI_TekkenCameraAnimator():
         if self.AnimationEditor.Animation == None: return
         with open(dataPath + self.AnimationEditor.Animation.filename, "w") as f:
             for group in self.AnimationEditor.Animation.groups:
-                line = "[%s, %d, %d, %d, %d, %d]\n" % (group['name'], group['duration'], group['delay'], group['interpolation'], group['easing'], group['pre_delay_pos'])
+                line = "[%s, %d, %d, %d, %d, %d, %d]\n" % (group['name'], group['duration'], group['delay'], group['interpolation'], group['easing'], group['pre_delay_pos'], group['relativity'])
                 f.write(line)
                 for frame in group['frames']:
                     line = ",".join([str(frame[field]) for field in frameFields])
