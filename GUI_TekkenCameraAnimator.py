@@ -15,7 +15,7 @@ from scipy import interpolate
 
 dataPath = "./CameraAnimations/"
 dataPath2 = "./InterfaceData/"
-editorVersion = "1.0"
+editorVersion = "1.1"
 degToRad = (math.pi * 2) / 360
         
 colors = {
@@ -340,15 +340,18 @@ class Interpolation:
         try:
             x = [p['x'] for p in points]
             y = [p['y'] for p in points]
-            z = [p['z'] for p in points]
             
-            tck, u = interpolate.splprep([x, y, z], s=0)
-            xi, yi, zi = interpolate.splev([t], tck)
-            
+            if withZ:
+                z = [p['z'] for p in points]
+                tck, u = interpolate.splprep([x, y, z], s = 0, per=False)
+                xi, yi, zi = interpolate.splev([t], tck)
+                bezier['z'] = zi[0]
+            else:
+                tck, u = interpolate.splprep([x, y], s = 0, per=False)
+                xi, yi = interpolate.splev([t], tck)
+                
             bezier['x'] = xi[0]
             bezier['y'] = yi[0]
-            if withZ:
-                bezier['z'] = zi[0]
         except:
             pass
 
@@ -478,7 +481,7 @@ class Animation:
                 easingFunction = Interpolation.getEasing(group['easing'])
                 interpolationFunction = Interpolation.getInterpolation(group['interpolation'])
                 if group['length']> 0:
-                    frames = [interpolationFunction(group['frames'], easingFunction(idx / group['duration'])) for idx in range(group['duration'])]
+                    frames = [interpolationFunction(group['frames'], easingFunction(idx / (group['duration']))) for idx in range(group['duration'])]
                 else:
                     frames = []
                 self.cachedGroups[startingGroup + i] = {'frames': frames, 'length': len(frames), 'delay': group['delay'], 'duration': group['duration'], 'pre_delay_pos': group['pre_delay_pos']}
@@ -1006,11 +1009,12 @@ class AnimationEditor(BaseFormEditor):
         }
         self.reset()
         self.canvas = None
-        self.canvasWindowSize = 500
+        self.canvasWindow = None
+        self.canvasWindowDefaultWidth = 500
+        self.canvasWindowDefaultHeight = 500
         
     def getGroupToCanvasData(self):
-        if self.group == None or self.group['length'] == 0: return []
-        windowSize = self.canvasWindowSize
+        if self.group == None or self.group['length'] == 0: return [], [], 0, 0
         cachedGroup = self.Animation.calculateCachedFrames(self.currentGroup, True)[0]
         
         maxX = max(frame['x'] for frame in cachedGroup['frames'])
@@ -1018,13 +1022,25 @@ class AnimationEditor(BaseFormEditor):
         maxY = max(frame['y'] for frame in cachedGroup['frames'])
         minY = min(frame['y'] for frame in cachedGroup['frames'])
         
+        
+        maxX2 = max(frame['x'] for frame in self.group['frames'])
+        minX2 = min(frame['x'] for frame in self.group['frames'])
+        maxY2 = max(frame['y'] for frame in self.group['frames'])
+        minY2 = min(frame['y'] for frame in self.group['frames'])
+        
+        maxX = max(maxX, maxX2)
+        minX = min(minX, minX2)
+        maxY = max(maxY, maxY2)
+        minY = min(minY, minY2)
+        
         diffX = abs(maxX - minX)
         diffY = abs(maxY - minY) if maxY != minY else maxY
         biggestDiff = max(diffX, diffY)
+        windowSize = min(self.canvasWindowWidth, self.canvasWindowHeight)
         zoomLevel = (windowSize / biggestDiff) * 0.80 if biggestDiff != 0 else 1
     
-        offsetX = (windowSize - (diffX * zoomLevel)) / 2
-        offsetY = (windowSize - (diffY * zoomLevel)) / 2
+        offsetX = (self.canvasWindowWidth - (diffX * zoomLevel)) / 2
+        offsetY = (self.canvasWindowHeight - (diffY * zoomLevel)) / 2
         
         color1 = (3, 252, 53)
         color2 = (252, 3, 3)
@@ -1055,6 +1071,7 @@ class AnimationEditor(BaseFormEditor):
         if self.canvas == None: return
         
         canvasData, keyframes, keyframeCount, interpolationType = self.getGroupToCanvasData()
+        if canvasData == []: return
         canvasDataLen = len(canvasData)
         keyframeWeight = int(canvasDataLen / (keyframeCount - 1))
         
@@ -1063,22 +1080,39 @@ class AnimationEditor(BaseFormEditor):
         for i, data in enumerate(canvasData):
             x, y, color = data
             
+            if interpolationType != 2 and (i + 1 < canvasDataLen): #Nearest = no line
+                self.canvas.create_line(x, y, canvasData[i + 1][0], canvasData[i + 1][1], fill=color)
             if (i + 1 == canvasDataLen) or (i % keyframeWeight) == 0: #Keyframe
                 x, y, color = keyframes[int((i + 1) / keyframeWeight)]
                 pointSize = 5 if (i + 1 == canvasDataLen or i == 0) else 4
                 self.canvas.create_oval(x - pointSize, y - pointSize, x + pointSize, y + pointSize, fill=color)
-            elif interpolationType != 2: #Nearest = no line
-                self.canvas.create_line(x, y, canvasData[i + 1][0], canvasData[i + 1][1], fill=color)
         
     def visualizeGroup(self):
         if self.group == None: return
+        if self.canvasWindow != None:
+            self.canvasWindow.deiconify()
+            self.canvasWindow.focus_force()
+            self.updateCanvas()
+            return
+            
+        self.canvasWindowWidth = self.canvasWindowDefaultWidth
+        self.canvasWindowHeight = self.canvasWindowDefaultHeight
+        
         master = Toplevel()
-        self.canvas = Canvas(master, width=self.canvasWindowSize, height=self.canvasWindowSize, bg=getColor('BG'))
+        master.protocol("WM_DELETE_WINDOW", self.closeCanvas)
+        
+        self.canvas = Canvas(master, width=self.canvasWindowWidth, height=self.canvasWindowHeight, bg=getColor('BG'))
         self.canvas.pack(fill='both', expand=True)
         
         self.updateCanvas()
+        self.canvasWindow = master
         master.focus_force()
         master.mainloop()
+        
+    def closeCanvas(self):
+        self.canvasWindow.destroy()
+        self.canvasWindow = None
+        self.canvas = None
         
     def setControlEnabled(self, enabled):
         self.liveControlButton.configure(state=("normal" if enabled else "disabled"))
@@ -1107,6 +1141,10 @@ class AnimationEditor(BaseFormEditor):
         sleep(1 / 60)
         self.fieldVars['easing'].set(easingTypes[self.group['easing']])
         
+    def discardCache(self):
+        self.Animation.cachedGroups[self.currentGroup] = None
+        self.updateCanvas()
+        
     def onFieldChange(self, field, value):
         if self.Animation == None: return
         if field == "easing" and value == "---":
@@ -1131,9 +1169,10 @@ class AnimationEditor(BaseFormEditor):
                     if field == 'duration' or field == 'delay':
                         self.group[field] = int(value)  
                         if field == 'duration':
-                            self.Animation.cachedGroups[self.currentGroup] = None
+                            self.discardCache()
                         elif field == 'delay' and self.Animation.cachedGroups[self.currentGroup] != None:
                             self.Animation.cachedGroups[self.currentGroup]['delay'] = int(value)
+                            self.updateCanvas()
                     elif field == 'groupname':
                         value = value.replace('[', '').replace(',', '.').strip()
                         if len(value) > 0:
@@ -1143,8 +1182,7 @@ class AnimationEditor(BaseFormEditor):
                             self.group['name'] = value
                     else:
                         self.group[field] = easingTypes2[value] if field == 'easing' else interpolationTypes2[value]
-                        self.Animation.cachedGroups[self.currentGroup] = None
-                        self.updateCanvas()
+                        self.discardCache()
                     self.root.onAnimModification()
                 except:
                     pass
@@ -1174,7 +1212,7 @@ class AnimationEditor(BaseFormEditor):
         if self.Animation == None or self.group == None: return
         if order == -1 and self.currentFrame == 0: return
         if order == 1 and (self.currentFrame + 1) == self.group['length']: return
-        self.Animation.cachedGroups[self.currentGroup] = None
+        self.discardCache()
         
         self.group['frames'][self.currentFrame], self.group['frames'][self.currentFrame + order] = self.group['frames'][self.currentFrame + order], self.group['frames'][self.currentFrame]
         self.setFrame(self.currentFrame + order)
@@ -1188,6 +1226,7 @@ class AnimationEditor(BaseFormEditor):
         
         self.Animation.groups[self.currentGroup], self.Animation.groups[self.currentGroup + order] = self.Animation.groups[self.currentGroup + order], self.Animation.groups[self.currentGroup]
         self.Animation.cachedGroups[self.currentGroup], self.Animation.cachedGroups[self.currentGroup + order] = self.Animation.cachedGroups[self.currentGroup + order], self.Animation.cachedGroups[self.currentGroup]
+        self.updateCanvas()
         
         self.setGroup(self.currentGroup + order)
         self.updateGroupList()
@@ -1246,6 +1285,7 @@ class AnimationEditor(BaseFormEditor):
             messagebox.showinfo("Error", "Error pasting frame data", parent=self.root.window)
             return
         self.Animation.addFrame(self.currentGroup, newFrame, self.currentFrame + 1)
+        self.updateCanvas()
         self.updateFrameList()
         self.setFrame(self.currentFrame + 1 if self.group['length'] > (self.currentFrame + 1) else self.currentFrame)
         self.root.onAnimModification(True)
@@ -1268,6 +1308,7 @@ class AnimationEditor(BaseFormEditor):
         framedata['name'] = "New frame %d" % (self.group['length'] + 1)
         
         self.Animation.addFrame(self.currentGroup, framedata, self.currentFrame + 1)
+        self.updateCanvas()
         self.updateFrameList()
         self.setFrame(self.currentFrame + 1 if self.group['length'] > (self.currentFrame + 1) else self.currentFrame)
         self.root.onAnimModification(True)
@@ -1282,6 +1323,7 @@ class AnimationEditor(BaseFormEditor):
             self.resetFrame()
         else:
             self.setFrame(self.currentFrame if self.currentFrame < self.group['length'] else self.currentFrame - 1)
+        self.updateCanvas()
         self.root.onAnimModification(True)
         
     def recolorFrameList(self):
@@ -1678,14 +1720,12 @@ class LiveEditor:
             currFrame = self.T.readInt(game_addresses.addr['frame_counter'], 4)
         
     def waitSingleFrame(self):
-        #sleep(1/60)
-        #return
         currFrame = self.T.readInt(game_addresses.addr['frame_counter'], 4)
         originalFrame = currFrame
         while currFrame == originalFrame:
             if not self.liveControl: return
             currFrame = self.T.readInt(game_addresses.addr['frame_counter'], 4)
-
+        
     keyvalues = {
         'U': 1,
         'D': 2,
