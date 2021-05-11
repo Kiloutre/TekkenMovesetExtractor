@@ -1096,7 +1096,7 @@ class AnimationEditor(BaseFormEditor):
         self.canvas.delete("all")
         
         canvasData, keyframes, keyframeCount, interpolationType = self.getGroupToCanvasData()
-        if canvasData == [] or keyframeCount == 0: return
+        if canvasData == [] or keyframeCount <= 1: return
         canvasDataLen = len(canvasData)
         keyframeWeight = int(canvasDataLen / (keyframeCount - 1))
         
@@ -1220,9 +1220,9 @@ class AnimationEditor(BaseFormEditor):
                 self.framelist.delete(self.currentFrame)
                 self.framelist.insert(self.currentFrame, value)
                 self.framelist.itemconfig(self.currentFrame, {'fg': getColor('listSelectedItem'), 'bg': getColor('listSelectedItemBG')})
-            else:
-                self.updateCanvas()
+
             self.Animation.setValue(self.currentGroup, field, self.currentFrame, value)
+            self.updateCanvas()
             self.root.onAnimModification(True)
         else:
             if self.enabledEditing:
