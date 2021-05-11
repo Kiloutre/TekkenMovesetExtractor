@@ -1,4 +1,4 @@
-1.0.32.9:
+1.0.32.11:
 [EDITOR] Fix "play move" that did not work for move over 999 frames long
 [CAMERA] Add new interpolation options (spline, circular)
 [CAMERA] Add visualization of the camera's path in 2d to better predict the interpolated result
