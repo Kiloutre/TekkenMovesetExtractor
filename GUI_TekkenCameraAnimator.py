@@ -1400,7 +1400,12 @@ class AnimationEditor(BaseFormEditor):
             if not self.root.LiveEditor.startIfNeeded(): return
             framedata = self.root.LiveEditor.getCameraPos(self.group['relativity'])
             
-        framedata['name'] = "New frame %d" % (self.group['length'] + 1)
+        framedata['name'] = "%d" % (self.group['length'] + 1)
+        while True:
+            if next((f for f in self.group['frames'] if f['name'] == framedata['name']), None) == None:
+                break
+            framedata['name'] += "_2"
+            
         
         self.Animation.addFrame(self.currentGroup, framedata, self.currentFrame + 1)
         self.updateFrameList()
@@ -1707,7 +1712,7 @@ class LiveEditor:
             for g in groups:
                 if g['delay'] > 0:
                     if g['pre_delay_pos'] > 0 and g['length'] > 0:
-                        self.setCameraPos(g['frames'][0])
+                        self.setCameraPos(g['frames'][0], g['relativity'])
                     self.waitFrame(g['delay'])
                 for f in g['frames']:
                     if self.runningAnimation == False: raise
@@ -1791,7 +1796,7 @@ class LiveEditor:
             distance = math.sqrt(diffx ** 2 + diffy * 2)
             
             rotx = math.atan2(diffy, diffx) * (180 / math.pi)
-            roty = -(math.atan2(distance, diffz) * (180 / math.pi))
+            roty = -(math.atan2(distance, diffz) * (360 / math.pi))
         
         self.writeFloat(camAddr + 0x39C, cam['fov']) #FOV
         self.writeFloat(camAddr + 0x404, roty) #roty

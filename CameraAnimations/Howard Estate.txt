@@ -1,4 +1,5 @@
-[Movement start, 700, 120, 1, 11, 1]
+[Movement start]
+[duration=700, delay=120, interpolation=1, easing=11, pre_delay_pos=1, relativity=0]
 Main room,65.47045135,0.0,-2.136524916,1309.998779,850.0,-89.85717773,0.0,0.0
 Main room,65.47045135,0.0,-2.136524916,1309.998779,850.0,-89.85717773,0.0,0.0
 Leaving play area,63.0,0.0,820.0,420.0,870.0,-43.0,1.0,0.0
@@ -9,10 +10,12 @@ Roof coming in view,70.0,0.0,4940.0,-930.0,2989.0,-199.0,-29.0,0.0
 Estate roof wide shot,70.0,0.0,3709.0,-2450.0,3409.0,-229.0,-29.0,0.0
 Estate roof corner,70.0,0.0,1739.0,-1860.0,4349.0,-359.0,-69.0,0.0
 Estate roof (left side),70.0,0.0,0.0,-1000.0,6001.0,-360.0,-90.0,0.0
-[Aerial unzoom, 80, 60, 1, 11, 0]
+[Aerial unzoom]
+[duration=80, delay=60, interpolation=1, easing=11, pre_delay_pos=0, relativity=0]
 Estate roof (left side),70.0,0.0,0.0,-1000.0,6001.0,-360.0,-90.0,0.0
 Estate roof (full. high view),75.0,0.0,0.0,950.0,10000.0,-360.0,-90.0,0.0
-[Aerial zoom to ground, 360, 120, 1, 11, 0]
+[Aerial zoom to ground]
+[duration=360, delay=120, interpolation=1, easing=11, pre_delay_pos=0, relativity=0]
 Estate roof (full. high view),75.0,0.0,0.0,950.0,10000.0,-360.0,-90.0,0.0
 Transition to ground,75.0,0.0,0.0,-2000.0,9000.0,-360.0,-150.0,8.0
 Ground,65.0,0.0,-140.269958,-2746.744873,813.657837,29.79941,-3.4e-05,0.0
