@@ -94,6 +94,15 @@ fieldLabels = {
     'z': 'Height'
 }
 
+groupKeys = [
+    'duration',
+    'delay',
+    'interpolation',
+    'easing',
+    'pre_delay_pos',
+    'relativity'
+]
+
 interpolationTypes = {
     0: "Linear",
     2: "Nearest",
@@ -457,21 +466,38 @@ class Animation:
             for line in f:
                 line = line.strip()
                 if len(line) == 0 or line.startswith("#"): continue
-                if re.match("^\[.*,( ?[0-9]+,){4} ?[0-9]+\]$", line):
-                    groupData = line[1:-1].split(",")
+                if re.match("^\[([^,=]+)\]$", line):
                     group = {
-                        'name': groupData[0],
-                        'duration': int(groupData[1]),
-                        'delay': int(groupData[2]),
-                        'interpolation': int(groupData[3]),
-                        'easing': int(groupData[4]),
-                        'pre_delay_pos': int(groupData[5]),
+                        'name': line[1:-1],
+                        'duration': 0,
+                        'delay': 0,
+                        'interpolation': 0,
+                        'easing': 0,
+                        'pre_delay_pos': 0,
                         'relativity': 0,
                         'length': 0,
                         'frames': []
                     }
-                    if len(groupData) > 6:
-                        group['relativity'] = int(groupData[6])
+                    self.groups.append(group)
+                    self.cachedGroups.append(None)
+                elif re.match("^\[(([a-z\_]+=[0-9]+)+, ?)*([a-z\_]+=[0-9]+)\]$", line):
+                    for pair in line[1:-1].split(","):
+                        key, value = [k.strip() for k in pair.split("=")]
+                        if key in groupKeys: group[key] = int(value)
+                elif re.match("^\[.*,( ?[0-9]+,)* ?[0-9]+\]$", line):
+                    groupData = line[1:-1].split(",")
+                    groupDataLen = len(groupData)
+                    group = {
+                        'name': groupData[0],
+                        'duration': int(groupData[1]) if groupDataLen > 1 else 0,
+                        'delay': int(groupData[2]) if groupDataLen > 2 else 0,
+                        'interpolation': int(groupData[3]) if groupDataLen > 3 else 0,
+                        'easing': int(groupData[4]) if groupDataLen > 4 else 0,
+                        'pre_delay_pos': int(groupData[5]) if groupDataLen > 5 else 0,
+                        'relativity': int(groupData[6]) if groupDataLen > 6 else 0,
+                        'length': 0,
+                        'frames': []
+                    }
                     self.groups.append(group)
                     self.cachedGroups.append(None)
                 else:
@@ -1234,7 +1260,7 @@ class AnimationEditor(BaseFormEditor):
                             self.Animation.cachedGroups[self.currentGroup]['delay'] = int(value)
                             self.updateCanvas()
                     elif field == 'groupname':
-                        value = value.replace('[', '').replace(',', '.').strip()
+                        value = value.replace('[', '(').replace(']', ')').replace('=', '-').replace(',', '.').strip()
                         if len(value) > 0:
                             self.grouplist.delete(self.currentGroup)
                             self.grouplist.insert(self.currentGroup, value)
@@ -1740,9 +1766,8 @@ class LiveEditor:
             y += playerPos['y']
             z += playerPos['z']
         elif relative == 3 or relative == 4: #Pos & height & rot relativity
-            fullAngle = (math.pi * 2)
             playerPos = self.getPlayerPos()
-            playerRot = self.getPlayerRot() * (fullAngle / 65535)
+            playerRot = self.getPlayerRot() * ((math.pi * 2) / 65535)
             
             distance = math.sqrt(x ** 2 + y ** 2)
             camAngle = math.atan2(y, x)
@@ -1766,7 +1791,7 @@ class LiveEditor:
             distance = math.sqrt(diffx ** 2 + diffy * 2)
             
             rotx = math.atan2(diffy, diffx) * (180 / math.pi)
-            roty = math.atan2(distance, diffz) * (180 / math.pi) - 90
+            roty = -(math.atan2(distance, diffz) * (180 / math.pi))
         
         self.writeFloat(camAddr + 0x39C, cam['fov']) #FOV
         self.writeFloat(camAddr + 0x404, roty) #roty
@@ -1964,7 +1989,8 @@ class GUI_TekkenCameraAnimator():
         if self.AnimationEditor.Animation == None: return
         with open(dataPath + self.AnimationEditor.Animation.filename, "w") as f:
             for group in self.AnimationEditor.Animation.groups:
-                line = "[%s, %d, %d, %d, %d, %d, %d]\n" % (group['name'], group['duration'], group['delay'], group['interpolation'], group['easing'], group['pre_delay_pos'], group['relativity'])
+                line = "[%s]\n" % (group['name'])
+                line += "[" + (", ".join(["%s=%d" % (key, group[key]) for key in groupKeys])) + "]\n"
                 f.write(line)
                 for frame in group['frames']:
                     line = ",".join([str(frame[field]) for field in frameFields])
@@ -1972,7 +1998,7 @@ class GUI_TekkenCameraAnimator():
             self.AnimationSelector.setSaveButtonEnabled(False)
         
     def LoadAnimation(self, filename):
-        LoadedAnim = Animation(filename=filename)
+        LoadedAnim = None
         try:
             LoadedAnim = Animation(filename=filename)
         except:
