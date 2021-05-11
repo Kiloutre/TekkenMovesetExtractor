@@ -1718,7 +1718,7 @@ class LiveEditor:
                     if self.runningAnimation == False: raise
                     self.setCameraPos(f, g['relativity'])
                     self.waitFrame(1)
-        except:
+        except Exception as e:
             pass
         self.runningAnimation = False
         if not self.exiting:
@@ -1793,10 +1793,10 @@ class LiveEditor:
             diffx = playerPos['x'] - x
             diffy = playerPos['y'] - y
             diffz = z - playerPos['z']
-            distance = math.sqrt(diffx ** 2 + diffy * 2)
+            distance = math.sqrt(diffx ** 2 + diffy ** 2)
             
             rotx = math.atan2(diffy, diffx) * (180 / math.pi)
-            roty = -(math.atan2(distance, diffz) * (360 / math.pi))
+            roty = math.atan2(distance, diffz) * (180 / math.pi) - 90
         
         self.writeFloat(camAddr + 0x39C, cam['fov']) #FOV
         self.writeFloat(camAddr + 0x404, roty) #roty
