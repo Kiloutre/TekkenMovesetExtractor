@@ -108,7 +108,13 @@ interpolationTypes2 = {interpolationTypes[k]:k for k in interpolationTypes}
 relativityTypes = {
     0: "None",
     1: "P1 Pos",
-    2: "P1 Pos & Rotation"
+    2: "P1 Pos & Height",
+    3: "P1 Pos & Rotation",
+    4: "P1 Pos & Height & Rotation",
+    11: "P2 Pos",
+    12: "P2 Pos & Height",
+    13: "P2 Pos & Rotation",
+    14: "P2 Pos & Height & Rotation",
 }
 relativityTypes2 = {relativityTypes[k]:k for k in relativityTypes}
 
@@ -1144,15 +1150,6 @@ class AnimationEditor(BaseFormEditor):
         master.focus_force()
         master.protocol("WM_DELETE_WINDOW", self.closeAdvancedWindow)
         
-        relativityLabel = Label(master,  text='Relativity:', bg=getColor('lighterBG'), fg=getColor('labelTextColor'))
-        relativityLabel.pack(side='left', padx=(0, 7))
-        OPTIONS = [relativityTypes[k] for k in relativityTypes]
-        relativityVar = StringVar()
-        relativityVar.trace("w", lambda name, index, mode, relativityVar=relativityVar: self.onFieldChange('relativity', relativityVar.get()))
-        w = OptionMenu(master, relativityVar, OPTIONS[0], *OPTIONS)
-        w.pack(side='left', padx=(0, 7))
-        self.relativitySelect = w
-        
         self.advancedWindow = master
         master.mainloop()
         
@@ -1311,6 +1308,7 @@ class AnimationEditor(BaseFormEditor):
             'interpolation': 1,
             'pre_delay_pos': 0,
             'length': 0,
+            'relativity': 0,
             'frames': []
         }
         self.Animation.addGroup(groupData, self.currentGroup + 1)
@@ -1372,7 +1370,7 @@ class AnimationEditor(BaseFormEditor):
                 framedata = { 'fov': 65, 'dof': 0, 'x': 0, 'y': 0, 'z': 0, 'rotx': 0, 'roty': 0, 'tilt': 0}
         else:
             if not self.root.LiveEditor.startIfNeeded(): return
-            framedata = self.root.LiveEditor.getCameraPos(1)
+            framedata = self.root.LiveEditor.getCameraPos(self.group['relativity'])
             
         framedata['name'] = "New frame %d" % (self.group['length'] + 1)
         
@@ -1515,8 +1513,11 @@ def matrixMult(mat, b):
 class LiveEditor:
     def __init__(self, root):
         self.root = root
-        self.playerAddress = game_addresses.addr['t7_p1_addr']
+        self.setPlayer(0)
         self.stop()
+        
+    def setPlayer(self, id):
+        self.playerAddress = game_addresses.addr['t7_p1_addr'] + (id * game_addresses.addr['t7_playerstruct_size'])
         
     def stop(self, exiting=False):
         self.camAddr = None
@@ -1721,12 +1722,20 @@ class LiveEditor:
         y = cam['y']
         z = cam['z']
         
+        if relative >= 11:
+            relative -= 10
+            self.setPlayer(1) #2p
+            
         if relative == 1: #Pos relativity
             playerPos = self.getPlayerPos()
             x += playerPos['x']
             y += playerPos['y']
+        elif relative == 2: #Pos & height relativity
+            playerPos = self.getPlayerPos()
+            x += playerPos['x']
+            y += playerPos['y']
             z += playerPos['z']
-        elif relative == 2: #Pos & rot relativity
+        elif relative == 3 or relative == 4: #Pos & height & rot relativity
             fullAngle = (math.pi * 2)
             playerPos = self.getPlayerPos()
             playerRot = self.getPlayerRot() * (fullAngle / 65535)
@@ -1742,7 +1751,8 @@ class LiveEditor:
             rotx = (rotx - (self.getPlayerRot() * (360/ 65535))) % 360
             x = newx + playerPos['x']
             y = newy + playerPos['y']
-            z += playerPos['z']
+            if relative == 4: #height relativity
+                z += playerPos['z']
         
         self.writeFloat(camAddr + 0x39C, cam['fov']) #FOV
         self.writeFloat(camAddr + 0x404, roty) #roty
@@ -1766,11 +1776,20 @@ class LiveEditor:
             'z': self.readFloat(camAddr + 0x400)
         }
         
+        if relative >= 11:
+            relative -= 10
+            self.setPlayer(1) #2p
+            
         if relative == 1: #Pos
+            playerPos = self.getPlayerPos()
+            cam['x'] -= playerPos['x']
+            cam['y'] -= playerPos['y']
+        elif relative == 2: #Pos & height
+            playerPos = self.getPlayerPos()
             cam['x'] -= playerPos['x']
             cam['y'] -= playerPos['y']
             cam['z'] -= playerPos['z']
-        elif relative == 2: #Pos & rot
+        elif relative == 3 or relative == 4: #Pos & rot & height
             playerPos = self.getPlayerPos()
             playerRot = self.getPlayerRot()
             
@@ -1791,12 +1810,13 @@ class LiveEditor:
             cam['rotx'] = (cam['rotx'] + (playerRot * (360/ 65535))) % 360
             cam['x'] = newx
             cam['y'] = newy
-            cam['z'] -= playerPos['z'] #Relative player height
+            if relative == 4:
+                cam['z'] -= playerPos['z'] #Relative player height
         
         return cam
         
     def getPlayerHeight(self):
-        return self.getPlayerFloorheight() + self.readFloat(self.playerAddress + 0xF8) / 10
+        return self.getPlayerFloorheight() + self.readFloat(self.playerAddress + 0x114) / 10
         
     def getPlayerFloorheight(self):
         return self.readFloat(self.playerAddress + 0x1B0) / 10
@@ -1809,7 +1829,7 @@ class LiveEditor:
         }
         
     def getPlayerRot(self):
-        return self.T.readInt(self.playerAddress + 0xEE, 2)
+        return self.T.readInt(self.playerAddress + 0x1c0, 2)
         
     def waitFrame(self, amount):
         currFrame = self.T.readInt(game_addresses.addr['frame_counter'], 4)
