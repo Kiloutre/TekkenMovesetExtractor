@@ -1,0 +1,6 @@
+Export a moveset by loading up the target character in-game, then clicking the wanted export button. Movesets loaded using "Import to P1/P2" will be unloaded after the next loading screen.
+If you want the moveset to stay constantly, use the "Online Player" buttons, and BEFORE the loading screen. Both online players must load the same moveset on the same players.
+
+Both players must select the characters they each will play as their respective "local" player.
+
+- Using only 'Set Online Local' OR 'Set Online Remote' alone will not properly track side changes after loading screens. Use BOTH at once so that the tool work properly.

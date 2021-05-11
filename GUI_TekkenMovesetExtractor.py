@@ -1,6 +1,6 @@
 # Python 3.6.5
 
-from tkinter import Tk, Menu, Frame, Listbox, Label, Text, messagebox
+from tkinter import Tk, Menu, Frame, Listbox, Label, Text, messagebox, messagebox
 from tkinter.ttk import Button
 from re import match
 from Addresses import game_addresses
@@ -496,6 +496,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         menubar.add_command(label="Animation Editor", command=openAnimationEditor)
         menubar.add_command(label="Camera Animator", command=openCameraAnimator)
         menubar.add_command(label="Create shortcuts", command=self.createShortcuts)
+        menubar.add_command(label="Extractor guide", command=self.openGuide)
         self.config(menu=menubar)
         
         
@@ -534,6 +535,10 @@ class GUI_TekkenMovesetExtractor(Tk):
                 for line in f: print(line)
         except:
             pass
+            
+    def openGuide(self):
+        with open("InterfaceData/extractorGuide.txt", "r") as f:
+            messagebox.showinfo("Guide", f.read(),  parent=self)
         
     def createShortcuts(self):
         targetDir = os.path.dirname(os.path.abspath(__file__)) + "\\"
