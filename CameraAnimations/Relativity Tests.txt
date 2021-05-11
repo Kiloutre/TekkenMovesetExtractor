@@ -1,5 +1,5 @@
 [Circling around 1P (5s)]
-[duration=300, delay=45, interpolation=4, easing=11, pre_delay_pos=1, relativity=1]
+[duration=300, delay=45, interpolation=4, easing=11, pre_delay_pos=1, relativity=2]
 Front view,65.0,0.0,0.0,1000.0,104.25,-90.0,0.0,-0.0
 Left view,65.0,0.0,-1000.0,0.0,104.25,0.0,0.0,-0.0
 Back view,65.0,0.0,0.0,-1000.0,104.25,90.0,0.0,-0.0

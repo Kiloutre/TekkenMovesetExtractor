@@ -1859,8 +1859,17 @@ class LiveEditor:
         
         return cam
         
+    def getPlayerHeightOffset(self, key):
+        return {
+            'left_hand': 0xed4,
+            'right_hand': 0x1904,
+            'body': 0xFD4,
+            'body2': 0xFB4,
+            'body3': 0xFF4,
+        }.get(key, 0xFF4)
+        
     def getPlayerHeight(self):
-        return self.getPlayerFloorheight() + self.readFloat(self.playerAddress + 0x114) / 10
+        return self.readFloat(self.playerAddress + self.getPlayerHeightOffset('body')) / 10
         
     def getPlayerFloorheight(self):
         return self.readFloat(self.playerAddress + 0x1B0) / 10
