@@ -111,10 +111,12 @@ relativityTypes = {
     2: "P1 Pos & Height",
     3: "P1 Pos & Rotation",
     4: "P1 Pos & Height & Rotation",
+    5: "P1 Look-At",
     11: "P2 Pos",
     12: "P2 Pos & Height",
     13: "P2 Pos & Rotation",
     14: "P2 Pos & Height & Rotation",
+    15: "P2 Look-At"
 }
 relativityTypes2 = {relativityTypes[k]:k for k in relativityTypes}
 
@@ -1246,7 +1248,7 @@ class AnimationEditor(BaseFormEditor):
                         }
                         self.group[field] = selectDicts[field][value]
                         self.discardCache()
-                    self.root.onAnimModification()
+                    self.root.onAnimModification(field == 'relativity')
                 except:
                     pass
                 
@@ -1725,6 +1727,8 @@ class LiveEditor:
         if relative >= 11:
             relative -= 10
             self.setPlayer(1) #2p
+        else:
+            self.setPlayer(0) #1p
             
         if relative == 1: #Pos relativity
             playerPos = self.getPlayerPos()
@@ -1748,11 +1752,21 @@ class LiveEditor:
             newx = (distance) * math.cos(finalAngle)
             newy = (distance) * math.sin(finalAngle)
             
-            rotx = (rotx - (self.getPlayerRot() * (360/ 65535))) % 360
             x = newx + playerPos['x']
             y = newy + playerPos['y']
             if relative == 4: #height relativity
                 z += playerPos['z']
+                
+            rotx = (rotx - (self.getPlayerRot() * (360/ 65535))) % 360
+        elif relative == 5: #Look-at
+            playerPos = self.getPlayerPos()
+            diffx = playerPos['x'] - x
+            diffy = playerPos['y'] - y
+            diffz = z - playerPos['z']
+            distance = math.sqrt(diffx ** 2 + diffy * 2)
+            
+            rotx = math.atan2(diffy, diffx) * (180 / math.pi)
+            roty = math.atan2(distance, diffz) * (180 / math.pi) - 90
         
         self.writeFloat(camAddr + 0x39C, cam['fov']) #FOV
         self.writeFloat(camAddr + 0x404, roty) #roty

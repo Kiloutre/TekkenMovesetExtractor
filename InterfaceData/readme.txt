@@ -3,7 +3,7 @@ If you want the moveset to stay constantly, use the "Online Player" buttons, and
 
 - Using only 'Set Online Local' OR 'Set Online Remote' alone will not properly track side changes. Use BOTH at once for proper behaviour.
 1.0.32.9:
-[CAMERA] Add new interpolation options, add visualization of the camera's path in 2d
+[CAMERA] Add new interpolation options, add visualization of the camera's path in 2d, add relative position & rotation
 [EDITOR] Fix "play move" that did not work for move over 999 frames long
     
 --- by kilo ( https://www.youtube.com/c/kiloutre ) ---
