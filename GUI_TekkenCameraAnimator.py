@@ -890,7 +890,7 @@ class AnimationEditor(BaseFormEditor):
         groupsHeader = Frame(farLeft, bg=getColor('BG'))
         groupsHeader.pack(side='top', pady=(0, 3), fill='x')
         
-        groupLabel = Label(groupsHeader,  text='Groups:', bg=getColor('BG'), fg=getColor('labelTextColor'))
+        groupLabel = Label(groupsHeader, text='Groups:', bg=getColor('BG'), fg=getColor('labelTextColor'))
         groupLabel.pack(side='left')
         
         groupOrderDown = Button(groupsHeader, bg=getColor('buttonBGColor'), fg=getColor('buttonTextColor'), text='↓')
@@ -901,6 +901,15 @@ class AnimationEditor(BaseFormEditor):
         groupOrderDown.pack(side='right')
         CreateToolTip(groupOrderDown, 'Move group up')
         CreateToolTip(groupOrderDown, 'Move group down')
+        
+        pasteButton = Button(groupsHeader, bg=getColor('buttonBGColor'), fg=getColor('buttonTextColor'), text='[P]')
+        pasteButton['command'] = self.pasteGroup
+        pasteButton.pack(side='right')
+        copyButton = Button(groupsHeader, bg=getColor('buttonBGColor'), fg=getColor('buttonTextColor'), text='[C]')
+        copyButton['command'] = self.copyGroup
+        copyButton.pack(side='right')
+        CreateToolTip(pasteButton, 'Paste from clipboard')
+        CreateToolTip(copyButton, 'Copy to clipboard')
         
         grouplist = Listbox(farLeft, bg=getColor('ListBGColor'))
         grouplist.bind('<<ListboxSelect>>', self.onGroupSelectionChange)
@@ -1075,6 +1084,7 @@ class AnimationEditor(BaseFormEditor):
         if self.group == None or self.group['length'] == 0: return [], [], 0, 0
         cachedGroup = self.Animation.calculateCachedFrames(self.currentGroup, True)[0]
         
+        
         maxX = max(frame['x'] for frame in cachedGroup['frames'])
         minX = min(frame['x'] for frame in cachedGroup['frames'])
         maxY = max(frame['y'] for frame in cachedGroup['frames'])
@@ -1091,37 +1101,88 @@ class AnimationEditor(BaseFormEditor):
         maxY = max(maxY, maxY2)
         minY = min(minY, minY2)
         
-        diffX = abs(maxX - minX)
-        diffY = abs(maxY - minY) if maxY != minY else maxY
-        biggestDiff = max(diffX, diffY)
-        windowSize = min(self.canvasWindowWidth, self.canvasWindowHeight)
-        zoomLevel = (windowSize / biggestDiff) * 0.80 if biggestDiff != 0 else 1
-    
-        offsetX = (self.canvasWindowWidth - (diffX * zoomLevel)) / 2
-        offsetY = (self.canvasWindowHeight - (diffY * zoomLevel)) / 2
+        #print(f"""
+        #maxX: {maxX}
+        #minX: {minX}
+        #maxY: {maxY}
+        #minY: {minY}
+        #""")
         
+        
+        # window size is set to 500 for our computations
+        # pt1 = (-300, -250) pt2 = (3000, 1000) => offset to: (0, 0), (3300, 1250) => scaled to (*0.1515): (0, 0), (500, 190)
+        # pt1 = (-300, 250) pt2 = (-300, 250) => offset to: (0, 550), (0, 550)
+        #
+        # 
+
+        
+        # compute the offset to make sure the coordinates start to 0     
+        offsetX = abs(min(minX, 0))
+        offsetY = abs(min(minY, 0))
+        diffX = maxX + offsetX
+        diffY = maxY + offsetY
+        
+        #print(f"""
+        #offsetX: {offsetX}
+        #offsetY: {offsetY}
+        #diffX: {diffX}
+        #diffY: {diffY}
+        #""")      
+        
+        # compute the scale
+        windowSize = min(self.canvasWindowWidth, self.canvasWindowHeight)  
+        largestDiff = max(diffX, diffY)
+        scale = windowSize / largestDiff * 0.90 if largestDiff != 0 else 1
+        
+        #print(f"""
+        #windowSize: {windowSize}
+        #largestDiff: {max(diffX, diffY)}
+        #scale: {scale}
+        #""")    
+        
+        
+        offsetCenterX = (self.canvasWindowWidth // 2) - (diffX * scale) // 2
+        offsetCenterY = (self.canvasWindowHeight // 2) - (diffY * scale) // 2
+
+        #print(f"""
+        #offsetCenterX: {offsetCenterX}
+        #offsetCenterY: {offsetCenterY}
+        #""")
+        
+        #
         color1 = (3, 252, 53)
         color2 = (252, 3, 3)
         diff = [color2[i] - color1[i] for i in range(3)]
-        
+
+        #
         canvasPoints = []
         frameCount = len(cachedGroup['frames'])
         for i, frame in enumerate(cachedGroup['frames']):
             t = i / frameCount
-            x = (frame['x'] - min(0, minX)) * zoomLevel + offsetX
-            y = (frame['y'] - min(0, minY)) * zoomLevel + offsetY
+            x = (frame['x'] + offsetX) * scale + offsetCenterX
+            y = (frame['y'] + offsetY) * scale + offsetCenterY
+            #print(f"""
+            #x: {x}
+            #y: {y}
+            #""")
             newColor = "".join(["%02x" % int(color1[n] + diff[n] * t) for n in range(3)])
             canvasPoints.append((x, y, "#" + newColor))
-            
+        
+        # 
         keyframes = []
         for i, frame in enumerate(self.group['frames']):
             t = i / len(self.group['frames'])
             
-            x = (frame['x'] - min(0, minX)) * zoomLevel + offsetX
-            y = (frame['y'] - min(0, minY)) * zoomLevel + offsetY
+            x = (frame['x'] + offsetX) * scale + offsetCenterX
+            y = (frame['y'] + offsetY) * scale + offsetCenterY
             
+            #print(f"""
+            #x: {x}
+            #y: {y}
+            #""")
             newColor = "".join(["%02x" % int(color1[n] + diff[n] * t) for n in range(3)])
             keyframes.append((x, y, "#" + newColor))
+            
            
         return canvasPoints, keyframes, self.group['length'], self.group['interpolation']
         
@@ -1130,9 +1191,9 @@ class AnimationEditor(BaseFormEditor):
         self.canvas.delete("all")
         
         canvasData, keyframes, keyframeCount, interpolationType = self.getGroupToCanvasData()
-        if canvasData == [] or keyframeCount <= 1: return
+        if canvasData == []: return
         canvasDataLen = len(canvasData)
-        keyframeWeight = int(canvasDataLen / (keyframeCount - 1))
+        keyframeWeight = int((canvasDataLen / (keyframeCount - 1)) if keyframeCount > 1 else canvasDataLen + 1)
         
         for i, data in enumerate(canvasData):
             x, y, color = data
@@ -1162,8 +1223,8 @@ class AnimationEditor(BaseFormEditor):
         self.canvas = Canvas(master, width=self.canvasWindowWidth, height=self.canvasWindowHeight, bg=getColor('BG'))
         self.canvas.pack(fill='both', expand=True)
         
-        self.updateCanvas()
         self.canvasWindow = master
+        self.updateCanvas()
         master.focus_force()
         master.mainloop()
         
@@ -1353,6 +1414,55 @@ class AnimationEditor(BaseFormEditor):
         else:
             self.setGroup(self.currentGroup if self.currentGroup < len(self.Animation.groups) else self.currentGroup - 1)
         self.root.onAnimModification()
+        
+    def copyGroup(self):
+        if self.group == None: return
+        data = "[%s]\n" % (self.group['name'])
+        data += "[" + (", ".join(["%s=%d" % (key, self.group[key]) for key in groupKeys if self.group[key] != 0])) + "]\n"
+        for frame in self.group['frames']:
+            data += ",".join([str(frame[k]) for k in frameFields]) + "\n"
+        pyperclip.copy(data)
+        messagebox.showinfo("Copied", "Group data copied", parent=self.root.window)
+        
+    def pasteGroup(self):
+        if self.Animation == None or self.group == None: return
+        groupList = []
+        try:
+            copiedGroup = pyperclip.paste().strip()
+            groupData = None
+            for line in copiedGroup.split("\n"):
+                line = line.strip()
+                if re.match("^\[([^,=]+)\]$", line):
+                    groupData = {
+                        'name': line[1:-1],
+                        'duration': 0,
+                        'delay': 0,
+                        'interpolation': 0,
+                        'easing': 0,
+                        'pre_delay_pos': 0,
+                        'relativity': 0,
+                        'length': 0,
+                        'frames': []
+                    }
+                    groupList.append(groupData)
+                elif re.match("^\[(([a-z\_]+=[0-9]+)+, ?)*([a-z\_]+=[0-9]+)\]$", line):
+                    for pair in line[1:-1].split(","):
+                        key, value = [k.strip() for k in pair.split("=")]
+                        if key in groupKeys: groupData[key] = int(value)
+                elif groupData != None and len(line) != 0:
+                    line = line.split(',')
+                    groupData['frames'].append({field:getValueFromType(fieldTypes[field], line[i]) for i, field in enumerate(frameFields)})
+                    groupData['length'] += 1
+        except:
+            messagebox.showinfo("Error", "Error pasting frame data", parent=self.root.window)
+            return
+        groupList.reverse()
+        for group in groupList:
+            self.Animation.addGroup(group, self.currentGroup + 1)
+        self.updateGroupList()
+        self.setGroup(self.currentGroup + 1 if self.currentGroup + 1 < len(self.Animation.groups) else self.currentGroup)
+        self.root.onAnimModification()
+        self.updateCanvas()
         
     def copyFrame(self):
         if self.Animation == None or self.group == None or self.group['length'] == 0: return
