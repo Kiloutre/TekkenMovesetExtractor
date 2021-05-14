@@ -19,7 +19,7 @@ from GUI_TekkenMovesetEditor import GUI_TekkenMovesetEditor
 from GUI_TekkenAnimationEditor import GUI_TekkenAnimationEditor
 from GUI_TekkenCameraAnimator import GUI_TekkenCameraAnimator
 
-extractorVersion = "1.0.32.11"
+extractorVersion = "1.0.32.12"
 latestRelease = "https://api.github.com/repos/Kiloutre/TekkenMovesetExtractor/releases/latest" #Unused
 latestAddrFile = game_addresses['update_link']
 charactersPath = "./extracted_chars/"

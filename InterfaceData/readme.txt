@@ -1,8 +1,9 @@
-1.0.32.11:
-[EDITOR] Fix "play move" that did not work for move over 999 frames long
-[CAMERA] Add new interpolation options (spline, circular)
-[CAMERA] Add visualization of the camera's path in 2d to better predict the interpolated result
-[CAMERA] Add options for player-relative camera movement
+1.0.32.12:
+[CAMERA] Add game speed option, add keyframe timing control and keyframe easing
+[CAMERA] Add button to freeze/unfreeze game time, fix camera not being able to move while the time was frozen
+[CAMERA] Show player position when visualizing the camera movement
+[CAMERA] Add "previous frame" relativity to move the camera relatively to its ending position in the previous group
+[EXTRACTOR] Add button to update game_addresses.txt file
     
 If you find a bug, let me know on github.
 --- by kilo ( https://www.youtube.com/c/kiloutre ) ---

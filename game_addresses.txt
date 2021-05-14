@@ -88,7 +88,7 @@ global_frame_counter_ptr   = 0x143444F44
 using_global_frame_counter = 1           #0 = more reliable, 1 = animation is not paused by game and camera can move even if the in-game time is frozen
 freeze_code_addr           = 0x140262114 #jne 14026349A
 freeze_environment         = 0x1487EE6B0
-input_buffer               = 0x14343C808
+input_buffer               = 0x1434C9490
 camera_starting_ptr        = 0x14377FCF0
 input_code_injection       = 0x145038ea8
 camera_code_injection      = 0x1416A2A40

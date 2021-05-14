@@ -62,7 +62,8 @@ frameFields = {
     'speed': 'int',
     'frame_easing': 'int'
 }
-dataFields = [f for f in frameFields if f != 'name']
+linearlyInterpolated = [ 'speed' ]
+dataFields = [f for f in frameFields if f != 'name' and f != 'frame_easing']
 
 defaultFieldValues = {
     'name': '',
@@ -171,6 +172,10 @@ easingTypes = {
     15: "Ease in-out elastic",
 }
 easingTypes2 = {easingTypes[k]:k for k in easingTypes}
+        
+def generateProgressBar(progress, iteration=20):
+    filledCount = int(progress * iteration)
+    return "[" + "|" * filledCount + "_" * (iteration - filledCount) + "]"
         
 def getValueFromType(type, value):
     try:
@@ -307,7 +312,7 @@ class Interpolation:
             13: Interpolation.easeInOutQuart,
             14: Interpolation.easeInOutExpo,
             15: Interpolation.easeInOutElastic,
-        }.get(id, 0)
+        }.get(id, Interpolation.linear)
     
     def getInterpolation(id):
         return {
@@ -317,7 +322,7 @@ class Interpolation:
             3: Interpolation.splineInterpolation,
             5: lambda points, t: Interpolation.splineInterpolation(points, t, withZ=True),
             4: Interpolation.circularInterpolation,
-        }.get(id, 0)
+        }.get(id, Interpolation.linearCurveValue)
 
     def linear(x):
         return x
@@ -381,10 +386,20 @@ class Interpolation:
     
     def interpolateLine(p0, p1, t):
         return {field:(p0[field] + (p1[field] - p0[field]) * t) for field in dataFields}
+        
+    def interpolateSingleValue(points, t, field):
+        pointsLen = len(points)
+        if t >= 1 or pointsLen == 1: return points[-1][field]
+        idx = (pointsLen - 1) * t
+        remainder = idx % 1
+        idx = int(idx)
+        return points[idx][field] + (points[idx + 1][field] - points[idx][field]) * remainder
     
     def getBezierCurveValue(points, t):
+        speed = Interpolation.interpolateSingleValue(points, t, 'speed')
         while len(points) > 1:
             points = [Interpolation.interpolateLine(points[i], points[i + 1], t) for i in range(0, len(points) - 1)]
+        points[0]['speed'] = speed
         return points[0]
         
     def splineInterpolation(points, t, withZ=False):
@@ -491,9 +506,10 @@ class Interpolation:
     
     def nearestInterpolation(points, t):
         pointsLen = len(points)
-        idx = pointsLen * t
+        idx = (pointsLen - 1) * t
         remainder = idx % 1
-        return points[int(idx + 1 if ((idx % 1) >= 0.5 and idx + 1 < pointsLen) else idx)]
+        idx = int(idx)
+        return points[idx + 1 if (remainder >= 0.5 and idx + 1 < pointsLen) else idx]
         
 class Animation:
     def __init__(self, filename):
@@ -576,15 +592,12 @@ class Animation:
     def calculateCachedFrames(self, startingGroup=0, singleGroup=False):
         end = startingGroup + 1 if singleGroup else len(self.groups)
         
-        def generateProgressBar(progress, iteration=20):
-            filledCount = int(progress * iteration)
-            return "[" + "|" * filledCount + "_" * (iteration - filledCount) + "]"
-        
         for i, group in enumerate(self.groups[startingGroup:end]):
             if self.cachedGroups[startingGroup + i] == None:
-                easingFunction = Interpolation.getEasing(group['easing'])
                 interpolationFunction = Interpolation.getInterpolation(group['interpolation'])
+                
                 if group['length'] == 2 or group['length'] == 1:
+                    easingFunction = Interpolation.getEasing(group['easing'])
                     frames = [interpolationFunction(group['frames'], easingFunction(idx / (group['duration'] - 1))) for idx in range(group['duration'])]
                 elif group['length'] > 0:
                     if group['easing'] == -1:
@@ -607,6 +620,7 @@ class Animation:
                             
                             prevKeyframe = int(keyframe['frame'])
                     else:
+                        easingFunction = Interpolation.getEasing(group['easing'])
                         frames = [interpolationFunction(group['frames'], easingFunction(idx / (group['duration'] - 1))) for idx in range(group['duration'])]
                 else:
                     frames = []
@@ -1437,7 +1451,7 @@ class AnimationEditor(BaseFormEditor):
         self.updateCanvas()
         
     def setKeyframeIdxEditing(self, enabled):
-        if self.currentFrame > 0 and enabled:
+        if self.currentFrame > 0 and enabled and self.group['length'] > 2:
             self.frameEasing.enable()
         else:
             self.frameEasing.disable()
@@ -2007,7 +2021,7 @@ class LiveEditor:
         except:
             self.liveControl = False
             
-        if not self.exiting: self.onLiveControlDisable()
+        if not self.exiting: self.root.onLiveControlDisable()
         self.resetInputsCode()
         
     def playAnimation(self, groups):
@@ -2030,7 +2044,6 @@ class LiveEditor:
         try:
             prevCameraPos = None
             for g in groups:
-                
                 if g['delay'] > 0:
                     if g['pre_delay_pos'] > 0 and g['length'] > 0:
                         self.setCameraPos(g['frames'][0], g['relativity'])
@@ -2046,6 +2059,7 @@ class LiveEditor:
                     
         except Exception as e:
             pass
+        
         self.runningAnimation = False
         if not self.exiting:
             if self.root.AnimationEditor.getFrame()[0] != None:
@@ -2254,7 +2268,7 @@ class LiveEditor:
     }
     
     def getInputBufferAddr(self):
-        self.inputbuffer = self.T.readInt(game_addresses['input_buffer'], 8) + 0x20
+        self.inputbuffer = self.T.readInt(game_addresses['input_buffer'], 8) + 0x94
         return self.inputbuffer
 
     def getInputs(self):
@@ -2318,6 +2332,7 @@ class GUI_TekkenCameraAnimator():
         self.LiveEditor.setCharFrozen(False)
         self.LiveEditor.setSpeedControl(False)
         self.AnimationEditor.enablePlayback()
+        self.AnimationSelector.setCanFreezeCharButton(True)
         
     def ResetCamera(self):
         self.LiveEditor.unlockCamera()
