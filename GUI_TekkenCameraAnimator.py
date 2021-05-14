@@ -558,13 +558,13 @@ class Animation:
                     self.groups.append(group)
                     self.cachedGroups.append(None)
                 else:
-                    newFrame = {}
+                    newFrame = defaultFieldValues.copy()
                     line = line.split(',')
                     for i, field in enumerate(frameFields):
                         if i < len(line):
                             newFrame[field] = getValueFromType(frameFields[field], line[i])
                         else:
-                            newFrame[field] = defaultFieldValues[field]
+                            break
                         
                     group['frames'].append(newFrame)
                     group['length'] += 1
@@ -1607,7 +1607,7 @@ class AnimationEditor(BaseFormEditor):
         messagebox.showinfo("Copied", "Group data copied", parent=self.root.window)
         
     def pasteGroup(self):
-        if self.Animation == None or self.group == None: return
+        if self.Animation == None: return
         groupList = []
         try:
             copiedGroup = pyperclip.paste().strip()
@@ -1627,16 +1627,23 @@ class AnimationEditor(BaseFormEditor):
                         'frames': []
                     }
                     groupList.append(groupData)
-                elif re.match("^\[(([a-z\_]+=[0-9]+)+, ?)*([a-z\_]+=[0-9]+)\]$", line):
+                elif re.match("^\[(([a-z\_]+=[\-0-9]+)+, ?)*([a-z\_]+=[\-0-9]+)\]$", line):
                     for pair in line[1:-1].split(","):
                         key, value = [k.strip() for k in pair.split("=")]
                         if key in groupKeys: groupData[key] = int(value)
                 elif groupData != None and len(line) != 0:
                     line = line.split(',')
-                    groupData['frames'].append({field:getValueFromType(frameFields[field], line[i]) for i, field in enumerate(frameFields)})
+                    newFrame = defaultFieldValues.copy()
+                    
+                    for i, field in enumerate(frameFields):
+                        if i < len(line):
+                            newFrame[field] = getValueFromType(frameFields[field], line[i])
+                        else:
+                            break
+                    groupData['frames'].append(newFrame)
                     groupData['length'] += 1
         except:
-            messagebox.showinfo("Error", "Error pasting frame data", parent=self.root.window)
+            messagebox.showinfo("Error", "Error pasting group data", parent=self.root.window)
             return
         groupList.reverse()
         for group in groupList:

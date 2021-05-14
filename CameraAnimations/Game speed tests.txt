@@ -1,0 +1,17 @@
+[(1sec delay) Follow P1 for 2sec]
+[duration=120, delay=60, interpolation=1, relativity=1]
+Follow 1P,65,1,63.032,338.4427,100,271.0049,0,0,100,0
+[Freeze time over 2.5 sec]
+[duration=150, interpolation=1, easing=6, relativity=1]
+Follow 1P (speed 100%),65,1,63.032,338.4427,100,271.0049,0,0,100,0
+Follow 1P (speed 0%),85,150,0,350,120,270,0,0,0,0
+[Circling around 1P (5s)]
+[duration=700, delay=40, interpolation=4, easing=12, pre_delay_pos=1, relativity=1]
+Front view,85,0,0,350,120,270,0,0,0,0
+Left view,85,0,-350,0,120,360,0,0,0,0
+Back view,85,0,0,-350,120,450,0,0,0,0
+Right view,85,0,350,0,120,540,0,0,0,0
+Front view,85,0,0,350,120,630,0,0,0,0
+[Unfreeze & follow player (4s)]
+[duration=240, delay=20, interpolation=1, relativity=1]
+Unfreeze & follow player,85,240,0,350,120,630,0,0,100,0
