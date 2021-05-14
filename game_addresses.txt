@@ -77,9 +77,15 @@ playerid_starting_ptr        = 0x1434D0510      # Used to find whether local pla
 #Scan repeatedly value between 0 and 1 during loading to filter out the remaining garbage. Then pause the process (slow to 0.00), set all remaining variables to a fringe unique value (e.g. 216246545) and search for the following pointer path that leads to the previous value (68 is last offset!): 0, 0, 68.
 
 # -- Camera animator --
-frame_counter          = 0x1434C8460
-input_buffer           = 0x14343C808
-camera_starting_ptr    = 0x14377FCF0
-input_code_injection   = 0x145038ea8
-camera_code_injection  = 0x1416A2A40
-camera_code_injection2 = 0x148B56F30
+game_speed_address         = 0x1434D9F9C
+game_speed_injection       = 0x145A04C20
+game_frame_counter         = 0x1434C8460 #related to in-game timer
+global_frame_counter_ptr   = 0x143444F44
+using_global_frame_counter = 1           #0 = more reliable, 1 = animation is not paused by game and camera can move even if the in-game time is frozen
+freeze_code_addr           = 0x140262114 #jne 14026349A
+freeze_environment         = 0x1487EE6B0
+input_buffer               = 0x14343C808
+camera_starting_ptr        = 0x14377FCF0
+input_code_injection       = 0x145038ea8
+camera_code_injection      = 0x1416A2A40
+camera_code_injection2     = 0x148B56F30

@@ -11,6 +11,7 @@ import struct
 import ctypes
 import math
 import pyperclip
+import numexpr
 from scipy import interpolate
 
 dataPath = "./CameraAnimations/"
@@ -47,51 +48,48 @@ colors = {
     }
 }
 
-frameFields = [
-    'name',
-    'fov',
-    'dof',
-    'x',
-    'y',
-    'z',
-    'rotx',
-    'roty',
-    'tilt'
-]
 
-dataFields = [
-    'fov',
-    'dof',
-    'x',
-    'y',
-    'z',
-    'rotx',
-    'roty',
-    'tilt'
-]
-
-fieldTypes = {
+frameFields = {
     'name': 'text',
     'fov': 'float',
-    'dof': 'float',
+    'frame': 'int',
+    'x': 'float',
+    'y': 'float',
+    'z': 'float',
     'rotx': 'float',
     'roty': 'float',
     'tilt': 'float',
-    'x': 'float',
-    'y': 'float',
-    'z': 'float'
+    'speed': 'int',
+    'frame_easing': 'int'
+}
+dataFields = [f for f in frameFields if f != 'name']
+
+defaultFieldValues = {
+    'name': '',
+    'fov': 65.0,
+    'frame': 0,
+    'x': 0.0,
+    'y': 0.0,
+    'z': 0.0,
+    'rotx': 0.0,
+    'roty': 0.0,
+    'tilt': 0.0,
+    'speed': 100,
+    'frame_easing': 0
 }
 
 fieldLabels = {
     'name': 'Frame name',
     'fov': 'Field of view',
-    'dof': 'Depth of Field',
+    'speed': 'Game speed',
+    'frame': 'Frame idx',
+    'x': 'Position X',
+    'y': 'Position Y',
+    'z': 'Height',
+    'frame_easing': 'Frame easing',
     'rotx': 'Yaw',
     'roty': 'Pitch',
     'tilt': 'Roll',
-    'x': 'Position X',
-    'y': 'Position Y',
-    'z': 'Height'
 }
 
 groupKeys = [
@@ -110,12 +108,12 @@ interpolationTypes = {
     3: "Bézier + Spline X/Y",
     5: "Bézier + Spline X/Y/Z",
     4: "Bézier + Circular X/Y",
-    #6: "Catmull-Rom",
 }
 interpolationTypes2 = {interpolationTypes[k]:k for k in interpolationTypes}
 
 relativityTypes = {
     0: "None",
+    -1: "Prev group's last pos & rot",
     1: "P1 Pos",
     2: "P1 Pos & Height",
     3: "P1 Pos & Rotation",
@@ -129,7 +127,29 @@ relativityTypes = {
 }
 relativityTypes2 = {relativityTypes[k]:k for k in relativityTypes}
 
+keyframeEasingTypes = {
+    0: "Linear",
+    1000: "---",
+    1: "Ease in",
+    2: "Ease in cubic",
+    3: "Ease in quart",
+    4: "Ease in expo",
+    5: "Ease in elastic",
+    1001: "---",
+    6: "Ease out",
+    7: "Ease out cubic",
+    8: "Ease out quart",
+    9: "Ease out expo",
+    10: "Ease out elastic",
+    1002: "---",
+    11: "Ease in-out",
+    12: "Ease in-out cubic",
+    13: "Ease in-out quart",
+    14: "Ease in-out expo",
+    15: "Ease in-out elastic",
+}
 easingTypes = {
+    -1: "Keyframe-based",
     0: "Linear",
     1000: "---",
     1: "Ease in",
@@ -151,6 +171,28 @@ easingTypes = {
     15: "Ease in-out elastic",
 }
 easingTypes2 = {easingTypes[k]:k for k in easingTypes}
+        
+def getValueFromType(type, value):
+    try:
+        if type == 'text':
+            value = value.strip()
+            return value if len(value) != 0 else None
+        elif type == 'float':
+            return float(numexpr.evaluate(value))
+        elif type == 'int':
+            return int(float(value))
+    except Exception as e:
+        pass
+    return None
+        
+def getStringValueFromType(type, value):
+    if type == 'text': return value
+    elif type == 'float':
+        value = ("%01.04f" % value).rstrip('0').rstrip('.')
+        return value[1:] if float(value) == 0 and value[0] == "-" else value
+    elif type == 'int':
+        return str(value)
+    return None
 
 class ToolTip(object):
     def __init__(self, widget):
@@ -227,7 +269,7 @@ class Point:
             return Point(self.x * other.x, self.y * other.y)
         else:
             return Point(self.x * other, self.y * other)
-        2
+        
     def __truediv__(self, other):
         if isinstance(other, Point):
             otherX = 1 if other.x == 0 else other.x #Failsafes
@@ -265,7 +307,7 @@ class Interpolation:
             13: Interpolation.easeInOutQuart,
             14: Interpolation.easeInOutExpo,
             15: Interpolation.easeInOutElastic,
-        }[id]
+        }.get(id, 0)
     
     def getInterpolation(id):
         return {
@@ -275,8 +317,7 @@ class Interpolation:
             3: Interpolation.splineInterpolation,
             5: lambda points, t: Interpolation.splineInterpolation(points, t, withZ=True),
             4: Interpolation.circularInterpolation,
-            #6: Interpolation.catmullRom,
-        }[id]
+        }.get(id, 0)
 
     def linear(x):
         return x
@@ -480,7 +521,7 @@ class Animation:
                     }
                     self.groups.append(group)
                     self.cachedGroups.append(None)
-                elif re.match("^\[(([a-z\_]+=[0-9]+)+, ?)*([a-z\_]+=[0-9]+)\]$", line):
+                elif re.match("^\[(([a-z\_]+=[\-0-9]+)+, ?)*([a-z\_]+=[\-0-9]+)\]$", line):
                     for pair in line[1:-1].split(","):
                         key, value = [k.strip() for k in pair.split("=")]
                         if key in groupKeys: group[key] = int(value)
@@ -501,19 +542,72 @@ class Animation:
                     self.groups.append(group)
                     self.cachedGroups.append(None)
                 else:
+                    newFrame = {}
                     line = line.split(',')
-                    group['frames'].append({field:getValueFromType(fieldTypes[field], line[i]) for i, field in enumerate(frameFields)})
+                    for i, field in enumerate(frameFields):
+                        if i < len(line):
+                            newFrame[field] = getValueFromType(frameFields[field], line[i])
+                        else:
+                            newFrame[field] = defaultFieldValues[field]
+                        
+                    group['frames'].append(newFrame)
                     group['length'] += 1
+        
+    def fixGroupFrameIdx(self, group, force=True):
+        tofix = False
+        
+        for i, keyframe in enumerate(group['frames']):
+            if (i == 0 and keyframe['frame'] != 1) \
+                or (i > 0 and i + 1  == group['length'] and keyframe['frame'] != group['duration']) \
+                or (i > 0 and keyframe['frame'] <= group['frames'][i - 1]['frame']):
+                tofix = True
+                break
+                
+        if group['duration'] < group['length']:
+            group['duration'] = group['length']
+            
+        if tofix and group['length'] > 0:
+            for i, keyframe in enumerate(group['frames']):
+                if i != 0 and (group['length'] - 1) != 0:
+                    keyframe['frame'] = i * int(group['duration'] / (group['length'] - 1)) + (i & 1)
+            group['frames'][0]['frame'] = 1
+            group['frames'][-1]['frame'] = group['duration']
         
     def calculateCachedFrames(self, startingGroup=0, singleGroup=False):
         end = startingGroup + 1 if singleGroup else len(self.groups)
+        
+        def generateProgressBar(progress, iteration=20):
+            filledCount = int(progress * iteration)
+            return "[" + "|" * filledCount + "_" * (iteration - filledCount) + "]"
         
         for i, group in enumerate(self.groups[startingGroup:end]):
             if self.cachedGroups[startingGroup + i] == None:
                 easingFunction = Interpolation.getEasing(group['easing'])
                 interpolationFunction = Interpolation.getInterpolation(group['interpolation'])
-                if group['length']> 0:
-                    frames = [interpolationFunction(group['frames'], easingFunction(idx / (group['duration']))) for idx in range(group['duration'])]
+                if group['length'] == 2 or group['length'] == 1:
+                    frames = [interpolationFunction(group['frames'], easingFunction(idx / (group['duration'] - 1))) for idx in range(group['duration'])]
+                elif group['length'] > 0:
+                    if group['easing'] == -1:
+                        self.fixGroupFrameIdx(group)
+                        prevKeyframe = 0
+                        frames = []
+                        
+                        for keyframeId, keyframe in enumerate(group['frames']):
+                            easingFunction = Interpolation.getEasing(keyframe['frame_easing'])
+                            for frameIdx in range(prevKeyframe, int(keyframe['frame'])):
+                                localProgress = (frameIdx + 2 - prevKeyframe) / (keyframe['frame'] - prevKeyframe + 1)
+                                
+                                baseKeyframeProgress = keyframeId / (group['length'] - 1)
+                                prevbaseKeyframeProgress = 0 if keyframeId == 0 else ((keyframeId - 1) / (group['length'] - 1))
+                                progressDiff = (baseKeyframeProgress - prevbaseKeyframeProgress)
+                                
+                                t = prevbaseKeyframeProgress + progressDiff * easingFunction(localProgress) # Timefactor with variable keyframe weight
+                            
+                                frames.append(interpolationFunction(group['frames'], t))
+                            
+                            prevKeyframe = int(keyframe['frame'])
+                    else:
+                        frames = [interpolationFunction(group['frames'], easingFunction(idx / (group['duration'] - 1))) for idx in range(group['duration'])]
                 else:
                     frames = []
                 self.cachedGroups[startingGroup + i] = {
@@ -628,13 +722,19 @@ class AnimationSelector:
             ("Load selected", self.LoadAnimationToEditor),
             ("Create animation", self.CreateFile),
             #("Reload list", lambda self=self: self.UpdateItemlist(reloadOnly=True)),
+            ("Freeze chars", self.root.ToggleFreezeChars),
+            ("Reset time", self.root.ResetTime),
             ("Reset camera", self.root.ResetCamera),
         ]
         
+        createdButtons = []
         for label, callback in buttons:
             newButton = Button(mainFrame, text=label, command=callback, bg=getColor('buttonBGColor'), fg=getColor('buttonTextColor'))
             newButton.pack(fill='x')
+            createdButtons.append(newButton)
             
+        self.freezeCharsButton = createdButtons[-3]
+        
         self.saveButton = Button(mainFrame, text='Save file', command=self.root.SaveFile, bg=getColor('buttonBGColor'), fg=getColor('buttonTextColor'))
         self.saveButton.pack(fill='x')
         
@@ -645,6 +745,12 @@ class AnimationSelector:
         self.selectionIndex = -1
         self.selection = None
         self.setSaveButtonEnabled(False)
+        
+    def setCanFreezeCharButton(self, canFreeze):
+        if canFreeze:
+            self.freezeCharsButton['text'] = 'Freeze chars'
+        else:
+            self.freezeCharsButton['text'] = 'Unfreeze chars'
         
     def setSaveButtonEnabled(self, enabled):
         if enabled:
@@ -753,14 +859,36 @@ class BaseFormEditor:
 
         
 class FieldEditor:
-    def __init__(self, root, rootFrame, fieldId, color=None):
+    def __init__(self, root, rootFrame, fieldId, color=None, selectOptions = None):
         self.root = root
         self.rootFrame = rootFrame
         self.fieldId = fieldId
         
+        if selectOptions:
+            self.options = selectOptions
+            self.isSelect = True
+        else:
+            self.isSelect = None
         
+        self.editingEnabled = False
         self.initEditor(color)
         self.resetForm()
+        
+    def initEntry(self, content):
+        sv = StringVar()
+        sv.trace("w", lambda name, index, mode: self.onchange())
+        fieldInput = Entry(content, textvariable=sv, width=15)
+        fieldInput.pack()
+        return fieldInput, sv
+        
+    def initSelect(self, content):
+        OPTIONS = [self.options[k] for k in self.options]
+        sv = StringVar()
+        sv.trace("w", lambda name, index, mode: self.onchange())
+        fieldInput = OptionMenu(content, sv, OPTIONS[0], *OPTIONS)
+        fieldInput.pack()
+        fieldInput.configure(width=11)
+        return fieldInput, sv
         
     def initEditor(self, labelColor):
         container = Frame(self.rootFrame, bg=getColor('BG'))
@@ -768,17 +896,15 @@ class FieldEditor:
         if labelColor == None: labelColor = getColor('labelBgColor')
         
         label = Label(container, bg=labelColor, fg=getColor('labelTextColor'))
-        label.pack(side='top', fill='x')
+        label.pack(side='top', fill='x', expand=True)
         
         content = Frame(container, bg=getColor('BG'))
-        content.pack(side='top')
+        content.pack(side='top', fill='x', expand=True)
         
-        sv = StringVar()
-        sv.trace("w", lambda name, index, mode: self.onchange())
-        fieldInput = Entry(content, textvariable=sv)
-        fieldInput.pack()
-        self.fieldInput = fieldInput
-        self.sv = sv
+        if self.isSelect:
+            self.fieldInput, self.sv = self.initSelect(content)
+        else:
+            self.fieldInput, self.sv = self.initEntry(content)
         
         self.baseContainer = container
         self.container = content
@@ -786,7 +912,7 @@ class FieldEditor:
         
     def setValue(self, newval):
         self.editingEnabled = False
-        self.sv.set(newval)
+        self.sv.set(self.options[int(newval)] if self.isSelect else newval)
         self.editingEnabled = True
         
         self.enable()
@@ -794,7 +920,7 @@ class FieldEditor:
     def onchange(self):
         if not self.editingEnabled: return
         value = self.sv.get()
-        self.root.onFieldChange(self.fieldId, value)
+        self.root.onFieldChange(self.fieldId, easingTypes2[value] if self.isSelect else value)
         
     def setTitle(self, text):
         self.label['text'] = text
@@ -808,27 +934,9 @@ class FieldEditor:
         self.editingEnabled = False
         
     def resetForm(self):
-        self.setValue('')
+        self.setValue(0 if self.isSelect else '')
         self.fieldInput.config(state='disabled')
         self.editingEnabled = False
-        
-def getValueFromType(type, value):
-    try:
-        if type == 'text':
-            value = value.strip()
-            return value if len(value) != 0 else None
-        elif type == 'float':
-            return float(value)
-    except:
-        pass
-    return None
-        
-def getStringValueFromType(type, value):
-    if type == 'text': return value
-    elif type == 'float':
-        value = ("%01.03f" % value).rstrip('0').rstrip('.')
-        return value[1:] if float(value) == 0 and value[0] == "-" else value
-    return None
         
 class AnimationEditor(BaseFormEditor):
     def __init__(self, root, rootFrame):
@@ -932,18 +1040,24 @@ class AnimationEditor(BaseFormEditor):
         
         self.fields = []
         fieldFrame = None
-        fieldPerLine = 3
-        for i, field in enumerate(frameFields):
-            if (i % fieldPerLine) == 0:
+        colorIndex = -1
+        fieldLineIndexes = [0, 4, 8]
+        fieldLabelsLen = len([f for f in fieldLabels])
+        for i, field in enumerate(fieldLabels):
+            if i in fieldLineIndexes:
                 fieldFrame = Frame(fieldsFrame, bg=getColor('BG'))
                 fieldFrame.pack(anchor='w', expand=1, fill='both')
-                
-            if field == 'dof': # We skip that one
-                continue
-                
-            newField = FieldEditor(self, fieldFrame, field, color=getColor('groupColor' + str(int(i / fieldPerLine))))
+                colorIndex += 1
+            
+            if field == 'frame_easing':
+                newField = FieldEditor(self, fieldFrame, field, color=getColor('groupColor' + str(colorIndex if field != 'frame_easing' else 3)), selectOptions=keyframeEasingTypes)
+                self.frameEasing = newField
+            else:
+                newField = FieldEditor(self, fieldFrame, field, color=getColor('groupColor' + str(colorIndex if field != 'frame' else 3)))
+                if field == 'frame':
+                    self.frameField = newField
             newField.setTitle(fieldLabels[field])
-            newField.baseContainer.pack(side='left', padx=2, pady=(0, 4))
+            newField.baseContainer.pack(side='left', padx=(3, 0 if (i + 1 in fieldLineIndexes) else 3), pady=(0, 4))
             self.fields.append(newField)
             
         
@@ -988,7 +1102,7 @@ class AnimationEditor(BaseFormEditor):
         OPTIONS = [easingTypes[k] for k in easingTypes]
         easingVar = StringVar()
         easingVar.trace("w", lambda name, index, mode, easingVar=easingVar: self.onFieldChange('easing', easingVar.get()))
-        w = OptionMenu(interpolationOptions, easingVar, OPTIONS[0], *OPTIONS)
+        w = OptionMenu(interpolationOptions, easingVar, OPTIONS[1], *OPTIONS)
         w.pack(side='left', padx=(0, 15))
         self.easingSelect = w
         
@@ -1076,37 +1190,63 @@ class AnimationEditor(BaseFormEditor):
         self.reset()
         self.canvas = None
         self.canvasWindow = None
-        self.canvasWindowDefaultWidth = 400
-        self.canvasWindowDefaultHeight = 400
+        self.canvasWindowDefaultWidth = 300
+        self.canvasWindowDefaultHeight = 300
+        self.canvasPlayerIds = []
         self.advancedWindow = None
+        self.canvasPlayerUpdating = False
+        
+    def updateCanvasPlayerPosition(self):
+        if self.canvasPlayerUpdating or not self.canvasWindow \
+            or not self.group or not self.root.LiveEditor.startIfNeeded() \
+            or (1 <= self.group['relativity'] <= 4) or (11 <= self.group['relativity'] <= 14):
+            return
+        self.canvasPlayerUpdating = True
+        
+        offsetX, offsetY, scale, offsetCenterX, offsetCenterY = self.drawingInfo
+        
+        while self.canvasPlayerUpdating and self.canvas:
+            canvasIds = self.canvasPlayerIds
+            for i, p in enumerate(canvasIds):
+                tagOrId, oldX, oldY = p
+                pos = self.root.LiveEditor.getPlayerPos(i)
+                
+                newPosX = (pos['x'] + offsetX) * scale + offsetCenterX
+                newPosY = (pos['y'] + offsetY) * scale + offsetCenterY
+                
+                self.canvas.move(tagOrId, newPosX - oldX, newPosY - oldY)
+                canvasIds[i] = (tagOrId, newPosX, newPosY)
+            sleep(1 / 60)
+            
+        self.canvasPlayerUpdating = False
         
     def getGroupToCanvasData(self):
-        if self.group == None or self.group['length'] == 0: return [], [], 0, 0
+        if self.group == None or self.group['length'] == 0: return None
         cachedGroup = self.Animation.calculateCachedFrames(self.currentGroup, True)[0]
         
+        playerPoses = []
+        try:
+            if (1 <= self.group['relativity'] <= 4) or (11 <= self.group['relativity'] <= 14):
+                playerPoses.append({'x': 0, 'y': 0})
+            else:
+                self.root.LiveEditor.startIfNeeded()
+                playerPoses.append(self.root.LiveEditor.getPlayerPos(0))
+                playerPoses.append(self.root.LiveEditor.getPlayerPos(1))
+        except:
+            pass
+            
+        xList = [p['x'] for p in playerPoses]
+        xList += [frame['x'] for frame in cachedGroup['frames']]
+        xList += [frame['x'] for frame in self.group['frames']]
         
-        maxX = max(frame['x'] for frame in cachedGroup['frames'])
-        minX = min(frame['x'] for frame in cachedGroup['frames'])
-        maxY = max(frame['y'] for frame in cachedGroup['frames'])
-        minY = min(frame['y'] for frame in cachedGroup['frames'])
+        yList = [p['y'] for p in playerPoses]
+        yList += [frame['y'] for frame in cachedGroup['frames']]
+        yList += [frame['y'] for frame in self.group['frames']]
         
-        
-        maxX2 = max(frame['x'] for frame in self.group['frames'])
-        minX2 = min(frame['x'] for frame in self.group['frames'])
-        maxY2 = max(frame['y'] for frame in self.group['frames'])
-        minY2 = min(frame['y'] for frame in self.group['frames'])
-        
-        maxX = max(maxX, maxX2)
-        minX = min(minX, minX2)
-        maxY = max(maxY, maxY2)
-        minY = min(minY, minY2)
-        
-        #print(f"""
-        #maxX: {maxX}
-        #minX: {minX}
-        #maxY: {maxY}
-        #minY: {minY}
-        #""")
+        maxX = max(xList)
+        minX = min(xList)
+        maxY = max(yList)
+        minY = min(yList)
         
         
         # window size is set to 500 for our computations
@@ -1122,49 +1262,34 @@ class AnimationEditor(BaseFormEditor):
         diffX = maxX + offsetX
         diffY = maxY + offsetY
         
-        #print(f"""
-        #offsetX: {offsetX}
-        #offsetY: {offsetY}
-        #diffX: {diffX}
-        #diffY: {diffY}
-        #""")      
-        
         # compute the scale
         windowSize = min(self.canvasWindowWidth, self.canvasWindowHeight)  
         largestDiff = max(diffX, diffY)
         scale = windowSize / largestDiff * 0.90 if largestDiff != 0 else 1
         
-        #print(f"""
-        #windowSize: {windowSize}
-        #largestDiff: {max(diffX, diffY)}
-        #scale: {scale}
-        #""")    
-        
         
         offsetCenterX = (self.canvasWindowWidth // 2) - (diffX * scale) // 2
         offsetCenterY = (self.canvasWindowHeight // 2) - (diffY * scale) // 2
 
-        #print(f"""
-        #offsetCenterX: {offsetCenterX}
-        #offsetCenterY: {offsetCenterY}
-        #""")
         
-        #
         color1 = (3, 252, 53)
         color2 = (252, 3, 3)
         diff = [color2[i] - color1[i] for i in range(3)]
 
-        #
         canvasPoints = []
         frameCount = len(cachedGroup['frames'])
-        for i, frame in enumerate(cachedGroup['frames']):
+        step = 1
+        
+        if frameCount > 2500:
+            res = frameCount / 2500
+            step = int(res)
+        
+        for i in range(0, frameCount, step):
+            frame = cachedGroup['frames'][i]
             t = i / frameCount
             x = (frame['x'] + offsetX) * scale + offsetCenterX
             y = (frame['y'] + offsetY) * scale + offsetCenterY
-            #print(f"""
-            #x: {x}
-            #y: {y}
-            #""")
+            
             newColor = "".join(["%02x" % int(color1[n] + diff[n] * t) for n in range(3)])
             canvasPoints.append((x, y, "#" + newColor))
         
@@ -1176,34 +1301,47 @@ class AnimationEditor(BaseFormEditor):
             x = (frame['x'] + offsetX) * scale + offsetCenterX
             y = (frame['y'] + offsetY) * scale + offsetCenterY
             
-            #print(f"""
-            #x: {x}
-            #y: {y}
-            #""")
             newColor = "".join(["%02x" % int(color1[n] + diff[n] * t) for n in range(3)])
             keyframes.append((x, y, "#" + newColor))
             
+        players = []
+        for player in playerPoses:
+            x = (player['x'] + offsetX) * scale + offsetCenterX
+            y = (player['y'] + offsetY) * scale + offsetCenterY
+            
+            players.append((x, y, "white"))
            
-        return canvasPoints, keyframes, self.group['length'], self.group['interpolation']
+        self.drawingInfo = (offsetX, offsetY, scale, offsetCenterX, offsetCenterY)
+        return canvasPoints, keyframes, self.group['interpolation'], players
         
     def updateCanvas(self):
         if self.canvas == None: return
         self.canvas.delete("all")
         
-        canvasData, keyframes, keyframeCount, interpolationType = self.getGroupToCanvasData()
-        if canvasData == []: return
+        canvasData = self.getGroupToCanvasData()
+        if canvasData == None: return
+        
+        canvasData, keyframes, interpolationType, players = canvasData
         canvasDataLen = len(canvasData)
-        keyframeWeight = int((canvasDataLen / (keyframeCount - 1)) if keyframeCount > 1 else canvasDataLen + 1)
+        keyframeWeight = int((canvasDataLen / (len(keyframes) - 1)) if len(keyframes) > 1 else canvasDataLen + 1)
         
         for i, data in enumerate(canvasData):
             x, y, color = data
             
             if interpolationType != 2 and (i + 1 < canvasDataLen): #Nearest = no line
                 self.canvas.create_line(x, y, canvasData[i + 1][0], canvasData[i + 1][1], fill=color)
-            if (i + 1 == canvasDataLen) or (i % keyframeWeight) == 0: #Keyframe
-                x, y, color = keyframes[int((i + 1) / keyframeWeight)]
-                pointSize = 5 if (i + 1 == canvasDataLen or i == 0) else 4
-                self.canvas.create_oval(x - pointSize, y - pointSize, x + pointSize, y + pointSize, fill=color)
+                
+        for i, keyframe in enumerate(keyframes):
+            x, y, color = keyframe
+            pointSize = 5 if (i + 1 == len(keyframes) or i == 0) else 4
+            self.canvas.create_oval(x - pointSize, y - pointSize, x + pointSize, y + pointSize, fill=color)
+            
+        canvasPlayerIds = []
+        for x, y, color in players:
+            pointSize = 5
+            tagOrId = self.canvas.create_oval(x - pointSize, y - pointSize, x + pointSize, y + pointSize, fill=color)
+            canvasPlayerIds.append((tagOrId, x, y))
+        self.canvasPlayerIds = canvasPlayerIds
         
     def visualizeGroup(self):
         if self.canvasWindow != None:
@@ -1225,6 +1363,7 @@ class AnimationEditor(BaseFormEditor):
         
         self.canvasWindow = master
         self.updateCanvas()
+        #self.startUpdatingPlayerPos()
         master.focus_force()
         master.mainloop()
         
@@ -1245,6 +1384,10 @@ class AnimationEditor(BaseFormEditor):
     def closeAdvancedWindow(self):
         self.advancedWindow.destroy()
         self.advancedWindow = None
+        
+    def startUpdatingPlayerPos(self):
+        newThread = threading.Thread(target=self.updateCanvasPlayerPosition)
+        newThread.start()
         
     def onCanvasResize(self, event):
         if self.canvasWindow == None: return
@@ -1286,18 +1429,40 @@ class AnimationEditor(BaseFormEditor):
     def setEasingField(self):
         sleep(1 / 60)
         self.fieldVars['easing'].set(easingTypes[self.group['easing']])
+        if self.group['length'] != 0:
+            self.frameEasing.setValue(self.group['frames'][self.currentFrame]['frame_easing'])
         
     def discardCache(self):
         self.Animation.cachedGroups[self.currentGroup] = None
         self.updateCanvas()
         
+    def setKeyframeIdxEditing(self, enabled):
+        if self.currentFrame > 0 and enabled:
+            self.frameEasing.enable()
+        else:
+            self.frameEasing.disable()
+        
+        if self.currentFrame > 0 and (self.currentFrame + 1) < self.group['length'] and enabled:
+            self.frameField.enable()
+        else:
+            self.frameField.disable()
+            
+    def scaleKeyframesFromDuration(self, oldvalue, newvalue):
+        if self.group['length'] == 0: return newvalue
+        if newvalue < self.group['length']: newvalue = self.group['length']
+        self.group['duration'] = newvalue
+        self.Animation.fixGroupFrameIdx(self.group, force=True)
+        self.setFrame(self.currentFrame)
+        return newvalue
+        
     def onFieldChange(self, field, value):
         if self.Animation == None: return
-        if field == "easing" and value == "---":
+        if (field == "easing" and value == "---") or (field == "frame_easing" and value >= 1000):
             threading.Thread(target=self.setEasingField).start()
             return False
+            
         if field in frameFields:
-            value = getValueFromType(fieldTypes[field], value)
+            value = getValueFromType(frameFields[field], value)
             if value == None: return
             
             if field == 'name':
@@ -1314,12 +1479,14 @@ class AnimationEditor(BaseFormEditor):
             if self.enabledEditing:
                 try:
                     if field == 'duration' or field == 'delay':
-                        self.group[field] = int(value)  
+                        value = int(value)
                         if field == 'duration':
                             self.discardCache()
+                            value = self.scaleKeyframesFromDuration(self.group['duration'], value)
                         elif field == 'delay' and self.Animation.cachedGroups[self.currentGroup] != None:
-                            self.Animation.cachedGroups[self.currentGroup]['delay'] = int(value)
+                            self.Animation.cachedGroups[self.currentGroup]['delay'] = value
                             self.updateCanvas()
+                        self.group[field] = value
                     elif field == 'groupname':
                         value = value.replace('[', '(').replace(']', ')').replace('=', '-').replace(',', '.').strip()
                         if len(value) > 0:
@@ -1335,6 +1502,7 @@ class AnimationEditor(BaseFormEditor):
                         }
                         self.group[field] = selectDicts[field][value]
                         self.discardCache()
+                        if field == 'easing': self.setKeyframeIdxEditing(self.group['easing'] == -1)
                     self.root.onAnimModification(field == 'relativity')
                 except:
                     pass
@@ -1451,7 +1619,7 @@ class AnimationEditor(BaseFormEditor):
                         if key in groupKeys: groupData[key] = int(value)
                 elif groupData != None and len(line) != 0:
                     line = line.split(',')
-                    groupData['frames'].append({field:getValueFromType(fieldTypes[field], line[i]) for i, field in enumerate(frameFields)})
+                    groupData['frames'].append({field:getValueFromType(frameFields[field], line[i]) for i, field in enumerate(frameFields)})
                     groupData['length'] += 1
         except:
             messagebox.showinfo("Error", "Error pasting frame data", parent=self.root.window)
@@ -1467,7 +1635,6 @@ class AnimationEditor(BaseFormEditor):
     def copyFrame(self):
         if self.Animation == None or self.group == None or self.group['length'] == 0: return
         frame = self.group['frames'][self.currentFrame]
-        frame['dof'] = 0.0
         pyperclip.copy(",".join([str(frame[k]) for k in frameFields]))
         messagebox.showinfo("Copied", "Keyframe data copied", parent=self.root.window)
         
@@ -1475,17 +1642,12 @@ class AnimationEditor(BaseFormEditor):
         if self.Animation == None or self.group == None: return
         try:
             frameData = pyperclip.paste().strip().split(",")
-            newFrame = {
-                'name': frameData[0],
-                'fov': float(frameData[1]),
-                'dof': float(frameData[2]),
-                'x': float(frameData[3]),
-                'y': float(frameData[4]),
-                'z': float(frameData[5]),
-                'rotx': float(frameData[6]),
-                'roty': float(frameData[7]),
-                'tilt': float(frameData[8])
-            }
+            newFrame = {field:defaultFieldValues[field] for field in defaultFieldValues}
+            
+            for i, field in enumerate(frameFields):
+                if i >= len(frameData):
+                    break
+                newFrame[field] = getValueFromType(frameFields[field], frameData[i])
         except:
             messagebox.showinfo("Error", "Error pasting frame data", parent=self.root.window)
             return
@@ -1505,10 +1667,12 @@ class AnimationEditor(BaseFormEditor):
             elif self.group['length'] != 0:
                 framedata = self.group['frames'][self.currentFrame].copy()
             else:
-                framedata = { 'fov': 65, 'dof': 0, 'x': 0, 'y': 0, 'z': 0, 'rotx': 0, 'roty': 0, 'tilt': 0}
+                framedata = {field:defaultFieldValues[field] for field in defaultFieldValues}
         else:
-            if not self.root.LiveEditor.startIfNeeded(): return
+            if not self.root.openTekkenProcess(): return
             framedata = self.root.LiveEditor.getCameraPos(self.group['relativity'])
+            for field in defaultFieldValues:
+                if field not in framedata: framedata[field] = defaultFieldValues[field]
             
         framedata['name'] = "%d" % (self.group['length'] + 1)
         while True:
@@ -1632,12 +1796,13 @@ class AnimationEditor(BaseFormEditor):
         self.framelist.selection_clear(0, 'end')
         #self.keyframeLabel['text'] = 'Keyframe %d/%d' % (index + 1, self.group['length'])
         for field in self.fields:
-            value = getStringValueFromType(fieldTypes[field.fieldId], self.Animation.getValue(self.currentGroup, field.fieldId, index))
+            value = getStringValueFromType(frameFields[field.fieldId], self.Animation.getValue(self.currentGroup, field.fieldId, index))
             field.setValue(value)
         self.currentFrame = index
         self.recolorFrameList()
         self.enabledEditing = True
         self.root.onFrameChange()
+        self.setKeyframeIdxEditing(self.group['easing'] == -1)
         if not self.root.LiveEditor.runningAnimation:
             self.enablePlayback()
         
@@ -1663,6 +1828,7 @@ class LiveEditor:
         self.playerAddress = game_addresses.addr['t7_p1_addr'] + (id * game_addresses.addr['t7_playerstruct_size'])
         
     def stop(self, exiting=False):
+        self.exiting = exiting
         self.camAddr = None
         self.inputbuffer = None
         self.T = None
@@ -1670,7 +1836,9 @@ class LiveEditor:
         self.runningAnimation = False
         self.liveEditing = False
         self.liveControl = False
-        self.exiting = exiting
+        self.frame_counter = None
+        self.charFrozen = False
+        self.root.AnimationSelector.setCanFreezeCharButton(True)
         
     def startIfNeeded(self):
         if self.T == None:
@@ -1691,6 +1859,35 @@ class LiveEditor:
             self.stop()
         return self.running
         
+    def setSpeedControl(self, enabled):
+        if not self.startIfNeeded(): return False
+        if enabled:
+            self.T.writeBytes(game_addresses.addr['game_speed_injection'], [0x90] * 6)
+        else:
+            self.T.writeBytes(game_addresses.addr['game_speed_injection'], [0x89, 0xD, 0x76, 0x53, 0xAD, 0xFD])
+            
+    def setGameSpeed(self, value):
+        value = int(value)
+        if value <= 0:
+            self.T.writeInt(game_addresses.addr['game_speed_address'], 100, 4)
+            self.setCharFrozen(True)
+        else:
+            self.T.writeInt(game_addresses.addr['game_speed_address'], value, 4)
+            if self.charFrozen: self.setCharFrozen(False)
+        
+    def setCharFrozen(self, frozen, environments=True):
+        if not self.startIfNeeded(): return False
+        self.charFrozen = frozen
+        if self.charFrozen:
+            self.T.writeBytes(game_addresses.addr['freeze_code_addr'], [0xE9, 0x81, 0x13, 0x0, 0x0, 0x90]) #jmp 14026349A, freeze chars
+            if environments:
+                self.T.writeBytes(game_addresses.addr['freeze_environment'], [0x0, 0x75, 0x08, 0xB0, 0x01, 0x48, 0x83, 0xC4]) #freeze environment & particles
+        else:
+            self.T.writeBytes(game_addresses.addr['freeze_code_addr'], [0x0F, 0x85, 0x80, 0x13, 0x0, 0x0]) #jne 14026349A
+            if environments:
+                self.T.writeBytes(game_addresses.addr['freeze_environment'], [0x0, 0x75, 0x08, 0x32, 0xC0, 0x48, 0x83, 0xC4]) #freeze environment & particles
+        return self.charFrozen
+        
     def toggleLivePreview(self):
         self.liveEditing = not self.liveEditing
         if self.liveEditing:
@@ -1704,7 +1901,7 @@ class LiveEditor:
             self.liveControl = self.startIfNeeded()
             if self.liveControl and self.liveEditing:
                 self.liveEditing = False
-                self.root.AnimationEditor.previewButton['text'] = '[OFF] Live preview'
+                self.root.OnLiveEditingDisable()
         return self.liveControl
         
     def writeFloat(self, addr, value):
@@ -1795,7 +1992,9 @@ class LiveEditor:
     def liveControlLoop(self):
         self.lockCamera()
         self.getInputBufferAddr()
+        self.getFrameCounterAddr()
         self.nopInputsCode()
+        
         try:
             frameHeld = 0
             while self.liveControl:
@@ -1808,26 +2007,43 @@ class LiveEditor:
         except:
             self.liveControl = False
             
-        if not self.exiting: self.root.AnimationEditor.liveControlButton['text'] = '[OFF] Live control'       
+        if not self.exiting: self.onLiveControlDisable()
         self.resetInputsCode()
         
     def playAnimation(self, groups):
         self.runningAnimation = True
         self.lockCamera()
         self.getCameraAddr()
+        self.getFrameCounterAddr()
         self.liveControl = False
         self.root.AnimationEditor.setControlEnabled(False)
         
+        foundSpeedChange = False
+        for g in groups:
+            for f in g['frames']:
+                if int(f['speed']) != 100:
+                    self.setSpeedControl(True)
+                    foundSpeedChange = True
+                    break
+            if foundSpeedChange: break
+        
         try:
+            prevCameraPos = None
             for g in groups:
+                
                 if g['delay'] > 0:
                     if g['pre_delay_pos'] > 0 and g['length'] > 0:
                         self.setCameraPos(g['frames'][0], g['relativity'])
                     self.waitFrame(g['delay'])
-                for f in g['frames']:
+                    
+                for i, f in enumerate(g['frames']):
+                
                     if self.runningAnimation == False: raise
-                    self.setCameraPos(f, g['relativity'])
+                    cameraPos = self.setCameraPos(f, g['relativity'], prevCameraPos)
+                    if foundSpeedChange: self.setGameSpeed(f['speed'])
+                    if (i + 1) == g['duration']: prevCameraPos = cameraPos
                     self.waitFrame(1)
+                    
         except Exception as e:
             pass
         self.runningAnimation = False
@@ -1856,7 +2072,7 @@ class LiveEditor:
         self.camAddr = self.readPointerPath(game_addresses.addr['camera_starting_ptr'], [0x30, 0x418])
         return self.camAddr
         
-    def setCameraPos(self, cam, relative=0):
+    def setCameraPos(self, cam, relative=0, prevCameraPos=None):
         camAddr = self.camAddr
         
         rotx = cam['rotx']
@@ -1864,6 +2080,14 @@ class LiveEditor:
         x = cam['x']
         y = cam['y']
         z = cam['z']
+        
+        if relative == -1 and prevCameraPos != None: #Last group relativity
+            old_rotx, old_roty, old_x, old_y, old_z = prevCameraPos
+            rotx += old_rotx
+            roty += old_roty
+            x += old_x
+            y += old_y
+            z += old_z
         
         if relative >= 11:
             relative -= 10
@@ -1915,13 +2139,14 @@ class LiveEditor:
         self.writeFloat(camAddr + 0x3F8, x) #x
         self.writeFloat(camAddr + 0x3FC, y) #y
         self.writeFloat(camAddr + 0x400, z) #z
+        
+        return rotx, roty, x, y, z
             
     def getCameraPos(self, relative=0):
         if not self.startIfNeeded(): return
         camAddr = self.getCameraAddr()
         cam = {
             'fov': self.readFloat(camAddr + 0x39C),
-            'dof': 0,
             'rotx': self.readFloat(camAddr + 0x408),
             'roty': self.readFloat(camAddr + 0x404),
             'tilt': self.readFloat(camAddr + 0x40C),
@@ -1978,36 +2203,41 @@ class LiveEditor:
             'body3': 0xFF4,
         }.get(key, 0xFF4)
         
-    def getPlayerHeight(self):
-        return self.readFloat(self.playerAddress + self.getPlayerHeightOffset('body')) / 10
-        
     def getPlayerFloorheight(self):
         return self.readFloat(self.playerAddress + 0x1B0) / 10
         
-    def getPlayerPos(self):
+    def getPlayerPos(self, playerId=-1):
+        playerAddress = self.playerAddress
+        if playerId != -1: playerAddress = game_addresses.addr['t7_p1_addr'] + (0 if playerId == 0 else game_addresses.addr['t7_playerstruct_size'])
         return {
-            'x': self.readFloat(self.playerAddress + 0xFC) / 10,
-            'y': -(self.readFloat(self.playerAddress + 0xF4) / 10),
-            'z': self.getPlayerHeight(),
+            'x': self.readFloat(playerAddress + 0xFC) / 10,
+            'y': -(self.readFloat(playerAddress + 0xF4) / 10),
+            'z': self.readFloat(playerAddress + self.getPlayerHeightOffset('body')) / 10,
         }
         
     def getPlayerRot(self):
         return self.T.readInt(self.playerAddress + 0x1c0, 2)
         
+    def getFrameCounterAddr(self):
+        if game_addresses.addr['using_global_frame_counter']:
+            self.frame_counter = game_addresses.addr['global_frame_counter_ptr']
+        else:
+            self.frame_counter = game_addresses.addr['game_frame_counter']
+        
     def waitFrame(self, amount):
-        currFrame = self.T.readInt(game_addresses.addr['frame_counter'], 4)
+        currFrame = self.T.readInt(self.frame_counter, 4)
         targetFrame = currFrame + amount
         while currFrame < targetFrame:
-            if currFrame < 10 or self.runningAnimation == False:
+            if self.runningAnimation == False or self.T.readInt(game_addresses.addr['game_frame_counter'], 4) < 10:
                 raise
-            currFrame = self.T.readInt(game_addresses.addr['frame_counter'], 4)
+            currFrame = self.T.readInt(self.frame_counter, 4)
         
     def waitSingleFrame(self):
-        currFrame = self.T.readInt(game_addresses.addr['frame_counter'], 4)
+        currFrame = self.T.readInt(self.frame_counter, 4)
         originalFrame = currFrame
         while currFrame == originalFrame:
             if not self.liveControl: return
-            currFrame = self.T.readInt(game_addresses.addr['frame_counter'], 4)
+            currFrame = self.T.readInt(self.frame_counter, 4)
         
     keyvalues = {
         'U': 1,
@@ -2040,7 +2270,6 @@ class GUI_TekkenCameraAnimator():
         window.iconbitmap(dataPath2 + 'hotaru.ico')
         window.geometry("960x372")
         window.minsize(500, 372)
-        #self.setWindowSize(1163, 539)
         window.protocol("WM_DELETE_WINDOW", self.on_close)
         
         self.AnimationSelector = AnimationSelector(self, window) #Side menu
@@ -2057,10 +2286,12 @@ class GUI_TekkenCameraAnimator():
         self.TekkenGame = None
         self.LiveEditor = LiveEditor(self)
         
+        #toremove
+        
     def on_close(self):
         try: self.LiveEditor.resetInputsCode()
         except: pass
-        self.LiveEditor.stop(exiting=True)
+        self.LiveEditor.stop(True)
         self.window.destroy()
         
     def onAnimModification(self, dataModification=False):
@@ -2071,9 +2302,22 @@ class GUI_TekkenCameraAnimator():
         if self.LiveEditor.liveEditing and not self.LiveEditor.runningAnimation:
             self.LiveEditor.lockCamera()
             if self.LiveEditor.running:
-                self.LiveEditor.setCameraPos(*self.AnimationEditor.getFrame())
+                frame, relativity = self.AnimationEditor.getFrame()
+                if frame: self.LiveEditor.setCameraPos(frame, relativity)
             else:
                 self.AnimationEditor.previewButton['text'] = '[OFF] Live preview'
+        
+    def ToggleFreezeChars(self):
+        result = not self.LiveEditor.setCharFrozen(not self.LiveEditor.charFrozen)
+        self.AnimationSelector.setCanFreezeCharButton(result)
+        
+    def ResetTime(self):
+        if not self.openTekkenProcess(): return
+        self.LiveEditor.runningAnimation = False
+        self.LiveEditor.setGameSpeed(100)
+        self.LiveEditor.setCharFrozen(False)
+        self.LiveEditor.setSpeedControl(False)
+        self.AnimationEditor.enablePlayback()
         
     def ResetCamera(self):
         self.LiveEditor.unlockCamera()
@@ -2114,15 +2358,15 @@ class GUI_TekkenCameraAnimator():
         with open(dataPath + self.AnimationEditor.Animation.filename, "w") as f:
             for group in self.AnimationEditor.Animation.groups:
                 line = "[%s]\n" % (group['name'])
-                line += "[" + (", ".join(["%s=%d" % (key, group[key]) for key in groupKeys])) + "]\n"
+                line += "[" + (", ".join(["%s=%d" % (key, group[key]) for key in groupKeys if group[key] != 0])) + "]\n"
                 f.write(line)
                 for frame in group['frames']:
-                    line = ",".join([str(frame[field]) for field in frameFields])
+                    line = ",".join([getStringValueFromType(frameFields[field], frame[field]) for field in frameFields])
                     f.write(line + "\n")
             self.AnimationSelector.setSaveButtonEnabled(False)
         
     def LoadAnimation(self, filename):
-        LoadedAnim = None
+        LoadedAnim = Animation(filename=filename)
         try:
             LoadedAnim = Animation(filename=filename)
         except:
@@ -2147,6 +2391,11 @@ class GUI_TekkenCameraAnimator():
             title += " - " + label
         self.window.wm_title(title) 
         
+    def onLiveEditingDisable(self):
+        self.AnimationEditor.previewButton['text'] = '[OFF] Live preview'    
+    
+    def onLiveControlDisable(self):
+         self.AnimationEditor.liveControlButton['text'] = '[OFF] Live control' 
 
 if __name__ == "__main__":
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('kilo.TekkenCameraAnimator')

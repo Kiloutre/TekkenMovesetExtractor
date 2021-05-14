@@ -1957,6 +1957,7 @@ class GUI_TekkenMovesetEditor():
             ("Insert new extra move-prop to current list", self.insertNewExtraprop ),
             ("Create new extra move-prop list", self.createExtrapropList ),
             ("", "separator" ),
+            ("Duplicate current extra move-prop", lambda self=self: self.insertNewExtraprop(copyCurrent=True) ),
             ("Duplicate current extra move-prop list", self.copyExtrapropList ),
         ]
         
