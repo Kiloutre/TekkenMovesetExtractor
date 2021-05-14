@@ -3,7 +3,7 @@
 from tkinter import Tk, Menu, Frame, Listbox, Label, Text, messagebox, messagebox
 from tkinter.ttk import Button
 from re import match
-from Addresses import game_addresses
+from Addresses import game_addresses, AddressFile
 import io
 import sys
 import os
@@ -19,8 +19,9 @@ from GUI_TekkenMovesetEditor import GUI_TekkenMovesetEditor
 from GUI_TekkenAnimationEditor import GUI_TekkenAnimationEditor
 from GUI_TekkenCameraAnimator import GUI_TekkenCameraAnimator
 
-extractorVersion = "1.0.32"
-latestRelease = "https://api.github.com/repos/Kiloutre/TekkenMovesetExtractor/releases/latest"
+extractorVersion = "1.0.32.11"
+latestRelease = "https://api.github.com/repos/Kiloutre/TekkenMovesetExtractor/releases/latest" #Unused
+latestAddrFile = game_addresses['update_link']
 charactersPath = "./extracted_chars/"
 codeInjectionSize = 256
     
@@ -46,7 +47,7 @@ def getRequestFromURL(url):
     )
     return requestObject
 
-def getLatestReleaseInfo():
+def getLatestReleaseInfo(): #Unused
     requestObject = getRequestFromURL(latestRelease)
     releaseStats = request.urlopen(requestObject).read() 
     releaseStats = json.load(io.BytesIO(releaseStats))
@@ -56,6 +57,12 @@ def getLatestReleaseInfo():
     description = releaseStats['body']
     
     return tag_name, download_link, description
+
+def getLatestAddressFile(address):
+    requestObject = getRequestFromURL(address)
+    content = request.urlopen(requestObject).read() 
+    
+    return content.decode('ascii')
 
 def hexToList(value, bytes_count):
     return [((value >> (b * 8)) & 0xFF) for b in range(bytes_count)]
@@ -497,6 +504,7 @@ class GUI_TekkenMovesetExtractor(Tk):
         menubar.add_command(label="Camera Animator", command=openCameraAnimator)
         menubar.add_command(label="Create shortcuts", command=self.createShortcuts)
         menubar.add_command(label="Extractor guide", command=self.openGuide)
+        menubar.add_command(label="Update game_addresses.txt", command=self.updateAddresses)
         self.config(menu=menubar)
         
         
@@ -535,6 +543,18 @@ class GUI_TekkenMovesetExtractor(Tk):
                 for line in f: print(line)
         except:
             pass
+            
+    def updateAddresses(self):
+        filedata = getLatestAddressFile(game_addresses['update_link'])
+        newAddresses = AddressFile(data=filedata)
+        
+        if newAddresses['version'] != game_addresses['version']:
+            with open("game_addresses.txt", "w") as f:
+                f.write(filedata)
+            game_addresses.reloadValues()
+            messagebox.showinfo("Updated", "Addresses successfully updated.\nRestart this software for the effect to take place.",  parent=self)
+        else:
+            messagebox.showinfo("Not updating", "Nothing to update, file is up to date.",  parent=self)
             
     def openGuide(self):
         with open("InterfaceData/extractorGuide.txt", "r") as f:

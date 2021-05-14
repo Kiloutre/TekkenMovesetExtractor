@@ -1825,7 +1825,7 @@ class LiveEditor:
         self.stop()
         
     def setPlayer(self, id):
-        self.playerAddress = game_addresses.addr['t7_p1_addr'] + (id * game_addresses.addr['t7_playerstruct_size'])
+        self.playerAddress = game_addresses['t7_p1_addr'] + (id * game_addresses['t7_playerstruct_size'])
         
     def stop(self, exiting=False):
         self.exiting = exiting
@@ -1862,30 +1862,30 @@ class LiveEditor:
     def setSpeedControl(self, enabled):
         if not self.startIfNeeded(): return False
         if enabled:
-            self.T.writeBytes(game_addresses.addr['game_speed_injection'], [0x90] * 6)
+            self.T.writeBytes(game_addresses['game_speed_injection'], [0x90] * 6)
         else:
-            self.T.writeBytes(game_addresses.addr['game_speed_injection'], [0x89, 0xD, 0x76, 0x53, 0xAD, 0xFD])
+            self.T.writeBytes(game_addresses['game_speed_injection'], [0x89, 0xD, 0x76, 0x53, 0xAD, 0xFD])
             
     def setGameSpeed(self, value):
         value = int(value)
         if value <= 0:
-            self.T.writeInt(game_addresses.addr['game_speed_address'], 100, 4)
+            self.T.writeInt(game_addresses['game_speed_address'], 100, 4)
             self.setCharFrozen(True)
         else:
-            self.T.writeInt(game_addresses.addr['game_speed_address'], value, 4)
+            self.T.writeInt(game_addresses['game_speed_address'], value, 4)
             if self.charFrozen: self.setCharFrozen(False)
         
     def setCharFrozen(self, frozen, environments=True):
         if not self.startIfNeeded(): return False
         self.charFrozen = frozen
         if self.charFrozen:
-            self.T.writeBytes(game_addresses.addr['freeze_code_addr'], [0xE9, 0x81, 0x13, 0x0, 0x0, 0x90]) #jmp 14026349A, freeze chars
+            self.T.writeBytes(game_addresses['freeze_code_addr'], [0xE9, 0x81, 0x13, 0x0, 0x0, 0x90]) #jmp 14026349A, freeze chars
             if environments:
-                self.T.writeBytes(game_addresses.addr['freeze_environment'], [0x0, 0x75, 0x08, 0xB0, 0x01, 0x48, 0x83, 0xC4]) #freeze environment & particles
+                self.T.writeBytes(game_addresses['freeze_environment'], [0x0, 0x75, 0x08, 0xB0, 0x01, 0x48, 0x83, 0xC4]) #freeze environment & particles
         else:
-            self.T.writeBytes(game_addresses.addr['freeze_code_addr'], [0x0F, 0x85, 0x80, 0x13, 0x0, 0x0]) #jne 14026349A
+            self.T.writeBytes(game_addresses['freeze_code_addr'], [0x0F, 0x85, 0x80, 0x13, 0x0, 0x0]) #jne 14026349A
             if environments:
-                self.T.writeBytes(game_addresses.addr['freeze_environment'], [0x0, 0x75, 0x08, 0x32, 0xC0, 0x48, 0x83, 0xC4]) #freeze environment & particles
+                self.T.writeBytes(game_addresses['freeze_environment'], [0x0, 0x75, 0x08, 0x32, 0xC0, 0x48, 0x83, 0xC4]) #freeze environment & particles
         return self.charFrozen
         
     def toggleLivePreview(self):
@@ -1983,11 +1983,11 @@ class LiveEditor:
         return 0 if (rotational and not up and not down and not left and not right) else frameHeld + 1
         
     def nopInputsCode(self):
-        self.T.writeBytes(game_addresses.addr['input_code_injection'], bytes([0x31, 0xC0, 0x90, 0x90])) # xor eax, eax ; nop; nop
+        self.T.writeBytes(game_addresses['input_code_injection'], bytes([0x31, 0xC0, 0x90, 0x90])) # xor eax, eax ; nop; nop
         
     def resetInputsCode(self):
         if not self.T: return
-        self.T.writeBytes(game_addresses.addr['input_code_injection'], bytes([0x8B, 0x44, 0x81, 0x20])) # mov eax,[rcx+rax*4+20]
+        self.T.writeBytes(game_addresses['input_code_injection'], bytes([0x8B, 0x44, 0x81, 0x20])) # mov eax,[rcx+rax*4+20]
         
     def liveControlLoop(self):
         self.lockCamera()
@@ -2054,22 +2054,22 @@ class LiveEditor:
         
     def lockCamera(self):
         if not self.startIfNeeded(): return
-        self.T.writeBytes(game_addresses.addr['camera_code_injection2'], bytes([0x90] * 8))
-        self.T.writeBytes(game_addresses.addr['camera_code_injection'] + 0xE, bytes([0x90] * 8))
-        self.T.writeBytes(game_addresses.addr['camera_code_injection'] + 0x25, bytes([0x90] * 6))
-        self.T.writeBytes(game_addresses.addr['camera_code_injection'], bytes([0x90] * 8))
-        self.T.writeBytes(game_addresses.addr['camera_code_injection'] + 0x1B, bytes([0x90] * 6))
+        self.T.writeBytes(game_addresses['camera_code_injection2'], bytes([0x90] * 8))
+        self.T.writeBytes(game_addresses['camera_code_injection'] + 0xE, bytes([0x90] * 8))
+        self.T.writeBytes(game_addresses['camera_code_injection'] + 0x25, bytes([0x90] * 6))
+        self.T.writeBytes(game_addresses['camera_code_injection'], bytes([0x90] * 8))
+        self.T.writeBytes(game_addresses['camera_code_injection'] + 0x1B, bytes([0x90] * 6))
         
     def unlockCamera(self):
         if not self.startIfNeeded(): return
-        self.T.writeBytes(game_addresses.addr['camera_code_injection2'], bytes([0xF3, 0x0f, 0x11, 0x89, 0x9c, 0x03, 000, 0x0]))
-        self.T.writeBytes(game_addresses.addr['camera_code_injection'] + 0xE, bytes([0xF2, 0x0f, 0x11, 0x87, 0x04, 0x04, 0x0, 0x0]))
-        self.T.writeBytes(game_addresses.addr['camera_code_injection'] + 0x25, bytes([0x89, 0x87, 0x0c, 0x04, 0x0, 0x0]))
-        self.T.writeBytes(game_addresses.addr['camera_code_injection'], bytes([0xF2, 0x0F, 0x11, 0x87, 0xF8, 0x03, 0x0, 0x0]))
-        self.T.writeBytes(game_addresses.addr['camera_code_injection'] + 0x1B, bytes([0x89, 0x87, 0, 0x04, 0, 0]))
+        self.T.writeBytes(game_addresses['camera_code_injection2'], bytes([0xF3, 0x0f, 0x11, 0x89, 0x9c, 0x03, 000, 0x0]))
+        self.T.writeBytes(game_addresses['camera_code_injection'] + 0xE, bytes([0xF2, 0x0f, 0x11, 0x87, 0x04, 0x04, 0x0, 0x0]))
+        self.T.writeBytes(game_addresses['camera_code_injection'] + 0x25, bytes([0x89, 0x87, 0x0c, 0x04, 0x0, 0x0]))
+        self.T.writeBytes(game_addresses['camera_code_injection'], bytes([0xF2, 0x0F, 0x11, 0x87, 0xF8, 0x03, 0x0, 0x0]))
+        self.T.writeBytes(game_addresses['camera_code_injection'] + 0x1B, bytes([0x89, 0x87, 0, 0x04, 0, 0]))
         
     def getCameraAddr(self):
-        self.camAddr = self.readPointerPath(game_addresses.addr['camera_starting_ptr'], [0x30, 0x418])
+        self.camAddr = self.readPointerPath(game_addresses['camera_starting_ptr'], [0x30, 0x418])
         return self.camAddr
         
     def setCameraPos(self, cam, relative=0, prevCameraPos=None):
@@ -2208,7 +2208,7 @@ class LiveEditor:
         
     def getPlayerPos(self, playerId=-1):
         playerAddress = self.playerAddress
-        if playerId != -1: playerAddress = game_addresses.addr['t7_p1_addr'] + (0 if playerId == 0 else game_addresses.addr['t7_playerstruct_size'])
+        if playerId != -1: playerAddress = game_addresses['t7_p1_addr'] + (0 if playerId == 0 else game_addresses['t7_playerstruct_size'])
         return {
             'x': self.readFloat(playerAddress + 0xFC) / 10,
             'y': -(self.readFloat(playerAddress + 0xF4) / 10),
@@ -2219,16 +2219,16 @@ class LiveEditor:
         return self.T.readInt(self.playerAddress + 0x1c0, 2)
         
     def getFrameCounterAddr(self):
-        if game_addresses.addr['using_global_frame_counter']:
-            self.frame_counter = game_addresses.addr['global_frame_counter_ptr']
+        if game_addresses['using_global_frame_counter']:
+            self.frame_counter = game_addresses['global_frame_counter_ptr']
         else:
-            self.frame_counter = game_addresses.addr['game_frame_counter']
+            self.frame_counter = game_addresses['game_frame_counter']
         
     def waitFrame(self, amount):
         currFrame = self.T.readInt(self.frame_counter, 4)
         targetFrame = currFrame + amount
         while currFrame < targetFrame:
-            if self.runningAnimation == False or self.T.readInt(game_addresses.addr['game_frame_counter'], 4) < 10:
+            if self.runningAnimation == False or self.T.readInt(game_addresses['game_frame_counter'], 4) < 10:
                 raise
             currFrame = self.T.readInt(self.frame_counter, 4)
         
@@ -2254,7 +2254,7 @@ class LiveEditor:
     }
     
     def getInputBufferAddr(self):
-        self.inputbuffer = self.T.readInt(game_addresses.addr['input_buffer'], 8) + 0x20
+        self.inputbuffer = self.T.readInt(game_addresses['input_buffer'], 8) + 0x20
         return self.inputbuffer
 
     def getInputs(self):

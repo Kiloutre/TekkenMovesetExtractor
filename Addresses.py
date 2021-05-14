@@ -12,11 +12,36 @@ kernel32 = ctypes.windll.kernel32
 psapi = ctypes.windll.psapi
 
 class AddressFile:
-    def __init__(self, path):
+    def __init__(self, path=None, data=None):
         self.addr = {}
-        self.path = path
         
-        self.reloadValues()
+        self.path = path
+        self.data = data
+        
+        if self.path:
+            self.reloadValues()
+        elif data:
+            self.readData(data)
+            
+    def __getitem__(self, item):
+        return self.addr[item]
+        
+    def readData(self, data):
+        for line in data.split("\n"):
+            line = line.strip()
+            if len(line) == 0 or line[0] == "#":
+                continue
+            name, _ = findall('^([a-zA-Z0-9\_\-]+)( *= *)', line)[0]
+            value = line[len(name + _):].split('#')[0]
+            
+            if match('-?0(x|X)[0-9a-fA-F]+', value):
+                value = int(value, 16)
+            elif match('-?[0-9]+', value):
+                value = int(value, 10)
+            else:
+                value = value.strip()
+            
+            self.addr[name] = value
         
     def reloadValues(self):
         with open(self.path, "r") as f:
