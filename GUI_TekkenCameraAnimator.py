@@ -16,7 +16,7 @@ from scipy import interpolate
 
 dataPath = "./CameraAnimations/"
 dataPath2 = "./InterfaceData/"
-editorVersion = "1.1"
+editorVersion = "1.2"
 degToRad = (math.pi * 2) / 360
         
 colors = {
