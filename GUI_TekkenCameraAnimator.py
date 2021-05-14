@@ -117,11 +117,13 @@ relativityTypes = {
     -1: "Prev group's last pos & rot",
     1: "P1 Pos",
     2: "P1 Pos & Height",
+    6: "P1 Pos & Floor Height",
     3: "P1 Pos & Rotation",
     4: "P1 Pos & Height & Rotation",
     5: "P1 Look-At",
     11: "P2 Pos",
     12: "P2 Pos & Height",
+    16: "P2 Pos & Floor Height",
     13: "P2 Pos & Rotation",
     14: "P2 Pos & Height & Rotation",
     15: "P2 Look-At"
@@ -2120,8 +2122,8 @@ class LiveEditor:
             playerPos = self.getPlayerPos()
             x += playerPos['x']
             y += playerPos['y']
-        elif relative == 2: #Pos & height relativity
-            playerPos = self.getPlayerPos()
+        elif relative == 2 or relative == 6: #Pos & height relativity
+            playerPos = self.getPlayerPos(floorHeight = (relative == 6))
             x += playerPos['x']
             y += playerPos['y']
             z += playerPos['z']
@@ -2184,8 +2186,8 @@ class LiveEditor:
             playerPos = self.getPlayerPos()
             cam['x'] -= playerPos['x']
             cam['y'] -= playerPos['y']
-        elif relative == 2: #Pos & height
-            playerPos = self.getPlayerPos()
+        elif relative == 2 or relative == 6: #Pos & height
+            playerPos = self.getPlayerPos(floorHeight=(relative == 6))
             cam['x'] -= playerPos['x']
             cam['y'] -= playerPos['y']
             cam['z'] -= playerPos['z']
@@ -2227,13 +2229,13 @@ class LiveEditor:
     def getPlayerFloorheight(self):
         return self.readFloat(self.playerAddress + 0x1B0) / 10
         
-    def getPlayerPos(self, playerId=-1):
+    def getPlayerPos(self, playerId=-1, floorHeight=False):
         playerAddress = self.playerAddress
         if playerId != -1: playerAddress = game_addresses['t7_p1_addr'] + (0 if playerId == 0 else game_addresses['t7_playerstruct_size'])
         return {
             'x': self.readFloat(playerAddress + 0xFC) / 10,
             'y': -(self.readFloat(playerAddress + 0xF4) / 10),
-            'z': self.readFloat(playerAddress + self.getPlayerHeightOffset('body')) / 10,
+            'z': (self.readFloat(playerAddress + self.getPlayerHeightOffset('body')) / 10) if not floorHeight else self.getPlayerFloorheight(),
         }
         
     def getPlayerRot(self):
