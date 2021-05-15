@@ -64,6 +64,10 @@ swapGameAnimBytes = {
     '3d': False
 }
 
+charaIdSize = {
+    't5': 2
+}
+
 animEndPosFunc = {
     't7': GetBigEndianAnimEnd,
     'tag2': GetLittleEndianAnimEnd,
@@ -1883,7 +1887,7 @@ class Motbin:
     def getCharacterId(self, playerAddress):
         key = self.TekkenVersion + '_chara_id_offset'
         if key in game_addresses.addr:
-            self.chara_id = (self.readInt(self.base + playerAddress + game_addresses.addr[key], 4))
+            self.chara_id = self.readInt(self.base + playerAddress + game_addresses.addr[key], charaIdSize.get(self.TekkenVersion, 4))
         else:
             key = self.TekkenVersion + '_chara_id_addr'
             if key not in game_addresses.addr:

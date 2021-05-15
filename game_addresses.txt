@@ -59,7 +59,7 @@ t5_base               = 0x20000000
 t5_p1_addr            = 0x3a8ad0
 t5_playerstruct_size  = 0x8D0
 t5_motbin_offset      = 0x50
-#t5_chara_id_addr     = 0x102C8D0A
+t5_chara_id_offset    = 0x42
 
 # Tekken 4 addresses (SLUS-20328, NTSC-USA)
 t4_process_name       = pcsx2.exe
@@ -67,7 +67,7 @@ t4_base               = 0x20000000
 t4_p1_addr            = 0x2AA4E4
 t4_playerstruct_size  = 0xF24              
 t4_motbin_offset      = -0xEE0
-td_chara_id_offset    = 0                  # tofind
+t4_chara_id_offset    = -0xEEC
 
 
 # miscellaneous
