@@ -12,6 +12,7 @@
 0x8012,Fire effect
 0x801b,Rage Drive VFX
 0x802e,Hit Spark on self
+0x8032,Hit Sparks(?)
 0x8036,Trail VFX
 0x8038,Special Trail VFX
 0x8039,Play hit spark (opponent)
@@ -44,7 +45,7 @@
 0x81d6,Player speed (4096 = 100%)
 0x81d7,Activate Speed modifier
 0x81db,Charge speed
-0x81e0,Blending (?)
+0x81e0,Blending duration
 0x81e4,Break floor
 0x81e8,Pushback-related
 0x81f3,Activate laser
@@ -103,6 +104,9 @@
 0x843d,Rage Art camera related(?)
 0x8442,Camera Zoom Focal Point
 0x8443,Camera Zoom Effect
+0x844e,Camera Movement(?)
+0x844f,Camera Interpolation
+0x8450,Camera Rotation
 0x8454,Something used in Rage Art Camera (?)
 0x84c1,Play facial anim
 0x84c2,Play facial anim sequence
