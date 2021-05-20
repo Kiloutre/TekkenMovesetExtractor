@@ -26,6 +26,14 @@
 67,Crouching
 72,Backturned
 73,Not Backturned
+92,Opponent facing Forward
+93,Opponent facing Left
+94,Opponent facing Right
+95,Opponent facing Back
+96,Opponent facing Forward
+97,Opponent facing Left
+98,Opponent facing Right
+99,Opponent facing Back
 126,Opponent downed
 127,Opponent on their feet
 130,Counterhit
@@ -35,7 +43,7 @@
 135,On death
 139,Player HP check (direct)
 143,Player HP check (percentage)
-144,Opponent HP less than
+144,Opponent HP check
 146,Standing on left side
 147,Standing on right side
 148,On ground (right side)
@@ -55,13 +63,17 @@
 253,Bryan taunted
 256,Bryan taunted
 308,Lucky Chloe RA point check
-329,Move Value check
+329,Check value (prop 0x807c)
 344,Kazuya Devil Form
 345,Check Lucky Chloe RA points
+346,Check value (prop 0x80c5)
 351,Claudio Starburst
 352,Fully charged (?)
 359,Character specific flag
-361,Combo route
+361,Check value (prop 0x80ed)
+532,Check Player speed(?)
+533,Check Player speed(?)
+534,Check Player speed(?)
 552,Random number generator (uniform)
 553,Random number generator (weighted)
 558,Story Battle
@@ -75,6 +87,7 @@
 615,Screw available
 629,Meter equal or higher
 634,Treasure Battle Special Match
+637,Check Match Point
 639,Parry Zoom
 641,Once per match (Leroy Cane)
 813,Parry high
