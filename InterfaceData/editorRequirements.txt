@@ -49,6 +49,7 @@
 148,On ground (right side)
 149,On ground (left side)
 155,If Ki Charged
+156,Opponent is in rage
 157,Rage
 176,Geese in Max-Mode
 182,Near Wall
