@@ -1924,7 +1924,7 @@ class LiveEditor:
             self.liveControl = self.startIfNeeded()
             if self.liveControl and self.liveEditing:
                 self.liveEditing = False
-                self.root.OnLiveEditingDisable()
+                self.root.onLivePreviewDisable()
         return self.liveControl
         
     def writeFloat(self, addr, value):
@@ -2415,11 +2415,11 @@ class GUI_TekkenCameraAnimator():
             title += " - " + label
         self.window.wm_title(title) 
         
-    def onLiveEditingDisable(self):
+    def onLivePreviewDisable(self):
         self.AnimationEditor.previewButton['text'] = '[OFF] Live preview'    
     
     def onLiveControlDisable(self):
-         self.AnimationEditor.liveControlButton['text'] = '[OFF] Live control' 
+        self.AnimationEditor.liveControlButton['text'] = '[OFF] Live control' 
 
 if __name__ == "__main__":
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('kilo.TekkenCameraAnimator')
