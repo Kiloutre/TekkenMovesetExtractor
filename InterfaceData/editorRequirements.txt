@@ -58,7 +58,7 @@
 219,Opponent character ID
 220,Opponent NOT character ID
 221,Partner character ID
-222,Partner NOT character ID 
+222,Partner NOT character ID
 223,Gamemode
 225,Player is CPU
 253,Bryan taunted

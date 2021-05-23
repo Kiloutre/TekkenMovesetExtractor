@@ -1,6 +1,5 @@
 0x0,Properties end
 0x8001,Lightest camera shake
-0x8002,Hit particle
 0x8002,Light camera shake
 0x8003,Moderate camera shake
 0x8004,Heavy camera shake

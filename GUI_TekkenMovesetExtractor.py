@@ -19,9 +19,7 @@ from GUI_TekkenMovesetEditor import GUI_TekkenMovesetEditor
 from GUI_TekkenAnimationEditor import GUI_TekkenAnimationEditor
 from GUI_TekkenCameraAnimator import GUI_TekkenCameraAnimator
 
-extractorVersion = "1.0.32.12"
-latestRelease = "https://api.github.com/repos/Kiloutre/TekkenMovesetExtractor/releases/latest" #Unused
-latestAddrFile = game_addresses['update_link']
+extractorVersion = "1.0.32.13"
 charactersPath = "./extracted_chars/"
 codeInjectionSize = 256
     
@@ -47,19 +45,8 @@ def getRequestFromURL(url):
     )
     return requestObject
 
-def getLatestReleaseInfo(): #Unused
-    requestObject = getRequestFromURL(latestRelease)
-    releaseStats = request.urlopen(requestObject).read() 
-    releaseStats = json.load(io.BytesIO(releaseStats))
-    
-    tag_name = releaseStats['tag_name']
-    download_link = releaseStats['zipball_url']
-    description = releaseStats['body']
-    
-    return tag_name, download_link, description
-
-def getLatestAddressFile(address):
-    requestObject = getRequestFromURL(address)
+def getFileFromRepo(address, path):
+    requestObject = getRequestFromURL(address + path)
     content = request.urlopen(requestObject).read() 
     
     return content.decode('ascii')
@@ -493,6 +480,17 @@ def openAnimationEditor():
 def openCameraAnimator():
     app = GUI_TekkenCameraAnimator(mainWindow=False)
     app.window.mainloop()
+    
+def editorDescriptionfileToDict(filedata, base=10):
+    resultingDict = {}
+    for line in [l.strip() for l in filedata.split("\n") if len(l.strip()) != 0]:
+        try:
+            commaPos = line.find(',')
+            val, label = line[:commaPos], line[commaPos + 1:].strip()
+            resultingDict[int(val, base)] = label
+        except Exception as e:
+            pass
+    return {key:resultingDict[key] for key in sorted(resultingDict)}
         
 class GUI_TekkenMovesetExtractor(Tk):
     def __init__(self):
@@ -504,7 +502,8 @@ class GUI_TekkenMovesetExtractor(Tk):
         menubar.add_command(label="Camera Animator", command=openCameraAnimator)
         menubar.add_command(label="Create shortcuts", command=self.createShortcuts)
         menubar.add_command(label="Extractor guide", command=self.openGuide)
-        menubar.add_command(label="Update game_addresses.txt", command=self.updateAddresses)
+        menubar.add_command(label="Update game_addresses.txt", command=self.updateAddressFile)
+        menubar.add_command(label="Update editor descriptions", command=self.updateEditorDescriptions)
         self.config(menu=menubar)
         
         
@@ -544,8 +543,36 @@ class GUI_TekkenMovesetExtractor(Tk):
         except:
             pass
             
-    def updateAddresses(self):
-        filedata = getLatestAddressFile(game_addresses['update_link'])
+    def updateEditorDescriptions(self):
+        for file, base in [('editorRequirements.txt', 10), ('editorProperties.txt', 16), ('editorCommands.txt', 16)]:
+            path = 'InterfaceData/' + file
+            newFiledata = getFileFromRepo(game_addresses['repo_link'], path)
+            newDict = editorDescriptionfileToDict(newFiledata, base)
+    
+            if not os.path.exists(path): open(path, 'w').close()
+            with open(path, 'r+') as f:
+                currentDict = editorDescriptionfileToDict(f.read(), base)
+                
+                modified = False
+                for key in newDict:
+                    if key not in currentDict or currentDict[key] != newDict[key]:
+                        currentDict[key] = newDict[key]
+                        modified = True
+                        
+                if modified:
+                    f.truncate(0)
+                    f.seek(0, 0)
+                    for key in sorted(currentDict):
+                        prefix = ("0x%x" % key) if base == 16 else ("%d" % key)
+                        f.write(prefix + ",%s\n" % currentDict[key])
+                    messagebox.showinfo("Updated", "File %s successfully updated." % file,  parent=self)
+                else:
+                    print("\nNo update needed for file %s" % file)
+        
+
+            
+    def updateAddressFile(self):
+        filedata = getFileFromRepo(game_addresses['repo_link'], 'game_addresses.txt')
         newAddresses = AddressFile(data=filedata)
         
         if newAddresses['version'] != game_addresses['version']:
