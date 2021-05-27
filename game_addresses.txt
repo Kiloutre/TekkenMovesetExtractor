@@ -1,6 +1,6 @@
 # For updating purposes
-version     = 1 #Must be different for it to register it as an update
-repo_link = https://raw.githubusercontent.com/Kiloutre/TekkenMovesetExtractor/master/
+version     = 2 #Must be different for it to register it as an update
+repo_link   = https://raw.githubusercontent.com/Kiloutre/TekkenMovesetExtractor/master/
 
 # Tekken 7 addresses and offsets. Changes with updates
 t7_process_name       = TekkenGame-Win64-Shipping.exe
@@ -75,21 +75,21 @@ player_curr_move_addr_offset = 0x220            # Used by Animator to overwrite 
 player_curr_move_offset      = 0x350            # Used by editor to force a move to play
 next_move_offset             = 0xD60            # Used by editor to force a move to play
 curr_frame_timer_offset      = 0x1D4            # Used by editor to force a move to play
-code_injection_addr          = 0x14074418F      # Address that writes on player+motbin_offset, used for online play
-playerid_starting_ptr        = 0x1434D0510      # Used to find whether local player is 1P or 2P, used for online play
-#Finding playerid_starting_ptr: Go in training mode as 2p, scan for value on 1. Change to 1P, scan for value on 0. Repeat many times to lower matches to a few hundreds. Do combo, grabs and change outfit & character to keep lowering.
-#Scan repeatedly value between 0 and 1 during loading to filter out the remaining garbage. Then pause the process (slow to 0.00), set all remaining variables to a fringe unique value (e.g. 216246545) and search for the following pointer path that leads to the previous value (68 is last offset!): 0, 0, 68.
+code_injection_addr          = 0x1407450DF      # Address that writes on player+motbin_offset, used for online play
+playerid_starting_ptr        = 0x1434D0520      # Used to find whether local player is 1P or 2P, used for online play
+#Finding playerid_starting_ptr: Go in training mode as 2p, scan for value on 1. Change to 1P, scan for value on 0. Repeat many times to lower matches to a few hundreds. Do combo, grabs and change outfit & character to keep lowering matches.
+#Scan repeatedly value between 0 and 1 during loading to filter out the remaining garbage. Then pause the process (slow to 0.00), set all remaining variables to a fringe unique value (e.g. 216246545) and search for the following pointer path that leads to the fringe value (68 is last offset!): 0, 0, 68.
 
 # -- Camera animator --
-game_speed_address         = 0x1434D9F9C
-game_speed_injection       = 0x145A04C20
-game_frame_counter         = 0x1434C8460 #related to in-game timer
-global_frame_counter_ptr   = 0x143444F44
+game_speed_address         = 0x1434D9F9C #where we write our game speed
+game_speed_injection       = 0x145D7EC60 #prevent game speed from being overwritten
+game_frame_counter         = 0x1434C8460 #related to game timer: pausing the game pauses it
+global_frame_counter_ptr   = 0x143444F44 #detached from game timer
 using_global_frame_counter = 1           #0 = more reliable, 1 = animation is not paused by game and camera can move even if the in-game time is frozen
-freeze_code_addr           = 0x140262114 #jne 14026349A
-freeze_environment         = 0x1487EE6B0
-input_buffer               = 0x1434C9490
-camera_starting_ptr        = 0x14377FCF0
-input_code_injection       = 0x145038ea8
-camera_code_injection      = 0x1416A2A40
-camera_code_injection2     = 0x148B56F30
+freeze_code_addr           = 0x1402623B4 #jne +26373A, used to freeze players
+freeze_environment         = 0x14887F150 #used to freeze particles in the environment when the game speed reaches 0. gotta find this one using unreal unlocker and not game pause
+input_buffer               = 0x1434C9490 #used to read player input during camera control
+camera_starting_ptr        = 0x14377FCF0 #used to find camera, pointer path is 0x30 0x418
+input_code_injection       = 0x14530F8C8 #prevent player movement during manual camera control
+camera_code_injection      = 0x1416A2A60 #prevent writing of certain camera offsets
+camera_code_injection2     = 0x148B1D9A0 #prevent writing of fov
