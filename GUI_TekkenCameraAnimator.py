@@ -11,7 +11,6 @@ import struct
 import ctypes
 import math
 import pyperclip
-import numexpr
 from scipy import interpolate
 
 dataPath = "./CameraAnimations/"
@@ -179,13 +178,21 @@ def generateProgressBar(progress, iteration=20):
     filledCount = int(progress * iteration)
     return "[" + "|" * filledCount + "_" * (iteration - filledCount) + "]"
         
+def safe_math_eval(string):
+    allowed_chars = "0123456789+-*(). /"
+    for char in string:
+        if char not in allowed_chars:
+            raise Exception("Unsafe eval")
+
+    return eval(string)
+        
 def getValueFromType(type, value):
     try:
         if type == 'text':
             value = value.strip()
             return value if len(value) != 0 else None
         elif type == 'float':
-            return float(numexpr.evaluate(value))
+            return float(safe_math_eval(value))
         elif type == 'int':
             return int(float(value))
     except Exception as e:
@@ -1902,13 +1909,13 @@ class LiveEditor:
         if not self.startIfNeeded(): return False
         self.charFrozen = frozen
         if self.charFrozen:
-            self.T.writeBytes(game_addresses['freeze_code_addr'], [0xE9, 0x81, 0x13, 0x0, 0x0, 0x90]) #jmp 14026349A, freeze chars
+            self.T.writeBytes(game_addresses['freeze_code_addr'], [0xE9, 0x81, 0x13, 0x0, 0x0, 0x90]) #jmp +26373A, freeze chars
             if environments:
                 self.T.writeBytes(game_addresses['freeze_environment'], [0x0, 0x75, 0x08, 0xB0, 0x01, 0x48, 0x83, 0xC4]) #freeze environment & particles
         else:
-            self.T.writeBytes(game_addresses['freeze_code_addr'], [0x0F, 0x85, 0x80, 0x13, 0x0, 0x0]) #jne 14026349A
+            self.T.writeBytes(game_addresses['freeze_code_addr'], [0x0F, 0x85, 0x80, 0x13, 0x0, 0x0]) #jne +26373A
             if environments:
-                self.T.writeBytes(game_addresses['freeze_environment'], [0x0, 0x75, 0x08, 0x32, 0xC0, 0x48, 0x83, 0xC4]) #freeze environment & particles
+                self.T.writeBytes(game_addresses['freeze_environment'], [0x0, 0x75, 0x08, 0x32, 0xC0, 0x48, 0x83, 0xC4]) #unfreeze environment & particles
         return self.charFrozen
         
     def toggleLivePreview(self):
@@ -2006,6 +2013,7 @@ class LiveEditor:
         return 0 if (rotational and not up and not down and not left and not right) else frameHeld + 1
         
     def nopInputsCode(self):
+        #Nop instruction that reads off the inputs
         self.T.writeBytes(game_addresses['input_code_injection'], bytes([0x31, 0xC0, 0x90, 0x90])) # xor eax, eax ; nop; nop
         
     def resetInputsCode(self):

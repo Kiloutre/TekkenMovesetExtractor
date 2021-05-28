@@ -24,7 +24,7 @@ charactersPath = "./extracted_chars/"
 codeInjectionSize = 256
     
 selfName = os.path.basename(__file__)
-monitorVerificationFrequency   = (2)
+monitorVerificationFrequency = (2)
 runningMonitors = [None, None]
 creatingMonitor = [False, False]
 codeInjection = None

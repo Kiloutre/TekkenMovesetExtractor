@@ -16,7 +16,6 @@ class AddressFile:
         self.addr = {}
         
         self.path = path
-        self.data = data
         
         if self.path:
             self.reloadValues()
@@ -27,6 +26,7 @@ class AddressFile:
         return self.addr[item]
         
     def readData(self, data):
+        self.data = data
         for line in data.split("\n"):
             line = line.strip()
             if len(line) == 0 or line[0] == "#":
@@ -44,27 +44,12 @@ class AddressFile:
             self.addr[name] = value
         
     def reloadValues(self):
-        with open(self.path, "r") as f:
-            try:
-                for line in f:
-                    line = line.strip()
-                    if len(line) == 0 or line[0] == "#":
-                        continue
-                    name, _ = findall('^([a-zA-Z0-9\_\-]+)( *= *)', line)[0]
-                    value = line[len(name + _):].split('#')[0]
-                    
-                    if match('-?0(x|X)[0-9a-fA-F]+', value):
-                        value = int(value, 16)
-                    elif match('-?[0-9]+', value):
-                        value = int(value, 10)
-                    else:
-                        value = value.strip()
-                    
-                    self.addr[name] = value
-            except Exception as e:
-                print(e)
-                print("Invalid game_addresses.txt format at line.")
-                print("Last line: ", line)
+        try:
+            with open(self.path, "r") as f:
+                self.readData(f.read())
+        except Exception as e:
+            print(e)
+            print("Could not load game_addresses.txt properly")
     
 class GameClass:
     def __init__(self, processName):
