@@ -19,7 +19,7 @@ from GUI_TekkenMovesetEditor import GUI_TekkenMovesetEditor
 from GUI_TekkenAnimationEditor import GUI_TekkenAnimationEditor
 from GUI_TekkenCameraAnimator import GUI_TekkenCameraAnimator
 
-extractorVersion = "1.0.32.13"
+extractorVersion = "1.0.32.14"
 charactersPath = "./extracted_chars/"
 codeInjectionSize = 256
     
@@ -469,16 +469,19 @@ def on_close():
     runningMonitors = [None, None]
     os._exit(0)
     
-def openMovesetEditor():
-    app = GUI_TekkenMovesetEditor(mainWindow=False)
+def openMovesetEditor(mainWindow=False):
+    if mainWindow: ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('kilo.TekkenMovesetEditor')
+    app = GUI_TekkenMovesetEditor(mainWindow)
     app.window.mainloop()
     
-def openAnimationEditor():
-    app = GUI_TekkenAnimationEditor(mainWindow=False)
+def openAnimationEditor(mainWindow=False):
+    if mainWindow: ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('kilo.TekkenAnimationEditor')
+    app = GUI_TekkenAnimationEditor(mainWindow)
     app.window.mainloop()
     
-def openCameraAnimator():
-    app = GUI_TekkenCameraAnimator(mainWindow=False)
+def openCameraAnimator(mainWindow=False):
+    if mainWindow: ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('kilo.TekkenCameraAnimator')
+    app = GUI_TekkenCameraAnimator(mainWindow)
     app.window.mainloop()
     
 def editorDescriptionfileToDict(filedata, base=10):
@@ -764,15 +767,12 @@ class GUI_TekkenMovesetExtractor(Tk):
 
 if __name__ == "__main__":
     if "--editor" in sys.argv:
-        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('kilo.TekkenMovesetEditor')
-        app = GUI_TekkenMovesetEditor().window
+        openMovesetEditor(mainWindow=True)
     elif "--animator" in sys.argv:
-        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('kilo.TekkenAnimationEditor')
-        app = GUI_TekkenAnimationEditor().window
+        openAnimationEditor(mainWindow=True)
     elif "--camera" in sys.argv:
-        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('kilo.TekkenCameraAnimator')
-        app = GUI_TekkenCameraAnimator().window
+        openCameraAnimator(mainWindow=True)
     else:
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('kilo.TekkenMovesetExtractor')
         app = GUI_TekkenMovesetExtractor()
-    app.mainloop()
+        app.mainloop()

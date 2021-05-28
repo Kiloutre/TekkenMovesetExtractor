@@ -251,20 +251,14 @@ def CreateToolTip(widget, text):
     widget.bind('<Leave>', leave)
     
 class Point:
-    def __init__(self, x, y = None):
+    def __init__(self, x = 0, y = 0, dictData=None, pointData=None):
         
-        if isinstance(x, Point):
-            self.x = x.x
-            self.y = x.y
-        elif isinstance(x, dict):
-            self.x = x['x']
-            self.y = x['y']
-        elif isinstance(x, float) and isinstance(y, float):
-            self.x = x
-            self.y = y
+        if pointData:
+            self.x, self.y = pointData.getXY()
+        elif dictData:
+            self.x, self.y = dictData['x'], dictData['y']
         else:
-            self.x = 0
-            self.y = 0
+            self.x, self.y = x, y
         
     def __add__(self, other):
         if isinstance(other, Point):
@@ -451,7 +445,7 @@ class Interpolation:
             return Interpolation.interpolateLine(points[idx], points[idx + 1], remainder)
     
     def lli8(x1, y1, x2, y2, x3, y3, x4, y4):
-        nx =  (x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)
+        nx = (x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)
         ny = (x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)
         d = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
         return Point(nx, ny) / d
@@ -489,14 +483,14 @@ class Interpolation:
         idx = int(idx)
         
         if (idx + 2 < pointsLen) and (idx >= 0):
-            a = Point(points[idx])
-            b = Point(points[idx+1])
-            c = Point(points[idx+2])
+            a = Point(dictData=points[idx])
+            b = Point(dictData=points[idx+1])
+            c = Point(dictData=points[idx+2])
             circle, size, s, e, e2 = Interpolation.getCircleFromThreePoints(a, b, c)
         elif (idx + 1 < pointsLen) and (idx > 0):
-            a = Point(points[idx - 1])
-            b = Point(points[idx + 0])
-            c = Point(points[idx + 1])
+            a = Point(dictData=points[idx - 1])
+            b = Point(dictData=points[idx + 0])
+            c = Point(dictData=points[idx + 1])
             circle, size, s, e, e2 = Interpolation.getCircleFromThreePoints(a, b, c)
             s, e = e, e2
         else:
