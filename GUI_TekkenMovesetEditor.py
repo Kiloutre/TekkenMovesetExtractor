@@ -1891,7 +1891,7 @@ def createMenu(root, menuActions, validationFunc=None, rootMenu=True):
     return newMenu
         
 class GUI_TekkenMovesetEditor():
-    def __init__(self, showCharacterSelector=True, mainWindow=True):
+    def __init__(self, mainWindow=True, showCharacterSelector=True):
         window = Tk() if mainWindow else Toplevel()
         self.window = window
 
