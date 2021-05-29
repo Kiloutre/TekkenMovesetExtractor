@@ -15,11 +15,8 @@ import motbinExport as exportLib
 import motbinImport as importLib
 from win32com.client import Dispatch
 from urllib import request
-from GUI_TekkenMovesetEditor import GUI_TekkenMovesetEditor
-from GUI_TekkenAnimationEditor import GUI_TekkenAnimationEditor
-from GUI_TekkenCameraAnimator import GUI_TekkenCameraAnimator
 
-extractorVersion = "1.0.32.14"
+extractorVersion = "1.0.32.15"
 charactersPath = "./extracted_chars/"
 codeInjectionSize = 256
     
@@ -470,16 +467,19 @@ def on_close():
     os._exit(0)
     
 def openMovesetEditor(mainWindow=False):
+    from GUI_TekkenMovesetEditor import GUI_TekkenMovesetEditor
     if mainWindow: ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('kilo.TekkenMovesetEditor')
     app = GUI_TekkenMovesetEditor(mainWindow)
     app.window.mainloop()
     
 def openAnimationEditor(mainWindow=False):
+    from GUI_TekkenAnimationEditor import GUI_TekkenAnimationEditor
     if mainWindow: ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('kilo.TekkenAnimationEditor')
     app = GUI_TekkenAnimationEditor(mainWindow)
     app.window.mainloop()
     
 def openCameraAnimator(mainWindow=False):
+    from GUI_TekkenCameraAnimator import GUI_TekkenCameraAnimator
     if mainWindow: ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('kilo.TekkenCameraAnimator')
     app = GUI_TekkenCameraAnimator(mainWindow)
     app.window.mainloop()
@@ -503,10 +503,12 @@ class GUI_TekkenMovesetExtractor(Tk):
         menubar.add_command(label="Moveset Editor", command=openMovesetEditor)
         menubar.add_command(label="Animation Editor", command=openAnimationEditor)
         menubar.add_command(label="Camera Animator", command=openCameraAnimator)
+        menubar.add_separator()
         menubar.add_command(label="Create shortcuts", command=self.createShortcuts)
         menubar.add_command(label="Extractor guide", command=self.openGuide)
-        menubar.add_command(label="Update game_addresses.txt", command=self.updateAddressFile)
-        menubar.add_command(label="Update editor descriptions", command=self.updateEditorDescriptions)
+        menubar.add_separator()
+        menubar.add_command(label="[UPDATE] game_addresses.txt", command=self.updateAddressFile)
+        menubar.add_command(label="[UPDATE] editor descriptions", command=self.updateEditorDescriptions)
         self.config(menu=menubar)
         
         
