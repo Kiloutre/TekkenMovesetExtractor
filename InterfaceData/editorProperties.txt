@@ -9,7 +9,9 @@
 0x8009,Heavy camera shake
 0x800b,Ground Ripple
 0x8012,Fire effect
+0x801a,Electric Effect on self
 0x801b,Rage Drive VFX
+0x8023,Hit Spark on Opponent
 0x802e,Hit Spark on self
 0x8032,Hit Sparks(?)
 0x8036,Trail VFX
@@ -18,8 +20,16 @@
 0x803b,Play hit spark
 0x803d,Heavy Hit Sparks
 0x803f,Heavy spark w/ chara hit spark
+0x8041,Throw Effect on self
+0x8044,Block Effect on self
 0x8046,Special VFX (Armored, sparks...)
+0x804c,Fire Effect on self
+0x805c,Spark Effect on self
+0x805d,Throw Effect on self
+0x8060,White Spark(?) on self
+0x8063,Small Spark(?) on self
 0x806a,Inflict damage to opponent
+0x806e,Inflict self Damage
 0x8078,Give Bryan taunt properties
 0x807c,Move Value Store (uses req 329)
 0x80bd,Kazuya devil mode
@@ -79,6 +89,8 @@
 0x82c8,Use fake frame advantage
 0x82c9,Use fake startup frame
 0x82cb,Special Cancellable (?)
+0x82cc,Activate Azazel hand
+0x82cd,Spend Azazel hand
 0x82d8,Set partner's move (Sugar)
 0x82eb,Spend once per match move
 0x82fa,Fahkumram skin pulse
