@@ -35,6 +35,7 @@
 0x80bd,Kazuya devil mode
 0x80c3,Give Lucky Chloe RA point
 0x80c5,Move Value Store (2D cancel|uses req 346)
+0x80a6,Value Store (uses req 352)
 0x80ed,Store Combo Route Value
 0x8106,Activate Flag
 0x817c,Allow player to block
