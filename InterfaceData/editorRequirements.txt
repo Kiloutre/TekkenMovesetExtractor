@@ -20,7 +20,10 @@
 24,Attack to Throw (Backward)
 25,Attack to Throw (Left Side)
 26,Attack to Throw (Right Side)
-27,Throw Hits (Airborne)
+27,Airborne Throw Hit (Forward)
+28,Airborne Throw Hit (Backward)
+29,Airborne Throw Hit (Left Side)
+30,Airborne Throw Hit (Right Side)
 35,Opponent distance
 44,On Hit
 47,On block
@@ -72,8 +75,8 @@
 345,Check Lucky Chloe RA points
 346,Check value (prop 0x80c5)
 351,Claudio Starburst
-352,Fully charged (?)
-359,Character specific flag
+352,Check value (prop 0x80a6)
+359,Check flag value (prop 0x8106)
 361,Check value (prop 0x80ed)
 532,Check Player speed(?)
 533,Check Player speed(?)
