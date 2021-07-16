@@ -2008,10 +2008,11 @@ class LiveEditor:
         
     def nopInputsCode(self):
         #Nop instruction that reads off the inputs
-        self.T.writeBytes(game_addresses['input_code_injection'], bytes([0x31, 0xC0, 0x90, 0x90])) # xor eax, eax ; nop; nop
+        if game_addresses['nop_inputs'] != 0: 
+            self.T.writeBytes(game_addresses['input_code_injection'], bytes([0x31, 0xC0, 0x90, 0x90])) # xor eax, eax ; nop; nop
         
     def resetInputsCode(self):
-        if not self.T: return
+        if not self.T or game_addresses['nop_inputs'] == 0: return
         self.T.writeBytes(game_addresses['input_code_injection'], bytes([0x8B, 0x44, 0x81, 0x20])) # mov eax,[rcx+rax*4+20]
         
     def liveControlLoop(self):
