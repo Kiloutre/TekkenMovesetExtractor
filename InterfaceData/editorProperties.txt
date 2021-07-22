@@ -30,6 +30,7 @@
 0x8063,Small Spark(?) on self
 0x806a,Inflict damage to opponent
 0x806e,Inflict self Damage
+0x8072,Inflict self Damage (no scale)
 0x8078,Give Bryan taunt properties
 0x807c,Move Value Store (uses req 329)
 0x80bd,Kazuya devil mode
@@ -71,6 +72,7 @@
 0x8229,EX Effect
 0x8233,Spend Rage (if grounded)
 0x8234,Rage drive BG effect
+0x8243,Play attached subtitles
 0x824a,AI Input (Devil Kazuya reverse transform)
 0x824c,AI input
 0x8251,Player visibility
@@ -124,6 +126,7 @@
 0x84c2,Play facial anim sequence
 0x84c3,Play system sound
 0x84c4,Play player sound
+0x84c5,Play player sound
 0x84c6,Play opponent sound
 0x84ca,Announcer says 'Fight'
 0x84cb,Play attached audio
