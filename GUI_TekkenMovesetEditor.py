@@ -332,8 +332,10 @@ def getCommandStr(commandBytes):
     
     if directionBits in commandLabels:
         direction = '(%s)' % commandLabels[directionBits]
+    elif 32781 <= directionBits <= 36863:
+        direction = " input_sequence[%d]" % (directionBits - 32781)
     else:
-        direction =  {
+        direction = {
             (0): "",
             (1 << 1): "D/B",
             (1 << 2): "D",
@@ -344,6 +346,10 @@ def getCommandStr(commandBytes):
             (1 << 8): "U",
             (1 << 9): "U/F",
             (1 << 15): "[AUTO]",
+            (32769): " Double tap F",
+            (32770): " Double tap B",
+            (32771): " Double tap U",
+            (32772): " Double tap D",
         }.get(directionBits, "UNKNOWN")
     
         
