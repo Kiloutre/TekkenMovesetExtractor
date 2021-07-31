@@ -84,8 +84,8 @@
 0x8270,Activate rage
 0x8272,Spend rage
 0x828b,Game speed%
-0x828c,RA freeze
-0x828d,RA freeze immunity
+0x828c,Slow down Effect
+0x828d,Slow down Effect immunity
 0x829d,Set HUD visibility
 0x829f,Play subtitles
 0x82ae,Noctis warp effect
