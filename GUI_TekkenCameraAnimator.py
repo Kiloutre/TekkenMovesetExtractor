@@ -1888,7 +1888,7 @@ class LiveEditor:
         if enabled:
             self.T.writeBytes(game_addresses['game_speed_injection'], [0x90] * 6)
         else:
-            self.T.writeBytes(game_addresses['game_speed_injection'], [0x89, 0xD, 0x76, 0x53, 0xAD, 0xFD])
+            self.T.writeBytes(game_addresses['game_speed_injection'], [0x89, 0xD, 0x46, 0xb4, 0xAE, 0xFD])
             
     def setGameSpeed(self, value):
         value = int(value)
@@ -2009,11 +2009,11 @@ class LiveEditor:
     def nopInputsCode(self):
         #Nop instruction that reads off the inputs
         if game_addresses['nop_inputs'] != 0: 
-            self.T.writeBytes(game_addresses['input_code_injection'], bytes([0x31, 0xC0, 0x90, 0x90])) # xor eax, eax ; nop; nop
+            self.T.writeBytes(game_addresses['input_code_injection'], bytes([0x90, 0x90, 0x90, 0x90, 0x90]))
         
     def resetInputsCode(self):
         if not self.T or game_addresses['nop_inputs'] == 0: return
-        self.T.writeBytes(game_addresses['input_code_injection'], bytes([0x8B, 0x44, 0x81, 0x20])) # mov eax,[rcx+rax*4+20]
+        self.T.writeBytes(game_addresses['input_code_injection'], bytes([0x44, 0x89, 0x44, 0x81, 0x20])) # mov [rcx+rax*4+20],r8d
         
     def liveControlLoop(self):
         self.lockCamera()
@@ -2280,7 +2280,7 @@ class LiveEditor:
     }
     
     def getInputBufferAddr(self):
-        self.inputbuffer = self.T.readInt(game_addresses['input_buffer'], 8) + 0x94
+        self.inputbuffer = self.T.readInt(game_addresses['input_buffer'], 8) + 0x1F4
         return self.inputbuffer
 
     def getInputs(self):
