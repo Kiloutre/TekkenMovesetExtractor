@@ -28,6 +28,8 @@
 44,On Hit
 47,On block
 48,On whiff
+49,On hit/block
+51,On hit
 66,Standing
 67,Crouching
 72,Backturned
@@ -48,8 +50,9 @@
 133,Pressed ONLY LP+RP (1+2)
 135,On death
 139,Player HP check (direct)
+141,Opponent HP check (direct)
 143,Player HP check (percentage)
-144,Opponent HP check
+144,Opponent HP check (percentage)
 146,Standing on left side
 147,Standing on right side
 148,On ground (right side)
@@ -69,7 +72,9 @@
 224,Opponent NOT Character ID
 225,Player is CPU
 253,Bryan taunted
+255,Check value (prop 0x807c)
 256,Bryan taunted
+284,Check value (prop 0x8109)
 308,Lucky Chloe RA point check
 329,Check value (prop 0x807c)
 344,Kazuya Devil Form
@@ -87,6 +92,9 @@
 558,Story Battle
 559,Story Battle Number
 563,Gamemode
+566,Outro Related(?)
+569,Intro(?)
+570,Outro Related(?)
 573,Check Stage ID
 607,Opponent is Airborne
 608,Opponent is Not Airborne
