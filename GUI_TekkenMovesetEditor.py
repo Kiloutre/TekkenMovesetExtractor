@@ -328,7 +328,9 @@ def getCommandStr(commandBytes):
     for i in range(1, 5):
         if inputBits & (1 << (i - 1)):
             inputs += "+%d" % (i)
-    
+            
+    if inputBits & (1 << 4):
+        inputs += "+R"  # Label for Rage Art button
     
     if directionBits in commandLabels:
         direction = '(%s)' % commandLabels[directionBits]
