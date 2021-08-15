@@ -29,22 +29,31 @@
 0x8060,White Spark(?) on self
 0x8063,Small Spark(?) on self
 0x806a,Inflict damage to opponent
+0x806b,Inflict self Damage
 0x806e,Inflict self Damage
 0x8072,Inflict self Damage (no scale)
 0x8078,Give Bryan taunt properties
-0x807c,Move Value Store (uses req 329)
+0x807c,Value Store (uses req 329)
+0x807d,Add value to 0x807c
+0x807e,Sub value from 0x807c
 0x80bd,Kazuya devil mode
 0x80c3,Give Lucky Chloe RA point
-0x80c5,Move Value Store (2D cancel|uses req 346)
+0x80c5,Value Store (2D cancel|uses req 346)
 0x80a6,Value Store (uses req 352)
 0x80ed,Store Combo Route Value
 0x8106,Activate Flag
+0x8107,Add value to Flag
+0x8108,Sub value from Flag
+0x8109,Activate Flag
+0x810a,Add value to Flag
+0x810b,Sub value from Flag
 0x817c,Allow player to block
 0x817d,Give CH property
 0x8181,Stop pushback
 0x818a,Add Tracking/Alignment
 0x818c,Change player status/vulnerability
 0x81a7,Align Player To Wall (?)
+0x81ad,Reset player position
 0x81bd,Power Crush
 0x81be,Rage Art SFX
 0x81bf,Give Claudio starbust
@@ -62,6 +71,7 @@
 0x81f3,Activate laser
 0x81f4,Disable laser
 0x81ff,Slide player
+0x8206,Distance from centre
 0x820b,Spawn projectile
 0x8213,Attack destroys projectile
 0x8214,Attack deflects projectile
@@ -73,7 +83,7 @@
 0x8233,Spend Rage (if grounded)
 0x8234,Rage drive BG effect
 0x8243,Play attached subtitles
-0x824a,AI Input (Devil Kazuya reverse transform)
+0x824a,AI Input (DVK reverse transform)
 0x824c,AI input
 0x8251,Player visibility
 0x8255,Spend screw
@@ -87,6 +97,7 @@
 0x828c,Slow down Effect
 0x828d,Slow down Effect immunity
 0x829d,Set HUD visibility
+0x829e,Screen Transition VFX
 0x829f,Play subtitles
 0x82ae,Noctis warp effect
 0x82c8,Use fake frame advantage
@@ -102,6 +113,7 @@
 0x83c2,Set opponent's floor level
 0x83c3,Set opponent's move
 0x83c5,Force new standing move (32769)
+0x8406,Rotate Player
 0x8428,Both Hands Mot Data
 0x8429,Left hand Mot Data
 0x842a,Right hand Mot Data
@@ -118,7 +130,7 @@
 0x843d,Rage Art camera related(?)
 0x8442,Camera Zoom Focal Point
 0x8443,Camera Zoom Effect
-0x844e,Camera Movement(?)
+0x844e,Camera Movement
 0x844f,Camera Interpolation
 0x8450,Camera Rotation
 0x8454,Something used in Rage Art Camera (?)
@@ -130,3 +142,4 @@
 0x84c6,Play opponent sound
 0x84ca,Announcer says 'Fight'
 0x84cb,Play attached audio
+0x84cc,Preset Camera Zoom
