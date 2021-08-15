@@ -41,12 +41,12 @@
 0x80c5,Value Store (2D cancel|uses req 346)
 0x80a6,Value Store (uses req 352)
 0x80ed,Store Combo Route Value
-0x8106,Activate Flag
-0x8107,Add value to Flag
-0x8108,Sub value from Flag
-0x8109,Activate Flag
-0x810a,Add value to Flag
-0x810b,Sub value from Flag
+0x8106,Activate Player Flag (0x8106)
+0x8107,Add value to Flag (0x8106)
+0x8108,Sub value from Flag (0x8106)
+0x8109,Activate Opponent Flag (0x8109)
+0x810a,Add value to Flag (0x8109)
+0x810b,Sub value from Flag (0x8109)
 0x817c,Allow player to block
 0x817d,Give CH property
 0x8181,Stop pushback
