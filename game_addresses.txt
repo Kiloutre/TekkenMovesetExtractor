@@ -92,5 +92,5 @@ input_buffer               = 0x1434C9490 #used to read player input during camer
 camera_starting_ptr        = 0x14377FCF0 #used to find camera, pointer path is 0x30 0x418
 input_code_injection       = 0x144FA40C7 #prevent player movement during manual camera control
 camera_code_injection      = 0x1416A2A60 #prevent writing of certain camera offsets
-camera_code_injection2     = 0x148B1D9A0 #prevent writing of fov
+camera_code_injection2     = 0x1491A8E01 #prevent writing of fov
 nop_inputs                 = 1           # 1 = disable player control during live control, 0 = don't disable
