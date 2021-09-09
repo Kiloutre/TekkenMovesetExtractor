@@ -684,7 +684,7 @@ t5_offsetTable = {
     'throws_ptr': { 'offset': None, 'size': 4 },
     'throws_size': { 'offset': None, 'size': 4 },
     
-    'mota_start': { 'offset': 0x240, 'size': None },
+    'mota_start': { 'offset': 0x230, 'size': None },
     'aliases': { 'offset': 0x18, 'size': (72, 4) },
     'aliases2': { 'offset': 0x13e, 'size': (37, 2) },
     
