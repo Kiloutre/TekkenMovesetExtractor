@@ -79,7 +79,7 @@ code_injection_addr          = 0x1407450DF      # Address that writes on player+
 playerid_starting_ptr        = 0x1434D0520      # Used to find whether local player is 1P or 2P, used for online play
 #Finding playerid_starting_ptr: Go in training mode as 2p, scan for value on 1. Change to 1P, scan for value on 0. Repeat many times to lower matches to a few hundreds. Do combo, grabs and change outfit & character to keep lowering matches.
 #Scan repeatedly value between 0 and 1 during loading to filter out the remaining garbage. Then pause the process (slow to 0.00), set all remaining variables to a fringe unique value (e.g. 216246545) and search for the following pointer path that leads to the fringe value (68 is last offset!): 0, 0, 68.
-
+#Alternatively: Load Kazuya in practice mode and search value 9. Then, using Simple Select, choose Kazumi and as soon as loading screen starts, search value 26. Then load Heihachi and search value 8. Can repeat this process to decreases addresses. In the end you'll be left with 9-11 addresses, and the address that you want will be something like XXXX0010. Now search pointer path with offsets 0, 0, 10.
 # -- Camera animator --
 game_speed_address         = 0x1434D9F9C #where we write our game speed
 game_speed_injection       = 0x1459EEB50 #prevent game speed from being overwritten
