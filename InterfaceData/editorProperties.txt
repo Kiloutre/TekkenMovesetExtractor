@@ -36,15 +36,16 @@
 0x807c,Value Store (uses req 329)
 0x807d,Add value to 0x807c
 0x807e,Sub value from 0x807c
+0x80a6,Value Store (uses req 352)
 0x80bd,Kazuya devil mode
+0x80c2,Lucky Chloe Point
 0x80c3,Give Lucky Chloe RA point
 0x80c5,Value Store (2D cancel|uses req 346)
-0x80a6,Value Store (uses req 352)
 0x80ed,Store Combo Route Value
-0x8106,Activate Player Flag (0x8106)
+0x8106,Activate Player Flag
 0x8107,Add value to Flag (0x8106)
 0x8108,Sub value from Flag (0x8106)
-0x8109,Activate Opponent Flag (0x8109)
+0x8109,Activate Opponent Flag
 0x810a,Add value to Flag (0x8109)
 0x810b,Sub value from Flag (0x8109)
 0x817c,Allow player to block
@@ -71,6 +72,7 @@
 0x81f3,Activate laser
 0x81f4,Disable laser
 0x81ff,Slide player
+0x8200,Change sliding axis
 0x8206,Distance from centre
 0x820b,Spawn projectile
 0x8213,Attack destroys projectile
@@ -85,8 +87,10 @@
 0x8243,Play attached subtitles
 0x824a,AI Input (DVK reverse transform)
 0x824c,AI input
+0x824d,AI input
 0x8251,Player visibility
 0x8255,Spend screw
+0x8262,Wing Flapping Animation
 0x826a,Homing (Left Hand)
 0x826b,Homing (Right Hand)
 0x826c,Homing (Left foot)
@@ -96,6 +100,9 @@
 0x828b,Game speed%
 0x828c,Slow down Effect
 0x828d,Slow down Effect immunity
+0x828f,Set Kazumi's tiger's anim
+0x8292,Player stop-motion Effect
+0x8293,Opponent stop-motion Effect
 0x829d,Set HUD visibility
 0x829e,Screen Transition VFX
 0x829f,Play subtitles
