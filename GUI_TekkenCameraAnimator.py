@@ -2080,7 +2080,7 @@ class LiveEditor:
         
     def lockCamera(self):
         if not self.startIfNeeded(): return
-        self.T.writeBytes(game_addresses['camera_code_injection2'], bytes([0x90] * 7))
+        self.T.writeBytes(game_addresses['camera_code_injection2'], bytes([0x90] * 8))
         self.T.writeBytes(game_addresses['camera_code_injection'] + 0xE, bytes([0x90] * 8))
         self.T.writeBytes(game_addresses['camera_code_injection'] + 0x25, bytes([0x90] * 6))
         self.T.writeBytes(game_addresses['camera_code_injection'], bytes([0x90] * 8))
@@ -2088,14 +2088,14 @@ class LiveEditor:
         
     def unlockCamera(self):
         if not self.startIfNeeded(): return
-        self.T.writeBytes(game_addresses['camera_code_injection2'], bytes([0x0F, 0x11, 0x89, 0x9C, 0x03, 0x00, 0x00]))
         self.T.writeBytes(game_addresses['camera_code_injection'] + 0xE, bytes([0xF2, 0x0f, 0x11, 0x87, 0x04, 0x04, 0x0, 0x0]))
         self.T.writeBytes(game_addresses['camera_code_injection'] + 0x25, bytes([0x89, 0x87, 0x0c, 0x04, 0x0, 0x0]))
-        self.T.writeBytes(game_addresses['camera_code_injection'], bytes([0xF2, 0x0F, 0x11, 0x87, 0xF8, 0x03, 0x0, 0x0]))
+        self.T.writeBytes(game_addresses['camera_code_injection'], bytes([0xF2, 0x0F, 0x11, 0x87, 0xF8, 0x03, 0x0, 0x0])) # x
         self.T.writeBytes(game_addresses['camera_code_injection'] + 0x1B, bytes([0x89, 0x87, 0, 0x04, 0, 0]))
+        self.T.writeBytes(game_addresses['camera_code_injection2'], bytes([0xF3, 0x0F, 0x11, 0x89, 0x9C, 0x03, 0x00, 0x00])) #fov
         
     def getCameraAddr(self):
-        self.camAddr = self.readPointerPath(game_addresses['camera_starting_ptr'], [0x30, 0x418])
+        self.camAddr = self.readPointerPath(game_addresses['camera_starting_ptr'], [0x380, 0x418])
         return self.camAddr
         
     def setCameraPos(self, cam, relative=0, prevCameraPos=None):
@@ -2246,7 +2246,7 @@ class LiveEditor:
         
     def getFrameCounterAddr(self):
         if game_addresses['using_global_frame_counter']:
-            self.frame_counter = game_addresses['global_frame_counter_ptr']
+            self.frame_counter = game_addresses['global_frame_counter']
         else:
             self.frame_counter = game_addresses['game_frame_counter']
         
@@ -2280,7 +2280,7 @@ class LiveEditor:
     }
     
     def getInputBufferAddr(self):
-        self.inputbuffer = self.T.readInt(game_addresses['input_buffer'], 8) + 0x1F4
+        self.inputbuffer = self.T.readInt(game_addresses['input_buffer'], 8) + game_addresses['input_buffer_offset']
         return self.inputbuffer
 
     def getInputs(self):

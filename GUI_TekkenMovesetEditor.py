@@ -556,6 +556,7 @@ class MoveSelector:
         motbinOffset = game_addresses.addr['t7_motbin_offset']
         curr_frame_timer_offset = game_addresses.addr['curr_frame_timer_offset']
         next_move_offset = game_addresses.addr['next_move_offset']
+        player_curr_move_offset = game_addresses.addr['player_curr_move_offset']
         
         moveset = T.readInt(playerAddr + motbinOffset, 8)
         movelist = T.readInt(moveset + 0x210, 8)
@@ -563,6 +564,7 @@ class MoveSelector:
         moveAddr = movelist + (self.playMoveId * 0xB0)
         T.writeInt(playerAddr + curr_frame_timer_offset, 99999, 4)
         T.writeInt(playerAddr + next_move_offset, moveAddr, 8)
+        T.writeInt(playerAddr + player_curr_move_offset, self.playMoveId, 4)
             
        
     def hide(self):

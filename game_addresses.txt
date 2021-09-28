@@ -5,9 +5,9 @@ repo_link   = https://raw.githubusercontent.com/Kiloutre/TekkenMovesetExtractor/
 # Tekken 7 addresses and offsets. Changes with updates
 t7_process_name       = TekkenGame-Win64-Shipping.exe
 t7_base               = 0x0
-t7_p1_addr            = 0x1434E5250
-t7_playerstruct_size  = 0x3620             # Distance between 2 players addresses
-t7_motbin_offset      = 0x14d0
+t7_p1_addr            = 0x1434E71D0
+t7_playerstruct_size  = 0x3670             # Distance between 2 players addresses
+t7_motbin_offset      = 0x1520
 t7_chara_id_offset    = 0xD8
 
 # Tag2 addresses.
@@ -73,24 +73,25 @@ t4_chara_id_offset    = -0xEEC
 # miscellaneous
 player_curr_move_addr_offset = 0x220            # Used by Animator to overwrite current address
 player_curr_move_offset      = 0x350            # Used by editor to force a move to play
-next_move_offset             = 0xD60            # Used by editor to force a move to play
+next_move_offset             = 0xDA0            # Used by editor to force a move to play
 curr_frame_timer_offset      = 0x1D4            # Used by editor to force a move to play
-code_injection_addr          = 0x1407450DF      # Address that writes on player+motbin_offset, used for online play
-playerid_starting_ptr        = 0x1434D0520      # Used to find whether local player is 1P or 2P, used for online play
+code_injection_addr          = 0x140746A4F      # Address that writes on player+motbin_offset, used for online play
+playerid_starting_ptr        = 0x1434D24A0      # Used to find whether local player is 1P or 2P, used for online play
 #Finding playerid_starting_ptr: Go in training mode as 2p, scan for value on 1. Change to 1P, scan for value on 0. Repeat many times to lower matches to a few hundreds. Do combo, grabs and change outfit & character to keep lowering matches.
 #Scan repeatedly value between 0 and 1 during loading to filter out the remaining garbage. Then pause the process (slow to 0.00), set all remaining variables to a fringe unique value (e.g. 216246545) and search for the following pointer path that leads to the fringe value (68 is last offset!): 0, 0, 68.
 
 # -- Camera animator --
-game_speed_address         = 0x1434D9F9C #where we write our game speed
-game_speed_injection       = 0x1459EEB50 #prevent game speed from being overwritten
-game_frame_counter         = 0x1434C8460 #related to game timer: pausing the game pauses it
-global_frame_counter_ptr   = 0x143444F44 #detached from game timer
+game_speed_address         = 0x1434DBF1C #where we write our game speed
+game_speed_injection       = 0x145FEE540 #prevent game speed from being overwritten
+game_frame_counter         = 0x143444830 #related to game timer: pausing the game pauses it
+global_frame_counter       = 0x143446F34 #detached from game timer
 using_global_frame_counter = 1           #0 = more reliable, 1 = animation is not paused by game and camera can move even if the in-game time is frozen
-freeze_code_addr           = 0x1402623B4 #jne +26373A, used to freeze players
-freeze_environment         = 0x14887F150 #used to freeze particles in the environment when the game speed reaches 0. gotta find this one using unreal unlocker and not game pause
-input_buffer               = 0x1434C9490 #used to read player input during camera control, pointer path is 0x1F4 (value seems to be prone to change but length is always 1)
-camera_starting_ptr        = 0x14377FCF0 #used to find camera, pointer path is 0x30 0x418
-input_code_injection       = 0x144FA40C7 #prevent player movement during manual camera control
-camera_code_injection      = 0x1416A2A60 #prevent writing of certain camera offsets
-camera_code_injection2     = 0x1491A8E01 #prevent writing of fov
+freeze_code_addr           = 0X140262044 #jne +2633CA, used to freeze players
+freeze_environment         = 0x148E53EE0 #used to freeze particles in the environment when the game speed reaches 0. gotta find this one using unreal unlocker and not game pause. searching of hex 00 75 08 32 also work
+input_buffer               = 0x1434CB410 #used to read player input during camera control, pointer path is 0x1F4 (value seems to be prone to change but length is always 1)
+input_buffer_offset        = 0x94        #used in cunjuction with above address
+camera_starting_ptr        = 0x1434CAF50 #used to find camera, pointer path is 0x30 0x418
+input_code_injection       = 0x145204997 #prevent player movement during manual camera control
+camera_code_injection      = 0x1416A5810 #prevent writing of certain camera offsets
+camera_code_injection2     = 0x149266240 #prevent writing of fov
 nop_inputs                 = 1           # 1 = disable player control during live control, 0 = don't disable
