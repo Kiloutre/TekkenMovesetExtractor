@@ -24,7 +24,8 @@
 28,Airborne Throw Hit (Backward)
 29,Airborne Throw Hit (Left Side)
 30,Airborne Throw Hit (Right Side)
-35,Opponent distance
+35,Opponent distance smaller or equal
+36,Opponent distance greater or equal
 44,On Hit
 47,On block
 48,On whiff
@@ -32,6 +33,8 @@
 51,On hit
 66,Standing
 67,Crouching
+68,Incoming high attack
+69,Incoming mid attack
 72,Backturned
 73,Not Backturned
 92,Opponent facing Forward
@@ -42,6 +45,18 @@
 97,Opponent facing Left
 98,Opponent facing Right
 99,Opponent facing Back
+100,Enemy within 1792 units & last active frame not reached & attack is high
+101,Enemy first active frame - curr frame < X
+102,Enemy first active frame - curr frame >= X
+103,Enemy first active frame - curr frame = X
+104,Enemy last active frame - curr frame < X
+105,Enemy last active frame - curr frame >= X
+106,Enemy last active frame - curr frame = X
+110,Enemy move timer >= X
+111,Enemy move timer < X
+112,Enemy move timer == X
+110,Enemy move timer >= X
+110,Enemy move timer >= X
 126,Opponent downed
 127,Opponent on their feet
 130,Counterhit

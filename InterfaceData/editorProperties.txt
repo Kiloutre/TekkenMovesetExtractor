@@ -82,6 +82,7 @@
 0x8229,EX Effect
 0x8233,Spend Rage (if grounded)
 0x8234,Rage drive BG effect
+0x823e,Set character visible (0/1)
 0x8243,Play attached subtitles
 0x824a,AI Input (DVK reverse transform)
 0x824c,AI input

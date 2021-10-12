@@ -75,23 +75,23 @@ player_curr_move_addr_offset = 0x220            # Used by Animator to overwrite 
 player_curr_move_offset      = 0x350            # Used by editor to force a move to play
 next_move_offset             = 0xDA0            # Used by editor to force a move to play
 curr_frame_timer_offset      = 0x1D4            # Used by editor to force a move to play
-code_injection_addr          = 0x140746A4F      # Address that writes on player+motbin_offset, used for online play
+code_injection_addr          = 0x140746C3F      # Address that writes on player+motbin_offset, used for online play
 playerid_starting_ptr        = 0x1434D24A0      # Used to find whether local player is 1P or 2P, used for online play
 #Finding playerid_starting_ptr: Go in training mode as 2p, scan for value on 1. Change to 1P, scan for value on 0. Repeat many times to lower matches to a few hundreds. Do combo, grabs and change outfit & character to keep lowering matches.
 #Scan repeatedly value between 0 and 1 during loading to filter out the remaining garbage. Then pause the process (slow to 0.00), set all remaining variables to a fringe unique value (e.g. 216246545) and search for the following pointer path that leads to the fringe value (68 is last offset!): 0, 0, 68.
 
 # -- Camera animator --
 game_speed_address         = 0x1434DBF1C #where we write our game speed
-game_speed_injection       = 0x145FEE540 #prevent game speed from being overwritten
+game_speed_injection       = 0x145F95BC5 #prevent game speed from being overwritten, find game speed and look at what writes on it
 game_frame_counter         = 0x1434CA3E0 #related to game timer: pausing the game pauses it
 global_frame_counter       = 0x143446F34 #detached from game timer
 using_global_frame_counter = 1           #0 = more reliable, 1 = animation is not paused by game and camera can move even if the in-game time is frozen
-freeze_code_addr           = 0X140262044 #jne +2633CA, used to freeze players
-freeze_environment         = 0x148E53EE0 #used to freeze particles in the environment when the game speed reaches 0. gotta find this one using unreal unlocker and not game pause. searching of hex 00 75 08 32 also work
+freeze_code_addr           = 0X140262004 #jne +2633CA, used to freeze players
+freeze_environment         = 0x148B338B0 #used to freeze particles in the environment when the game speed reaches 0. gotta find this one using unreal unlocker and not game pause. searching of hex 00 75 08 32 also work
 input_buffer               = 0x1434CB410 #used to read player input during camera control, pointer path is 0x1F4 (value seems to be prone to change but length is always 1)
-input_buffer_offset        = 0x94        #used in cunjuction with above address
+input_buffer_offset        = 0x94        #used in conjuction with above address
 camera_starting_ptr        = 0x1434CAF50 #used to find camera, pointer path is 0x30 0x418
-input_code_injection       = 0x145204997 #prevent player movement during manual camera control
-camera_code_injection      = 0x1416A5810 #prevent writing of certain camera offsets
-camera_code_injection2     = 0x149266240 #prevent writing of fov
+input_code_injection       = 0x145171787 #prevent player movement during manual camera control
+camera_code_injection      = 0x1416a56b0 #prevent writing of certain camera offsets
+camera_code_injection2     = 0x148e562c0 #prevent writing of fov
 nop_inputs                 = 1           # 1 = disable player control during live control, 0 = don't disable

@@ -119,12 +119,14 @@ relativityTypes = {
     6: "P1 Pos & Floor Height",
     3: "P1 Pos & Rotation",
     4: "P1 Pos & Height & Rotation",
+    7: "P1 Pos & Floor Height & Rotation",
     5: "P1 Look-At",
     11: "P2 Pos",
     12: "P2 Pos & Height",
     16: "P2 Pos & Floor Height",
     13: "P2 Pos & Rotation",
     14: "P2 Pos & Height & Rotation",
+    17: "P2 Pos & Floor Height & Rotation",
     15: "P2 Look-At"
 }
 relativityTypes2 = {relativityTypes[k]:k for k in relativityTypes}
@@ -1886,9 +1888,9 @@ class LiveEditor:
     def setSpeedControl(self, enabled):
         if not self.startIfNeeded(): return False
         if enabled:
-            self.T.writeBytes(game_addresses['game_speed_injection'], [0x90] * 6)
+            self.T.writeBytes(game_addresses['game_speed_injection'], [0x90])
         else:
-            self.T.writeBytes(game_addresses['game_speed_injection'], [0x89, 0xD, 0x46, 0xb4, 0xAE, 0xFD])
+            self.T.writeBytes(game_addresses['game_speed_injection'], [0xfd]) #std
             
     def setGameSpeed(self, value):
         value = int(value)
@@ -1903,11 +1905,11 @@ class LiveEditor:
         if not self.startIfNeeded(): return False
         self.charFrozen = frozen
         if self.charFrozen:
-            self.T.writeBytes(game_addresses['freeze_code_addr'], [0xE9, 0x81, 0x13, 0x0, 0x0, 0x90]) #jmp +26373A, freeze chars
+            self.T.writeBytes(game_addresses['freeze_code_addr'], [0xE9, 0x81, 0x13, 0x0, 0x0, 0x90]) #jmp +26338A, freeze chars
             if environments:
                 self.T.writeBytes(game_addresses['freeze_environment'], [0x0, 0x75, 0x08, 0xB0, 0x01, 0x48, 0x83, 0xC4]) #freeze environment & particles
         else:
-            self.T.writeBytes(game_addresses['freeze_code_addr'], [0x0F, 0x85, 0x80, 0x13, 0x0, 0x0]) #jne +26373A
+            self.T.writeBytes(game_addresses['freeze_code_addr'], [0x0F, 0x85, 0x80, 0x13, 0x0, 0x0]) #jne +26338A
             if environments:
                 self.T.writeBytes(game_addresses['freeze_environment'], [0x0, 0x75, 0x08, 0x32, 0xC0, 0x48, 0x83, 0xC4]) #unfreeze environment & particles
         return self.charFrozen
@@ -2070,6 +2072,7 @@ class LiveEditor:
                     self.waitFrame(1)
                     
         except Exception as e:
+            
             pass
         
         self.runningAnimation = False
@@ -2130,8 +2133,8 @@ class LiveEditor:
             x += playerPos['x']
             y += playerPos['y']
             z += playerPos['z']
-        elif relative == 3 or relative == 4: #Pos & height & rot relativity
-            playerPos = self.getPlayerPos()
+        elif relative == 3 or relative == 4 or relative == 7: #Pos & height & rot relativity
+            playerPos = self.getPlayerPos(floorHeight = (relative == 7))
             playerRot = self.getPlayerRot() * ((math.pi * 2) / 65535)
             
             distance = math.sqrt(x ** 2 + y ** 2)
@@ -2144,7 +2147,7 @@ class LiveEditor:
             
             x = newx + playerPos['x']
             y = newy + playerPos['y']
-            if relative == 4: #height relativity
+            if relative == 4 or relative == 7: #height relativity
                 z += playerPos['z']
                 
             rotx = (rotx - (self.getPlayerRot() * (360/ 65535))) % 360

@@ -1791,7 +1791,11 @@ class MoveReferenceWindow:
         if len(referenceList) == 0:
             TextArea.insert("end", "No reference found for move %s (%d)" % (moveName, moveId))
         else:
-            TextArea.insert("end", "%d entries for move %s (%d):\n\n" % (len(referenceList), moveName, moveId))
+            if moveId in self.root.movelist['aliases']:
+                aliasedIndex = 0x8000 + self.root.movelist['aliases'].index(moveId)
+                TextArea.insert("end", "%d entries for move %s (%d / %d):\n\n" % (len(referenceList), moveName, moveId, aliasedIndex))
+            else:
+                TextArea.insert("end", "%d entries for move %s (%d):\n\n" % (len(referenceList), moveName, moveId))
         
             for reference in referenceList:
                 referenceText = "Type: %s" % (reference['origin'])
@@ -2178,10 +2182,14 @@ class GUI_TekkenMovesetEditor():
             return
             
         refList = []
+        moveIds = [self.MoveEditor.id]
+        
+        if self.MoveEditor.id in self.movelist['aliases']:
+            moveIds.append(0x8000 + self.movelist['aliases'].index(self.MoveEditor.id))
                 
         listId = 0
         for cancel_id, cancel in enumerate(self.movelist['group_cancels']):
-            if cancel['move_id'] == self.MoveEditor.id:
+            if cancel['move_id'] in moveIds:
                 moveReferences = []
                 
                 for cancelListId, cancelId in self.listCancelsUsingGroupCancel(listId, cancel_id):
@@ -2204,7 +2212,7 @@ class GUI_TekkenMovesetEditor():
         
         listId = 0
         for cancel_id, cancel in enumerate(self.movelist['cancels']):
-            if cancel['command'] != 0x800b and cancel['move_id'] == self.MoveEditor.id:
+            if cancel['command'] != 0x800b and cancel['move_id'] in moveIds:
                 references = ['Move %s (%d)' % (ref[1], ref[0]) for ref in self.listMovesUsingCancel(listId, cancel_id)]
                 refList.append({
                     'origin': 'cancels',
