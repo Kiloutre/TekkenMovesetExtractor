@@ -1888,9 +1888,9 @@ class LiveEditor:
     def setSpeedControl(self, enabled):
         if not self.startIfNeeded(): return False
         if enabled:
-            self.T.writeBytes(game_addresses['game_speed_injection'], [0x90])
+            self.T.writeBytes(game_addresses['game_speed_injection'], [0x90]* 6)
         else:
-            self.T.writeBytes(game_addresses['game_speed_injection'], [0xfd]) #std
+            self.T.writeBytes(game_addresses['game_speed_injection'], [0x89, 0x0D, 0x56, 0x63, 0x54,  0xFD]) #mov [1434DBF1C],ecx
             
     def setGameSpeed(self, value):
         value = int(value)

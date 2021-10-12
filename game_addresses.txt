@@ -82,7 +82,7 @@ playerid_starting_ptr        = 0x1434D24A0      # Used to find whether local pla
 
 # -- Camera animator --
 game_speed_address         = 0x1434DBF1C #where we write our game speed
-game_speed_injection       = 0x145F95BC5 #prevent game speed from being overwritten, find game speed and look at what writes on it
+game_speed_injection       = 0x145F95BC0 #prevent game speed from being overwritten, find game speed and look at what writes on it
 game_frame_counter         = 0x1434CA3E0 #related to game timer: pausing the game pauses it
 global_frame_counter       = 0x143446F34 #detached from game timer
 using_global_frame_counter = 1           #0 = more reliable, 1 = animation is not paused by game and camera can move even if the in-game time is frozen
