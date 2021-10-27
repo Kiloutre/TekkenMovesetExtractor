@@ -388,7 +388,7 @@ def exportAll(parent, TekkenVersion):
     playerSize = game_addresses[TekkenVersion + '_playerstruct_size']
     
     playerCount = 2
-    if TekkenVersion + '_player_count' in game_addresses:
+    if TekkenVersion + '_player_count' in game_addresses.addr:
         playerCount = game_addresses[TekkenVersion + '_player_count']
     
     for i in range(playerCount):
