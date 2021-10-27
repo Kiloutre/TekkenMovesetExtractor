@@ -87,7 +87,10 @@ class AddressFile:
                 calculatedAddress = self.moduleAddr + value if valueType == 1 else value
                 
                 if len(ptrPath) > 0: #relative to main module
-                    self.addr[key] = pointerPathFunction(calculatedAddress, ptrPath)
+                    try:
+                        self.addr[key] = pointerPathFunction(calculatedAddress, ptrPath)
+                    except:
+                        self.addr[key] = 0
                 else:
                     self.addr[key] = calculatedAddress
         
