@@ -16,7 +16,7 @@ import motbinImport as importLib
 from win32com.client import Dispatch
 from urllib import request
 
-extractorVersion = "1.0.32.21"
+extractorVersion = "1.0.32.22"
 charactersPath = "./extracted_chars/"
 codeInjectionSize = 256
     
@@ -112,51 +112,62 @@ def getBothPlayersInjection(movesetAddr, movesetAddr2, importer):
     loadedMovesetLocation = codeAddr + codeInjectionSize - 0x20
     importedMovesetLocation = codeAddr + codeInjectionSize - 0x10
     
-    playerLocation_bytes = hexToList(playerLocation, 4)
-    playerLocation2_bytes = hexToList(playerLocation + 8, 4)
-    loadedMovesetLocation_bytes = hexToList(loadedMovesetLocation, 4)
-    loadedMovesetLocation2_bytes = hexToList(loadedMovesetLocation + 8, 4)
-    importedMovesetLocation_bytes = hexToList(importedMovesetLocation, 4)
-    importedMovesetLocation2_bytes = hexToList(importedMovesetLocation + 8, 4)
+    playerLocation_bytes = hexToList(playerLocation, 8)
+    playerLocation2_bytes = hexToList(playerLocation + 8, 8)
     codeInjectionEnd = hexToList(game_addresses.addr['code_injection_addr'] + 0xE, 8)
 
+    #"TekkenGame-Win64-Shipping.exe"
     twoPlayersBytecode = [
-        0x3B, 0x0c, 0x25, *playerLocation_bytes, #cmp ecx,[location]
-        0x75, 0x3a, #jne p2_check
-        0x48, 0x89, 0x14, 0x25, *loadedMovesetLocation_bytes, # mov [location], rdx
+        0x41, 0x52, #push r10
+        0x4c, 0x8b, 0x15, 0xc7, 0x00, 0x00, 0x00, # mov r10, [codeInjection + 256 - 0x30] #playerLocation_bytes. compare to player address
+        0x4c, 0x39, 0xd1, #cmp rcx, r10
+        0x75, 0x3d, #jne p2_check : wrong player, not continuing
+        0x48, 0x89, 0x15, 0xcb, 0x00, 0x00, 0x00, # mov [codeInjection + 256 - 0x20], rdx #loadedMovesetLocation : store true moveset for later use
         0x51, #push rcx
         0x50, #push rax
         0x53, #push rbx
         0x48, 0x31, 0xDB, #xor rbx, rbx
-        0x48, 0x8b, 0x0c, 0x25, *importedMovesetLocation_bytes, #mov rcx, [location]
-        0x48, 0x8b, 0x84, 0xda, 0x80, 0x02, 0x00, 0x00, #mov rax,[rdx+rbx*8+00000290]
-        0x48, 0x89, 0x84, 0xd9, 0x80, 0x02, 0x00, 0x00, #mov [rcx+rbx*8+00000290], rax
-        0x48, 0xff, 0xc3, #inc rbx
-        0x48, 0x83, 0xfb, 0x0B, #cmp rbx, 11
-        0x75, 0xe7, #jne -e7
-        0x5b, #pop rbx
-        0x58, #pop rax
-        0x59, #pop rcx
-        0x48, 0x8b, 0x14, 0x25, *importedMovesetLocation_bytes, #mov rdx,[3f180066]
+        0x48, 0xb9, *moveset, #mov rcx, location
         
-        0x3B, 0x0c, 0x25, *playerLocation2_bytes, #cmp ecx,[location]
-        0x75, 0x3a, #jne end
-        0x48, 0x89, 0x14, 0x25, *loadedMovesetLocation2_bytes, # mov [location], rdx
-        0x51, #push rcx
-        0x50, #push rax
-        0x53, #push rbx
-        0x48, 0x31, 0xDB, #xor rbx, rbx
-        0x48, 0x8b, 0x0c, 0x25, *importedMovesetLocation2_bytes, #mov rcx, [location]
+        #copy some animation like cam, hand and all to avoid crash (we dont import those yet)
         0x48, 0x8b, 0x84, 0xda, 0x80, 0x02, 0x00, 0x00, #mov rax,[rdx+rbx*8+00000290]
         0x48, 0x89, 0x84, 0xd9, 0x80, 0x02, 0x00, 0x00, #mov [rcx+rbx*8+00000290], rax
         0x48, 0xff, 0xc3, #inc rbx
         0x48, 0x83, 0xfb, 0x0B, #cmp rbx, 11
         0x75, 0xe7, #jne -e7
+        
         0x5b, #pop rbx
         0x58, #pop rax
         0x59, #pop rcx
-        0x48, 0x8b, 0x14, 0x25, *importedMovesetLocation2_bytes, #mov rdx,[3f180066]
-
+        0x48, 0xba, *moveset, #mov rdx, location
+        
+        
+        
+        #p2_check, same as above but with p2 moveset
+        0x4c, 0x8b, 0x15, 0x86, 0x00, 0x00, 0x00, # mov r10, [codeInjection + 256 - 0x30 + 8] #playerLocation2_bytes
+        0x4c, 0x39, 0xd1, #cmp rcx, r10
+        0x75, 0x3d, #jne end
+        0x48, 0x89, 0x15, 0x8a, 0x00, 0x00, 0x00, # mov [codeInjection + 256 - 0x20 + 8], rdx #loadedMovesetLocation2
+        0x51, #push rcx
+        0x50, #push rax
+        0x53, #push rbx
+        0x48, 0x31, 0xDB, #xor rbx, rbx
+        0x48, 0xb9, *moveset2, #mov rcx, location
+        
+        0x48, 0x8b, 0x84, 0xda, 0x80, 0x02, 0x00, 0x00, #mov rax,[rdx+rbx*8+00000290]
+        0x48, 0x89, 0x84, 0xd9, 0x80, 0x02, 0x00, 0x00, #mov [rcx+rbx*8+00000290], rax
+        0x48, 0xff, 0xc3, #inc rbx
+        0x48, 0x83, 0xfb, 0x0B, #cmp rbx, 11
+        0x75, 0xe7, #jne -e7
+        
+        0x5b, #pop rbx
+        0x58, #pop rax
+        0x59, #pop rcx
+        0x48, 0xba, *moveset2, #mov rdx, location
+        
+        
+        #end
+        0x41, 0x5a, #pop r10
         0x48, 0x89, 0x91, 0x20, 0x15, 0x00, 0x00, #mov [rcx+1520, rdx]
         0x48, 0x89, 0x91, 0x28, 0x15, 0x00, 0x00, #mov [rcx+1528, rdx]
         0xFF, 0x25, 0x00, 0x00, 0x00, 0x00, *codeInjectionEnd #jmp
@@ -243,6 +254,7 @@ class Monitor:
             runningMonitors[self.otherMonitorId].injectPermanentMovesetCode()
             
     def writeMovesetToCode(self, playerId):
+        #print("writeMovesetToCode", playerId)
         global codeInjection
         
         if codeInjection == None or self.moveset == None:
@@ -253,11 +265,7 @@ class Monitor:
         self.Importer.writeInt(codeInjection + codeInjectionSize - 0x20 + offset, self.moveset.motbin_ptr, 8)
         
     def getLocalPlayerSide(self):
-        startingAddr = game_addresses.addr['playerid_starting_ptr']
-        for i in range(3): #2 scans
-            startingAddr = self.Importer.readInt(startingAddr, 8)
-            
-        return self.Importer.readInt(startingAddr + 0x68, 4)
+        return self.Importer.readInt(game_addresses.addr['playerid_starting_ptr'], 4)
         
     def getPlayerAddress(self, forceWriting = False):
         invertPlayers = self.getLocalPlayerSide()
@@ -265,11 +273,12 @@ class Monitor:
         playerId = self.playerId + invertPlayers
         if playerId == 3:
             playerId = 1
-        self.playerAddr = game_addresses.addr['t7_p1_addr']
+        self.playerAddr = self.Importer.getPlayerAddress(0)
         if playerId == 2:
             self.playerAddr += game_addresses.addr['t7_playerstruct_size']
             
         if self.invertedPlayers != invertPlayers or forceWriting:
+            #print("detected side change", playerId)
             self.writeMovesetToCode(playerId)
             self.invertedPlayers = invertPlayers
         
@@ -337,6 +346,7 @@ def startMonitor(parent, playerId):
     creatingMonitor[monitorId] = True
     TekkenImporter = importLib.Importer()
         
+    
     newMonitor = Monitor(playerId, TekkenImporter, parent)
     newThread = threading.Thread(target=newMonitor.start)
     
@@ -432,11 +442,10 @@ def importPlayer(parent, playerId):
         print("No character selected")
         return
     folderPath = charactersPath + parent.selected_char 
-    playerAddr = game_addresses.addr['t7_p1_addr']
-    if playerId == 2:
-        playerAddr += game_addresses.addr['t7_playerstruct_size']
+    
     
     TekkenImporter = importLib.Importer()
+    playerAddr = TekkenImporter.getPlayerAddress(playerId - 1)
     TekkenImporter.importMoveset(playerAddr, folderPath, charactersPath=charactersPath)
     print("\nSuccessfully imported %s !" % (parent.selected_char))
         

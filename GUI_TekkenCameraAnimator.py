@@ -3,7 +3,7 @@
 from tkinter import Tk, Frame, Listbox, Label, Scrollbar, StringVar, Toplevel, Menu, messagebox, Text, simpledialog, Button, Checkbutton, Canvas
 from tkinter.ttk import Entry, Style, OptionMenu
 from Addresses import game_addresses, GameClass, VirtualAllocEx, VirtualFreeEx, MEM_RESERVE, MEM_COMMIT, PAGE_EXECUTE_READWRITE, MEM_DECOMMIT, MEM_RELEASE
-from time import sleep
+from time import sleep, time
 import threading
 import os
 import re
@@ -108,6 +108,7 @@ interpolationTypes = {
     3: "Bézier + Spline X/Y",
     5: "Bézier + Spline X/Y/Z",
     4: "Bézier + Circular X/Y",
+    6: "None"
 }
 interpolationTypes2 = {interpolationTypes[k]:k for k in interpolationTypes}
 
@@ -605,7 +606,11 @@ class Animation:
                     easingFunction = Interpolation.getEasing(group['easing'])
                     frames = [interpolationFunction(group['frames'], easingFunction(idx / (group['duration'] - 1))) for idx in range(group['duration'])]
                 elif group['length'] > 0:
-                    if group['easing'] == -1:
+                    if group['interpolation'] == 6: #none
+                        frames = []
+                        for keyframe in group['frames']:
+                            frames.append(keyframe)
+                    elif group['easing'] == -1:
                         self.fixGroupFrameIdx(group)
                         prevKeyframe = 0
                         frames = []
@@ -1847,7 +1852,6 @@ def matrixMult(mat, b):
 class LiveEditor:
     def __init__(self, root):
         self.root = root
-        self.setPlayer(0)
         self.stop()
         
     def setPlayer(self, id):
@@ -1856,7 +1860,6 @@ class LiveEditor:
     def stop(self, exiting=False):
         self.exiting = exiting
         self.camAddr = None
-        self.inputbuffer = None
         self.T = None
         self.running = False
         self.runningAnimation = False
@@ -1864,6 +1867,8 @@ class LiveEditor:
         self.liveControl = False
         self.frame_counter = None
         self.charFrozen = False
+        self.saveAnimation = False
+
         self.root.AnimationSelector.setCanFreezeCharButton(True)
         
     def startIfNeeded(self):
@@ -1879,6 +1884,9 @@ class LiveEditor:
     def loadProcess(self):
         try:
             self.T = GameClass("TekkenGame-Win64-Shipping.exe")
+            self.T.applyModuleAddress(game_addresses)
+            self.setPlayer(0)
+            
             self.running = True
             self.getCameraAddr()
         except Exception as err:
@@ -1890,7 +1898,7 @@ class LiveEditor:
         if enabled:
             self.T.writeBytes(game_addresses['game_speed_injection'], [0x90]* 6)
         else:
-            self.T.writeBytes(game_addresses['game_speed_injection'], [0x89, 0x0D, 0x56, 0x63, 0x54,  0xFD]) #mov [1434DBF1C],ecx
+            self.T.writeBytes(game_addresses['game_speed_injection'], [0x89, 0x0D, 0x36, 0xE3, 0xDD, 0x02]) #mov [+34DBF1C],ecx
             
     def setGameSpeed(self, value):
         value = int(value)
@@ -1935,12 +1943,6 @@ class LiveEditor:
         
     def readFloat(self, addr):
         return struct.unpack('f', self.T.readBytes(addr, 4))[0]
-        
-    def readPointerPath(self, baseAddr, ptrlist):
-        currAddr = self.T.readInt(baseAddr, 8)
-        for ptr in ptrlist:
-            currAddr = self.T.readInt(currAddr + ptr, 8)
-        return currAddr
         
     def moveCamera(self, camPos, inputs, frameHeld):
         distance = 3
@@ -2019,7 +2021,6 @@ class LiveEditor:
         
     def liveControlLoop(self):
         self.lockCamera()
-        self.getInputBufferAddr()
         self.getFrameCounterAddr()
         self.nopInputsCode()
         
@@ -2046,6 +2047,8 @@ class LiveEditor:
         self.liveControl = False
         self.root.AnimationEditor.setControlEnabled(False)
         
+        savedKeyframes = []
+        
         foundSpeedChange = False
         for g in groups:
             for f in g['frames']:
@@ -2067,12 +2070,18 @@ class LiveEditor:
                 
                     if self.runningAnimation == False: raise
                     cameraPos = self.setCameraPos(f, g['relativity'], prevCameraPos)
+                    
+                    if self.saveAnimation:
+                        savedKeyframes.append(cameraPos)
+                    
                     if foundSpeedChange: self.setGameSpeed(f['speed'])
                     if (i + 1) == g['duration']: prevCameraPos = cameraPos
+                    
                     self.waitFrame(1)
                     
+            if self.saveAnimation:
+                self.root.saveKeyframesToFile(savedKeyframes)
         except Exception as e:
-            
             pass
         
         self.runningAnimation = False
@@ -2098,7 +2107,7 @@ class LiveEditor:
         self.T.writeBytes(game_addresses['camera_code_injection2'], bytes([0xF3, 0x0F, 0x11, 0x89, 0x9C, 0x03, 0x00, 0x00])) #fov
         
     def getCameraAddr(self):
-        self.camAddr = self.readPointerPath(game_addresses['camera_starting_ptr'], [0x380, 0x418])
+        self.camAddr = game_addresses['camera_starting_ptr']
         return self.camAddr
         
     def setCameraPos(self, cam, relative=0, prevCameraPos=None):
@@ -2111,7 +2120,7 @@ class LiveEditor:
         z = cam['z']
         
         if relative == -1 and prevCameraPos != None: #Last group relativity
-            old_rotx, old_roty, old_x, old_y, old_z = prevCameraPos
+            old_rotx, old_roty, old_x, old_y, old_z, fov, tilt = prevCameraPos
             rotx += old_rotx
             roty += old_roty
             x += old_x
@@ -2169,7 +2178,7 @@ class LiveEditor:
         self.writeFloat(camAddr + 0x3FC, y) #y
         self.writeFloat(camAddr + 0x400, z) #z
         
-        return rotx, roty, x, y, z
+        return rotx, roty, x, y, z, cam['fov'], cam['tilt']
             
     def getCameraPos(self, relative=0):
         if not self.startIfNeeded(): return
@@ -2281,13 +2290,9 @@ class LiveEditor:
         '1': 16384,
         '2': 32768,
     }
-    
-    def getInputBufferAddr(self):
-        self.inputbuffer = self.T.readInt(game_addresses['input_buffer'], 8) + game_addresses['input_buffer_offset']
-        return self.inputbuffer
 
     def getInputs(self):
-        inputs = self.T.readInt(self.inputbuffer, 2)
+        inputs = self.T.readInt(game_addresses['input_buffer'], 2)
         return [f for f in LiveEditor.keyvalues if (inputs & LiveEditor.keyvalues[f]) != 0]
         
 class GUI_TekkenCameraAnimator():
@@ -2322,6 +2327,25 @@ class GUI_TekkenCameraAnimator():
         except: pass
         self.LiveEditor.stop(True)
         self.window.destroy()
+        
+    def saveKeyframesToFile(self, keyframes):
+        with open("%s%d.txt" % (dataPath, int(round(time() * 1000))), "w") as f:
+            f.write("[Recording]\n")
+            f.write("[duration=%d, interpolation=6]\n" % (len(keyframes)))
+
+            idx = 0
+            for rotx, roty, x, y,z, fov, tilt in keyframes:
+                f.write("%d," % (idx))
+                f.write(("%f," % fov))
+                f.write("%d," % (idx))
+                f.write(("%f," % x))
+                f.write(("%f," % y))
+                f.write(("%f," % z))
+                f.write(("%f," % rotx))
+                f.write(("%f," % roty))
+                f.write(("%f," % tilt))
+                f.write("100,0\n")
+                idx += 1
         
     def onAnimModification(self, dataModification=False):
         self.AnimationSelector.setSaveButtonEnabled(True)

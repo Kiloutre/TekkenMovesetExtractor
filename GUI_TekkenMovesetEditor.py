@@ -593,6 +593,7 @@ class MoveSelector:
         playerAddress = game_addresses.addr['t7_p1_addr'] + (playerId * game_addresses.addr['t7_playerstruct_size'])
         offset = game_addresses.addr['player_curr_move_offset']
         TekkenGame = GameClass("TekkenGame-Win64-Shipping.exe")
+        TekkenGame.applyModuleAddress(game_addresses)
         
         currMoveId = TekkenGame.readInt(playerAddress + offset, 4)
         currMoveId = self.root.getMoveId(currMoveId)

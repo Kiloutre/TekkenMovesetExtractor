@@ -30,6 +30,7 @@ forbiddenMoves = ['Co_DA_Ground']
 class Importer:
     def __init__(self):
         self.T = GameClass("TekkenGame-Win64-Shipping.exe")
+        self.T.applyModuleAddress(game_addresses)
 
     def readInt(self, addr, bytes_length=4):
         return self.T.readInt(addr, bytes_length)
@@ -54,7 +55,13 @@ class Importer:
 
     def allocateMem(self, allocSize):
         return VirtualAllocEx(self.T.handle, 0, allocSize, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE)
-                
+        
+    def getPlayerAddress(self, playerid):
+        playerAddr = game_addresses.addr['t7_p1_addr']
+        if playerid == 1:
+            playerAddr += game_addresses.addr['t7_playerstruct_size']
+        return playerAddr
+   
     def importMoveset(self, playerAddr, folderName, moveset=None, charactersPath='extracted_chars/'):
         moveset = self.loadMoveset(folderName=folderName, moveset=moveset, charactersPath=charactersPath)
         

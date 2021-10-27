@@ -973,6 +973,7 @@ class LiveEditor:
     def loadProcess(self):
         try:
             self.T = GameClass("TekkenGame-Win64-Shipping.exe")
+            self.T.applyModuleAddress(game_addresses)
             self.running = True
         except Exception as err:
             print(err)

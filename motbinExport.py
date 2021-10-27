@@ -1259,6 +1259,7 @@ class Exporter:
         game_addresses.reloadValues()
 
         self.T = GameClass(game_addresses.addr[TekkenVersion + '_process_name'])
+        self.T.applyModuleAddress(game_addresses)
         self.TekkenVersion = TekkenVersion
         self.ptr_size = ptrSizes[TekkenVersion]
         self.base =  game_addresses.addr[TekkenVersion + '_base']
