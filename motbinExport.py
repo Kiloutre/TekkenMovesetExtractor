@@ -1272,9 +1272,9 @@ class Exporter:
             os.mkdir(folder_destination)
         
     def getP1Addr(self):
-        if (self.TekkenVersion + '_p1_addr') in game_addresses:
+        if (self.TekkenVersion + '_p1_addr') in game_addresses.addr:
             return game_addresses[self.TekkenVersion + '_p1_addr']
-        matchKeys = [key for key in game_addresses if key.startswith(self.TekkenVersion + '_p1_addr_')]
+        matchKeys = [key for key in game_addresses.addr if key.startswith(self.TekkenVersion + '_p1_addr_')]
         regex = game_addresses[self.TekkenVersion + '_window_title_regex']
         
         windowTitle = self.T.getWindowTitle()
@@ -1283,7 +1283,7 @@ class Exporter:
         if match == None:
             raise Exception('Player address not found')
         key = self.TekkenVersion + '_p1_addr_' + match.group(1)
-        return None if key not in game_addresses else game_addresses[key]
+        return None if key not in game_addresses.addr else game_addresses[key]
         
     def readInt(self, addr, len):
         return self.T.readInt(addr, len, endian=self.endian)
@@ -1887,11 +1887,11 @@ class Motbin:
         
     def getCharacterId(self, playerAddress):
         key = self.TekkenVersion + '_chara_id_offset'
-        if key in game_addresses:
+        if key in game_addresses.addr:
             self.chara_id = self.readInt(self.base + playerAddress + game_addresses[key], charaIdSize.get(self.TekkenVersion, 4))
         else:
             key = self.TekkenVersion + '_chara_id_addr'
-            if key not in game_addresses:
+            if key not in game_addresses.addr:
                 self.chara_id = 0
             else:
                 self.chara_id = (self.readInt(self.base  + game_addresses[key], 2))
@@ -2148,7 +2148,7 @@ if __name__ == "__main__":
         os._exit(1)
         
     TekkenVersion = sys.argv[1]
-    if (TekkenVersion + '_process_name') not in game_addresses:
+    if (TekkenVersion + '_process_name') not in game_addresses.addr:
         print("Unknown version '%s'" % (TekkenVersion))
         os._exit(1)
     
