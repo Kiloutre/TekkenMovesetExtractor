@@ -20,7 +20,7 @@ extractorVersion = "1.0.32.23"
 charactersPath = "./extracted_chars/"
 codeInjectionSize = 256
     
-monitorVerificationFrequency = 1
+monitorVerificationFrequency = .1
 runningMonitors = [None, None]
 creatingMonitor = [False, False]
 codeInjection = None
