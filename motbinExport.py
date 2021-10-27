@@ -1258,11 +1258,11 @@ class Exporter:
     def __init__(self, TekkenVersion, folder_destination='./extracted_chars/'):
         game_addresses.reloadValues()
 
-        self.T = GameClass(game_addresses.addr[TekkenVersion + '_process_name'])
+        self.T = GameClass(game_addresses[TekkenVersion + '_process_name'])
         self.T.applyModuleAddress(game_addresses)
         self.TekkenVersion = TekkenVersion
         self.ptr_size = ptrSizes[TekkenVersion]
-        self.base =  game_addresses.addr[TekkenVersion + '_base']
+        self.base =  game_addresses[TekkenVersion + '_base']
 
         self.endian = endians[TekkenVersion]
         self.folder_destination = folder_destination
@@ -1272,10 +1272,10 @@ class Exporter:
             os.mkdir(folder_destination)
         
     def getP1Addr(self):
-        if (self.TekkenVersion + '_p1_addr') in game_addresses.addr:
-            return game_addresses.addr[self.TekkenVersion + '_p1_addr']
-        matchKeys = [key for key in game_addresses.addr if key.startswith(self.TekkenVersion + '_p1_addr_')]
-        regex = game_addresses.addr[self.TekkenVersion + '_window_title_regex']
+        if (self.TekkenVersion + '_p1_addr') in game_addresses:
+            return game_addresses[self.TekkenVersion + '_p1_addr']
+        matchKeys = [key for key in game_addresses if key.startswith(self.TekkenVersion + '_p1_addr_')]
+        regex = game_addresses[self.TekkenVersion + '_window_title_regex']
         
         windowTitle = self.T.getWindowTitle()
         p = re.compile(regex)
@@ -1283,7 +1283,7 @@ class Exporter:
         if match == None:
             raise Exception('Player address not found')
         key = self.TekkenVersion + '_p1_addr_' + match.group(1)
-        return None if key not in game_addresses.addr else game_addresses.addr[key]
+        return None if key not in game_addresses else game_addresses[key]
         
     def readInt(self, addr, len):
         return self.T.readInt(addr, len, endian=self.endian)
@@ -1314,7 +1314,7 @@ class Exporter:
         
     def getMotbinPtr(self, playerAddress):
         key = self.TekkenVersion + '_motbin_offset'
-        motbin_ptr_addr = (playerAddress + game_addresses.addr[key])
+        motbin_ptr_addr = (playerAddress + game_addresses[key])
         return self.readInt(motbin_ptr_addr, self.ptr_size)
 
     def getPlayerMovesetName(self, playerAddress):
@@ -1887,14 +1887,14 @@ class Motbin:
         
     def getCharacterId(self, playerAddress):
         key = self.TekkenVersion + '_chara_id_offset'
-        if key in game_addresses.addr:
-            self.chara_id = self.readInt(self.base + playerAddress + game_addresses.addr[key], charaIdSize.get(self.TekkenVersion, 4))
+        if key in game_addresses:
+            self.chara_id = self.readInt(self.base + playerAddress + game_addresses[key], charaIdSize.get(self.TekkenVersion, 4))
         else:
             key = self.TekkenVersion + '_chara_id_addr'
-            if key not in game_addresses.addr:
+            if key not in game_addresses:
                 self.chara_id = 0
             else:
-                self.chara_id = (self.readInt(self.base  + game_addresses.addr[key], 2))
+                self.chara_id = (self.readInt(self.base  + game_addresses[key], 2))
         
     def printBasicData(self):
         if self.chara_id == -1:
@@ -2148,7 +2148,7 @@ if __name__ == "__main__":
         os._exit(1)
         
     TekkenVersion = sys.argv[1]
-    if (TekkenVersion + '_process_name') not in game_addresses.addr:
+    if (TekkenVersion + '_process_name') not in game_addresses:
         print("Unknown version '%s'" % (TekkenVersion))
         os._exit(1)
     
@@ -2162,7 +2162,7 @@ if __name__ == "__main__":
     extractedMovesets = []
     
     playerAddr = TekkenExporter.getP1Addr()
-    playerOffset = game_addresses.addr[TekkenVersion + "_playerstruct_size"]
+    playerOffset = game_addresses[TekkenVersion + "_playerstruct_size"]
     
     playerCount = 4 if TekkenVersion == 'tag2' else 2
     if len(sys.argv) > 2:

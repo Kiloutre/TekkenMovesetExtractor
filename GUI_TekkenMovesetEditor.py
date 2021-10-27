@@ -452,7 +452,7 @@ class CharalistSelector:
     def loadToPlayer(self, playerId):
         if self.movelist_path == None:
             return
-        playerAddr = game_addresses.addr['t7_p1_addr'] + (playerId * game_addresses.addr['t7_playerstruct_size'])
+        playerAddr = game_addresses['t7_p1_addr'] + (playerId * game_addresses['t7_playerstruct_size'])
         TekkenImporter = importLib.Importer()
         TekkenImporter.importMoveset(playerAddr, self.movelist_path, moveset=self.root.movelist, charactersPath=charactersPath)
         
@@ -552,11 +552,11 @@ class MoveSelector:
             return
         T = importLib.Importer()
         
-        playerAddr = game_addresses.addr['t7_p1_addr'] + (self.playMovePid * game_addresses.addr['t7_playerstruct_size'])
-        motbinOffset = game_addresses.addr['t7_motbin_offset']
-        curr_frame_timer_offset = game_addresses.addr['curr_frame_timer_offset']
-        next_move_offset = game_addresses.addr['next_move_offset']
-        player_curr_move_offset = game_addresses.addr['player_curr_move_offset']
+        playerAddr = game_addresses['t7_p1_addr'] + (self.playMovePid * game_addresses['t7_playerstruct_size'])
+        motbinOffset = game_addresses['t7_motbin_offset']
+        curr_frame_timer_offset = game_addresses['curr_frame_timer_offset']
+        next_move_offset = game_addresses['next_move_offset']
+        player_curr_move_offset = game_addresses['player_curr_move_offset']
         
         moveset = T.readInt(playerAddr + motbinOffset, 8)
         movelist = T.readInt(moveset + 0x210, 8)
@@ -590,8 +590,8 @@ class MoveSelector:
             
         self.playMovePid = playerId
         self.playMoveButton['text'] = "Play move (%dP)" % (playerId + 1)
-        playerAddress = game_addresses.addr['t7_p1_addr'] + (playerId * game_addresses.addr['t7_playerstruct_size'])
-        offset = game_addresses.addr['player_curr_move_offset']
+        playerAddress = game_addresses['t7_p1_addr'] + (playerId * game_addresses['t7_playerstruct_size'])
+        offset = game_addresses['player_curr_move_offset']
         TekkenGame = GameClass("TekkenGame-Win64-Shipping.exe")
         TekkenGame.applyModuleAddress(game_addresses)
         

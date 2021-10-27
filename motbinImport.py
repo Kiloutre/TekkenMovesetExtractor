@@ -57,15 +57,19 @@ class Importer:
         return VirtualAllocEx(self.T.handle, 0, allocSize, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE)
         
     def getPlayerAddress(self, playerid):
-        playerAddr = game_addresses.addr['t7_p1_addr']
+        playerAddr = game_addresses['t7_p1_addr']
+        
+        if playerAddr == 0: return None
+        
         if playerid == 1:
-            playerAddr += game_addresses.addr['t7_playerstruct_size']
+            playerAddr += game_addresses['t7_playerstruct_size']
+            
         return playerAddr
    
     def importMoveset(self, playerAddr, folderName, moveset=None, charactersPath='extracted_chars/'):
         moveset = self.loadMoveset(folderName=folderName, moveset=moveset, charactersPath=charactersPath)
         
-        motbin_ptr_addr = playerAddr + game_addresses.addr['t7_motbin_offset']
+        motbin_ptr_addr = playerAddr + game_addresses['t7_motbin_offset']
         current_motbin_ptr = self.readInt(motbin_ptr_addr, 8)
         old_character_name = self.readString(self.readInt(current_motbin_ptr + 0x8, 8))
         moveset.copyMotaOffsets(current_motbin_ptr)
@@ -863,7 +867,7 @@ class MotbinStruct:
         return self.movelist_ptr, moveCount
         
     def applyCharacterIDAliases(self, playerAddr):
-        currentChar = self.importer.readInt(playerAddr + game_addresses.addr['t7_chara_id_offset'])
+        currentChar = self.importer.readInt(playerAddr + game_addresses['t7_chara_id_offset'])
         
         movesetCharId = getCharacteridAlias(self.m['version'], self.m['character_id'])
         
@@ -883,7 +887,7 @@ class MotbinStruct:
             raise Exception("copyMotaOffsets: No valid address provided")
         
         if source_motbin_ptr == None:
-            source_motbin_ptr = self.importer.readInt(playerAddr + game_addresses.addr['t7_motbin_offset'], 8)
+            source_motbin_ptr = self.importer.readInt(playerAddr + game_addresses['t7_motbin_offset'], 8)
     
         excludedOffsets = [ # Don't copy these offsets from the current player. Put hands stuff in there
             
@@ -915,11 +919,11 @@ if __name__ == "__main__":
         print("Usage: [FOLDER_NAME]")
         os._exit(1)
         
-    playerAddress = game_addresses.addr['t7_p1_addr']
+    playerAddress = game_addresses['t7_p1_addr']
     TekkenImporter = Importer()
     TekkenImporter.importMoveset(playerAddress, sys.argv[1])
     
     if len(sys.argv) > 2:
-        playerAddress += game_addresses.addr['t7_playerstruct_size']
+        playerAddress += game_addresses['t7_playerstruct_size']
         TekkenImporter.importMoveset(playerAddress, sys.argv[2])
     

@@ -25,17 +25,29 @@ GetModuleInformation.argtypes = [w.HANDLE, w.HMODULE, ctypes.POINTER(MODULEINFO)
 class AddressFile:
     def __init__(self, path=None, data=None):
         self.addr = {}
+        self.orig_addr = {}
         
         self.path = path
         self.moduleAddr = None
+        
+        self.pointerPathFunction = None
         
         if self.path:
             self.reloadValues()
         elif data:
             self.readData(data)
             
-    def __getitem__(self, item):
-        return self.addr[item]
+    def __getitem__(self, key):
+        if type(self.orig_addr[key]) == tuple and self.pointerPathFunction != None:
+            valueType, value, ptrPath = self.orig_addr[key]
+            calculatedAddress = self.moduleAddr + value if valueType == 1 else value
+            
+            if len(ptrPath) > 0: #relative to main module
+                return self.pointerPathFunction(calculatedAddress, ptrPath)
+            else:
+                return calculatedAddress
+                
+        return self.addr[key]
         
     def readData(self, data):
         self.data = data
@@ -51,6 +63,7 @@ class AddressFile:
                 moduleRelative = values[0][0] == "+"
                 values = [int(f, 16) for f in values]
                 self.addr[name] = moduleRelative, values[0], values[1:]
+                self.orig_addr[name] = moduleRelative, values[0], values[1:]
             else:
                 if match('\+0(x|X)[0-9a-fA-F]+', value): #relative to module addr
                     value = 1, int(value, 16), []
@@ -62,9 +75,11 @@ class AddressFile:
                     value = value.strip()
             
                 self.addr[name] = value
+                self.orig_addr[name] = value
                 
     def applyModuleAddress(self, addr, pointerPathFunction):
         self.moduleAddr = addr
+        self.pointerPathFunction = pointerPathFunction
         
         for key in self.addr:
             if type(self.addr[key]) == tuple:

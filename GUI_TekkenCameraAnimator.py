@@ -2107,7 +2107,7 @@ class LiveEditor:
         self.T.writeBytes(game_addresses['camera_code_injection2'], bytes([0xF3, 0x0F, 0x11, 0x89, 0x9C, 0x03, 0x00, 0x00])) #fov
         
     def getCameraAddr(self):
-        self.camAddr = game_addresses['camera_starting_ptr']
+        self.camAddr = game_addresses['camera_ptr']
         return self.camAddr
         
     def setCameraPos(self, cam, relative=0, prevCameraPos=None):
