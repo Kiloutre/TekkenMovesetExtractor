@@ -2092,11 +2092,11 @@ class LiveEditor:
         
     def lockCamera(self):
         if not self.startIfNeeded(): return
-        self.T.writeBytes(game_addresses['camera_code_injection2'], bytes([0x90] * 8))
         self.T.writeBytes(game_addresses['camera_code_injection'] + 0xE, bytes([0x90] * 8))
         self.T.writeBytes(game_addresses['camera_code_injection'] + 0x25, bytes([0x90] * 6))
         self.T.writeBytes(game_addresses['camera_code_injection'], bytes([0x90] * 8))
         self.T.writeBytes(game_addresses['camera_code_injection'] + 0x1B, bytes([0x90] * 6))
+        self.T.writeBytes(game_addresses['camera_code_injection2'], bytes([0x90] * 8))
         
     def unlockCamera(self):
         if not self.startIfNeeded(): return
