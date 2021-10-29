@@ -575,14 +575,12 @@ class MoveSelector:
         
     def onMoveSelection(self, event):
         w = event.widget
-        moveId = -1
         try:
             moveId = int(w.curselection()[0])
-        except:
-            pass
-        finally:
             self.playMoveSv.set(str(moveId))
             self.root.setMove(moveId)
+        except:
+            pass
             
     def goToCurrentMove(self, playerId = 0):
         if self.root.movelist == None:
@@ -590,10 +588,12 @@ class MoveSelector:
             
         self.playMovePid = playerId
         self.playMoveButton['text'] = "Play move (%dP)" % (playerId + 1)
-        playerAddress = game_addresses['t7_p1_addr'] + (playerId * game_addresses['t7_playerstruct_size'])
-        offset = game_addresses['player_curr_move_offset']
+        
         TekkenGame = GameClass("TekkenGame-Win64-Shipping.exe")
         TekkenGame.applyModuleAddress(game_addresses)
+        
+        playerAddress = game_addresses['t7_p1_addr'] + (playerId * game_addresses['t7_playerstruct_size'])
+        offset = game_addresses['player_curr_move_offset']
         
         currMoveId = TekkenGame.readInt(playerAddress + offset, 4)
         currMoveId = self.root.getMoveId(currMoveId)
@@ -602,6 +602,7 @@ class MoveSelector:
             return
         
         self.root.setMove(currMoveId)
+        self.playMoveSv.set(str(currMoveId))
         
     def setCharacter(self, char):
         self.selectedChar['text'] = 'Current character: ' + char

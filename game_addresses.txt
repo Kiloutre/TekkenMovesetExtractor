@@ -1,5 +1,5 @@
 # For updating purposes
-version     = 3 #Must be different for it to register it as an update
+version     = 4 #Must be different for it to register it as an update
 repo_link   = https://raw.githubusercontent.com/Kiloutre/TekkenMovesetExtractor/master/
 
 # Tekken 7 addresses and offsets. Changes with updates
@@ -89,7 +89,7 @@ using_global_frame_counter = 1           #0 = more reliable; 1 = animation is no
 freeze_code_addr           = +0x262004 #jne +2633CA; used to freeze players
 freeze_environment         = +0x15747f1 #used to freeze particles in the environment when the game speed reaches 0. gotta find this one using unreal unlocker and not game pause. searching of hex 00 75 08 32 also work
 input_buffer               = +0x034CB410, 0x1F4 #used to read player input during camera control
-camera_ptr                 = +0x37991A0, 0x100, 0x380, 0 #used to find camera; pointer path is 0x30 0x418
+camera_ptr                 = +0x3781E70, 0x30, 0x418, 0 #used to find camera; best pointer path is 0x30 0x418, 0x0
 input_code_injection       = +0x2E2B57 #prevent player movement during manual camera control
 camera_code_injection      = +0x16A5C50 #prevent writing of certain camera offsets
 camera_code_injection2     = +0x16BD0E0 #prevent writing of fov

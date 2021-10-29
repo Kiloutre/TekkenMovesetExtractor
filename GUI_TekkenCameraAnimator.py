@@ -2024,17 +2024,17 @@ class LiveEditor:
         self.getFrameCounterAddr()
         self.nopInputsCode()
         
-        try:
-            frameHeld = 0
-            while self.liveControl:
-                inputs = self.getInputs()
-                if len(inputs) != 0:
-                    frameHeld = self.moveCamera(self.getCameraPos(), inputs, frameHeld)
-                elif frameHeld > 0:
-                    frameHeld -= 4
-                self.waitSingleFrame()
-        except:
-            self.liveControl = False
+        #try:
+        frameHeld = 0
+        while self.liveControl:
+            inputs = self.getInputs()
+            if len(inputs) != 0:
+                frameHeld = self.moveCamera(self.getCameraPos(), inputs, frameHeld)
+            elif frameHeld > 0:
+                frameHeld -= 4
+            self.waitSingleFrame()
+        #except:
+        #    self.liveControl = False
             
         if not self.exiting: self.root.onLiveControlDisable()
         self.resetInputsCode()
