@@ -934,7 +934,7 @@ class LiveEditor:
     def __init__(self, root):
         self.root = root
         self.stop()
-        self.setPlayerAddress(0)
+        self.playerAddress = None
        
     def setPlayerAddress(self, playerId):
         self.playerAddress = game_addresses['t7_p1_addr'] + (playerId * game_addresses['t7_playerstruct_size'])
@@ -971,13 +971,16 @@ class LiveEditor:
         return True
         
     def loadProcess(self):
-        try:
-            self.T = GameClass("TekkenGame-Win64-Shipping.exe")
-            self.T.applyModuleAddress(game_addresses)
-            self.running = True
-        except Exception as err:
-            print(err)
-            self.stop()
+        #try:
+        self.T = GameClass("TekkenGame-Win64-Shipping.exe")
+        self.T.applyModuleAddress(game_addresses)
+        self.running = True
+        
+        if self.playerAddress == None: self.setPlayerAddress(0 )
+        #except Exception as err:
+        #    print("o")
+        #    print(err)
+        #    self.stop()
         return self.running
         
     def stop(self):
@@ -1000,7 +1003,7 @@ class LiveEditor:
     def readFloat(self, addr):
         return struct.unpack('f', self.T.readBytes(addr, 4))[0]
         
-    def getCurrentAnimationAddr(self):
+    def getCurrentAnimationAddr(self):  
         currmoveAddr = self.T.readInt(self.playerAddress + 0x220, 8)
         animationAddr = self.T.readInt(currmoveAddr + 0x10, 8)
         return animationAddr
@@ -1129,19 +1132,13 @@ class LiveEditor:
     def currentAnimIsLoadedOne(self):
         return self.running and self.lastAllocation != None and self.lastAllocation == self.getCurrentAnimationAddr()
         
-    def readPointerPath(self, baseAddr, ptrlist):
-        currAddr = self.T.readInt(baseAddr, 8)
-        for ptr in ptrlist:
-            currAddr = self.T.readInt(currAddr + ptr, 8)
-        return currAddr
-        
     def lockCamera(self):
         if not self.startIfNeeded(): return
-        self.T.writeBytes(game_addresses['camera_code_injection2'], bytes([0x90] * 8))
         self.T.writeBytes(game_addresses['camera_code_injection'] + 0xE, bytes([0x90] * 8))
         self.T.writeBytes(game_addresses['camera_code_injection'] + 0x25, bytes([0x90] * 6))
         self.T.writeBytes(game_addresses['camera_code_injection'], bytes([0x90] * 8))
         self.T.writeBytes(game_addresses['camera_code_injection'] + 0x1B, bytes([0x90] * 6))
+        self.T.writeBytes(game_addresses['camera_code_injection2'], bytes([0x90] * 8))
         
     def unlockCamera(self):
         if not self.startIfNeeded(): return

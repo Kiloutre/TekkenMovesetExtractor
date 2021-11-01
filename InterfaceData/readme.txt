@@ -3,6 +3,8 @@
 1.0.32.24:
 - [EDITOR] Fix "Go to move" button
 - [CAMERA] Fix camera that sometimes wouldnt move
+1.0.32.25:
+- [ANIMATOR] Fix animator not starting
 
 If you find a bug, let me know on github.
 --- by kilo ( https://www.youtube.com/c/kiloutre ) ---
