@@ -971,16 +971,15 @@ class LiveEditor:
         return True
         
     def loadProcess(self):
-        #try:
-        self.T = GameClass("TekkenGame-Win64-Shipping.exe")
-        self.T.applyModuleAddress(game_addresses)
-        self.running = True
-        
-        if self.playerAddress == None: self.setPlayerAddress(0 )
-        #except Exception as err:
-        #    print("o")
-        #    print(err)
-        #    self.stop()
+        try:
+            self.T = GameClass("TekkenGame-Win64-Shipping.exe")
+            self.T.applyModuleAddress(game_addresses)
+            self.running = True
+            
+            if self.playerAddress == None: self.setPlayerAddress(0)
+        except Exception as err:
+            print(err)
+            self.stop()
         return self.running
         
     def stop(self):
