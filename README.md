@@ -40,6 +40,7 @@ cemu_p1_addr only needs to be found once, unless you change the Tag2 version you
 
 # Finding player addresses and structure sizes in Tekken 7
 
+(You might have to enabled MEM_MAPPED in cheat engine's scanning options to successfully work with emulators)
 Each Tekken 7 patch changes the addresses of the game_addresses.txt file. If i don't update the tool myself, you will need correct addresses for the tool to properly function:
 - `t7_p1_addr` and `t7_playerstruct_size` are required for basic import/export. More are needed to get access to the  tool's 'Set Online' functions, but they are hard to get so i will be the one to do it usually. `t7_base` is not needed as far as i know.
 
