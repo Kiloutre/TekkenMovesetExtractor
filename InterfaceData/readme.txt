@@ -5,6 +5,9 @@
 - [CAMERA] Fix camera that sometimes wouldnt move
 1.0.32.25:
 - [ANIMATOR] Fix animator not starting
+1.0.32.26:
+- [EXTRACTOR] Add RPCS3 tag2 extraction
+- [CAMERA] Fix bug when copying group
 
 If you find a bug, let me know on github.
 --- by kilo ( https://www.youtube.com/c/kiloutre ) ---
