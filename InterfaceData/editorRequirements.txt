@@ -52,11 +52,11 @@
 104,Enemy last active frame - curr frame < X
 105,Enemy last active frame - curr frame >= X
 106,Enemy last active frame - curr frame = X
-110,Enemy move timer >= X
-111,Enemy move timer < X
-112,Enemy move timer == X
-110,Enemy move timer >= X
-110,Enemy move timer >= X
+110,Enemy move frame >= X
+111,Enemy move frame < X
+112,Enemy move frame == X
+113,Enemy move frame >= X
+114,Enemy move frame >= X
 126,Opponent downed
 127,Opponent on their feet
 130,Counterhit

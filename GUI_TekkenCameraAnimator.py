@@ -1702,8 +1702,8 @@ class AnimationEditor(BaseFormEditor):
         else:
             if not self.root.openTekkenProcess(): return
             framedata = self.root.LiveEditor.getCameraPos(self.group['relativity'])
-            for field in defaultFieldValues:
-                if field not in framedata: framedata[field] = defaultFieldValues[field]
+        for field in defaultFieldValues:
+            if field not in framedata: framedata[field] = defaultFieldValues[field]
             
         framedata['name'] = "%d" % (self.group['length'] + 1)
         while True:
@@ -1868,6 +1868,7 @@ class LiveEditor:
         self.frame_counter = None
         self.charFrozen = False
         self.saveAnimation = False
+        self.awaitSignal = False
 
         self.root.AnimationSelector.setCanFreezeCharButton(True)
         
@@ -2048,6 +2049,11 @@ class LiveEditor:
         self.root.AnimationEditor.setControlEnabled(False)
         
         savedKeyframes = []
+        
+        if self.awaitSignal:
+            playerAddr = game_addresses['t7_p1_addr']
+            
+            while self.T.readInt(playerAddr + 0xCD8, 4) == 0: pass
         
         foundSpeedChange = False
         for g in groups:

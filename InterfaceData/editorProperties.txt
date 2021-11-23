@@ -71,6 +71,7 @@
 0x81f3,Activate laser
 0x81f4,Disable laser
 0x81ff,Slide player
+0x8200,Rotate player axis
 0x8206,Distance from centre
 0x820b,Spawn projectile
 0x8213,Attack destroys projectile
@@ -97,6 +98,9 @@
 0x828b,Game speed%
 0x828c,Slow down Effect
 0x828d,Slow down Effect immunity
+0x828f,Kazumi's tiger animation
+0x8292,Player Stop Motion Effect
+0x8293,Opponent Stop Motion Effect
 0x829d,Set HUD visibility
 0x829e,Screen Transition VFX
 0x829f,Play subtitles

@@ -1394,7 +1394,7 @@ class GUI_TekkenAnimationEditor():
         filePath = dataPath + fileName + '.bin'
         with open(filePath, 'wb') as f:
             f.write(bytes(self.AnimationEditor.Animation.data))
-            self.message("Error", "File successfully saved at path: " + filePath)
+            self.message("Saved", "File successfully saved at path: " + filePath)
             self.AnimationEditor.animationName = fileName + '.bin'
             self.AnimationEditor.setTitleInfo()
             self.onAnimationSave()

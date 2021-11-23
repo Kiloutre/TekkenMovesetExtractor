@@ -21,6 +21,15 @@ tag2_motbin_offset      = -0x98
 tag2_chara_id_offset    = -0xCC
 tag2_player_count       = 4
 
+# Tag2 RPCS3 addresses. (BLES01702)
+rpcs3_tag2_process_name       = rpcs3.exe
+rpcs3_tag2_base               = 0x300000000
+rpcs3_tag2_p1_addr            = 0x160C2B0  
+rpcs3_tag2_playerstruct_size  = 0x28B0
+rpcs3_tag2_motbin_offset      = -0x98
+rpcs3_tag2_chara_id_offset    = -0xCC
+rpcs3_tag2_player_count       = 4
+
 # Tekken Revolution addresses (NPEB01406 01.05)
 rev_process_name       = rpcs3.exe
 rev_base               = 0x300000000

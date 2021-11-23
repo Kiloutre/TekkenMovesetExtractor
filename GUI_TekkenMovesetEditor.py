@@ -55,6 +55,7 @@ itemNames = {
 }
 
 fieldLabels = {
+    'u8': 'head? (u8)',
     'u10': 'airborne_start',
     'u11': 'airborne_end',
     'u16': 'collision? (u16)',

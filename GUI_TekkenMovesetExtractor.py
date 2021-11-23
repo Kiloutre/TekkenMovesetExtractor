@@ -734,7 +734,8 @@ class GUI_TekkenMovesetExtractor(Tk):
         
         self.createButton(self.t7_exportFrame, "Export: Tekken 7: Both Players", ("t7",), exportAll)
         
-        self.createButton(self.tag2_exportFrame, "Export: Tekken Tag2: All players", ("tag2",), exportAll)
+        self.createButton(self.tag2_exportFrame, "Export: Tag2 (CEMU): All players", ("tag2",), exportAll)
+        self.createButton(self.tag2_exportFrame, "Export: Tag2 (RPCS3): All players", ("rpcs3_tag2",), exportAll)
         self.createButton(self.tag2_exportFrame, "Export: Tekken Rev: Both players", ("rev",), exportAll)
         self.createButton(self.tag2_exportFrame, "Export: Tekken 6: Both players", ("t6",), exportAll)
         self.createButton(self.tag2_exportFrame, "Export: Tekken 5: Both players", ("t5",), exportAll)

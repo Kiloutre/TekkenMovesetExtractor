@@ -34,6 +34,7 @@ def GetLittleEndianAnimEnd(data, searchStart):
 ptrSizes = {
     't7': 8,
     'tag2': 4,
+    'rpcs3_tag2': 4,
     'rev': 4,
     't6': 4,
     '3d': 4,
@@ -45,6 +46,7 @@ ptrSizes = {
 endians = {
     't7': 'little',
     'tag2': 'big',
+    'rpcs3_tag2': 'big',
     'rev': 'big',
     't6': 'big',
     't5': 'little',
@@ -56,6 +58,7 @@ endians = {
 swapGameAnimBytes = {
     't7': False,
     'tag2': True,
+    'rpcs3_tag2': True,
     'rev': True,
     't6': True,
     't5': False,
@@ -71,6 +74,7 @@ charaIdSize = {
 animEndPosFunc = {
     't7': GetBigEndianAnimEnd,
     'tag2': GetLittleEndianAnimEnd,
+    'rpcs3_tag2': GetLittleEndianAnimEnd,
     'rev': GetLittleEndianAnimEnd,
     't6': GetLittleEndianAnimEnd,
     't5dr': GetBigEndianAnimEnd,
@@ -82,6 +86,7 @@ animEndPosFunc = {
 versionLabels = {
     't7': 'Tekken7',
     'tag2': 'Tag2',
+    'rpcs3_tag2': 'Tag2',
     'rev': 'Revolution',
     't6': 'Tekken6',
     't5': 'Tekken5',
@@ -167,6 +172,7 @@ structSizes = {
         'UnknownParryRelated_size': 0x4
     },
     'tag2': tag2StructSizes,
+    'rpcs3_tag2': tag2StructSizes,
     'rev': tag2StructSizes,
     't6': t6StructSizes,
     '3d': t6StructSizes,
@@ -1096,6 +1102,7 @@ t4_offsetTable = {
 offsetTables = {
     't7': t7_offsetTable,
     'tag2': tag2_offsetTable,
+    'rpcs3_tag2': tag2_offsetTable,
     'rev': tag2_offsetTable,
     't6': t6_offsetTable,
     't5': t5_offsetTable,
