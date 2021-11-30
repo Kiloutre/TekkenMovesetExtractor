@@ -176,10 +176,9 @@ easingTypes = {
     15: "Ease in-out elastic",
 }
 easingTypes2 = {easingTypes[k]:k for k in easingTypes}
-        
-def generateProgressBar(progress, iteration=20):
-    filledCount = int(progress * iteration)
-    return "[" + "|" * filledCount + "_" * (iteration - filledCount) + "]"
+
+def hexToList(value, bytes_count):
+    return [((value >> (b * 8)) & 0xFF) for b in range(bytes_count)]
         
 def safe_math_eval(string):
     allowed_chars = "0123456789+-*(). /"
@@ -426,8 +425,24 @@ class Interpolation:
                 
             bezier['x'] = xi[0]
             bezier['y'] = yi[0]
-        except:
-            pass
+        except Exception as e:
+            try:
+                x = [p['x'] for p in points]
+                y = [p['y'] for p in points]
+                
+                if withZ:
+                    z = [p['z'] for p in points]
+                    tck, u = interpolate.splprep([x, y, z], s = 0, per=False, k=2)
+                    xi, yi, zi = interpolate.splev([t], tck)
+                    bezier['z'] = zi[0]
+                else:
+                    tck, u = interpolate.splprep([x, y], s = 0, per=False, k=2)
+                    xi, yi = interpolate.splev([t], tck)
+                    
+                bezier['x'] = xi[0]
+                bezier['y'] = yi[0]
+            except:
+                pass
 
         return bezier
         
@@ -1867,8 +1882,8 @@ class LiveEditor:
         self.liveControl = False
         self.frame_counter = None
         self.charFrozen = False
-        self.saveAnimation = False
-        self.awaitSignal = False
+        self.saveAnimation = False #unused for now
+        self.awaitSignal = False   #unused for now?
 
         self.root.AnimationSelector.setCanFreezeCharButton(True)
         
@@ -1897,8 +1912,10 @@ class LiveEditor:
     def setSpeedControl(self, enabled):
         if not self.startIfNeeded(): return False
         if enabled:
-            self.T.writeBytes(game_addresses['game_speed_injection'], [0x90]* 6)
+            self.T.writeBytes(game_addresses['game_speed_injection'], [0x90] * 6)
         else:
+            movAddr = game_addresses.orig_addr['game_speed_address'][1] - game_addresses.orig_addr['game_speed_injection'][1] - 6 #6 for bytes len
+            bytes = [0x89, 0x0D, *hexToList(movAddr, 4)]
             self.T.writeBytes(game_addresses['game_speed_injection'], [0x89, 0x0D, 0x36, 0xE3, 0xDD, 0x02]) #mov [+34DBF1C],ecx
             
     def setGameSpeed(self, value):
@@ -2053,7 +2070,11 @@ class LiveEditor:
         if self.awaitSignal:
             playerAddr = game_addresses['t7_p1_addr']
             
-            while self.T.readInt(playerAddr + 0xCD8, 4) == 0: pass
+            try:
+                while self.T.readInt(playerAddr + 0xCD8, 4) == 0:
+                    pass
+            except:
+                return
         
         foundSpeedChange = False
         for g in groups:
