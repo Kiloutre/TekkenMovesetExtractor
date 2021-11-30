@@ -18,9 +18,15 @@ from urllib import request
 
 extractorVersion = "1.0.32.26"
 charactersPath = "./extracted_chars/"
-codeInjectionSize = 256
+
+codeInjectionInfo = {
+    'size': 512,
+    'o_playerId': 0x110,
+    'o_playerLocation': 0x110 + 4,
+    'o_movesetLocation': 0x110 + 4 + 0x10,
+}
     
-monitorVerificationFrequency = .1
+monitorVerificationFrequency = 1 #seconds
 runningMonitors = [None, None]
 creatingMonitor = [False, False]
 codeInjection = None
@@ -53,28 +59,52 @@ def hexToList(value, bytes_count):
 def allocateMovesetWritingInjection(movesetAddr, movesetAddr2, importer):
     global codeInjection
     
-    codeSize = codeInjectionSize
-    codeAddr = importer.allocateMem(codeSize)
+    codeAddr = importer.allocateMem(codeInjectionInfo["size"])
     
-    playerLocation = codeAddr + codeInjectionSize - 0x20
-    newMovesetLocation = codeAddr + codeInjectionSize - 0x10
+    playerIdLocation = codeAddr + codeInjectionInfo["o_playerId"]
+    playerLocation = codeAddr + codeInjectionInfo["o_playerLocation"]
+    newMovesetLocation = codeAddr + codeInjectionInfo["o_movesetLocation"]
     
-    playerLocation_bytes = hexToList(playerLocation, 8)
-    playerLocation2_bytes = hexToList(playerLocation + 8, 8)
     codeInjectionEnd = hexToList(game_addresses['code_injection_addr'] + 0xE, 8)
+    
+    moduleAddr = hexToList(importer.T.moduleAddr, 8)
+    playerIdOffsets = game_addresses.orig_addr["playerid_ptr"][1], *game_addresses.orig_addr["playerid_ptr"][2]
 
     twoPlayersBytecode = [
         0x41, 0x52, #push r10
-        0x4c, 0x8b, 0x15, 0xD7, 0x00, 0x00, 0x00, # mov r10, [codeInjection + 256 - 0x20] #playerLocation_bytes. compare to player address
+        0x41, 0x53, #push r11
+        
+        
+        0x49, 0xBA, *moduleAddr, #mov r10, *moduleAddr
+        0x4D, 0x8b, 0x92, *hexToList(playerIdOffsets[0], 4), #mov r10, [r10 + offset1] (4b)
+        0x4D, 0x8b, 0x52, playerIdOffsets[1], #mov r10, [r10 + offset2] (1b)
+        0x4D, 0x8b, 0x52, playerIdOffsets[2], #mov r10, [r10 + offset3] (1b)
+        0x45, 0x8b, 0x92, *hexToList(playerIdOffsets[3], 4), #mov r10d, [r10 + offset4] (4b)
+        
+        0x44, 0x3B, 0x15, 0xE5, 0, 0, 0, #cmp r10d, [codeInjection + 256]  (relative)
+        0x74, 0x23, #je +23
+        0x44, 0x89, 0x15, 0xDC, 0, 0, 0, #mov [codeInjection + 256], r10d  (relative)
+        
+        #swap moveset pool
+        0x4C, 0x8B, 0x15, 0xE9, 0, 0, 0, #mov r10, [codeInjection + 256 + 4 + 0x10] (relative)
+        0x4C, 0x8B, 0x1D, 0xEA, 0, 0, 0, #mov r11, [codeInjection + 256 + 4 + 0x10 + 8] (relative)
+        0x4C, 0x89, 0x1D, 0xDB, 0, 0, 0, #mov [codeInjection + 256 + 4 + 0x10], r11 (relative)
+        0x4C, 0x89, 0x15, 0xDC, 0, 0, 0, #mov [codeInjection + 256 + 4 + 0x10 + 8], r10 (relative)
+        
+    
+        0x4c, 0x8b, 0x15, 0xBD, 0x00, 0x00, 0x00, # mov r10, [codeInjection + 256 + 4] #playerLocation_bytes. compare to player address
         0x4c, 0x39, 0xd1, #cmp rcx, r10
-        0x75, 0x30, #jne p2_check : wrong player, not continuing
+        0x75, 0x3c, #jne p2_check : wrong player, not continuing
+        0x4C, 0x8b, 0x15, 0xC1, 0x00, 0x00, 0x00, #mov r10, [newMovesetLocation]
+        0x4D, 0x85, 0xD2, #test r10, r10
+        0x74, 0x30, #jz p2_check : no moveset available for player
         0x51, #push rcx
         0x50, #push rax
         0x53, #push rbx
         
         # loop, copy some animation like cam, hand and all to moveset in order to avoid crash (we dont import those yet)
         0x48, 0x31, 0xDB, #xor rbx, rbx
-        0x48, 0x8b, 0x0D, 0xD5, 0x00, 0x00, 0x00, #mov rcx, [newMovesetLocation]
+        0x48, 0x8b, 0x0D, 0xAF, 0x00, 0x00, 0x00, #mov rcx, [newMovesetLocation]
         
         
         0x48, 0x8b, 0x84, 0xda, 0x80, 0x02, 0x00, 0x00, #mov rax,[rdx+rbx*8+00000290]
@@ -86,21 +116,25 @@ def allocateMovesetWritingInjection(movesetAddr, movesetAddr2, importer):
         0x5b, #pop rbx
         0x58, #pop rax
         0x59, #pop rcx
-        0x48, 0x8b, 0x15, 0xB2, 0x00, 0x00, 0x00, #mov rdx, [newMovesetLocation] #force new moveset
+        0x48, 0x8b, 0x15, 0x8C, 0x00, 0x00, 0x00, #mov rdx, [newMovesetLocation] #force new moveset
         
         
         
         #p2_check, same as above but with p2 moveset
-        0x4c, 0x8b, 0x15, 0xA3, 0x00, 0x00, 0x00, # mov r10, [codeInjection + 256 - 0x20 + 8] #playerLocation2_bytes
+        0x4c, 0x8b, 0x15, 0x7D, 0x00, 0x00, 0x00, # mov r10, [codeInjection + 256 + 4 + 8] #playerLocation2_bytes
         0x4c, 0x39, 0xd1, #cmp rcx, r10
-        0x75, 0x30, #jne end
+        0x75, 0x3c, #jne end : wrong player, not continuing
+        0x4C, 0x8b, 0x15, 0x81, 0x00, 0x00, 0x00, #mov r10, [newMovesetLocation + 8]
+        0x4D, 0x85, 0xD2, #test r10, r10
+        0x74, 0x30, #je end : no moveset available for player
         0x51, #push rcx
         0x50, #push rax
         0x53, #push rbx
         
         # loop, copy some animation like cam, hand and all to moveset in order to avoid crash (we dont import those yet)
         0x48, 0x31, 0xDB, #xor rbx, rbx
-        0x48, 0x8b, 0x0D, 0xa1, 0x00, 0x00, 0x00, #mov rcx, [newMovesetLocation + 8]
+        0x48, 0x8b, 0x0D, 0x6F, 0x00, 0x00, 0x00, #mov rcx, [newMovesetLocation + 8]
+        
         
         0x48, 0x8b, 0x84, 0xda, 0x80, 0x02, 0x00, 0x00, #mov rax,[rdx+rbx*8+00000290]
         0x48, 0x89, 0x84, 0xd9, 0x80, 0x02, 0x00, 0x00, #mov [rcx+rbx*8+00000290], rax
@@ -111,32 +145,35 @@ def allocateMovesetWritingInjection(movesetAddr, movesetAddr2, importer):
         0x5b, #pop rbx
         0x58, #pop rax
         0x59, #pop rcx
-        0x48, 0x8b, 0x15, 0x7E, 0x00, 0x00, 0x00, #mov rdx, [newMovesetLocation + 8] #force new moveset
+        0x48, 0x8b, 0x15, 0x4C, 0x00, 0x00, 0x00, #mov rdx, [newMovesetLocation + 8] #force new moveset
         
         
         #end
         0x41, 0x5a, #pop r10
-        0x48, 0x89, 0x91, 0x20, 0x15, 0x00, 0x00, #mov [rcx+1520, rdx]
-        0x48, 0x89, 0x91, 0x28, 0x15, 0x00, 0x00, #mov [rcx+1528, rdx]
+        0x41, 0x5b, #pop r11
+        0x48, 0x89, 0x91, 0x20, 0x15, 0x00, 0x00, #mov [rcx+1520], rdx #write moveset into player+1520
+        0x48, 0x89, 0x91, 0x28, 0x15, 0x00, 0x00, #mov [rcx+1528], rdx #write moveset into player+1528
         0xFF, 0x25, 0x00, 0x00, 0x00, 0x00, *codeInjectionEnd #jmp
     ]
     
     importer.writeBytes(codeAddr, bytes(twoPlayersBytecode))
     
-    
-    if movesetAddr != None:
+    try:
         importer.writeInt(playerLocation, game_addresses['t7_p1_addr'], 8)
-        importer.writeInt(newMovesetLocation, movesetAddr, 8)
-    else:
-        importer.writeInt(playerLocation, 0, 8)
-        importer.writeInt(newMovesetLocation, 0, 8)
-        
-    if movesetAddr2 != None:
         importer.writeInt(playerLocation + 8, game_addresses['t7_p1_addr'] + game_addresses['t7_playerstruct_size'], 8)
-        importer.writeInt(newMovesetLocation + 8, movesetAddr2, 8)
-    else:
+    except:
+        importer.writeInt(playerLocation, 0, 8) #can't write those yet
         importer.writeInt(playerLocation + 8, 0, 8)
-        importer.writeInt(newMovesetLocation + 8, 0, 8)
+    
+    importer.writeInt(newMovesetLocation, 0 if movesetAddr == None else movesetAddr, 8)
+    importer.writeInt(newMovesetLocation + 8, 0 if movesetAddr2 == None else movesetAddr2, 8)
+    
+    try:
+        playerid = importer.readInt(game_addresses['playerid_ptr'], 4)
+    except:
+        playerid = 0
+    finally:
+        importer.writeInt(playerIdLocation, playerid, 4)
     
     codeInjection = codeAddr
     return codeAddr
@@ -146,6 +183,7 @@ class Monitor:
         self.id = playerId - 1
         self.otherMonitorId = int(not self.id)
         self.playerId = playerId
+        self.playerSideId = playerId
         self.moveset = None
         
         self.Importer = TekkenImporter
@@ -163,7 +201,9 @@ class Monitor:
             
     def start(self):
         print("\nMonitoring successfully started for player %d. Moveset: %s" % (self.playerId, self.moveset.m['character_name']))
-        self.injectPermanentMovesetCode()
+        
+        if runningMonitors[self.otherMonitorId] == None:
+            self.injectPermanentMovesetCode()
         
         try:
             self.monitor()
@@ -193,9 +233,6 @@ class Monitor:
         
         self.Importer.writeBytes(game_addresses['code_injection_addr'], bytes(jmpInstruction))
         
-        if otherMonitor != None:
-            otherMonitor.getPlayerAddress(forceWriting = True)
-        
     def resetCodeInjection(self, forceReset=False):
         if runningMonitors[self.otherMonitorId] == None or forceReset:
             
@@ -205,39 +242,37 @@ class Monitor:
             ]
             self.Importer.writeBytes(game_addresses['code_injection_addr'], bytes(originalInstructions))
         else:
-            runningMonitors[self.otherMonitorId].injectPermanentMovesetCode()
+            self.writeMovesetToCode(self.playerSideId, forceReset=True)
             
-    def writeMovesetToCode(self, playerId):
+    def writeMovesetToCode(self, playerId, forceReset=False):
         global codeInjection
         
         if codeInjection == None or self.moveset == None:
             return
             
-        playerLocation = codeInjection + codeInjectionSize - 0x20
-        newMovesetLocation = codeInjection + codeInjectionSize - 0x10
-        
         
         offset = ((playerId - 1) * 8)
-        
-        self.Importer.writeInt(newMovesetLocation + offset, self.moveset.motbin_ptr, 8)
-        self.Importer.writeInt(playerLocation + offset, self.playerAddr, 8)
+        newMovesetLocation = codeInjection + codeInjectionInfo["o_movesetLocation"]
+        self.Importer.writeInt(newMovesetLocation + offset, 0 if forceReset else self.moveset.motbin_ptr, 8)
             
         if runningMonitors[self.otherMonitorId] == None:
             otherOffset = (8 if offset == 0 else 0)
             self.Importer.writeInt(newMovesetLocation + otherOffset, 0, 8)
-            self.Importer.writeInt(playerLocation + otherOffset, 0, 8)
+            
+    def writePlayerAddressesToCode(self):
+        global codeInjection
+        playerLocation = codeInjection + codeInjectionInfo["o_playerLocation"]
+        self.Importer.writeInt(playerLocation, game_addresses['t7_p1_addr'], 8)
+        self.Importer.writeInt(playerLocation + 8, game_addresses['t7_p1_addr'] + game_addresses['t7_playerstruct_size'], 8)
         
-    def getLocalPlayerSide(self):
-        return self.Importer.readInt(game_addresses['playerid_ptr'], 4)
-        
-    def getPlayerAddress(self, forceWriting = False):
+    def getPlayerAddress(self):
         self.playerAddr = self.Importer.getPlayerAddress(0)
         
         if self.playerAddr == None:
             self.invertedPlayers = -1
             return #player not loaded yet
         
-        invertPlayers = self.getLocalPlayerSide()
+        invertPlayers = self.Importer.readInt(game_addresses['playerid_ptr'], 4)
         
         playerId = self.playerId + invertPlayers
         if playerId == 3:
@@ -245,9 +280,10 @@ class Monitor:
         if playerId == 2:
             self.playerAddr += game_addresses['t7_playerstruct_size']
             
-        if self.invertedPlayers != invertPlayers or forceWriting:
-            self.writeMovesetToCode(playerId)
-            self.invertedPlayers = invertPlayers
+        self.invertedPlayers = invertPlayers
+        self.playerSideId = playerId
+        
+        return self.playerAddr
         
     def getCharacterId(self):
         if self.playerAddr == None: return -1
@@ -257,7 +293,8 @@ class Monitor:
         self.moveset.applyCharacterIDAliases(self.playerAddr)
         
     def monitor(self):
-        self.getPlayerAddress(forceWriting = True)
+        self.getPlayerAddress()
+        self.writeMovesetToCode(self.playerSideId)
         
         if self.playerAddr != None:
             try:
@@ -275,15 +312,20 @@ class Monitor:
         lastMotbinPtr = None
         usingMotaOffsets = False
         
+        lastPlayerAddr = None
         while runningMonitors[self.id] != None:
             try:
-                self.getPlayerAddress()
+                playerAddr = self.getPlayerAddress()
                 charaId = self.getCharacterId()
-                
+            
+                if lastPlayerAddr == None and playerAddr != None:
+                    self.writePlayerAddressesToCode()
+            
                 if charaId != prev_charaId:
                     self.applyCharacterAliases()
                     prev_charaId = charaId
-                
+            
+                lastPlayerAddr = playerAddr
                 time.sleep(monitorVerificationFrequency)
             except Exception as e:
                 try:
