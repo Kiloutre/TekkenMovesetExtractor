@@ -1,13 +1,5 @@
-1.0.32.23: (Update for new patch)
-- [EXTRACTOR] Fix "Set local/remote" player buttons completely, they now fully work as intended and you do not need to use both of them at once for proper behaviour
-1.0.32.24:
-- [EDITOR] Fix "Go to move" button
-- [CAMERA] Fix camera that sometimes wouldnt move
-1.0.32.25:
-- [ANIMATOR] Fix animator not starting
-1.0.32.26:
-- [EXTRACTOR] Add RPCS3 tag2 extraction
-- [CAMERA] Fix bug when copying group
+1.0.32.27: (Update for new patch)
+- [EXTRACTOR] Fix bug that made "Set Online" buttons sometimes switch sides
 
 If you find a bug, let me know on github.
 --- by kilo ( https://www.youtube.com/c/kiloutre ) ---

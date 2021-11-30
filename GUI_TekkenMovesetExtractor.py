@@ -16,7 +16,7 @@ import motbinImport as importLib
 from win32com.client import Dispatch
 from urllib import request
 
-extractorVersion = "1.0.32.26"
+extractorVersion = "1.0.32.27"
 charactersPath = "./extracted_chars/"
 
 codeInjectionInfo = {
