@@ -1,4 +1,5 @@
 0,Always true
+1,Practice mode move demo
 2,Attack to Throw
 3,Throw Hits Forward (Standing)
 4,Throw Hits Backward (Standing)
@@ -89,7 +90,7 @@
 253,Bryan taunted
 255,Check value (prop 0x807c)
 256,Bryan taunted
-284,Check value (prop 0x8109)
+284,Player Flag (prop 0x8106) >= param
 308,Lucky Chloe RA point check
 329,Check value (prop 0x807c)
 344,Kazuya Devil Form
@@ -97,7 +98,7 @@
 346,Check value (prop 0x80c5)
 351,Claudio Starburst
 352,Check value (prop 0x80a6)
-359,Check value (prop 0x8106)
+359,Check player flag (prop 0x8106)
 361,Check value (prop 0x80ed)
 532,Check Player speed(?)
 533,Check Player speed(?)
