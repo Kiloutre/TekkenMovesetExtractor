@@ -77,6 +77,7 @@
 156,Opponent is in rage
 157,Rage
 176,Geese in Max-Mode
+177,Throwbreak On(?)
 182,Near Wall
 217,Player character ID
 218,Player NOT character ID
@@ -122,6 +123,7 @@
 637,Check Match Point
 639,Parry Zoom
 641,Once per match (Leroy Cane)
+765,Arcade Mode Stage 4
 813,Parry high
 814,Parry mid
 815,Parry low
