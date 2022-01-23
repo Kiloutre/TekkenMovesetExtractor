@@ -23,6 +23,7 @@
 0x8041,Throw Effect on self
 0x8044,Block Effect on self
 0x8046,Special VFX (Armored, sparks...)
+0x8049,Item VFX
 0x804c,Fire Effect on self
 0x805c,Spark Effect on self
 0x805d,Throw Effect on self
@@ -36,23 +37,24 @@
 0x807c,Value Store (uses req 329)
 0x807d,Add value to 0x807c
 0x807e,Sub value from 0x807c
+0x80a6,Value Store (uses req 352)
 0x80bd,Kazuya devil mode
 0x80c2,Store Chloe points
 0x80c3,Give Lucky Chloe RA point
 0x80c5,Value Store (2D cancel|uses req 346)
-0x80a6,Value Store (uses req 352)
 0x80ed,Store Combo Route Value
-0x8106,Activate Player Flag (0x8106)
-0x8107,Add value to Flag (0x8106)
-0x8108,Sub value from Flag (0x8106)
-0x8109,Activate Opponent Flag (0x8109)
-0x810a,Add value to Flag (0x8109)
-0x810b,Sub value from Flag (0x8109)
+0x8106,Activate Player Flag
+0x8107,Add value to (0x8106)
+0x8108,Sub value from (0x8106)
+0x8109,Activate Opponent Flag
+0x810a,Add value to (0x8109)
+0x810b,Sub value from (0x8109)
 0x817c,Allow player to block
 0x817d,Give CH property
 0x8181,Stop pushback
 0x818a,Add Tracking/Alignment
 0x818c,Change player status/vulnerability
+0x818e,Change collision status
 0x81a7,Align Player To Wall (?)
 0x81ad,Reset player position
 0x81bd,Power Crush
@@ -75,6 +77,9 @@
 0x8200,Rotate player axis
 0x8206,Distance from centre
 0x820b,Spawn projectile
+0x820d,Projectile spawn x-axis
+0x820e,Projectile spawn y-axis
+0x820f,Projectile spawn z-axis
 0x8213,Attack destroys projectile
 0x8214,Attack deflects projectile
 0x821b,Enable scaled damage
@@ -91,7 +96,7 @@
 0x824d,AI input
 0x8251,Player visibility
 0x8255,Spend screw
-0x8262,wing flag anim
+0x8262,wing flap anim
 0x826a,Homing (Left Hand)
 0x826b,Homing (Right Hand)
 0x826c,Homing (Left foot)
@@ -107,6 +112,7 @@
 0x829d,Set HUD visibility
 0x829e,Screen Transition VFX
 0x829f,Play subtitles
+0x82a0,Skin shine effect
 0x82ae,Noctis warp effect
 0x82c8,Use fake frame advantage
 0x82c9,Use fake startup frame
@@ -116,6 +122,17 @@
 0x82d8,Set partner's move (Sugar)
 0x82eb,Spend once per match move
 0x82fa,Fahkumram skin pulse
+0x832c,Projectile draw duration
+0x832d,Projectile damage
+0x832e,Projectile hit-level
+0x8330,Projectile hit recovery
+0x8331,Projectile grounded reaction list
+0x8332,Projectile airborne reaction list
+0x8336,Projectile 30 degrees flag
+0x8337,Projectile horizontal speed
+0x8338,Projectile vertical speed
+0x833e,Projectile spawn position
+0x8340,Projectile grounded flag
 0x8343,Attach item to limb
 0x8344,Detach item to limb
 0x83c2,Set opponent's floor level
