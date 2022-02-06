@@ -32,8 +32,9 @@
 48,On whiff
 49,On hit/block
 51,On hit
-66,Standing
-67,Crouching
+61,Downed Opponent Face(up/down)
+66,Opponent Standing
+67,Opponent Crouching
 68,Incoming high attack
 69,Incoming mid attack
 72,Backturned
@@ -65,10 +66,12 @@
 132,Pressed ONLY RP (2)
 133,Pressed ONLY LP+RP (1+2)
 135,On death
-139,Player HP check (direct)
-141,Opponent HP check (direct)
-143,Player HP check (percentage)
-144,Opponent HP check (percentage)
+138,Player HP >= param
+139,Player HP < param
+140,Opponent HP >= param
+142,Player HP %age >= param
+143,Player HP %age < param
+144,Opponent HP <= param
 146,Standing on left side
 147,Standing on right side
 148,On ground (right side)
