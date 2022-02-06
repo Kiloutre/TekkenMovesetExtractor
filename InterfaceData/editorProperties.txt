@@ -75,7 +75,8 @@
 0x81f4,Disable laser
 0x81ff,Slide player
 0x8200,Rotate player axis
-0x8206,Distance from centre
+0x8205,Push player in z-axis
+0x8206,Push player in x-axis
 0x820b,Spawn projectile
 0x820d,Projectile spawn x-axis
 0x820e,Projectile spawn y-axis
@@ -122,7 +123,7 @@
 0x82d8,Set partner's move (Sugar)
 0x82eb,Spend once per match move
 0x82fa,Fahkumram skin pulse
-0x832c,Projectile draw duration
+0x832c,Projectile lifespan(in frames)
 0x832d,Projectile damage
 0x832e,Projectile hit-level
 0x8330,Projectile hit recovery
@@ -139,6 +140,7 @@
 0x83c3,Set opponent's move
 0x83c5,Force new standing move (32769)
 0x8406,Rotate Player
+0x8407,Put opponent next to player
 0x8428,Both Hands Mot Data
 0x8429,Left hand Mot Data
 0x842a,Right hand Mot Data
