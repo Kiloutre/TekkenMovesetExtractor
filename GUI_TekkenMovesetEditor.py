@@ -507,7 +507,7 @@ class MoveSelector:
         
             
         sv = StringVar()
-        sv.trace("w", lambda name, index, mode, sv=sv: self.onMoveidChange(sv))
+        sv.trace("w", lambda name, index, mode, sv=sv: self.onMoveidChange(sv=sv))
         playMoveField = Entry(playMoveFrame, textvariable=sv)
         playMoveField.pack(side='left')
         
@@ -533,18 +533,20 @@ class MoveSelector:
         self.playMoveButton = playMoveButton
         self.playMovePid = 0
         
-    def onMoveidChange(self, value):
+    def onMoveidChange(self, sv=None, moveId=None):
         if self.root.movelist == None:
             return
             
-        value = value.get()
-        if re.match("[0-9]+", value):
-            moveId = int(value)
+        if sv != None:
+            value = sv.get()
+            if re.match("[0-9]+", value):
+                moveId = int(value)
+        elif moveId == None: return
             
-            if moveId >= 0 and moveId < len(self.root.movelist['moves']):
-                self.playMoveId = moveId
-                self.playMoveButton.configure(state="enabled")
-                return
+        if moveId >= 0 and moveId < len(self.root.movelist['moves']):
+            self.playMoveId = moveId
+            self.playMoveButton.configure(state="enabled")
+            return
         
         self.playMoveButton.configure(state="disabled")
         
@@ -566,6 +568,9 @@ class MoveSelector:
         T.writeInt(playerAddr + curr_frame_timer_offset, 99999, 4)
         T.writeInt(playerAddr + next_move_offset, moveAddr, 8)
         T.writeInt(playerAddr + player_curr_move_offset, self.playMoveId, 4)
+        
+        for movesetOffset in [0x1528, 0x1530, 0x1538, 0x1540]:
+            T.writeInt(playerAddr + movesetOffset, moveset, 8)
             
        
     def hide(self):
@@ -2287,6 +2292,7 @@ class GUI_TekkenMovesetEditor():
         self.MoveEditor.setMove(moveData, moveId)
         self.MoveSelector.movelistSelect.select_set(moveId)
         self.MoveSelector.movelistSelect.see(moveId)
+        self.MoveSelector.onMoveidChange(moveId=moveId)
         
     def setReactionList(self, itemId):
         if itemId < 0 or itemId >= len(self.movelist['reaction_list']):

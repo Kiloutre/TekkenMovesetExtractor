@@ -937,7 +937,11 @@ class LiveEditor:
         self.playerAddress = None
        
     def setPlayerAddress(self, playerId):
-        self.playerAddress = game_addresses['t7_p1_addr'] + (playerId * game_addresses['t7_playerstruct_size'])
+        try:
+            self.playerAddress = game_addresses['t7_p1_addr'] + (playerId * game_addresses['t7_playerstruct_size'])
+        except:
+            self.loadProcess()
+            self.playerAddress = game_addresses['t7_p1_addr'] + (playerId * game_addresses['t7_playerstruct_size'])
         
     def setAnimation(self, anim):
         self.Animation = anim

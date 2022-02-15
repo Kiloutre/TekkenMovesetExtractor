@@ -122,13 +122,15 @@ relativityTypes = {
     4: "P1 Pos & Height & Rotation",
     7: "P1 Pos & Floor Height & Rotation",
     5: "P1 Look-At",
+    8: "P1 Look-At & Pos & Floor Height & Rotation",
     11: "P2 Pos",
     12: "P2 Pos & Height",
     16: "P2 Pos & Floor Height",
     13: "P2 Pos & Rotation",
     14: "P2 Pos & Height & Rotation",
     17: "P2 Pos & Floor Height & Rotation",
-    15: "P2 Look-At"
+    15: "P2 Look-At",
+    18: "P2 Look-At & Pos & Floor Height & Rotation",
 }
 relativityTypes2 = {relativityTypes[k]:k for k in relativityTypes}
 
@@ -204,7 +206,7 @@ def getValueFromType(type, value):
 def getStringValueFromType(type, value):
     if type == 'text': return value
     elif type == 'float':
-        value = ("%01.04f" % value).rstrip('0').rstrip('.')
+        value = ("%01.04f" % (value if value != None else 0)).rstrip('0').rstrip('.')
         return value[1:] if float(value) == 0 and value[0] == "-" else value
     elif type == 'int':
         return str(value)
@@ -616,10 +618,11 @@ class Animation:
         for i, group in enumerate(self.groups[startingGroup:end]):
             if self.cachedGroups[startingGroup + i] == None:
                 interpolationFunction = Interpolation.getInterpolation(group['interpolation'])
+                groupDuration = (group['duration'] - 1) if group['duration'] > 1 else 1
                 
                 if group['length'] == 2 or group['length'] == 1:
                     easingFunction = Interpolation.getEasing(group['easing'])
-                    frames = [interpolationFunction(group['frames'], easingFunction(idx / (group['duration'] - 1))) for idx in range(group['duration'])]
+                    frames = [interpolationFunction(group['frames'], easingFunction(idx / groupDuration)) for idx in range(group['duration'])]
                 elif group['length'] > 0:
                     if group['interpolation'] == 6: #none
                         frames = []
@@ -646,7 +649,7 @@ class Animation:
                             prevKeyframe = int(keyframe['frame'])
                     else:
                         easingFunction = Interpolation.getEasing(group['easing'])
-                        frames = [interpolationFunction(group['frames'], easingFunction(idx / (group['duration'] - 1))) for idx in range(group['duration'])]
+                        frames = [interpolationFunction(group['frames'], easingFunction(idx / groupDuration)) for idx in range(group['duration'])]
                 else:
                     frames = []
                 self.cachedGroups[startingGroup + i] = {
@@ -1883,7 +1886,7 @@ class LiveEditor:
         self.frame_counter = None
         self.charFrozen = False
         self.saveAnimation = False #unused for now
-        self.awaitSignal = False   #unused for now?
+        self.awaitSignal = False  #unused for now?
 
         self.root.AnimationSelector.setCanFreezeCharButton(True)
         
@@ -1914,9 +1917,9 @@ class LiveEditor:
         if enabled:
             self.T.writeBytes(game_addresses['game_speed_injection'], [0x90] * 6)
         else:
-            movAddr = game_addresses.orig_addr['game_speed_address'][1] - game_addresses.orig_addr['game_speed_injection'][1] - 6 #6 for bytes len
-            bytes = [0x89, 0x0D, *hexToList(movAddr, 4)]
-            self.T.writeBytes(game_addresses['game_speed_injection'], [0x89, 0x0D, 0x36, 0xE3, 0xDD, 0x02]) #mov [+34DBF1C],ecx
+            relativeAddr = game_addresses.orig_addr['game_speed_address'][1] - game_addresses.orig_addr['game_speed_injection'][1] - 6 #6 for bytes len
+            injectionBytes = [0x89, 0x0D, *hexToList(relativeAddr, 4)]
+            self.T.writeBytes(game_addresses['game_speed_injection'], [0x89, 0x0D, *hexToList(relativeAddr, 4)]) #mov [+34DBF1C],ecx
             
     def setGameSpeed(self, value):
         value = int(value)
@@ -2169,8 +2172,8 @@ class LiveEditor:
             x += playerPos['x']
             y += playerPos['y']
             z += playerPos['z']
-        elif relative == 3 or relative == 4 or relative == 7: #Pos & height & rot relativity
-            playerPos = self.getPlayerPos(floorHeight = (relative == 7))
+        elif relative == 3 or relative == 4 or relative == 7 or relative == 8: #Pos & height & rot relativity
+            playerPos = self.getPlayerPos(floorHeight = (relative == 7 or relative == 8))
             playerRot = self.getPlayerRot() * ((math.pi * 2) / 65535)
             
             distance = math.sqrt(x ** 2 + y ** 2)
@@ -2183,11 +2186,12 @@ class LiveEditor:
             
             x = newx + playerPos['x']
             y = newy + playerPos['y']
-            if relative == 4 or relative == 7: #height relativity
+            if relative == 4: #height relativity
                 z += playerPos['z']
                 
             rotx = (rotx - (self.getPlayerRot() * (360/ 65535))) % 360
-        elif relative == 5: #Look-at
+            
+        if relative == 5 or relative == 8: #Look-at
             playerPos = self.getPlayerPos()
             diffx = playerPos['x'] - x
             diffy = playerPos['y'] - y
@@ -2233,7 +2237,7 @@ class LiveEditor:
             cam['x'] -= playerPos['x']
             cam['y'] -= playerPos['y']
             cam['z'] -= playerPos['z']
-        elif relative == 3 or relative == 4: #Pos & rot & height
+        elif relative == 3 or relative == 4 or relative == 7 or relative == 8: #Pos & rot & height
             playerPos = self.getPlayerPos()
             playerRot = self.getPlayerRot()
             
@@ -2254,7 +2258,7 @@ class LiveEditor:
             cam['rotx'] = (cam['rotx'] + (playerRot * (360/ 65535))) % 360
             cam['x'] = newx
             cam['y'] = newy
-            if relative == 4:
+            if relative == 4  or relative == 8:
                 cam['z'] -= playerPos['z'] #Relative player height
         
         return cam
