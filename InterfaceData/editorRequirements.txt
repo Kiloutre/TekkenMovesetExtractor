@@ -1,4 +1,5 @@
 0,Always true
+1,Practice mode move demo
 2,Attack to Throw
 3,Throw Hits Forward (Standing)
 4,Throw Hits Backward (Standing)
@@ -31,8 +32,9 @@
 48,On whiff
 49,On hit/block
 51,On hit
-66,Standing
-67,Crouching
+61,Downed Opponent Face(up/down)
+66,Opponent Standing
+67,Opponent Crouching
 68,Incoming high attack
 69,Incoming mid attack
 72,Backturned
@@ -64,10 +66,12 @@
 132,Pressed ONLY RP (2)
 133,Pressed ONLY LP+RP (1+2)
 135,On death
-139,Player HP check (direct)
-141,Opponent HP check (direct)
-143,Player HP check (percentage)
-144,Opponent HP check (percentage)
+138,Player HP >= param
+139,Player HP < param
+140,Opponent HP >= param
+142,Player HP %age >= param
+143,Player HP %age < param
+144,Opponent HP <= param
 146,Standing on left side
 147,Standing on right side
 148,On ground (right side)
@@ -76,6 +80,7 @@
 156,Opponent is in rage
 157,Rage
 176,Geese in Max-Mode
+177,Throwbreak On(?)
 182,Near Wall
 217,Player character ID
 218,Player NOT character ID
@@ -87,9 +92,9 @@
 224,Opponent NOT Character ID
 225,Player is CPU
 253,Bryan taunted
-255,Check value (prop 0x807c)
+255,Value (prop 0x807c) >= param
 256,Bryan taunted
-284,Check value (prop 0x8109)
+284,Player Flag (prop 0x8106) >= param
 308,Lucky Chloe RA point check
 329,Check value (prop 0x807c)
 344,Kazuya Devil Form
@@ -97,7 +102,7 @@
 346,Check value (prop 0x80c5)
 351,Claudio Starburst
 352,Check value (prop 0x80a6)
-359,Check value (prop 0x8106)
+359,Check player flag (prop 0x8106)
 361,Check value (prop 0x80ed)
 532,Check Player speed(?)
 533,Check Player speed(?)
@@ -121,6 +126,9 @@
 637,Check Match Point
 639,Parry Zoom
 641,Once per match (Leroy Cane)
+765,Arcade Cutscene
+785,Projectile on-hit
+786,Projectile on-block
 813,Parry high
 814,Parry mid
 815,Parry low
