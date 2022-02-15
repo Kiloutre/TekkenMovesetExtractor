@@ -69,6 +69,7 @@
 138,Player HP >= param
 139,Player HP < param
 140,Opponent HP >= param
+141,Opponent HP check (direct)
 142,Player HP %age >= param
 143,Player HP %age < param
 144,Opponent HP <= param
@@ -94,11 +95,11 @@
 253,Bryan taunted
 255,Value (prop 0x807c) >= param
 256,Bryan taunted
-284,Player Flag (prop 0x8106) >= param
-308,Lucky Chloe RA point check
+284,Player Flag (prop 0x8106) <= param
+308,Chloe Points <= param
 329,Check value (prop 0x807c)
 344,Kazuya Devil Form
-345,Check Lucky Chloe RA points
+345,Chloe points == param
 346,Check value (prop 0x80c5)
 351,Claudio Starburst
 352,Check value (prop 0x80a6)
@@ -111,11 +112,14 @@
 553,Random number generator (weighted)
 558,Story Battle
 559,Story Battle Number
+560,Customization seq#
 563,Gamemode
+564,Gamemode(?)
 566,Outro Related(?)
 569,Intro(?)
 570,Outro Related(?)
 573,Check Stage ID
+579,Player check (P1/P2)
 607,Opponent is Airborne
 608,Opponent is Not Airborne
 609,Has item
