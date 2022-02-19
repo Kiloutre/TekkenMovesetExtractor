@@ -58,11 +58,15 @@ fieldLabels = {
     'u8': 'head? (u8)',
     'u10': 'airborne_start',
     'u11': 'airborne_end',
+    'u12': 'ground_fall',
     'u16': 'collision? (u16)',
     'u17': 'distance (u17)',
     'anim_max_len': 'anim_len',
     'standing': 'default',
     'type': 'starting_frame',
+    'val1': 'duration',
+    'val2': 'displacement',
+    'val3': 'num of loop'
 }
 
 moveFields = {
