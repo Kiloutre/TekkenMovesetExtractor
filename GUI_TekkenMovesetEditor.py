@@ -66,7 +66,7 @@ fieldLabels = {
     'type': 'starting_frame',
     'val1': 'duration',
     'val2': 'displacement',
-    'val3': 'num of loop'
+    'val3': 'num of loops'
 }
 
 moveFields = {
