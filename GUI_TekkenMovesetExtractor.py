@@ -189,7 +189,6 @@ class Monitor:
         self.Importer = TekkenImporter
         self.parent = parent
         self.selected_char = parent.selected_char
-        self.invertedPlayers = -1
         
         self.getPlayerAddress()
         
@@ -269,7 +268,6 @@ class Monitor:
         self.playerAddr = self.Importer.getPlayerAddress(0)
         
         if self.playerAddr == None:
-            self.invertedPlayers = -1
             return #player not loaded yet
         
         invertPlayers = self.Importer.readInt(game_addresses['playerid_ptr'], 4)
@@ -280,7 +278,6 @@ class Monitor:
         if playerId == 2:
             self.playerAddr += game_addresses['t7_playerstruct_size']
             
-        self.invertedPlayers = invertPlayers
         self.playerSideId = playerId
         
         return self.playerAddr

@@ -54,19 +54,28 @@ itemNames = {
     'voiceclips': 'voiceclip',
 }
 
+
 fieldLabels = {
-    'u8': 'head? (u8)',
-    'u10': 'airborne_start',
-    'u11': 'airborne_end',
-    'u12': 'ground_fall',
-    'u16': 'collision? (u16)',
-    'u17': 'distance (u17)',
-    'anim_max_len': 'anim_len',
-    'standing': 'default',
-    'type': 'starting_frame',
-    'val1': 'duration',
-    'val2': 'displacement',
-    'val3': 'num of loops'
+    'moves': {
+        'u8': 'head? (u8)',
+        'u10': 'airborne_start',
+        'u11': 'airborne_end',
+        'u12': 'ground_fall',
+        'u16': 'collision? (u16)',
+        'u17': 'distance (u17)',
+        'anim_max_len': 'anim_len',
+    },
+    'pushbacks': {
+        'val1': 'duration',
+        'val2': 'displacement',
+        'val3': 'num of loops'
+    },
+    'extra_move_properties': {
+        'type': 'starting_frame',
+    },
+    'reaction_list': {
+        'standing': 'default',
+    }
 }
 
 moveFields = {
@@ -812,7 +821,11 @@ class FormEditor:
             container = Frame(self.container)
             container.pack(side='top', anchor='n', fill='both')
 
-            fieldLabel = Label(container, text=fieldLabels.get(field, field), width=15)
+            if self.key in fieldLabels:
+                fieldLabelText = fieldLabels[self.key].get(field, field)
+            else:
+                fieldLabelText = field
+            fieldLabel = Label(container, text=fieldLabelText, width=15)
             fieldLabel.grid(row=0, column=0, pady=2, sticky='w')
             
             sv = StringVar()
@@ -1015,7 +1028,11 @@ class ReactionListEditor(FormEditor):
             container = Frame(self.westernFrame if i < sideBreakpoint else self.easternFrame)
             container.pack(side='top', anchor='n', fill='both')
 
-            fieldLabel = Label(container, text=fieldLabels.get(field, field), width=15)
+            if self.key in fieldLabels:
+                fieldLabelText = fieldLabels[self.key].get(field, field)
+            else:
+                fieldLabelText = field
+            fieldLabel = Label(container, text=fieldLabelText, width=15)
             fieldLabel.grid(row=0, column=0, sticky='w')
             
             sv = StringVar()
@@ -1279,7 +1296,11 @@ class MoveEditor(FormEditor):
             container = Frame(self.westernFrame if i < sideBreakpoint else self.easternFrame)
             container.pack(side='top', anchor='n', fill='both')
 
-            fieldLabel = Label(container, text=fieldLabels.get(field, field), width=15)
+            if self.key in fieldLabels:
+                fieldLabelText = fieldLabels[self.key].get(field, field)
+            else:
+                fieldLabelText = field
+            fieldLabel = Label(container, text=fieldLabelText, width=15)
             fieldLabel.grid(row=0, column=0, sticky='w')
             
             sv = StringVar()
