@@ -57,18 +57,23 @@ itemNames = {
 
 fieldLabels = {
     'moves': {
-        'u8': 'head? (u8)',
+        'u8': 'moveID_val1',
+        'u8_2': 'moveID_val2',
         'u10': 'airborne_start',
         'u11': 'airborne_end',
         'u12': 'ground_fall',
-        'u16': 'collision? (u16)',
-        'u17': 'distance (u17)',
+        'u15': 'facing/extras?',
+        'u16': 'collision?',
+        'u17': 'distance',
         'anim_max_len': 'anim_len',
     },
     'pushbacks': {
         'val1': 'duration',
         'val2': 'displacement',
         'val3': 'num of loops'
+    },
+    'pushback_extras': {
+        'value': 'horizontal offset'
     },
     'extra_move_properties': {
         'type': 'starting_frame',
