@@ -19,9 +19,6 @@ requirementLabels = {}
 propertyLabels = {}
 commandLabels = {}
 
-for i in range(0x83c4, 0x83c4 + 112):
-    propertyLabels[i] = 'Set %d alias' % (i)
-
 def getDetails(itemId, key):
     tekkenAliasesList = {
         'requirements': requirementLabels,
