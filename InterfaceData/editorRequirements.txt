@@ -94,7 +94,7 @@
 223,Opponent Character ID
 224,Opponent NOT Character ID
 225,Player is CPU
-253,Bryan taunted
+253,Bryan taunt value >= param
 255,Value (prop 0x807c) >= param
 256,Bryan taunted
 284,Player Flag (prop 0x8106) >= param
@@ -127,7 +127,7 @@
 609,Has item
 614,Juggle
 615,Screw available
-629,Meter equal or higher
+629,Meter >= param
 634,Treasure Battle Special Match
 637,Check Match Point
 639,Parry Zoom
