@@ -22,7 +22,7 @@
 0x803f,Heavy spark w/ chara hit spark
 0x8041,Throw Effect on self
 0x8044,Block Effect on self
-0x8046,Special VFX (Armored, sparks...)
+0x8046,Common VFX (Armored, sparks...)
 0x8049,Item VFX
 0x804c,Fire Effect on self
 0x805c,Spark Effect on self
@@ -84,6 +84,7 @@
 0x8205,Push player in z-axis
 0x8206,Push player in x-axis
 0x820b,Spawn projectile
+0x820c,Projectile spawn limb
 0x820d,Projectile spawn x-axis
 0x820e,Projectile spawn y-axis
 0x820f,Projectile spawn z-axis
@@ -217,9 +218,9 @@
 0x8406,Rotate Player
 0x8407,Put opponent next to player
 0x8410,Story Power Crush
-0x8428,Both Hands Mot Data
-0x8429,Left hand Mot Data
-0x842a,Right hand Mot Data
+0x8428,Both Hands pose
+0x8429,Left hand pose
+0x842a,Right hand pose
 0x842b,Left hand Mot Related(?)
 0x842c,Right hand Mot Related(?)
 0x842d,Play both hand anim
