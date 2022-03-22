@@ -1223,7 +1223,8 @@ class CancelEditor(FormEditor):
         self.setTitleFunction = None
         
     def onMoveClick(self, id):
-        if self.fieldValue['command'] == 0x800b:
+        startVal = 0x8005 if self.root.movelist['version'] == "Tekken5" else 0x800b
+        if self.fieldValue['command'] == startVal:
             self.root.openGroupCancel(id)
         else:
             self.root.setMove(id)
@@ -1238,7 +1239,8 @@ class CancelEditor(FormEditor):
         command = self.fieldValue['command']
         moveId = self.fieldValue['move_id']
         
-        if command == 0x800b:
+        startVal = 0x8005 if self.root.movelist['version'] == "Tekken5" else 0x800b
+        if command == startVal:
             self.details['text'] = '(move_id) group_cancel ' + str(moveId)
         else:
             moveName = self.root.getMoveName(moveId)
@@ -1380,7 +1382,8 @@ def getCancelList(movelist, cancelId):
     
 def getGroupCancelList(movelist, cancelId):
     id = cancelId
-    while movelist['group_cancels'][id]['command'] != 0x800c:
+    endingVal = 0x8006 if movelist['version'] == "Tekken5" else 0x800c
+    while movelist['group_cancels'][id]['command'] != endingVal:
         id += 1
     cancelList = [cancel for cancel in movelist['group_cancels'][cancelId:id + 1]]
     return cancelList
@@ -1623,7 +1626,7 @@ class MoveCopyingWindow:
             print("getRequirements")
             self.getCancelExtra(cancel['extradata_idx'], dependencies)
             print("getCancelExtra")
-            if cancel['command'] == 0x800b:
+            if cancel['command'] == 0x8005 if self.movelist['version'] == "Tekken5" else 0x800b:
                 print("Getting group cancel")
                 self.getGroupCancels(cancel['move_id'], dependencies, recursiveLevel + 1)
                 print("Got group cancel")
@@ -1714,7 +1717,7 @@ class MoveCopyingWindow:
             for cancel in dependencies['cancels'][cancelId]:
                 cancel['requirement_idx'] = idAliases['requirements'].get(cancel['requirement_idx'], -1)
                 cancel['extradata_idx'] = idAliases['cancel_extradata'].get(cancel['extradata_idx'], -1)
-                if cancel['command'] != 0x800b:
+                if cancel['command'] != 0x8005 if self.movelist['version'] == "Tekken5" else 0x800b:
                     cancel['move_id'] = idAliases['group_cancels'].get(cancel['move_id'], -1)
                 elif cancel['move_id'] < 0x8000:
                     cancel['move_id'] = idAliases['moves'].get(cancel['move_id'], -1)
@@ -1915,7 +1918,8 @@ class GroupCancelWindow:
             return
         cancelList = []
         id = cancelId
-        while self.root.movelist['group_cancels'][id]['command'] != 0x800c:
+        endingVal = 0x8006 if self.root.movelist['version'] == "Tekken5" else 0x800c
+        while self.root.movelist['group_cancels'][id]['command'] != endingVal:
             id += 1
         cancelList = [cancel for cancel in self.root.movelist['group_cancels'][cancelId:id + 1]]
         self.CancelEditor.setItemList(cancelList, cancelId)
@@ -2206,8 +2210,9 @@ class GUI_TekkenMovesetEditor():
             
     def listCancelsUsingGroupCancel(self, cancelListId, cancelId):
         listId = 0
+        startingVal = 0x8005 if self.movelist['version'] == "Tekken5" else 0x800b
         for cancel_id, cancel in enumerate(self.movelist['cancels']):
-            if cancel['command'] == 0x800b and cancelListId <= cancel['move_id'] <= cancelId:
+            if cancel['command'] == startingVal and cancelListId <= cancel['move_id'] <= cancelId:
                 yield listId, cancel_id
             elif cancel['command'] == 0x8000:
                 listId = cancel_id + 1
@@ -2223,6 +2228,7 @@ class GUI_TekkenMovesetEditor():
             moveIds.append(0x8000 + self.movelist['aliases'].index(self.MoveEditor.id))
                 
         listId = 0
+        endingVal = 0x8006 if self.root.movelist['version'] == "Tekken5" else 0x800c
         for cancel_id, cancel in enumerate(self.movelist['group_cancels']):
             if cancel['move_id'] in moveIds:
                 moveReferences = []
@@ -2242,12 +2248,13 @@ class GUI_TekkenMovesetEditor():
                     'list_id': listId,
                     'references': moveReferences
                 })
-            if cancel['command'] == 0x800c:
+            if cancel['command'] == endingVal:
                 listId = cancel_id + 1
         
         listId = 0
+        startingVal = 0x8005 if self.movelist['version'] == "Tekken5" else 0x800b
         for cancel_id, cancel in enumerate(self.movelist['cancels']):
-            if cancel['command'] != 0x800b and cancel['move_id'] in moveIds:
+            if cancel['command'] != startingVal and cancel['move_id'] in moveIds:
                 references = ['Move %s (%d)' % (ref[1], ref[0]) for ref in self.listMovesUsingCancel(listId, cancel_id)]
                 refList.append({
                     'origin': 'cancels',
@@ -2678,7 +2685,7 @@ class GUI_TekkenMovesetEditor():
         
     def createGroupCancelList(self):
         newCancel = {f:0 for f in cancelFields}
-        newCancel['command'] = 0x800c
+        newCancel['command'] = 0x8006 if version == "Tekken5" else 0x800c
         
         self.movelist['group_cancels'].append(newCancel)
         self.openGroupCancel(len(self.movelist['group_cancels']) - 1)
@@ -2689,7 +2696,8 @@ class GUI_TekkenMovesetEditor():
             
         cancelId = self.GroupCancelEditor.CancelEditor.baseId
         id = cancelId
-        while self.movelist['group_cancels'][id]['command'] != 0x800c:
+        endingVal = 0x8006 if self.movelist['version'] == "Tekken5" else 0x800c
+        while self.movelist['group_cancels'][id]['command'] != endingVal:
             id += 1
         cancelList = [cancel.copy() for cancel in self.movelist['group_cancels'][cancelId:id + 1]]
         
@@ -2710,9 +2718,9 @@ class GUI_TekkenMovesetEditor():
         
         if result == 'yes':
             self.movelist['group_cancels'] = self.movelist['group_cancels'][:startingId] + self.movelist['group_cancels'][startingId + listLen:]
-        
+            startingVal = 0x8005 if self.movelist['version'] == "Tekken5" else 0x800b
             for cancel in self.movelist['cancels']:
-                if cancel['command'] == 0x800b and cancel['move_id'] > startingId:
+                if cancel['command'] == startingVal and cancel['move_id'] > startingId:
                     cancel['move_id'] -= listLen
             
             messagebox.showinfo('Return', 'Group cancel-list successfully deleted.')
@@ -2724,7 +2732,8 @@ class GUI_TekkenMovesetEditor():
         
         listIndex = self.GroupCancelEditor.CancelEditor.listIndex
         index = self.GroupCancelEditor.CancelEditor.id
-        resetForm = (self.movelist['group_cancels'][index]['command'] == 0x800c)
+        endingVal = 0x8006 if self.movelist['version'] == "Tekken5" else 0x800c
+        resetForm = (self.movelist['group_cancels'][index]['command'] == endingVal)
         self.movelist['group_cancels'].pop(index)
         
         for cancel in self.movelist['cancels']:
@@ -2750,9 +2759,9 @@ class GUI_TekkenMovesetEditor():
             newCancel = self.movelist['group_cancels'][insertPoint].copy()
         
         self.movelist['group_cancels'].insert(insertPoint, newCancel)
-        
+        startVal = 0x8005 if self.movelist['version'] == "Tekken5" else 0x800b
         for cancel in self.movelist['cancels']:
-            if cancel['command'] == 0x800b and cancel['move_id'] > insertPoint:
+            if cancel['command'] == startVal and cancel['move_id'] > insertPoint:
                 cancel['move_id'] += 1
         
         self.openGroupCancel(self.GroupCancelEditor.CancelEditor.baseId)
@@ -2910,9 +2919,9 @@ class GUI_TekkenMovesetEditor():
             
         moveId = self.MoveEditor.id
         self.movelist['moves'].pop(moveId)
-        
+        startVal = 0x8005 if self.movelist['version'] == "Tekken5" else 0x800b
         for cancel in self.movelist['cancels']:
-            if cancel['move_id'] > moveId and cancel['command'] != 0x800b and cancel['move_id'] < 0x8000:
+            if cancel['move_id'] > moveId and cancel['command'] != startVal and cancel['move_id'] < 0x8000:
                 cancel['move_id'] -= 1
         
         for cancel in self.movelist['group_cancels']:
