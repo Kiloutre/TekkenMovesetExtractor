@@ -1723,6 +1723,13 @@ class Voiceclip:
         readOffsetTable(self, 'voiceclip')
 
     def dict(self):
+        # Assuming DR uses same voiceclip scheme as vanilla T5
+        if self.TekkenVersion == "t5" or self.TekkenVersion == "t5dr":
+            if self.value == 0xFFFF:
+                self.value = 0xFFFFFFFF
+            else: # Converts 2 byte value into 4 byte equivalent
+                self.value = (self.value << 16) & 0xFF000000 | (
+                    self.value & 0x000000FF)
         return self.value
         
 class InputExtradata:
