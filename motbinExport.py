@@ -780,8 +780,8 @@ t5_offsetTable = {
     'inputextradata:u1': { 'offset': 0x0, 'size': 2 },
     'inputextradata:u2': { 'offset': 0x2, 'size': 2 },
     
-    'inputsequence:u1': { 'offset': 0x2, 'size': 2 },
-    'inputsequence:u2': { 'offset': 0x4, 'size': 2 },
+    'inputsequence:u1': { 'offset': 0x0, 'size': 2 },
+    'inputsequence:u2': { 'offset': 0x2, 'size': 2 },
     'inputsequence:u3': { 'offset': 0x0, 'size': 1 },
     'inputsequence:extradata_addr': { 'offset': 4, 'size': 4 },
     
@@ -930,8 +930,8 @@ t5dr_offsetTable = {
     'inputextradata:u1': { 'offset': 0x0, 'size': 2 },
     'inputextradata:u2': { 'offset': 0x2, 'size': 2 },
     
-    'inputsequence:u1': { 'offset': 0x2, 'size': 2 },
-    'inputsequence:u2': { 'offset': 0x4, 'size': 2 },
+    'inputsequence:u1': { 'offset': 0x0, 'size': 2 },
+    'inputsequence:u2': { 'offset': 0x2, 'size': 2 },
     'inputsequence:u3': { 'offset': 0x0, 'size': 1 },
     'inputsequence:extradata_addr': { 'offset': 4, 'size': 4 },
     
