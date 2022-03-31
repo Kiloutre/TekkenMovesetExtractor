@@ -691,7 +691,7 @@ t5_offsetTable = {
     'throws_size': { 'offset': None, 'size': 4 },
     
     'mota_start': { 'offset': 0x230, 'size': None },
-    'aliases': { 'offset': 0x18, 'size': (70, 4) },
+    'aliases': { 'offset': 0x18, 'size': (36, 4) },
     'aliases2': { 'offset': 0x13e, 'size': (33, 2) },
     
     'pushback:val1': { 'offset': 0x0, 'size': 2 },
@@ -841,7 +841,7 @@ t5dr_offsetTable = {
     'throws_size': { 'offset': None, 'size': 4 }, #unknown
     
     'mota_start': { 'offset': 0x230, 'size': None },
-    'aliases': { 'offset': 0x18, 'size': (70, 4) },
+    'aliases': { 'offset': 0x18, 'size': (36, 4) },
     'aliases2': { 'offset': 0x13e, 'size': (33, 2) },
     
     'pushback:val1': { 'offset': 0x0, 'size': 2 },
@@ -1721,8 +1721,7 @@ class Voiceclip:
         data = initTekkenStructure(self, parent, addr, parent.Voiceclip_size)
         
         readOffsetTable(self, 'voiceclip')
-
-    def dict(self):
+        
         # Assuming DR uses same voiceclip scheme as vanilla T5
         if self.TekkenVersion == "t5" or self.TekkenVersion == "t5dr":
             if self.value == 0xFFFF:
@@ -1730,6 +1729,8 @@ class Voiceclip:
             else: # Converts 2 byte value into 4 byte equivalent
                 self.value = (self.value << 16) & 0xFF000000 | (
                     self.value & 0x000000FF)
+
+    def dict(self):
         return self.value
         
 class InputExtradata:
@@ -1738,7 +1739,6 @@ class InputExtradata:
         
         readOffsetTable(self, 'inputextradata')
         
-    def dict(self):
         if self.TekkenVersion == "t5":
             command = self.u2 << 16 | self.u1
             t = (command & 0x00FF0000) << 16
@@ -1746,6 +1746,8 @@ class InputExtradata:
             t |= (command & 0x0000FFFF)
             self.u1 = t & 0xffffffff
             self.u2 = t >> 32
+        
+    def dict(self):
         return {
             'u1': self.u1,
             'u2': self.u2

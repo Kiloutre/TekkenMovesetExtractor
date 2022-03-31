@@ -71,7 +71,12 @@ class Importer:
         
         motbin_ptr_addr = playerAddr + game_addresses['t7_motbin_offset']
         current_motbin_ptr = self.readInt(motbin_ptr_addr, 8)
-        old_character_name = self.readString(self.readInt(current_motbin_ptr + 0x8, 8))
+        
+        try:
+            old_character_name = self.readString(self.readInt(current_motbin_ptr + 0x8, 8))
+        except:
+            old_character_name = "???"
+            
         moveset.copyMotaOffsets(current_motbin_ptr)
         moveset.applyCharacterIDAliases(playerAddr)
         
@@ -204,15 +209,25 @@ class Importer:
     
     def writeAliases(self, motbin_ptr, m):
         alias_offset = 0x28
-        for alias in m['aliases']:
-            self.writeInt(motbin_ptr + alias_offset, alias, 2)
-            alias_offset += 2
-            
-        if 'aliases2' in m:
-            alias_offset = 0x108
-            for alias in m['aliases2']:
+        
+        if m["version"] == "Tekken5" or m["version"] == "Tekken5DR":
+            for i in range(2):
+                for i in range(36):
+                    self.writeInt(motbin_ptr + alias_offset, m['aliases'][i], 2)
+                    alias_offset += 2
+                for i in range(20):
+                    self.writeInt(motbin_ptr + alias_offset, 0, 2)
+                    alias_offset += 2
+        else:
+            for alias in m['aliases']:
                 self.writeInt(motbin_ptr + alias_offset, alias, 2)
                 alias_offset += 2
+                
+            if 'aliases2' in m:
+                alias_offset = 0x108
+                for alias in m['aliases2']:
+                    self.writeInt(motbin_ptr + alias_offset, alias, 2)
+                    alias_offset += 2
             
 def versionMatches(version):
     pos = version.rfind('.')
@@ -919,8 +934,8 @@ if __name__ == "__main__":
         print("Usage: [FOLDER_NAME]")
         os._exit(1)
         
-    playerAddress = game_addresses['t7_p1_addr']
     TekkenImporter = Importer()
+    playerAddress = game_addresses['t7_p1_addr']
     TekkenImporter.importMoveset(playerAddress, sys.argv[1])
     
     if len(sys.argv) > 2:
