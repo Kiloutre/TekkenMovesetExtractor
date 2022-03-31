@@ -780,8 +780,8 @@ t5_offsetTable = {
     'inputextradata:u1': { 'offset': 0x0, 'size': 2 },
     'inputextradata:u2': { 'offset': 0x2, 'size': 2 },
     
-    'inputsequence:u1': { 'offset': 0x1, 'size': 1 },
-    'inputsequence:u2': { 'offset': 0x2, 'size': 2 },
+    'inputsequence:u1': { 'offset': 0x2, 'size': 2 },
+    'inputsequence:u2': { 'offset': 0x4, 'size': 2 },
     'inputsequence:u3': { 'offset': 0x0, 'size': 1 },
     'inputsequence:extradata_addr': { 'offset': 4, 'size': 4 },
     
@@ -930,8 +930,8 @@ t5dr_offsetTable = {
     'inputextradata:u1': { 'offset': 0x0, 'size': 2 },
     'inputextradata:u2': { 'offset': 0x2, 'size': 2 },
     
-    'inputsequence:u1': { 'offset': 0x1, 'size': 1 },
-    'inputsequence:u2': { 'offset': 0x2, 'size': 2 },
+    'inputsequence:u1': { 'offset': 0x2, 'size': 2 },
+    'inputsequence:u2': { 'offset': 0x4, 'size': 2 },
     'inputsequence:u3': { 'offset': 0x0, 'size': 1 },
     'inputsequence:extradata_addr': { 'offset': 4, 'size': 4 },
     
@@ -1546,6 +1546,9 @@ class Cancel:
                 self.command = 0x800b
             elif self.command == 0x8006:
                 self.command = 0x800c
+            # Adjusting input sequences. Looks like they start from 0x8013 instead of 0x800d
+            elif self.command >= 0x8013 and self.command <= 0x81FF:
+                self.command += 6
         elif self.TekkenVersion == 't5':
             t = (self.command & 0x00FF0000) << 16
             t |= (self.command & 0xFF000000) << 33
@@ -1556,6 +1559,9 @@ class Cancel:
                 self.command = 0x800b
             elif self.command == 0x8006:
                 self.command = 0x800c
+            # Adjusting input sequences. Looks like they start from 0x8013 instead of 0x800d
+            elif self.command >= 0x8013 and self.command <= 0x81FF:
+                self.command += 6
         
         self.extradata_id = -1
         self.requirement_idx =- -1
