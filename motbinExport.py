@@ -690,9 +690,9 @@ t5_offsetTable = {
     'throws_ptr': { 'offset': None, 'size': 4 },
     'throws_size': { 'offset': None, 'size': 4 },
     
-    'mota_start': { 'offset': 0x240, 'size': None },
-    'aliases': { 'offset': 0x18, 'size': (72, 4) },
-    'aliases2': { 'offset': 0x13e, 'size': (37, 2) },
+    'mota_start': { 'offset': 0x230, 'size': None },
+    'aliases': { 'offset': 0x18, 'size': (70, 4) },
+    'aliases2': { 'offset': 0x13e, 'size': (33, 2) },
     
     'pushback:val1': { 'offset': 0x0, 'size': 2 },
     'pushback:val2': { 'offset': 0x2, 'size': 2 },
@@ -775,7 +775,7 @@ t5_offsetTable = {
     'move:u17': { 'offset': None, 'size': 2 },
     'move:u18': { 'offset': None, 'size': 4 },
     
-    'voiceclip:value': { 'offset': 0x0, 'size': 4 },
+    'voiceclip:value': { 'offset': 0x0, 'size': 2 },
     
     'inputextradata:u1': { 'offset': 0x0, 'size': 2 },
     'inputextradata:u2': { 'offset': 0x2, 'size': 2 },
@@ -840,9 +840,9 @@ t5dr_offsetTable = {
     'throws_ptr': { 'offset': None, 'size': 4 }, #unknown
     'throws_size': { 'offset': None, 'size': 4 }, #unknown
     
-    'mota_start': { 'offset': 0x240, 'size': None },
-    'aliases': { 'offset': 0x18, 'size': (73, 4) },
-    'aliases2': { 'offset': 0x13e, 'size': (37, 2) },
+    'mota_start': { 'offset': 0x230, 'size': None },
+    'aliases': { 'offset': 0x18, 'size': (70, 4) },
+    'aliases2': { 'offset': 0x13e, 'size': (33, 2) },
     
     'pushback:val1': { 'offset': 0x0, 'size': 2 },
     'pushback:val2': { 'offset': 0x2, 'size': 2 },
@@ -925,7 +925,7 @@ t5dr_offsetTable = {
     'move:u17': { 'offset': None, 'size': 2 },
     'move:u18': { 'offset': None, 'size': 4 },
     
-    'voiceclip:value': { 'offset': 0x0, 'size': 4 },
+    'voiceclip:value': { 'offset': 0x0, 'size': 2 },
     
     'inputextradata:u1': { 'offset': 0x0, 'size': 2 },
     'inputextradata:u2': { 'offset': 0x2, 'size': 2 },
@@ -1551,6 +1551,11 @@ class Cancel:
             t |= (self.command & 0xFF000000) << 33
             t |= (self.command & 0x0000FFFF)
             self.command = t
+
+            if self.command == 0x8005:
+                self.command = 0x800b
+            elif self.command == 0x8006:
+                self.command = 0x800c
         
         self.extradata_id = -1
         self.requirement_idx =- -1
@@ -1721,6 +1726,13 @@ class InputExtradata:
         readOffsetTable(self, 'inputextradata')
         
     def dict(self):
+        if self.TekkenVersion == "t5":
+            command = self.u2 << 16 | self.u1
+            t = (command & 0x00FF0000) << 16
+            t |= (command & 0xFF000000) << 33
+            t |= (command & 0x0000FFFF)
+            self.u1 = t & 0xffffffff
+            self.u2 = t >> 32
         return {
             'u1': self.u1,
             'u2': self.u2
