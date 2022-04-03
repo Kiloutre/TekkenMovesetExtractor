@@ -143,7 +143,7 @@ t5StructSizes = {
     'HitCondition_size': 0xC,
     'ExtraMoveProperty_size': 0x8,
     'Move_size': 0x4c,
-    'Voiceclip_size': 0x4,
+    'Voiceclip_size': 0x2,
     'InputExtradata_size': 0x4,
     'InputSequence_size': 0x8,
     'Projectile_size': 0x88,
