@@ -71,10 +71,8 @@ t5_requirements = {
     149: {'t7_id': 225, 'desc': 'Player is CPU'},
     172: {'t7_id': 289, 'desc': 'Something Backturned related?'},
     184: {'t7_id': 352, 'desc': 'Check value (prop 0x80a6)'},
+    280: {'t7_id': 614, 'desc': 'Opponent airborne'},
     321: {'t7_id': 881, 'desc': 'Requirements end'},
-}
-
-t5_extra_move_properties = {
     0x8001: {'t7_id': 0x8001, 'desc': 'Minimum Camera Shake'},
     0x8002: {'t7_id': 0x8003, 'desc': 'Heavy Camera Shake'},
     0x8003: {'t7_id': 0x8004, 'desc': 'Heaviest Camera Shake'},
@@ -114,4 +112,27 @@ t5_extra_move_properties = {
     # For T5: 0x0F00
     0x8152: {'t7_id': 0x84CB, 'desc': 'Play Attached Audio'},
     0x8153: {'t7_id': 0x84CC, 'desc': 'Preset Camera Zoom'},
+}
+
+t5_extra_move_properties = {
+    0x0: {'t7_id': 0x0, 'desc': 'Property list ends'},
+}
+
+# List still WIP
+t5_hitbox_aliases = {
+    0x5: {'t7_id': 0x6, 'desc': 'Right inner shoulder'},
+    0x6: {'t7_id': 0x7, 'desc': 'Right shoulder? (DJ b,f2)'},
+    0x7: {'t7_id': 0x8, 'desc': 'Right elbow'},
+    0x8: {'t7_id': 0x9, 'desc': 'Right jab'},
+    0x9: {'t7_id': 0xa, 'desc': 'Left inner shoulder'},
+    0xa: {'t7_id': 0xb, 'desc': 'Left shoulder'},
+    0xb: {'t7_id': 0xc, 'desc': 'Left Elbow (DJ b,f2,1'},
+    0xc: {'t7_id': 0xd, 'desc': "Left jab (DJ Heaven's Door)"},
+    # 0xe: {'t7_id': 0xe, 'desc': 'Right thigh'},
+    # 0xf: {'t7_id': 0xf, 'desc': 'Right knee'},
+    # 0x10: {'t7_id': 0x10, 'desc': 'Right foot'},
+    0x12: {'t7_id': 0x11, 'desc': '(DJ f,f3)'},
+    0x13: {'t7_id': 0x12, 'desc': 'Left knee (KAZ d/f+3_'},
+    0x14: {'t7_id': 0x13, 'desc': 'Left foot (KAZ b+3)'},
+    0x76: {'t7_id': 0x50, 'desc': '(DJ - An_DVKissY)'},
 }

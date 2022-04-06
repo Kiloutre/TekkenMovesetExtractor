@@ -143,7 +143,7 @@ t5StructSizes = {
     'HitCondition_size': 0xC,
     'ExtraMoveProperty_size': 0x8,
     'Move_size': 0x4c,
-    'Voiceclip_size': 0x4,
+    'Voiceclip_size': 0x2,
     'InputExtradata_size': 0x4,
     'InputSequence_size': 0x8,
     'Projectile_size': 0x88,
@@ -1723,11 +1723,15 @@ class Voiceclip:
         readOffsetTable(self, 'voiceclip')
         
         # Assuming DR uses same voiceclip scheme as vanilla T5
+        # Converts 2 byte value into 4 byte equivalent
         if self.TekkenVersion == "t5" or self.TekkenVersion == "t5dr":
             if self.value == 0xFFFF:
                 self.value = 0xFFFFFFFF
-            else: # Converts 2 byte value into 4 byte equivalent
+            elif 0x0F00 <= self.value < 0x1000:  # If in range of 0x0F00
                 self.value = (self.value << 16) & 0xFF000000 | (
+                    self.value & 0x000000FF)
+            else: # E.g; 0x2006 -> 0x0200006
+                self.value = (self.value << 12) & 0xFF000000 | (
                     self.value & 0x000000FF)
 
     def dict(self):
@@ -1853,7 +1857,7 @@ class Motbin:
             if mota_start != None:
                 for i in range(12):
                     mota_addr = self.readInt(addr + mota_start + (i * self.ptr_size), self.ptr_size)
-                    mota_end_addr = self.readInt(addr + mota_start + ((i + 2) * self.ptr_size), self.ptr_size) if i < 9 else mota_addr + 20
+                    mota_end_addr = self.readInt(addr + mota_start + ((i + 2) * self.ptr_size), self.ptr_size) if i < 10 else mota_addr + 20
                     self.mota_list.append((mota_addr, mota_end_addr - mota_addr))
                 
             
@@ -2035,11 +2039,7 @@ class Motbin:
         if existingAnim != 0:
             animLen = len(self.anims)
             print("%d/%d anims missing and imported." % (animLen - existingAnim, animLen))
-            
-        motaByteswapsIndexes = [
-            0, 1, 2, 3, 4, 6, 8
-        ]
-            
+                        
         print("Saving MOTA animations...")
         for i, mota in enumerate(self.mota_list):
             mota_addr, mota_size = mota
@@ -2052,7 +2052,7 @@ class Motbin:
                     continue
                     
                 try:
-                    if self.endian != 'little' and i in motaByteswapsIndexes:
+                    if self.readInt(self.base+mota_addr+4, 4) == 256: # if 2nd byte is 256, convert this into little endian
                         mota_data = SwapMotaBytes(mota_data)
                 except:
                     print("Error byteswapping MOTA %d, file will not be byteswapped." % (i))
