@@ -1,6 +1,7 @@
 # For updating purposes
 version     = 5 #Must be different for it to register it as an update
 repo_link   = https://raw.githubusercontent.com/Kiloutre/TekkenMovesetExtractor/master/
+sheet_link  = https://docs.google.com/spreadsheets/d/1xOvUozLiC-pwflK53JtZs_-Qnd3jQ5KyQspNooEtPAI/
 
 # Tekken 7 addresses and offsets. Changes with updates
 t7_process_name       = TekkenGame-Win64-Shipping.exe
