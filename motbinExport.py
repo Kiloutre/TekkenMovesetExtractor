@@ -690,7 +690,7 @@ t5_offsetTable = {
     'throws_ptr': { 'offset': None, 'size': 4 },
     'throws_size': { 'offset': None, 'size': 4 },
     
-    'mota_start': { 'offset': 0x230, 'size': None },
+    'mota_start': { 'offset': 0x238, 'size': None },
     'aliases': { 'offset': 0x18, 'size': (36, 4) },
     'aliases2': { 'offset': 0x13e, 'size': (33, 2) },
     
@@ -770,7 +770,7 @@ t5_offsetTable = {
     'move:u12': { 'offset': None, 'size': 4 },
     #'move:u13': { 'offset': 0x54 'size': 4 },
     #'move:u14': { 'offset': 0x58, 'size': 4 },
-    'move:u15': { 'offset': None, 'size': 4 },
+    'move:u15': { 'offset': 0x3c, 'size': 4 },
     'move:u16': { 'offset': None, 'size': 2 },
     'move:u17': { 'offset': None, 'size': 2 },
     'move:u18': { 'offset': None, 'size': 4 },
@@ -840,7 +840,7 @@ t5dr_offsetTable = {
     'throws_ptr': { 'offset': None, 'size': 4 }, #unknown
     'throws_size': { 'offset': None, 'size': 4 }, #unknown
     
-    'mota_start': { 'offset': 0x230, 'size': None },
+    'mota_start': { 'offset': 0x238, 'size': None },
     'aliases': { 'offset': 0x18, 'size': (36, 4) },
     'aliases2': { 'offset': 0x13e, 'size': (33, 2) },
     
@@ -920,7 +920,7 @@ t5dr_offsetTable = {
     'move:u12': { 'offset': None, 'size': 4 },
     #'move:u13': { 'offset': 0x54 'size': 4 },
     #'move:u14': { 'offset': 0x58, 'size': 4 },
-    'move:u15': { 'offset': None, 'size': 4 },
+    'move:u15': { 'offset': 0x3c, 'size': 4 },
     'move:u16': { 'offset': None, 'size': 2 },
     'move:u17': { 'offset': None, 'size': 2 },
     'move:u18': { 'offset': None, 'size': 4 },
@@ -1666,6 +1666,11 @@ class Move:
         self.hit_condition_idx = -1
         self.extra_properties_idx = -1
         self.voiceclip_idx = -1
+        
+        if self.TekkenVersion == "t5" or self.TekkenVersion == "t5dr":
+            # self.u15 = (self.u15 & 0xFFFFFFFF) >> 3  # 0x20000000 -> 0x04000000 (I'll check this one later)
+            if self.u15 == 0x20000000: # Player face towards opponent
+                self.u15 = 0x04000000
     
     def dict(self):
         return {
