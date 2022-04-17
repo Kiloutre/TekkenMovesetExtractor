@@ -20,39 +20,30 @@ propertyLabels = {}
 commandLabels = {}
 charIDlabels = {}
 
-def getDetails(itemId, key):
+def getLabel(itemId, key):
     tekkenAliasesList = {
         'requirements': requirementLabels,
-        'extra_move_properties': propertyLabels
+        'extra_move_properties': propertyLabels,
+        'char_ids': charIDlabels
     }
     
     return tekkenAliasesList[key].get(itemId)
 
 def appendFurtherDetails(itemId, param, key):
-    tekkenAliasesList = {
-        'requirements': requirementLabels,
-        'extra_move_properties': propertyLabels,
-        'char_ids': charIDlabels,
-    }
-    char_id = {
-        "Player character ID",
-        "Player NOT character ID",
-        "Opponent character ID",
-        "Opponent NOT character ID",
-    }
-    desc = tekkenAliasesList[key].get(itemId)
     detail = ""
+    
     if key == 'requirements':  # for requirements
-        if desc in char_id:
-            detail = " = %s" % tekkenAliasesList['char_ids'].get(param, "Invalid")
-        elif desc == "Player is CPU":
+    
+        if 217 <= itemId <= 224: #Character ID requirements
+            detail = " = %s" % charIDlabels.get(param, "Invalid")
+            
+        elif itemId == 225: #Player is CPU
             detail = {
                 0: " : No",
                 1: " : Yes",
                 3: " : Intro/Outro",
             }.get(param, " : Invalid")
-        else:
-            detail = ""
+            
     return detail
 
 reqListEndval = {
@@ -1106,7 +1097,7 @@ class ExtrapropEditor(FormEditor):
             return
 
         reqId = self.fieldValue['id']
-        description = getDetails(reqId, 'extra_move_properties')
+        description = getLabel(reqId, 'extra_move_properties')
         
         text = '(INSTANT) ' if self.fieldValue['type'] == 32769 else ''
         
@@ -1151,23 +1142,23 @@ class RequirementEditor(FormEditor):
             return
 
         reqId = self.fieldValue['req']
+        param = self.fieldValue['param']
         prefix = '%d' % (reqId)
-        key = 'requirements'
         
         if reqId >= 0x8000: #extraprop
             key = 'extra_move_properties'
             prefix = '%d (prop %x)' % (reqId, reqId)
+        else:
+            key = 'requirements'
             
-        description = getDetails(reqId, key)
+        description = getLabel(reqId, key)
         
         if description != None:
             text = prefix + ': ' + description
         else:
             text = '' if key == 'requirements' else prefix
             
-        more_text = appendFurtherDetails(reqId, param, key)
-        if more_text != "":
-            text += more_text
+        text += appendFurtherDetails(reqId, param, key)
             
         self.details['text'] = text
             
