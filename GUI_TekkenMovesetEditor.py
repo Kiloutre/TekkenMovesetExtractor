@@ -3,7 +3,7 @@
 from tkinter import Tk, Frame, Listbox, Label, Scrollbar, StringVar, Toplevel, Menu, messagebox, Text, simpledialog
 from tkinter.ttk import Button, Entry, Style
 from Addresses import game_addresses, GameClass
-import additionalReqDetails as fd  # further details
+import additionalReqDetails as ard  # additional req details
 import webbrowser
 import shutil
 import copy
@@ -33,12 +33,12 @@ def appendFurtherDetails(itemId, param, key):
     detail = ""
     if key == 'requirements':  # for requirements
         try:
-            desc = fd.reqDetailsList[itemId].get(param, "Invalid")
+            desc = ard.reqDetailsList[itemId].get(param, "Invalid")
         except KeyError:
             return detail
         detail = " : %s" % desc if desc != None else ""
         if itemId == 559:  # Story Battle Number
-            detail = " (%s)" % fd.storyBattles.get(param, "Invalid")            
+            detail = " (%s)" % ard.storyBattles.get(param, "Invalid")            
     return detail
 
 reqListEndval = {
