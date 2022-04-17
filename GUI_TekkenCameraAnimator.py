@@ -2297,7 +2297,7 @@ class LiveEditor:
         currFrame = self.T.readInt(self.frame_counter, 4)
         targetFrame = currFrame + amount
         while currFrame < targetFrame:
-            if self.runningAnimation == False or self.T.readInt(game_addresses['game_frame_counter'], 4) < 10:
+            if self.runningAnimation == False or self.T.readInt(self.frame_counter, 4) < 10:
                 raise
             currFrame = self.T.readInt(self.frame_counter, 4)
         
