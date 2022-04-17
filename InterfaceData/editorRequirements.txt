@@ -89,10 +89,10 @@
 218,Player NOT character ID
 219,Opponent character ID
 220,Opponent NOT character ID
-221,Character ID
-222,NOT Character ID
-223,Opponent Character ID
-224,Opponent NOT Character ID
+221,Player character ID
+222,Player NOT Character ID
+223,Opponent character ID
+224,Opponent NOT character ID
 225,Player is CPU
 253,Bryan taunt value >= param
 255,Value (prop 0x807c) >= param

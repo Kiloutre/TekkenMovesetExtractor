@@ -18,6 +18,7 @@ editorVersion = "0.32-BETA"
 requirementLabels = {}
 propertyLabels = {}
 commandLabels = {}
+charIDlabels = {}
 
 def getDetails(itemId, key):
     tekkenAliasesList = {
@@ -26,6 +27,33 @@ def getDetails(itemId, key):
     }
     
     return tekkenAliasesList[key].get(itemId)
+
+def appendFurtherDetails(itemId, param, key):
+    tekkenAliasesList = {
+        'requirements': requirementLabels,
+        'extra_move_properties': propertyLabels,
+        'char_ids': charIDlabels,
+    }
+    char_id = {
+        "Player character ID",
+        "Player NOT character ID",
+        "Opponent character ID",
+        "Opponent NOT character ID",
+    }
+    desc = tekkenAliasesList[key].get(itemId)
+    detail = ""
+    if key == 'requirements':  # for requirements
+        if desc in char_id:
+            detail = " = %s" % tekkenAliasesList['char_ids'].get(param, "Invalid")
+        elif desc == "Player is CPU":
+            detail = {
+                0: " : No",
+                1: " : Yes",
+                3: " : Intro/Outro",
+            }.get(param, " : Invalid")
+        else:
+            detail = ""
+    return detail
 
 reqListEndval = {
     'Tekken7': 881,
@@ -333,7 +361,25 @@ def calculateHash(movesetData):
     
     data = bytes(str.encode(data))
     return "%x" % (crc32(data))
-    
+
+def getDirectionalinput(directionBits):
+    valueList = ["INVALID", "d/b", "d", "d/f", "b", "n",
+                 "f", "u/b", "u", "u/f", "unknown"]
+    for i in range(1, 23):
+        valueList.append("INVALID")
+    value = ""
+    for i in range(0, 32):
+        if directionBits & (1 << (i)):
+            value += "| %s " % valueList[i]
+
+    if value.__contains__("INVALID"):
+        return "INVALID"
+
+    # Checking if command has more than 1 inputs
+    if (len(value) > 6):
+        return "(%s)" % value[2:-1]
+    return value[1:]
+
 def getCommandStr(commandBytes):
     inputs = ""
     direction = ""
@@ -346,31 +392,23 @@ def getCommandStr(commandBytes):
             inputs += "+%d" % (i)
             
     if inputBits & (1 << 4):
-        inputs += "+R"  # Label for Rage Art button
+        inputs += "+RA"  # Label for Rage Art button
     
-    if directionBits in commandLabels:
-        direction = '(%s)' % commandLabels[directionBits]
-    elif 32781 <= directionBits <= 36863:
-        direction = " input_sequence[%d]" % (directionBits - 32781)
-    else:
+    if directionBits < 0x8000:
+        direction = getDirectionalinput(directionBits)
+    elif directionBits < 0x800d:
         direction = {
-            (0): "",
-            (1 << 1): "D/B",
-            (1 << 2): "D",
-            (1 << 3): "D/F",
-            (1 << 4): "B",
-            (1 << 6): "F",
-            (1 << 7): "U/B",
-            (1 << 8): "U",
-            (1 << 9): "U/F",
-            (1 << 15): "[AUTO]",
+            (32768): "[AUTO]",
             (32769): " Double tap F",
             (32770): " Double tap B",
             (32771): " Double tap U",
             (32772): " Double tap D",
         }.get(directionBits, "UNKNOWN")
-    
+    elif directionBits <= 36863:
+        direction = " input_sequence[%d]" % directionBits - 0x800d
         
+    if (inputBits & (1 << 29)): # if "Partial Input" mode, replace (+) with pipe (|)
+        inputs = inputs[0] + inputs[1:].replace('+', ' | ', inputs.count('+'))
     if direction == "" and inputs != "":
         return inputs[1:]
     return direction + inputs
@@ -1126,6 +1164,10 @@ class RequirementEditor(FormEditor):
             text = prefix + ': ' + description
         else:
             text = '' if key == 'requirements' else prefix
+            
+        more_text = appendFurtherDetails(reqId, param, key)
+        if more_text != "":
+            text += more_text
             
         self.details['text'] = text
             
@@ -2112,13 +2154,21 @@ class GUI_TekkenMovesetEditor():
         self.resetForms()
         
     def loadLabels(self):
-        global requirementLabels, propertyLabels, commandLabels
+        global requirementLabels, propertyLabels, commandLabels, charIDlabels
         try:
             with open("InterfaceData/editorRequirements.txt", "r") as f:
                 for line in f:
                     commaPos = line.find(',')
                     val, label = line[:commaPos], line[commaPos + 1:].strip()
                     requirementLabels[int(val)] = label
+        except:
+            pass
+        try:
+            with open("InterfaceData/editorCharIDs.txt", "r") as f:
+                for line in f:
+                    commaPos = line.find(',')
+                    val, label = line[:commaPos], line[commaPos + 1:].strip()
+                    charIDlabels[int(val)] = label
         except:
             pass
         try:
