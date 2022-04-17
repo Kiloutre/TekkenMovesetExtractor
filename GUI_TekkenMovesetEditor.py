@@ -4,6 +4,7 @@ from tkinter import Tk, Frame, Listbox, Label, Scrollbar, StringVar, Toplevel, M
 from tkinter.ttk import Button, Entry, Style
 from Addresses import game_addresses, GameClass
 import additionalReqDetails as fd  # further details
+import webbrowser
 import shutil
 import copy
 import motbinImport as importLib
@@ -2112,6 +2113,10 @@ class GUI_TekkenMovesetEditor():
             ("Hit-condition list", self.goToHitConditionList),
         ]
         
+        helpMenu = [
+            ("Open Spreadsheet", self.openSpreadsheet),
+        ]
+        
         menuActions = [
             ('Toggle character selector', self.Charalist.toggleVisibility),
             ("", "separator"),
@@ -2122,6 +2127,7 @@ class GUI_TekkenMovesetEditor():
             ("Delete", deletionMenu ),
             ("Tools", toolsMenu ),
             ("Go to", gotoMenu ),
+            ("Help", helpMenu),
         ]
         
         menu = createMenu(window, menuActions, validationFunc=self.canEditMoveset)
@@ -2171,6 +2177,9 @@ class GUI_TekkenMovesetEditor():
         if label != "":
             title += " - " + label
         self.window.wm_title(title) 
+        
+    def openSpreadsheet(self):
+        webbrowser.open(game_addresses['sheet_link'], new=2)
 
     def save(self):
         if self.Charalist.filename == None or self.Charalist.movelist_path == None:
