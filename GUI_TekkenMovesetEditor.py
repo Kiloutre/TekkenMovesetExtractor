@@ -3,6 +3,7 @@
 from tkinter import Tk, Frame, Listbox, Label, Scrollbar, StringVar, Toplevel, Menu, messagebox, Text, simpledialog
 from tkinter.ttk import Button, Entry, Style
 from Addresses import game_addresses, GameClass
+import additionalReqDetails as fd  # further details
 import shutil
 import copy
 import motbinImport as importLib
@@ -18,32 +19,25 @@ editorVersion = "0.32-BETA"
 requirementLabels = {}
 propertyLabels = {}
 commandLabels = {}
-charIDlabels = {}
 
 def getLabel(itemId, key):
     tekkenAliasesList = {
         'requirements': requirementLabels,
         'extra_move_properties': propertyLabels,
-        'char_ids': charIDlabels
     }
     
     return tekkenAliasesList[key].get(itemId)
 
 def appendFurtherDetails(itemId, param, key):
     detail = ""
-    
     if key == 'requirements':  # for requirements
-    
-        if 217 <= itemId <= 224: #Character ID requirements
-            detail = " = %s" % charIDlabels.get(param, "Invalid")
-            
-        elif itemId == 225: #Player is CPU
-            detail = {
-                0: " : No",
-                1: " : Yes",
-                3: " : Intro/Outro",
-            }.get(param, " : Invalid")
-            
+        try:
+            desc = fd.reqDetailsList[itemId].get(param, "Invalid")
+        except KeyError:
+            return detail
+        detail = " : %s" % desc if desc != None else ""
+        if itemId == 559:  # Story Battle Number
+            detail = " (%s)" % fd.storyBattles.get(param, "Invalid")            
     return detail
 
 reqListEndval = {
@@ -2145,7 +2139,7 @@ class GUI_TekkenMovesetEditor():
         self.resetForms()
         
     def loadLabels(self):
-        global requirementLabels, propertyLabels, commandLabels, charIDlabels
+        global requirementLabels, propertyLabels, commandLabels
         try:
             with open("InterfaceData/editorRequirements.txt", "r") as f:
                 for line in f:
@@ -2154,14 +2148,7 @@ class GUI_TekkenMovesetEditor():
                     requirementLabels[int(val)] = label
         except:
             pass
-        try:
-            with open("InterfaceData/editorCharIDs.txt", "r") as f:
-                for line in f:
-                    commaPos = line.find(',')
-                    val, label = line[:commaPos], line[commaPos + 1:].strip()
-                    charIDlabels[int(val)] = label
-        except:
-            pass
+
         try:
             with open("InterfaceData/editorProperties.txt", "r") as f:
                 for line in f:
