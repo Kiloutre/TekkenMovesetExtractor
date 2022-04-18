@@ -8,27 +8,45 @@
 0x8008,Moderate camera shake
 0x8009,Heavy camera shake
 0x800b,Ground Ripple
-0x8012,Fire effect
-0x801a,Electric Effect on self
+0x8011,Fire burn VFX (self)
+0x8012,Fire burn VFX (opponent)
+0x8017,Hit spark (self)
+0x8019,Elecric Effect (self)
+0x801a,Elecric Effect (opponent)
 0x801b,Rage Drive VFX
-0x8023,Hit Spark on Opponent
-0x802e,Hit Spark on self
+0x8021,Hit spark (self)
+0x8023,Hit spark (opponent)
+0x802e,Char hit spark (self)
+0x802f,Char hit spark (self)
 0x8032,Hit Sparks(?)
-0x8036,Trail VFX
-0x8038,Special Trail VFX
-0x8039,Play hit spark (opponent)
-0x803b,Play hit spark
-0x803d,Heavy Hit Sparks
-0x803f,Heavy spark w/ chara hit spark
-0x8041,Throw Effect on self
-0x8044,Block Effect on self
+0x8034,Hit spark (self)
+0x8035,Hit spark (opponent)
+0x8036,Char trail VFX (self)
+0x8037,Char trail VFX????
+0x8038,Special trail VFX (self)
+0x8039,Opp hit spark (self)
+0x803a,Opp trail VFX (self)
+0x803b,Hit spark (self)
+0x803c,Hit spark (opponent)
+0x803d,Heavy hit sparks (self)
+0x803e,Heavy hit sparks (opponent)
+0x803f,Heavy + char hit spark (self)
+0x8040,Heavy + char hit spark (opponent)
+0x8041,Throw VFX
+0x8042,Smoke VFX
+0x8043,Faint Smoke VFX
+0x8044,Block VFX
 0x8046,Common VFX (Armored, sparks...)
+0x8047,Common VFX (Armored, sparks...)
 0x8049,Item VFX
-0x804c,Fire Effect on self
-0x805c,Spark Effect on self
-0x805d,Throw Effect on self
-0x8060,White Spark(?) on self
-0x8063,Small Spark(?) on self
+0x804c,Fire explosion VFX (self)
+0x805c,Hit spark (self)
+0x805d,Throw VFX
+0x805e,Smoke VFX
+0x8060,Block VFX
+0x8063,Small Spark
+0x8068,Reset cloth physics
+0x8069,Reset cloth physics
 0x806a,Inflict damage to opponent
 0x806b,Inflict self Damage
 0x806e,Inflict self Damage
@@ -41,6 +59,9 @@
 0x80a6,Value Store (uses req 352)
 0x80a7,Add value to 0x80a6
 0x80a8,Sub value from 0x80a6
+0x80a9,Value Store (uses req 353)
+0x80aa,Add value to 0x80a9
+0x80ab,Sub value from 0x80a9
 0x80bd,Kazuya devil flag
 0x80be,Add to devil flag
 0x80bf,Sub from devil flag
