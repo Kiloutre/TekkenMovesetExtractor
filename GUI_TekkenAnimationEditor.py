@@ -189,17 +189,6 @@ def isFloat(value):
     return len(value) > 0 and re.match('^\-?[0-9]+(\.[0-9]+)?$', value)
      
 class Animation:
-    AnimC8OffsetTable = {
-        0x17: 0x64,
-        0x19: 0x6C,
-        0x1B: 0x74,
-        0x1d: 0x7c,
-        0x1f: 0x80,
-        0x21: 0x8c,
-        0x23: 0x94,
-        0x31: 0xcc 
-    }
-    
     movementOffsets = [0, 0x8, 0xC, 0x14]
 
     def __init__(self, filename=None, data=None):
@@ -213,7 +202,7 @@ class Animation:
             self.data = data
             
         self.type = self.byte(0)
-        self.type2 = self.byte(2)
+        self.bone_count = self.byte(2)
         self.length = self.getLength()
         self.offset = self.getOffset()
         self.frame_size = self.getFramesize()
@@ -236,13 +225,13 @@ class Animation:
         
     def getOffset(self):
         if self.type == 0xC8:
-            return Animation.AnimC8OffsetTable[self.type2]
+            return self.bone_count * 0x4 + 0x8
         else:
             return 0
         
     def getFramesize(self):
         if self.type  == 0xC8:
-            return self.type2 * 0xC
+            return self.bone_count * 0xC
         else:
             return 0
         
@@ -1027,7 +1016,8 @@ class LiveEditor:
         
         animationLength = self.T.readInt(animationAddr + 4, 4)
         animationType2 = self.T.readInt(animationAddr + 2, 1)
-        animationSize = Animation.AnimC8OffsetTable[animationType2] + ((animationType2 * 0xC) * animationLength)
+        
+        animationSize = animationType2 * 0x4 + 0x8 + ((animationType2 * 0xC) * animationLength)
         
         return animationAddr, animationType, animationType2, animationLength, animationSize
         
@@ -1080,6 +1070,11 @@ class LiveEditor:
         currmoveAddr = self.T.readInt(self.playerAddress + 0x220, 8)
         
         animationAddr = self.allocateMem(anim.size)
+        
+        movesetAddr = self.T.readInt(self.playerAddress + 0x1520, 8)
+        mota3 = self.T.readInt(movesetAddr + 0x2a0, 8)
+        animationAddr = mota3 + self.T.readInt(mota3 + 20, 8)
+            
         
         self.lastAllocation = animationAddr
         self.lastAllocationSize = anim.size

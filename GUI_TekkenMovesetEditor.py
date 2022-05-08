@@ -1,6 +1,6 @@
 # Python 3.6.5
 
-from tkinter import Tk, Frame, Listbox, Label, Scrollbar, StringVar, Toplevel, Menu, messagebox, Text, simpledialog
+from tkinter import Tk, Frame, Listbox, Label, Scrollbar, StringVar, Toplevel, Menu, messagebox, Text, simpledialog, filedialog
 from tkinter.ttk import Button, Entry, Style
 from Addresses import game_addresses, GameClass
 import additionalReqDetails as ard  # additional req details
@@ -248,6 +248,43 @@ folderNameOrder = [
     't4'
 ]
 
+# --- mota ---
+    
+def RemoveMotaAnimation(mota_id, moveset_name):
+    try:
+        mota = Motafile("%s/mota_%d.bin" % (moveset_name, mota_id))
+    except:
+        return 0
+        
+    mota.removeLastAnimation()
+    mota.save()
+    
+    return mota.anim_count
+    
+def ListMotaAnimations(mota_id, moveset_name):
+    try:
+        return Motafile("%s/mota_%d.bin" % (moveset_name, mota_id)).anim_count
+    except:
+        return 0
+    
+def AddMotaAnimation(mota_id, moveset_name, animation_filename):
+    try:
+        mota = Motafile("%s/mota_%d.bin" % (moveset_name, mota_id))
+    except:
+        return 0
+        
+    with open(animation_filename, "rb") as f:
+        animation_data = f.read()
+        
+        mota.addAnimation(animation_data)
+        mota.save()
+        
+        return mota.anim_count
+        
+    return None
+
+# -----
+
 def groupByPrefix(strings):
     stringsByPrefix = {}
     for string in strings:
@@ -409,6 +446,86 @@ def getMoveColor(moveId, move, aliases):
     if move['hitlevel'] or move['hitbox_location'] or move['first_active_frame'] or move['last_active_frame']:
         return '#ffe7e6'
     return None
+    
+    
+class Motafile:
+    def __init__(self, filename):
+        print(filename)
+        with open(filename, "rb") as f:
+            self.data = list(f.read())
+            
+        self.filename = filename
+        self.endian = "big" if self.data[5] == 1 else "little"
+        
+        self.loadValues()
+        
+    def loadValues(self):
+        if bytes(self.data[0:4]) != b'MOTA': raise
+            
+        self.anim_count = self.readInt(0xC)
+        print("an", self.anim_count)
+        self.anim_offsets = self.getAnimOffsets()
+        self.anim_offsets_sorted = sorted(list(set(self.anim_offsets)))
+        
+        #for x in self.anim_offsets_sorted:
+        #    for b in self.data[x:x + 4]: print("%02x" % b, end = " ")
+        #    print("")
+        #for i, x in enumerate(self.anim_offsets): print("%x - %x " % (i, x))
+        #print("--\n")
+    
+    def getAnimOffsets(self):
+        for i in range(self.anim_count):
+            print(i, "offset %x, value = %x" % (0x14 + i * 4, self.readInt(0x14 + i * 4)))
+            if i > 500: return [self.readInt(0x14 + z * 4) for z in range(500)]
+        return [self.readInt(0x14 + i * 4) for i in range(self.anim_count)]
+        
+    def readInt(self, position):
+        return int.from_bytes(self.data[position:position + 4], self.endian)
+        
+    def writeInt(self, offset, value):
+        for i in range(4):
+            byteValue = (value >> (i * 8) ) & 0xFF
+            
+            if self.endian == "little":
+                self.data[offset + i] = byteValue
+            else:
+                self.data[offset + 3 - i] = byteValue
+        
+    def addAnimation(self, animationData):
+        listEnd = 0x14 + 4 * self.anim_count
+        animOffset = len(self.data) + 4 #+4 because the header list gets bigger by 4 bytes
+        
+        self.data = self.data[:listEnd] + [0] * 4 + self.data[listEnd:] + list(animationData)
+        self.writeInt(listEnd, animOffset) #write offset
+        
+        #gotta rewrite each offset
+        
+        offset = 0x14
+        for i in range(self.anim_count):
+            self.writeInt(offset, self.readInt(offset) + 4) #every animation is shifted because header size increments by 4
+            offset += 4
+        
+        self.writeInt(0xC, self.anim_count + 1)
+        self.loadValues()
+        
+    def removeLastAnimation(self):
+        offsetOffset = 0x14 + 4 * self.anim_count #offset of the anim's offset
+        lastAnimOffset = self.anim_offsets_sorted[-1]
+        
+        newData = self.data[:lastAnimOffset]
+        self.data = newData[:offsetOffset - 4] + newData[offsetOffset:]
+        
+        offset = 0x14
+        for i in range(self.anim_count - 1):
+            self.writeInt(offset, self.readInt(offset) - 4) #every animation is shifted because header size decrements by 4
+            offset += 4
+        
+        self.writeInt(0xC, self.anim_count - 1)
+        self.loadValues()
+        
+    def save(self):
+        with open(self.filename, "wb") as f:
+            f.write(bytes(self.data))
         
 class CharalistSelector:
     def __init__(self, root, rootFrame):
@@ -2117,6 +2234,22 @@ class GUI_TekkenMovesetEditor():
             ("Open Spreadsheet", self.openSpreadsheet),
         ]
         
+        faceAnimMenu = [
+            ("List face anims", self.listFaceAnims),
+            ("Add face anim", self.addFaceAnim),
+            ("Remove face anim", self.removeFaceAnim),
+            ("", "separator"),
+            ("How to use", self.displayFaceAnimInfoDialog),
+        ]
+        
+        handAnimMenu = [
+            ("List hand anims", self.listHandAnims),
+            ("Add hand anim", self.addHandAnim),
+            ("Remove hand anim", self.removeHandAnim),
+            ("", "separator"),
+            ("How to use", self.displayHandAnimInfoDialog),
+        ]
+        
         menuActions = [
             ('Toggle character selector', self.Charalist.toggleVisibility),
             ("", "separator"),
@@ -2125,6 +2258,8 @@ class GUI_TekkenMovesetEditor():
             ("", "separator"),
             ("New", creationMenu ),
             ("Delete", deletionMenu ),
+            ("Face anims", faceAnimMenu ),
+            ("Hand anims", handAnimMenu ),
             ("Tools", toolsMenu ),
             ("Go to", gotoMenu ),
             ("Help", helpMenu),
@@ -2212,6 +2347,72 @@ class GUI_TekkenMovesetEditor():
         if self.GroupCancelEditor:
             self.GroupCancelEditor.on_close()
             
+    # --- Face anims ----
+    
+    def listFaceAnims(self):
+        anim_count = ListMotaAnimations(4, self.Charalist.movelist_path)
+        messagebox.showinfo('Face anims info', 'There are %d facial animations in this moveset (0 - %d)' % (anim_count, anim_count - 1))
+        
+    def displayFaceAnimInfoDialog(self):
+        messagebox.showinfo('Face animations', 'Face animations can be created using\ngithub.com/Kiloutre/BlenderTekkenDirect')
+            
+    def addFaceAnim(self):
+        filepath = filedialog.askopenfilename(initialdir = ".",title = "Select file",filetypes =  ((".f_bin Animation","*.f_bin"),("All files","*.*")))
+        if filepath != None and filepath != '':
+            anim_count = AddMotaAnimation(4, self.Charalist.movelist_path, filepath)
+            if anim_count != 0:
+                messagebox.showinfo('Face anim imported', 'Animation successfully imported at index %d' % (anim_count - 1))
+                #if "mota_type" not in self.movelist: self.movelist["mota_type"] = 1
+                #else:  self.movelist["mota_type"] |= 1
+            else:
+                messagebox.showinfo('Face anim not imported', 'Error: the animation could not be imported. There might be a problem with the mota_4.bin file.')
+            
+    def removeFaceAnim(self):
+        maxvalue = ListMotaAnimations(4, self.Charalist.movelist_path) - 1
+        if maxvalue == 0:
+            messagebox.showinfo('Face anim not deleted', 'Error: no facial animation found.')
+            return
+        
+        animId = 0#simpledialog.askinteger("Remove face anim", "Face anim id (0 - %d)" % (maxvalue), minvalue=0, maxvalue=maxvalue)
+        
+        if messagebox.askquestion("Remove face anim", "Are you sure you want to remove the last facial animation?") == "yes":
+            anim_count = RemoveMotaAnimation(4, self.Charalist.movelist_path)
+            messagebox.showinfo('Face anim removed', 'Animation successfully removed : there are now %d facial animations. (0 - %d)' % (anim_count, anim_count - 1))
+            #if "mota_type" not in self.movelist: self.movelist["mota_type"] = 1
+            #else:  self.movelist["mota_type"] |= 1
+            
+    # --- Hand anims ----
+    
+    def listHandAnims(self):
+        anim_count = ListMotaAnimations(2, self.Charalist.movelist_path)
+        messagebox.showinfo('Hand anims info', 'There are %d hand animations in this moveset (0 - %d)' % (anim_count, anim_count - 1))
+        
+    def displayHandAnimInfoDialog(self):
+        messagebox.showinfo('Hand animations', '...')
+            
+    def addHandAnim(self):
+        filepath = filedialog.askopenfilename(initialdir = ".",title = "Select file",filetypes =  (("hf_bin Animation","*.h_bin"),("All files","*.*")))
+        if filepath != None and filepath != '':
+            anim_count = AddMotaAnimation(2, self.Charalist.movelist_path, filepath)
+            if anim_count != 0:
+                messagebox.showinfo('Hand anim imported', 'Animation successfully imported at index %d' % (anim_count - 1))
+                #if "mota_type" not in self.movelist: self.movelist["mota_type"] = 2
+                #else:  self.movelist["mota_type"] |= 2
+            else:
+                messagebox.showinfo('Face anim not imported', 'Error: the animation could not be imported. There might be a problem with the mota_4.bin file.')
+            
+    def removeHandAnim(self):
+        maxvalue = ListMotaAnimations(3, self.Charalist.movelist_path)
+        if maxvalue == 0:
+            messagebox.showinfo('Hand anim not deleted', 'Error: no hand animation found.')
+            return
+        
+        if messagebox.askquestion("Remove hand anim", "Are you sure you want to remove the last hand animation?") == "yes":
+            anim_count = RemoveMotaAnimation(2, self.Charalist.movelist_path)
+            messagebox.showinfo('Hand anim removed', 'Animation successfully removed : there are now %d facial animations. (0 - %d)' % (anim_count, anim_count - 1))
+            #if "mota_type" not in self.movelist: self.movelist["mota_type"] = 2
+            #else:  self.movelist["mota_type"] |= 2
+    # --- ----
     def goToCancel(self):
         maxvalue = len(self.movelist['cancels']) - 1
         cancelId = simpledialog.askinteger("Go to Cancel", "Input cancel list id (0 - %d)" % (maxvalue), minvalue=0, maxvalue=maxvalue)

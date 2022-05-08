@@ -795,7 +795,14 @@ class MotbinStruct:
             try:
                 with open("%s/mota_%d.bin" % (self.folderName, i), "rb") as f:
                     motaBytes = f.read()
-                    motaAddr = self.curr_ptr
+                    
+                    if motaBytes[0:4] == b'MOTA':
+                        motaAddr = self.curr_ptr
+                        self.mota_list.append(motaAddr)
+                    else:
+                        motaAddr = 0
+                        print("DEBUG: Mota %d not valid" % i)
+                        
                     self.writeBytes(motaBytes)
                     self.mota_list.append(motaAddr)
             except:
@@ -905,8 +912,13 @@ class MotbinStruct:
             source_motbin_ptr = self.importer.readInt(playerAddr + game_addresses['t7_motbin_offset'], 8)
     
         excludedOffsets = [ # Don't copy these offsets from the current player. Put hands stuff in there
-            
+            0x290, #hand
+            0x2a0, #face
         ]
+        
+        #mota_type = 0 if "mota_type" not in self.m else self.m["mota_type"]
+        #if mota_type & 1: excludedOffsets.append(0x2a0) #face
+        #if mota_type & 2: excludedOffsets.append(0x290) #hand
     
         offsets = [
             (0x280, 8),
@@ -917,9 +929,9 @@ class MotbinStruct:
             (0x2a8, 8), #Face
             (0x2b0, 8),
             (0x2b8, 8),
-            (0x2c0, 8),
-            (0x2c8, 8),
-            (0x2d0, 8),
+            (0x2c0, 8), #
+            (0x2c8, 8), #
+            (0x2d0, 8), #
             (0x2d8, 8)
         ]
         
