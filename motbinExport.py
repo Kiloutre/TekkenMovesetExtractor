@@ -2051,7 +2051,7 @@ class Motbin:
         for i, mota in enumerate(self.mota_list):
             mota_addr, mota_size = mota
             filePath = "%s/mota_%d.bin" % (path, i)
-            if True:#not os.path.exists(filePath):
+            if True:#not os.path.exists(filePath): #we used not to re-export mota everytime, now we do because it's starting to get used
                 try:
                     mota_data = self.readBytes(self.base + mota_addr, mota_size)
                 except:
