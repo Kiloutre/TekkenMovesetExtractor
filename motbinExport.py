@@ -2043,13 +2043,15 @@ class Motbin:
                 print("Error extracting animation %s, file will not be created" % (anim.name), file=sys.stderr)
         if existingAnim != 0:
             animLen = len(self.anims)
-            print("%d/%d anims missing and imported." % (animLen - existingAnim, animLen))
+            missingAnims = animLen - existingAnim
+            if missingAnims != 0:
+                print("%d/%d missing anims have been imported." % (missingAnims, animLen))
                         
         print("Saving MOTA animations...")
         for i, mota in enumerate(self.mota_list):
             mota_addr, mota_size = mota
             filePath = "%s/mota_%d.bin" % (path, i)
-            if not os.path.exists(filePath):
+            if True:#not os.path.exists(filePath):
                 try:
                     mota_data = self.readBytes(self.base + mota_addr, mota_size)
                 except:

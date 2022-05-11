@@ -450,7 +450,6 @@ def getMoveColor(moveId, move, aliases):
     
 class Motafile:
     def __init__(self, filename):
-        print(filename)
         with open(filename, "rb") as f:
             self.data = list(f.read())
             
@@ -459,24 +458,22 @@ class Motafile:
         
         self.loadValues()
         
+    def __str__(self):
+        s = ""
+        
+        for i, offset in enumerate(self.anim_offsets):
+            s += "%02d. % 6x\n" % (i, offset)
+        
+        return s
+        
     def loadValues(self):
-        if bytes(self.data[0:4]) != b'MOTA': raise
+        if bytes(self.data[0:4]) != b'MOTA': raise #todo: create new self.data here
             
         self.anim_count = self.readInt(0xC)
-        print("an", self.anim_count)
         self.anim_offsets = self.getAnimOffsets()
         self.anim_offsets_sorted = sorted(list(set(self.anim_offsets)))
-        
-        #for x in self.anim_offsets_sorted:
-        #    for b in self.data[x:x + 4]: print("%02x" % b, end = " ")
-        #    print("")
-        #for i, x in enumerate(self.anim_offsets): print("%x - %x " % (i, x))
-        #print("--\n")
     
     def getAnimOffsets(self):
-        for i in range(self.anim_count):
-            print(i, "offset %x, value = %x" % (0x14 + i * 4, self.readInt(0x14 + i * 4)))
-            if i > 500: return [self.readInt(0x14 + z * 4) for z in range(500)]
         return [self.readInt(0x14 + i * 4) for i in range(self.anim_count)]
         
     def readInt(self, position):
@@ -2236,7 +2233,7 @@ class GUI_TekkenMovesetEditor():
         
         faceAnimMenu = [
             ("List face anims", self.listFaceAnims),
-            ("Add face anim", self.addFaceAnim),
+            ("Add face anim (*.f_bin)", self.addFaceAnim),
             ("Remove face anim", self.removeFaceAnim),
             ("", "separator"),
             ("How to use", self.displayFaceAnimInfoDialog),
@@ -2244,7 +2241,7 @@ class GUI_TekkenMovesetEditor():
         
         handAnimMenu = [
             ("List hand anims", self.listHandAnims),
-            ("Add hand anim", self.addHandAnim),
+            ("Add hand anim (*.h_bin)", self.addHandAnim),
             ("Remove hand anim", self.removeHandAnim),
             ("", "separator"),
             ("How to use", self.displayHandAnimInfoDialog),
@@ -2354,7 +2351,12 @@ class GUI_TekkenMovesetEditor():
         messagebox.showinfo('Face anims info', 'There are %d facial animations in this moveset (0 - %d)' % (anim_count, anim_count - 1))
         
     def displayFaceAnimInfoDialog(self):
-        messagebox.showinfo('Face animations', 'Face animations can be created using\ngithub.com/Kiloutre/BlenderTekkenDirect')
+        messagebox.showinfo('Face animations', """
+Import an animation using the "Add facial animation" button and memorize the ID that the editor gives you.
+Use extra property 0x84c2 along with the ID of the animation as the value of the extra property to use that animation.
+\n
+Face animations can be created in blender, using the following plugins:\ngithub.com/Kiloutre/BlenderTekkenDirect\ngithub.com/Kiloutre/BlenderTekkenDirect
+""")
             
     def addFaceAnim(self):
         filepath = filedialog.askopenfilename(initialdir = ".",title = "Select file",filetypes =  ((".f_bin Animation","*.f_bin"),("All files","*.*")))
@@ -2362,8 +2364,8 @@ class GUI_TekkenMovesetEditor():
             anim_count = AddMotaAnimation(4, self.Charalist.movelist_path, filepath)
             if anim_count != 0:
                 messagebox.showinfo('Face anim imported', 'Animation successfully imported at index %d' % (anim_count - 1))
-                #if "mota_type" not in self.movelist: self.movelist["mota_type"] = 1
-                #else:  self.movelist["mota_type"] |= 1
+                if "mota_type" not in self.movelist: self.movelist["mota_type"] = 1
+                else:  self.movelist["mota_type"] |= 1
             else:
                 messagebox.showinfo('Face anim not imported', 'Error: the animation could not be imported. There might be a problem with the mota_4.bin file.')
             
@@ -2378,8 +2380,8 @@ class GUI_TekkenMovesetEditor():
         if messagebox.askquestion("Remove face anim", "Are you sure you want to remove the last facial animation?") == "yes":
             anim_count = RemoveMotaAnimation(4, self.Charalist.movelist_path)
             messagebox.showinfo('Face anim removed', 'Animation successfully removed : there are now %d facial animations. (0 - %d)' % (anim_count, anim_count - 1))
-            #if "mota_type" not in self.movelist: self.movelist["mota_type"] = 1
-            #else:  self.movelist["mota_type"] |= 1
+            if "mota_type" not in self.movelist: self.movelist["mota_type"] = 1
+            else:  self.movelist["mota_type"] |= 1
             
     # --- Hand anims ----
     
@@ -2388,16 +2390,21 @@ class GUI_TekkenMovesetEditor():
         messagebox.showinfo('Hand anims info', 'There are %d hand animations in this moveset (0 - %d)' % (anim_count, anim_count - 1))
         
     def displayHandAnimInfoDialog(self):
-        messagebox.showinfo('Hand animations', '...')
-            
+        messagebox.showinfo('Hand animations', """
+Import an animation using the "Add hand animation" button and memorize the ID that the editor gives you.
+Use extra property 0x842e or 0x842f along with the ID of the animation as the value of the extra property to use that animation.
+\n
+Hand animations can be created in blender, using the following plugins:\ngithub.com/Kiloutre/BlenderTekkenDirect\ngithub.com/Kiloutre/BlenderTekkenDirect
+""")
+ 
     def addHandAnim(self):
         filepath = filedialog.askopenfilename(initialdir = ".",title = "Select file",filetypes =  (("hf_bin Animation","*.h_bin"),("All files","*.*")))
         if filepath != None and filepath != '':
             anim_count = AddMotaAnimation(2, self.Charalist.movelist_path, filepath)
             if anim_count != 0:
                 messagebox.showinfo('Hand anim imported', 'Animation successfully imported at index %d' % (anim_count - 1))
-                #if "mota_type" not in self.movelist: self.movelist["mota_type"] = 2
-                #else:  self.movelist["mota_type"] |= 2
+                if "mota_type" not in self.movelist: self.movelist["mota_type"] = 2
+                else:  self.movelist["mota_type"] |= 2
             else:
                 messagebox.showinfo('Face anim not imported', 'Error: the animation could not be imported. There might be a problem with the mota_4.bin file.')
             
@@ -2410,8 +2417,8 @@ class GUI_TekkenMovesetEditor():
         if messagebox.askquestion("Remove hand anim", "Are you sure you want to remove the last hand animation?") == "yes":
             anim_count = RemoveMotaAnimation(2, self.Charalist.movelist_path)
             messagebox.showinfo('Hand anim removed', 'Animation successfully removed : there are now %d facial animations. (0 - %d)' % (anim_count, anim_count - 1))
-            #if "mota_type" not in self.movelist: self.movelist["mota_type"] = 2
-            #else:  self.movelist["mota_type"] |= 2
+            if "mota_type" not in self.movelist: self.movelist["mota_type"] = 2
+            else:  self.movelist["mota_type"] |= 2
     # --- ----
     def goToCancel(self):
         maxvalue = len(self.movelist['cancels']) - 1
@@ -2727,10 +2734,15 @@ class GUI_TekkenMovesetEditor():
         self.CancelEditor.setItem(index)
         
     def createExtrapropList(self):
-        newProp = {f:0 for f in extrapropFields}
+        listStart = {f:0 for f in extrapropFields}
+        listEnd = {f:0 for f in extrapropFields}
         
-        self.movelist['extra_move_properties'].append(newProp)
-        self.setExtrapropList(len(self.movelist['extra_move_properties']) - 1)
+        listStart['type'] = 32769
+        listStart['id'] = 0x8000
+        
+        self.movelist['extra_move_properties'].append(listStart)
+        self.movelist['extra_move_properties'].append(listEnd)
+        self.setExtrapropList(len(self.movelist['extra_move_properties']) - 2)
         
     def copyExtrapropList(self):
         if self.ExtrapropEditor.editMode == None:

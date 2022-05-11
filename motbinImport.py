@@ -173,11 +173,11 @@ class Importer:
         self.writeInt(p.motbin_ptr + 0x1e0, extra_move_properties_ptr, 8)
         self.writeInt(p.motbin_ptr + 0x1e8, extra_move_properties_count, 8)
         
-        self.writeInt(p.motbin_ptr + 0x1f0, 0, 8)
-        self.writeInt(p.motbin_ptr + 0x1f8, 0, 8)
+        self.writeInt(p.motbin_ptr + 0x1f0, 0, 8) #??
+        self.writeInt(p.motbin_ptr + 0x1f8, 0, 8) #??
         
-        self.writeInt(p.motbin_ptr + 0x200, 0, 8)
-        self.writeInt(p.motbin_ptr + 0x208, 0, 8)
+        self.writeInt(p.motbin_ptr + 0x200, 0, 8) #??
+        self.writeInt(p.motbin_ptr + 0x208, 0, 8) #??
         
         self.writeInt(p.motbin_ptr + 0x210, moves_ptr, 8)
         self.writeInt(p.motbin_ptr + 0x218, move_count, 8)
@@ -203,14 +203,14 @@ class Importer:
         p.applyMotaOffsets()
         
         print("%s (ID: %d) successfully imported in memory at 0x%x." % (m['character_name'], m['character_id'], p.motbin_ptr))
-        print("%d/%d bytes left." % (p.size - (p.curr_ptr - p.head_ptr), p.size))
+        #print("%d/%d bytes left." % (p.size - (p.curr_ptr - p.head_ptr), p.size)) #print this to check if any allocated byte has not been used (written on)
         
         return p
     
     def writeAliases(self, motbin_ptr, m):
         alias_offset = 0x28
         
-        if m["version"] == "Tekken5" or m["version"] == "Tekken5DR":
+        if m["version"] == "Tekken5" or m["version"] == "Tekken5DR": #different alias system for T5
             for i in range(2):
                 for i in range(36):
                     self.writeInt(motbin_ptr + alias_offset, m['aliases'][i], 2)
@@ -218,7 +218,7 @@ class Importer:
                 for i in range(20):
                     self.writeInt(motbin_ptr + alias_offset, 0, 2)
                     alias_offset += 2
-        else:
+        else: #T6 and later games alias system
             for alias in m['aliases']:
                 self.writeInt(motbin_ptr + alias_offset, alias, 2)
                 alias_offset += 2
@@ -236,7 +236,7 @@ def versionMatches(version):
     pos = importVersion.rfind('.')
     importUpperVersion = importVersion[:pos]
     
-    if importUpperVersion == exportUpperVersion and version != importVersion:
+    if importUpperVersion == exportUpperVersion and version != importVersion: #simple warning
         print("\nVersion mismatch: consider exporting the moveset again (not obligated).")
         print("Moveset version: %s. Importer version: %s.\n" % (version, importVersion))
     
@@ -295,7 +295,7 @@ def getMovesetTotalSize(m, folderName, animInfos):
     size = align8Bytes(size)
     # size += sum([k for k in animInfos]) + len(animInfos.keys())
     for anim in animInfos:
-        size += len(anim) + 1
+        size += len(anim) + 1 #filename
     
     size = align8Bytes(size)
     for anim in animInfos:
@@ -798,10 +798,9 @@ class MotbinStruct:
                     
                     if motaBytes[0:4] == b'MOTA':
                         motaAddr = self.curr_ptr
-                        self.mota_list.append(motaAddr)
                     else:
                         motaAddr = 0
-                        print("DEBUG: Mota %d not valid" % i)
+                        #print("DEBUG: Mota %d not valid, not importing" % i)
                         
                     self.writeBytes(motaBytes)
                     self.mota_list.append(motaAddr)
@@ -911,34 +910,33 @@ class MotbinStruct:
         if source_motbin_ptr == None:
             source_motbin_ptr = self.importer.readInt(playerAddr + game_addresses['t7_motbin_offset'], 8)
     
-        excludedOffsets = [ # Don't copy these offsets from the current player. Put hands stuff in there
+        excludedOffsets = [
+            # Don't copy these offsets from the current player, import them from the files we load.
+            #Put hands stuff in there
             0x290, #hand
-            0x2a0, #face
         ]
         
-        #mota_type = 0 if "mota_type" not in self.m else self.m["mota_type"]
-        #if mota_type & 1: excludedOffsets.append(0x2a0) #face
-        #if mota_type & 2: excludedOffsets.append(0x290) #hand
+        mota_type = 0 if "mota_type" not in self.m else self.m["mota_type"]
+        if mota_type & 1: excludedOffsets.append(0x2a0) #face
     
         offsets = [
-            (0x280, 8),
-            (0x288, 8),
-            (0x290, 8), #Hand
-            (0x298, 8), #Hand
-            (0x2a0, 8), #Face
-            (0x2a8, 8), #Face
-            (0x2b0, 8),
-            (0x2b8, 8),
-            (0x2c0, 8), #
-            (0x2c8, 8), #
-            (0x2d0, 8), #
-            (0x2d8, 8)
+            0x280,
+            0x288,
+            0x290, #Hand
+            0x298, #Hand
+            0x2a0, #Face
+            0x2a8, #Face
+            0x2b0,
+            0x2b8,
+            0x2c0, #
+            0x2c8, #
+            0x2d0, #
+            0x2d8
         ]
         
-        for idx, offsetInfo in enumerate(offsets):
-            if (idx not in excludedOffsets) or self.mota_list[idx] == 0:
-                offset, read_size = offsetInfo
-                offsetBytes = self.importer.readBytes(source_motbin_ptr + offset, read_size)
+        for idx, offset in enumerate(offsets):
+            if (offset not in excludedOffsets) or self.mota_list[idx] == 0:
+                offsetBytes = self.importer.readBytes(source_motbin_ptr + offset, 8)
                 self.importer.writeBytes(self.motbin_ptr + offset, offsetBytes)
 
 if __name__ == "__main__":
