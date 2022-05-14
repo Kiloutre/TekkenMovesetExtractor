@@ -2023,6 +2023,7 @@ class Motbin:
             movesetData = self.dict()
             movesetData['original_hash'] = self.calculateHash(movesetData)
             movesetData['last_calculated_hash'] = movesetData['original_hash']
+            movesetData['mota_type'] = (1 << 2) #allow hand mota by default
             json.dump(movesetData, f, indent=4)
             
         print("Saving animations...")

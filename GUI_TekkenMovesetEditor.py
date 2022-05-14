@@ -447,6 +447,11 @@ def getMoveColor(moveId, move, aliases):
         return '#ffe7e6'
     return None
     
+def allowMotaImportation(movelist, motaId):
+    if "mota_type" not in movelist:
+        movelist["mota_type"] = (1 << motaId)
+    else:
+        movelist["mota_type"] |= (1 << motaId)
     
 class Motafile:
     def __init__(self, filename):
@@ -2364,8 +2369,7 @@ Face animations can be created in blender, using the following plugins:\ngithub.
             anim_count = AddMotaAnimation(4, self.Charalist.movelist_path, filepath)
             if anim_count != 0:
                 messagebox.showinfo('Face anim imported', 'Animation successfully imported at index %d' % (anim_count - 1))
-                if "mota_type" not in self.movelist: self.movelist["mota_type"] = 1
-                else:  self.movelist["mota_type"] |= 1
+                allowMotaImportation(self.movelist, 4)
             else:
                 messagebox.showinfo('Face anim not imported', 'Error: the animation could not be imported. There might be a problem with the mota_4.bin file.')
             
@@ -2380,8 +2384,7 @@ Face animations can be created in blender, using the following plugins:\ngithub.
         if messagebox.askquestion("Remove face anim", "Are you sure you want to remove the last facial animation?") == "yes":
             anim_count = RemoveMotaAnimation(4, self.Charalist.movelist_path)
             messagebox.showinfo('Face anim removed', 'Animation successfully removed : there are now %d facial animations. (0 - %d)' % (anim_count, anim_count - 1))
-            if "mota_type" not in self.movelist: self.movelist["mota_type"] = 1
-            else:  self.movelist["mota_type"] |= 1
+            allowMotaImportation(self.movelist, 4)
             
     # --- Hand anims ----
     
@@ -2403,8 +2406,7 @@ Hand animations can be created in blender, using the following plugins:\ngithub.
             anim_count = AddMotaAnimation(2, self.Charalist.movelist_path, filepath)
             if anim_count != 0:
                 messagebox.showinfo('Hand anim imported', 'Animation successfully imported at index %d' % (anim_count - 1))
-                if "mota_type" not in self.movelist: self.movelist["mota_type"] = 2
-                else:  self.movelist["mota_type"] |= 2
+                allowMotaImportation(self.movelist, 2)
             else:
                 messagebox.showinfo('Face anim not imported', 'Error: the animation could not be imported. There might be a problem with the mota_4.bin file.')
             
@@ -2417,8 +2419,7 @@ Hand animations can be created in blender, using the following plugins:\ngithub.
         if messagebox.askquestion("Remove hand anim", "Are you sure you want to remove the last hand animation?") == "yes":
             anim_count = RemoveMotaAnimation(2, self.Charalist.movelist_path)
             messagebox.showinfo('Hand anim removed', 'Animation successfully removed : there are now %d facial animations. (0 - %d)' % (anim_count, anim_count - 1))
-            if "mota_type" not in self.movelist: self.movelist["mota_type"] = 2
-            else:  self.movelist["mota_type"] |= 2
+            allowMotaImportation(self.movelist, 2)
     # --- ----
     def goToCancel(self):
         maxvalue = len(self.movelist['cancels']) - 1

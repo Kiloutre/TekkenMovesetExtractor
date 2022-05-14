@@ -910,15 +910,6 @@ class MotbinStruct:
         if source_motbin_ptr == None:
             source_motbin_ptr = self.importer.readInt(playerAddr + game_addresses['t7_motbin_offset'], 8)
     
-        excludedOffsets = [
-            # Don't copy these offsets from the current player, import them from the files we load.
-            #Put hands stuff in there
-            0x290, #hand
-        ]
-        
-        mota_type = 0 if "mota_type" not in self.m else self.m["mota_type"]
-        if mota_type & 1: excludedOffsets.append(0x2a0) #face
-    
         offsets = [
             0x280,
             0x288,
@@ -933,6 +924,9 @@ class MotbinStruct:
             0x2d0, #
             0x2d8
         ]
+        
+        mota_type = (1 << 2) if "mota_type" not in self.m else self.m["mota_type"]
+        excludedOffsets = [offset for i, offset in enumerate(offsets) if mota_type & (1 << i)]
         
         for idx, offset in enumerate(offsets):
             if (offset not in excludedOffsets) or self.mota_list[idx] == 0:
