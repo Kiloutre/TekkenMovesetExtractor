@@ -1,7 +1,6 @@
 # For updating purposes
 version     = 5 #Must be different for it to register it as an update
 repo_link   = https://raw.githubusercontent.com/Kiloutre/TekkenMovesetExtractor/master/
-sheet_link  = https://docs.google.com/spreadsheets/d/1xOvUozLiC-pwflK53JtZs_-Qnd3jQ5KyQspNooEtPAI/
 
 # Tekken 7 addresses and offsets. Changes with updates
 t7_process_name       = TekkenGame-Win64-Shipping.exe
@@ -86,9 +85,14 @@ player_curr_move_offset      = 0x350                          # Used by editor t
 next_move_offset             = 0xDA0                          # Used by editor to force a move to play
 curr_frame_timer_offset      = 0x1D4                          # Used by editor to force a move to play
 code_injection_addr          = +0x746C2F                      # Address that writes on player+motbin_offset; used for online play. 
-playerid_ptr                 = +0x34E71B8, 0x10, 0x28, 0xF74  # Used to find whether local player is 1P or 2P; used for online play
+playerid_ptr                 = +0x37991A0, 0x58, 0x388, 0x68, 0x8, 0x0, 0x470, 0x14  # Used to find whether local player is 1P or 2P; used for online play
 #Finding playerid_starting_ptr: Go in training mode as 2p; scan for value on 1. Change to 1P; scan for value on 0. Repeat many times to lower matches to a few hundreds. Do combo; grabs and change outfit & character to keep lowering matches.
 #Scan repeatedly value between 0 and 1 during loading to filter out the remaining garbage. Then pause the process (slow to 0.00); set all remaining variables to a fringe unique value (e.g. 216246545) and search for the following pointer path that leads to the fringe value (68 is last offset!): 0; 0; 68.
+
+# blender tools
+player_distance_limit_addr   = +0x6E269E
+player_collision_code_addr   = +0x6D4515
+wall_collision_code_addr     = +0x792B04                 #writes negative values on [player + 1308] to induce reverse movement
 
 # -- Camera animator --
 game_speed_address         = +0x34DBF1C                  #where we write our game speed

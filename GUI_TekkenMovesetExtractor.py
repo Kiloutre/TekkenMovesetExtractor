@@ -21,10 +21,12 @@ charactersPath = "./extracted_chars/"
 
 codeInjectionInfo = {
     'size': 512, #0x200
-    'o_moveset_mota_type': 0x140,
-    'o_playerId': 0x150,
-    'o_playerLocation': 0x150 + 4,
-    'o_movesetLocation': 0x150 + 4 + 0x10,
+    #the code injection takes somewhere about 0x160 bytes
+    #if you're gonna make the playerid ptr list bigger, you should increase the size of the allocation and the value of the offsets here and in the code injection
+    'o_moveset_mota_type': 0x16C, #2x8b
+    'o_playerId': 0x17C, #1x4b
+    'o_playerLocation': 0x180, #2x8b
+    'o_movesetLocation': 0x190, #2x8b
 }
     
 monitorVerificationFrequency = 1 #seconds
@@ -79,30 +81,29 @@ def allocateMovesetWritingInjection(movesetAddr, movesetAddr2, importer):
         
         0x49, 0xBA, *moduleAddr, #mov r10, *moduleAddr
         0x4D, 0x8b, 0x92, *hexToList(playerIdOffsets[0], 4), #mov r10, [r10 + offset1] (4b)
-        0x4D, 0x8b, 0x52, playerIdOffsets[1], #mov r10, [r10 + offset2] (1b)
-        0x4D, 0x8b, 0x52, playerIdOffsets[2], #mov r10, [r10 + offset3] (1b)
-        0x45, 0x8b, 0x92, *hexToList(playerIdOffsets[3], 4), #mov r10d, [r10 + offset4] (4b)
+        0xE9, 0x0E, 0x01, 0x00, 0x00, #jmp get_playerid
         
-        0x44, 0x3B, 0x15, 0x25, 0x01, 0, 0, #cmp r10d, [playerIdLocation] # see if game playerid matches what we have saved up
+        0x44, 0x3B, 0x15, 0x5B, 0x01, 0, 0, #cmp r10d, [playerIdLocation] # see if game playerid matches what we have saved up
         0x74, 0x3F, #je (mov r10, [playerLocation])
-        0x44, 0x89, 0x15, 0x1C, 0x01, 0, 0, #mov [playerIdLocation], r10d #save game playerid
+        0x44, 0x89, 0x15, 0x52, 0x01, 0, 0, #mov [playerIdLocation], r10d #save game playerid
+        
         
         #swap moveset pool
-        0x4C, 0x8B, 0x15, 0x29, 0x01, 0, 0, #mov r10, [newMovesetLocation]
-        0x4C, 0x8B, 0x1D, 0x2A, 0x01, 0, 0, #mov r11, [newMovesetLocation + 8]
-        0x4C, 0x89, 0x1D, 0x1B, 0x01, 0, 0, #mov [newMovesetLocation], r11
-        0x4C, 0x89, 0x15, 0x1C, 0x01, 0, 0, #mov [newMovesetLocation + 8], r10
+        0x4C, 0x8B, 0x15, 0x5F, 0x01, 0, 0, #mov r10, [newMovesetLocation]
+        0x4C, 0x8B, 0x1D, 0x60, 0x01, 0, 0, #mov r11, [newMovesetLocation + 8]
+        0x4C, 0x89, 0x1D, 0x51, 0x01, 0, 0, #mov [newMovesetLocation], r11
+        0x4C, 0x89, 0x15, 0x52, 0x01, 0, 0, #mov [newMovesetLocation + 8], r10
         
-        0x4C, 0x8B, 0x15, 0xE9, 0x00, 0, 0, #mov r10, [motaTypeLocation]
-        0x4C, 0x8B, 0x1D, 0xEA, 0x00, 0, 0, #mov r11, [motaTypeLocation + 8]
-        0x4C, 0x89, 0x1D, 0xDB, 0x00, 0, 0, #mov [motaTypeLocation], r11
-        0x4C, 0x89, 0x15, 0xDC, 0x00, 0, 0, #mov [motaTypeLocation + 8], r10
+        0x4C, 0x8B, 0x15, 0x1F, 0x01, 0, 0, #mov r10, [motaTypeLocation]
+        0x4C, 0x8B, 0x1D, 0x20, 0x01, 0, 0, #mov r11, [motaTypeLocation + 8]
+        0x4C, 0x89, 0x1D, 0x11, 0x01, 0, 0, #mov [motaTypeLocation], r11
+        0x4C, 0x89, 0x15, 0x12, 0x01, 0, 0, #mov [motaTypeLocation + 8], r10
         
     
-        0x4c, 0x8b, 0x15, 0xE1, 0x00, 0x00, 0x00, # mov r10, [playerLocation] #playerLocation. compare to player address
-        0x4c, 0x39, 0xd1, #cmp rcx, r10
+        0x4c, 0x8b, 0x15, 0x17, 0x01, 0x00, 0x00, # mov r10, [playerLocation] #playerLocation. compare to player address
+        0x4c, 0x39, 0xD1, #cmp rcx, r10
         0x75, 0x47, #jne p2_check : wrong player, not continuing
-        0x4C, 0x8b, 0x15, 0xE5, 0x00, 0x00, 0x00, #mov r10, [newMovesetLocation]
+        0x4C, 0x8b, 0x15, 0x1B, 0x01, 0x00, 0x00, #mov r10, [newMovesetLocation]
         0x4D, 0x85, 0xD2, #test r10, r10
         0x74, 0x3B, #jz p2_check : no moveset available for player
         0x51, #push rcx
@@ -111,10 +112,10 @@ def allocateMovesetWritingInjection(movesetAddr, movesetAddr2, importer):
         
         # loop, copy some animation like cam, hand and all to moveset in order to avoid crash (we dont import those yet)
         0x48, 0x31, 0xDB, #xor rbx, rbx
-        0x48, 0x8b, 0x0D, 0xD3, 0x00, 0x00, 0x00, #mov rcx, [newMovesetLocation]
+        0x48, 0x8b, 0x0D, 0x09, 0x01, 0x00, 0x00, #mov rcx, [newMovesetLocation]
         
         #---- ignore mota depending on bit flags corresponding to the mota index
-        0x4C, 0x8b, 0x15, 0xA8, 0x00, 0x00, 0x00, #mov r10, [motaTypeLocation]
+        0x4C, 0x8b, 0x15, 0xDE, 0x00, 0x00, 0x00, #mov r10, [motaTypeLocation]
         0x49, 0x0F, 0xA3, 0xDA, #bt r10, rbx
         0x72, 0x10, #jb - (#inc ebx)
         #---
@@ -128,15 +129,15 @@ def allocateMovesetWritingInjection(movesetAddr, movesetAddr2, importer):
         0x5b, #pop rbx
         0x58, #pop rax
         0x59, #pop rcx
-        0x48, 0x8b, 0x15, 0xA5, 0x00, 0x00, 0x00, #mov rdx, [newMovesetLocation] #force new moveset
+        0x48, 0x8b, 0x15, 0xDB, 0x00, 0x00, 0x00, #mov rdx, [newMovesetLocation] #force new moveset
         
         
         
         #p2_check, same as above but with p2 moveset
-        0x4c, 0x8b, 0x15, 0x96, 0x00, 0x00, 0x00, # mov r10, [playerLocation + 8] #playerLocation2
+        0x4c, 0x8b, 0x15, 0xCC, 0x00, 0x00, 0x00, # mov r10, [playerLocation + 8] #playerLocation2
         0x4c, 0x39, 0xd1, #cmp rcx, r10
         0x75, 0x47, #jne end : wrong player, not continuing
-        0x4C, 0x8B, 0x15, 0x9A, 0x00, 0x00, 0x00, #mov r10, [newMovesetLocation + 8]
+        0x4C, 0x8B, 0x15, 0xD0, 0x00, 0x00, 0x00, #mov r10, [newMovesetLocation + 8]
         0x4D, 0x85, 0xD2, #test r10, r10
         0x74, 0x3B, #je end : no moveset available for player
         0x51, #push rcx
@@ -145,11 +146,11 @@ def allocateMovesetWritingInjection(movesetAddr, movesetAddr2, importer):
         
         # loop, copy some animation like cam, hand and all to moveset in order to avoid crash (we dont import those yet)
         0x48, 0x31, 0xDB, #xor rbx, rbx
-        0x48, 0x8b, 0x0D, 0x88, 0x00, 0x00, 0x00, #mov rcx, [newMovesetLocation + 8]
+        0x48, 0x8b, 0x0D, 0xBE, 0x00, 0x00, 0x00, #mov rcx, [newMovesetLocation + 8]
         
         
         #---- ignore mota depending on bit flags corresponding to the mota index
-        0x4C, 0x8b, 0x15, 0x5D, 0x00, 0x00, 0x00, #mov r10, [motaTypeLocation + 8]
+        0x4C, 0x8b, 0x15, 0x93, 0x00, 0x00, 0x00, #mov r10, [motaTypeLocation + 8]
         0x49, 0x0F, 0xA3, 0xDA, #bt r10, rbx
         0x72, 0x10, #jb - (#inc ebx)
         #---
@@ -163,7 +164,7 @@ def allocateMovesetWritingInjection(movesetAddr, movesetAddr2, importer):
         0x5b, #pop rbx
         0x58, #pop rax
         0x59, #pop rcx
-        0x48, 0x8b, 0x15, 0x5A, 0x00, 0x00, 0x00, #mov rdx, [newMovesetLocation + 8] #force new moveset
+        0x48, 0x8b, 0x15, 0x90, 0x00, 0x00, 0x00, #mov rdx, [newMovesetLocation + 8] #force new moveset
         
         
         #end
@@ -171,8 +172,19 @@ def allocateMovesetWritingInjection(movesetAddr, movesetAddr2, importer):
         0x41, 0x5b, #pop r11
         0x48, 0x89, 0x91, 0x20, 0x15, 0x00, 0x00, #mov [rcx+1520], rdx #write moveset into player+1520
         0x48, 0x89, 0x91, 0x28, 0x15, 0x00, 0x00, #mov [rcx+1528], rdx #write moveset into player+1528
-        0xFF, 0x25, 0x00, 0x00, 0x00, 0x00, *codeInjectionEnd #jmp
+        0xFF, 0x25, 0x00, 0x00, 0x00, 0x00, *codeInjectionEnd, #jmp
+        
+        #get_playerid
+        #we put this here because the playerid ptr is bound to change and changing the code's size would mess up the offsets used above
     ]
+    
+    for i in range(1, len(playerIdOffsets)):
+        twoPlayersBytecode += [0x4D, 0x8B, 0x92, *hexToList(playerIdOffsets[i], 4)] #mov r10, [r10 + offset] (4b)
+    
+    twoPlayersBytecode += [
+        0xE9, *hexToList(0xFFFFFFFF - len(twoPlayersBytecode) - 4 + 0x1A, 4), #jmp at 0x1A (start)
+    ]
+        
     
     importer.writeBytes(codeAddr, bytes(twoPlayersBytecode))
     
@@ -194,7 +206,6 @@ def allocateMovesetWritingInjection(movesetAddr, movesetAddr2, importer):
         importer.writeInt(playerIdLocation, playerid, 4)
     
     codeInjection = codeAddr
-    print("%x" % codeInjection)
     return codeAddr
         
 class Monitor:
