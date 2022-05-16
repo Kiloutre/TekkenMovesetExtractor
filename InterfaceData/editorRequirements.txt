@@ -25,14 +25,15 @@
 28,Airborne Throw Hit (Backward)
 29,Airborne Throw Hit (Left Side)
 30,Airborne Throw Hit (Right Side)
-35,Opponent distance smaller or equal
-36,Opponent distance greater or equal
+35,Opponent distance <= param
+36,Opponent distance >= param
+43,On Hit
 44,On Hit
 47,On block
 48,On whiff
 49,On hit/block
 51,On hit
-61,Downed Opponent Face(up/down)
+61,Check opponent VULN
 66,Opponent Standing
 67,Opponent Crouching
 68,Incoming high attack
@@ -85,6 +86,7 @@
 176,Geese in Max-Mode
 177,Throwbreak On(?)
 182,Near Wall
+216,Something wallsplat related
 217,Player character ID
 218,Player NOT character ID
 219,Opponent character ID
@@ -108,9 +110,9 @@
 353,Check value (prop 0x80a9)
 359,Check player flag (prop 0x8106)
 361,Check value (prop 0x80ed)
-532,Check Player speed(?)
-533,Check Player speed(?)
-534,Check Player speed(?)
+532,Player speed >= param
+533,Player speed <= param
+534,Player speed == param
 552,Random number generator (uniform)
 553,Random number generator (weighted)
 558,Story Battle
@@ -130,12 +132,15 @@
 615,Screw available
 629,Meter >= param
 634,Treasure Battle Special Match
+636,Assist button pressed
 637,Check Match Point
 639,Parry Zoom
 641,Once per match (Leroy Cane)
 765,Arcade Cutscene
 785,Projectile on-hit
 786,Projectile on-block
+809,Check value (prop 0x8414)
+811,Basic combo enabled
 813,Parry high
 814,Parry mid
 815,Parry low
