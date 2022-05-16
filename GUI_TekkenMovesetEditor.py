@@ -428,7 +428,7 @@ def getCommandStr(commandBytes):
             (32772): " Double tap D",
         }.get(directionBits, "UNKNOWN")
     elif directionBits <= 36863:
-        direction = " input_sequence[%d]" % directionBits - 0x800d
+        direction = " input_sequence[%d]" % (directionBits - 0x800d)
         
     if (inputBits & (1 << 29)): # if "Partial Input" mode, replace (+) with pipe (|)
         inputs = inputs[0] + inputs[1:].replace('+', ' | ', inputs.count('+'))
