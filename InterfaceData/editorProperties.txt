@@ -14,6 +14,7 @@
 0x8019,Elecric Effect (self)
 0x801a,Elecric Effect (opponent)
 0x801b,Rage Drive VFX
+0x801e,Mouth fog VFX
 0x8021,Hit spark (self)
 0x8023,Hit spark (opponent)
 0x802e,Char hit spark (self)
@@ -69,6 +70,8 @@
 0x80c3,Add Chloe points
 0x80c4,Sub Chloe points
 0x80c5,Value Store (2D cancel|uses req 346)
+0x80c6,Add value to 0x80c5
+0x80c7,Sub value from 0x80c5
 0x80ed,Store Combo Route Value
 0x8106,Activate Player Flag
 0x8107,Add value to (0x8106)
@@ -82,6 +85,7 @@
 0x818a,Add Tracking/Alignment
 0x818c,Change player status/vulnerability
 0x818e,Change collision status
+0x8193,Footstep VFX+SFX
 0x81a7,Align Player To Wall (?)
 0x81ad,Reset player position
 0x81bd,Power Crush
@@ -98,8 +102,10 @@
 0x81e0,Blending duration
 0x81e4,Break floor
 0x81e8,Pushback-related
-0x81f3,Activate laser
+0x81ec,Enable gravity
+0x81f3,Enable laser
 0x81f4,Disable laser
+0x81fe,Reset upwards vector
 0x81ff,Slide player
 0x8200,Rotate player axis
 0x8205,Push player in z-axis
@@ -126,6 +132,7 @@
 0x824d,AI input
 0x8251,Player visibility
 0x8255,Spend screw
+0x8257,Extend left shoulder hurtbox
 0x8262,wing flap anim
 0x826a,Homing (Left Hand)
 0x826b,Homing (Right Hand)
