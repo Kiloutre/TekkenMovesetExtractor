@@ -98,7 +98,7 @@
 253,Bryan taunt value >= param
 255,Value (prop 0x807c) >= param
 256,Bryan taunted
-284,
+284,Player flag (0x8106) >= param
 308,Chloe Points <= param
 329,Check value (prop 0x807c)
 344,Kazuya Devil Form
