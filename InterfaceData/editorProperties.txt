@@ -14,7 +14,7 @@
 0x8019,Elecric Effect (self)
 0x801a,Elecric Effect (opponent)
 0x801b,Rage Drive VFX
-0x801e,Mouth fog VFX
+0x801e,Mouth Fog VFX
 0x8021,Hit spark (self)
 0x8023,Hit spark (opponent)
 0x802e,Char hit spark (self)
@@ -70,22 +70,22 @@
 0x80c3,Add Chloe points
 0x80c4,Sub Chloe points
 0x80c5,Value Store (2D cancel|uses req 346)
-0x80c6,Add value to 0x80c5
-0x80c7,Sub value from 0x80c5
+0x80c6,Add to 0x80c5
+0x80c7,Sub from 0x80c5
 0x80ed,Store Combo Route Value
 0x8106,Activate Player Flag
-0x8107,Add value to (0x8106)
-0x8108,Sub value from (0x8106)
+0x8107,Add value to 0x8106
+0x8108,Sub value from 0x8106
 0x8109,Activate Opponent Flag
-0x810a,Add value to (0x8109)
-0x810b,Sub value from (0x8109)
+0x810a,Add value to 0x8109
+0x810b,Sub value from 0x8109
 0x817c,Allow player to block
 0x817d,Give CH property
 0x8181,Stop pushback
 0x818a,Add Tracking/Alignment
 0x818c,Change player status/vulnerability
 0x818e,Change collision status
-0x8193,Footstep VFX+SFX
+0x8193,Footstep SFX + VFX
 0x81a7,Align Player To Wall (?)
 0x81ad,Reset player position
 0x81bd,Power Crush
@@ -102,8 +102,8 @@
 0x81e0,Blending duration
 0x81e4,Break floor
 0x81e8,Pushback-related
-0x81ec,Enable gravity
-0x81f3,Enable laser
+0x81ec,Set Gravity (0/1)
+0x81f3,Activate laser
 0x81f4,Disable laser
 0x81fe,Reset upwards vector
 0x81ff,Slide player
@@ -151,6 +151,7 @@
 0x829f,Play subtitles
 0x82a0,Skin shine effect
 0x82ae,Noctis warp effect
+0x82bf,Assist Button Pressed VFX
 0x82c8,Use fake frame advantage
 0x82c9,Use fake startup frame
 0x82ca,Startup frames related (?)
@@ -166,6 +167,7 @@
 0x8330,Projectile hit recovery
 0x8331,Projectile grounded reaction list
 0x8332,Projectile airborne reaction list
+0x8333,Set limb for attaching item
 0x8336,Projectile 30 degrees flag
 0x8337,Projectile horizontal speed
 0x8338,Projectile vertical speed
@@ -174,7 +176,7 @@
 0x8343,Attach item to limb
 0x8344,Detach item to limb
 0x837e,Select limb to resize
-0x837f,Resize player
+0x837f,Resize player/limb
 0x83c2,Set opponent's floor level
 0x83c3,Set opponent's move
 0x83c4,Force new default stance (32768)
@@ -245,7 +247,11 @@
 0x8405,Restore alias (32800)
 0x8406,Rotate Player
 0x8407,Put opponent next to player
+0x840f,Play midbattle cutscene
 0x8410,Story Power Crush
+0x8414,Store Assist Combo Value
+0x8415,Add to 0x8414
+0x8416,Sub from 0x8414
 0x8428,Both Hands pose
 0x8429,Left hand pose
 0x842a,Right hand pose
