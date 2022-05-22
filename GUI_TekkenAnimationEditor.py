@@ -1070,10 +1070,6 @@ class LiveEditor:
         currmoveAddr = self.T.readInt(self.playerAddress + 0x220, 8)
         
         animationAddr = self.allocateMem(anim.size)
-        
-        movesetAddr = self.T.readInt(self.playerAddress + 0x1520, 8)
-        mota3 = self.T.readInt(movesetAddr + 0x2a0, 8)
-        animationAddr = mota3 + self.T.readInt(mota3 + 20, 8)
             
         
         self.lastAllocation = animationAddr
