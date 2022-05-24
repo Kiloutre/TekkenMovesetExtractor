@@ -1,5 +1,5 @@
 # For updating purposes
-version     = 5 #Must be different for it to register it as an update
+version     = 6 #Must be different for it to register it as an update
 repo_link   = https://raw.githubusercontent.com/Kiloutre/TekkenMovesetExtractor/master/
 
 # Tekken 7 addresses and offsets. Changes with updates

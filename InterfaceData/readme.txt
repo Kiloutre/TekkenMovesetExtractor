@@ -1,8 +1,8 @@
 1.0.32.30
 - [EXTRACTOR] Hand animations and optionally face animations are now imported
 - [EDITOR] Allow the importation of custom hand and facial animations
-1.0.32.31 Hotfix: [EDITOR] Fix error when displaying input sequences
-1.0.32.32 Hotfix: [ANIMATOR] Fix animation editor crashing the game
+...
+1.0.32.33 (Optional): Update addresses for newest patch
 
 If you find a bug, let me know on github.
 - by kilo ( youtube.com/c/kiloutre - @kiloutre ) -
