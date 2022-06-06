@@ -81,7 +81,8 @@ If you wish to play online with a friend, both players should use monitors so th
 
 - Python 3.6.5 specifically, newever version don't work with the current code.
 
-- Pywin32 : `python -m pip install pywin32 --user`
+- Pywin32 (required) : `python -m pip install pywin32 --user`
+- Pyperclip (if you're going to use the animation editor) : `python -m pip install pyperclip --user`
 
 ## Exporting from Tekken 7
 This tool exports movesets from memory, you therefore need the game running with the target moveset loaded up already.
