@@ -115,6 +115,7 @@ interpolationTypes2 = {interpolationTypes[k]:k for k in interpolationTypes}
 relativityTypes = {
     0: "None",
     -1: "Prev group's last pos & rot",
+    
     1: "P1 Pos",
     2: "P1 Pos & Height",
     6: "P1 Pos & Floor Height",
@@ -123,6 +124,7 @@ relativityTypes = {
     7: "P1 Pos & Floor Height & Rotation",
     5: "P1 Look-At",
     8: "P1 Look-At & Pos & Floor Height & Rotation",
+    
     11: "P2 Pos",
     12: "P2 Pos & Height",
     16: "P2 Pos & Floor Height",
@@ -131,6 +133,8 @@ relativityTypes = {
     17: "P2 Pos & Floor Height & Rotation",
     15: "P2 Look-At",
     18: "P2 Look-At & Pos & Floor Height & Rotation",
+    
+    21: "Keep game camera",
 }
 relativityTypes2 = {relativityTypes[k]:k for k in relativityTypes}
 
@@ -1548,6 +1552,11 @@ class AnimationEditor(BaseFormEditor):
                     self.root.onAnimModification(field == 'relativity')
                 except:
                     pass
+                    
+    def resetFrameForm(self, excludedFields=[]):
+        for field in self.fields:
+            if field.fieldId not in excludedFields:
+                field.resetForm()
                 
     def resetFrame(self):
         for field in self.fields: field.resetForm()
@@ -2087,25 +2096,35 @@ class LiveEditor:
                     foundSpeedChange = True
                     break
             if foundSpeedChange: break
+            
+        camControlEnabled = True
         
         try:
             prevCameraPos = None
             for g in groups:
+                camControlEnabled = g['relativity'] != 21
+                if camControlEnabled: self.lockCamera()
+                else: self.unlockCamera()
+            
                 if g['delay'] > 0:
-                    if g['pre_delay_pos'] > 0 and g['length'] > 0:
-                        self.setCameraPos(g['frames'][0], g['relativity'])
+                
+                    if g['pre_delay_pos'] > 0 and g['length'] > 0 and camControlEnabled:
+                            self.setCameraPos(g['frames'][0], g['relativity'])
+                        
                     self.waitFrame(g['delay'])
                     
                 for i, f in enumerate(g['frames']):
                 
                     if self.runningAnimation == False: raise
-                    cameraPos = self.setCameraPos(f, g['relativity'], prevCameraPos)
                     
-                    if self.saveAnimation:
-                        savedKeyframes.append(cameraPos)
+                    if camControlEnabled:
+                        cameraPos = self.setCameraPos(f, g['relativity'], prevCameraPos)
+                        if (i + 1) == g['duration']: prevCameraPos = cameraPos
+                        
+                        if self.saveAnimation:
+                            savedKeyframes.append(cameraPos)
                     
                     if foundSpeedChange: self.setGameSpeed(f['speed'])
-                    if (i + 1) == g['duration']: prevCameraPos = cameraPos
                     
                     self.waitFrame(1)
                     
