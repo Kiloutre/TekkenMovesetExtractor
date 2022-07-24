@@ -9,6 +9,7 @@ t7_p1_addr            = +0x34E6370, 0
 t7_playerstruct_size  = 0x3670             # Distance between 2 players addresses
 t7_motbin_offset      = 0x1520
 t7_chara_id_offset    = 0xD8
+t7_camera_mota_offset = 0x14A0
 
 # Tag2 addresses.
 tag2_process_name       = Cemu.exe
