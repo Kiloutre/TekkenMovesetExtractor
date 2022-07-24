@@ -89,7 +89,7 @@
 0x81a7,Align Player To Wall (?)
 0x81ad,Reset player position
 0x81bd,Power Crush
-0x81be,Rage Art SFX
+0x81be,Rage Art FX
 0x81bf,Give Claudio starbust
 0x81c2,Give meter (signed int)
 0x81c7,Fill meter
@@ -134,12 +134,13 @@
 0x8255,Spend screw
 0x8257,Extend left shoulder hurtbox
 0x8262,wing flap anim
-0x826a,Homing (Left Hand)
-0x826b,Homing (Right Hand)
-0x826c,Homing (Left foot)
-0x826d,Homing (Right Foot)
+0x826a,Homing VFX (Left Hand)
+0x826b,Homing VFX (Right Hand)
+0x826c,Homing VFX (Left foot)
+0x826d,Homing VFX (Right Foot)
 0x8270,Activate rage
 0x8272,Spend rage
+0x8280,Force char face to opp.
 0x828b,Game speed%
 0x828c,Slow down Effect
 0x828d,Slow down Effect immunity
@@ -150,6 +151,7 @@
 0x829e,Screen Transition VFX
 0x829f,Play subtitles
 0x82a0,Skin shine effect
+0x82a9,Fill Geese max mode meter
 0x82ae,Noctis warp effect
 0x82bf,Assist Button Pressed VFX
 0x82c8,Use fake frame advantage
@@ -161,6 +163,9 @@
 0x82d8,Set partner's move (Sugar)
 0x82eb,Spend once per match move
 0x82fa,Fahkumram skin pulse
+0x8300,Spawn Kuni item
+0x8301,De-spawn Kuni item
+0x8302,Kuni item VFX?
 0x832c,Projectile lifespan(in frames)
 0x832d,Projectile damage
 0x832e,Projectile hit-level
@@ -261,13 +266,21 @@
 0x842e,Play left hand anim
 0x842f,Play right hand anim
 0x8430,Devil Kazuya wing animations
-0x8435,Cinematic Camera (intro/outro)
+0x8435,Cinematic Camera (no reset)
+0x8436,Cinematic Camera (no reset, mirror)
+0x8437,Cinematic Camera (no reset, mirror)
+0x8438,Cinematic Camera (no reset, mirror)
 0x8439,Cinematic Camera Left side
 0x843a,Cinematic Camera Right side
 0x843c,Throw camera
 0x843d,Rage Art camera
 0x8442,Camera Zoom Focal Point
 0x8443,Camera Zoom Effect
+0x8444,Move Camera Position
+0x8445,Cinematic Camera (no reset)
+0x8448,Cinematic Camera (no reset)
+0x8449,Cinematic Camera (no reset)
+0x844b,Reset Camera
 0x844e,Camera Movement
 0x844f,Camera Interpolation
 0x8450,Camera Rotation
