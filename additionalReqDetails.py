@@ -129,13 +129,14 @@ class req359:
             return default
         flag = x >> 16
         value = x & 0xFFFF
-        output = "Player flag %d = %d" % (flag, value)
+        output = "Player flag %d == %d" % (flag, value)
         return output
 
 
 # Add req in this list and assign parameter list
 # Format: reqId -> paramList
 reqDetailsList = {
+    156: reqYesNo,
     157: reqYesNo,
     217: charIDs,  # Char ID checks
     218: charIDs,
