@@ -84,7 +84,7 @@
 149,On ground (left side)
 155,If Ki Charged
 156,Opponent is in rage
-157,Rage
+157,Player is in rage
 176,Geese in Max-Mode
 182,Near Wall
 216,Something wallsplat related
