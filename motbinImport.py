@@ -936,6 +936,7 @@ class MotbinStruct:
                 self.importer.writeBytes(self.motbin_ptr + offset, offsetBytes)
                 
     def updateCameraMotaStaticPointer(self, playerAddr=None):
+        if self.m['version'] != 'Tekken7': return
         if playerAddr == None:
             raise Exception(
                 "updateCameraMotaStaticPointer: No valid address provided")
