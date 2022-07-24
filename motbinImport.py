@@ -83,6 +83,9 @@ class Importer:
         print("\nOLD moveset pointer: 0x%x (%s)" % (current_motbin_ptr, old_character_name))
         print("NEW moveset pointer: 0x%x (%s)" % (moveset.motbin_ptr, moveset.m['character_name']))
         self.writeInt(motbin_ptr_addr, moveset.motbin_ptr, 8)
+        
+        moveset.updateCameraMotaStaticPointer(playerAddr)
+        
         return moveset
         
     def loadMoveset(self, folderName=None, moveset=None, charactersPath=None):
@@ -925,13 +928,24 @@ class MotbinStruct:
             0x2d8
         ]
         
-        mota_type = (1 << 2) if "mota_type" not in self.m else self.m["mota_type"]
-        excludedOffsets = [offset for i, offset in enumerate(offsets) if mota_type & (1 << i)]
+        excludedOffsets = [0x290, 0x298, 0x2c0, 0x2c8]
         
         for idx, offset in enumerate(offsets):
             if (offset not in excludedOffsets) or self.mota_list[idx] == 0:
                 offsetBytes = self.importer.readBytes(source_motbin_ptr + offset, 8)
                 self.importer.writeBytes(self.motbin_ptr + offset, offsetBytes)
+                
+    def updateCameraMotaStaticPointer(self, playerAddr=None):
+        if playerAddr == None:
+            raise Exception(
+                "updateCameraMotaStaticPointer: No valid address provided")
+
+        mota8_addr = self.importer.readBytes(self.motbin_ptr + 0x2c0, 8)
+        mota9_addr = self.importer.readBytes(self.motbin_ptr + 0x2c8, 8)
+
+        static_mota_ptr = playerAddr + game_addresses['t7_camera_mota_offset']
+        self.importer.writeBytes(static_mota_ptr, mota8_addr)
+        self.importer.writeBytes(static_mota_ptr + 8, mota9_addr)
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
