@@ -100,7 +100,7 @@
 253,Bryan taunt value >= param
 255,Value (prop 0x807c) >= param
 256,Bryan taunted
-284,Player Flag (prop 0x8106) >= param
+284,_ 
 308,Chloe Points <= param
 329,Check value (prop 0x807c)
 344,Kazuya Devil Form
@@ -109,7 +109,7 @@
 351,Claudio Starburst
 352,Check value (prop 0x80a6)
 353,Check value (prop 0x80a9)
-359,Check player flag (prop 0x8106)
+359,_ 
 361,Check value (prop 0x80ed)
 532,Player speed >= param
 533,Player speed <= param
