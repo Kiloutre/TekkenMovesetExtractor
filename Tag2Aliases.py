@@ -609,39 +609,8 @@ tag2_extra_move_properties = {
 
 tag2_character_fixes = {
     "[Kunimitsu]": {
-        'extraproperty': [
-            {
-                'type': 0x8001,
-                'id': 0x82ea,
-                'value_alias': {
-                    0x31: 0x12 #fixes f4, 4 camera
-                }
-            }
-        ],
         'moves': [
             { 'name': 'Kt_6lklprp', 'hitbox_location': 0x08091009 }  #fix SEN 1 2 hitbox
-        ]
-    },
-    "[ANGEL]": {
-        'extraproperty': [
-            {
-                'type': 0x8010,
-                'id': 0x82ea,
-                'value_alias': {
-                    0x32: 0 #fixes f4, 4 camera
-                }
-            }
-        ]
-    },
-    "[Jinpachi]": {
-        'extraproperty': [
-            {
-                'type': 1,
-                'id': 0x82ea,
-                'value_alias': {
-                    0x31: 0x4 #fixes fly 1 1 2 2 camera
-                }
-            }
         ]
     },
     "[Alisa]": {
@@ -659,13 +628,7 @@ tag2_character_fixes = {
             {
                 'id': 0x8036, #Fix D/F+1+2 throw crash
                 'copy_nearest': True
-            },
-            {
-                'id': 0x82e9, #Fix D/F+1+2 camera
-                'value_alias': {
-                    0x3b: 0x10
-                }
-            },
+            }
         ]
     },
 }
