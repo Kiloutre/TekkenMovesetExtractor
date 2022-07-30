@@ -69,22 +69,23 @@
 132,Pressed ONLY RP (2)
 133,Pressed ONLY LP+RP (1+2)
 135,On death
+137,Opponent HP < 50%
 138,Player HP >= param
 139,Player HP < param
 140,Opponent HP >= param
-141,Opponent HP check (direct)
+141,Opponent HP > param
 142,Player HP %age >= param
 143,Player HP %age < param
 144,Opponent HP <= param
+145,Player HP <= param
 146,Standing on left side
 147,Standing on right side
 148,On ground (right side)
 149,On ground (left side)
 155,If Ki Charged
 156,Opponent is in rage
-157,Rage
+157,Player is in rage
 176,Geese in Max-Mode
-177,Throwbreak On(?)
 182,Near Wall
 216,Something wallsplat related
 217,Player character ID
@@ -95,11 +96,11 @@
 222,Player NOT Character ID
 223,Opponent character ID
 224,Opponent NOT character ID
-225,Player is CPU
+225,Character Controller
 253,Bryan taunt value >= param
 255,Value (prop 0x807c) >= param
 256,Bryan taunted
-284,Player Flag (prop 0x8106) >= param
+284,_ 
 308,Chloe Points <= param
 329,Check value (prop 0x807c)
 344,Kazuya Devil Form
@@ -108,7 +109,7 @@
 351,Claudio Starburst
 352,Check value (prop 0x80a6)
 353,Check value (prop 0x80a9)
-359,Check player flag (prop 0x8106)
+359,_ 
 361,Check value (prop 0x80ed)
 532,Player speed >= param
 533,Player speed <= param
@@ -125,6 +126,8 @@
 570,Outro Related(?)
 573,Check Stage ID
 579,Player check (P1/P2)
+583,Character is male
+584,Character is female
 607,Opponent is Airborne
 608,Opponent is Not Airborne
 609,Has item
@@ -136,6 +139,7 @@
 637,Check Match Point
 639,Parry Zoom
 641,Once per match (Leroy Cane)
+643,is Kuni mask On?
 765,Arcade Cutscene
 785,Projectile on-hit
 786,Projectile on-block
