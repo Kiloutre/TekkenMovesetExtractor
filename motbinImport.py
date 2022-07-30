@@ -975,12 +975,11 @@ class MotbinStruct:
             0x2d8
         ]
 
-        if self.m['version'] == 'Tekken7':
-            mota_type = 780 if "mota_type" not in self.m else self.m["mota_type"]
-            # 780 has bit 2,3,8 & 9 set, which indicate respective mota
+        if "mota_type" in self.m:
+            mota_type = self.m["mota_type"]
         else:
-            mota_type = (
-                1 << 2) if "mota_type" not in self.m else self.m["mota_type"]
+            mota_type = 780 if self.m['version'] == 'Tekken7' else (1 << 2)
+            # 780 has bit 2,3,8 & 9 set, which indicate respective mota
 
         # excludedOffsets = [0x290, 0x298, 0x2c0, 0x2c8]
         excludedOffsets = [offset for i, offset in enumerate(
