@@ -223,11 +223,35 @@ class Animation:
         else:
             return 0
         
+    def get0x64HeaderSize(self):
+        order = 'little' if self.bToInt(0, 1) != 0x00 else 'big'
+        auStack536 = [0] * 256
+        
+        bone_count = self.bToInt(2, 2, order=order)
+        anim_length = self.bToInt(4 + bone_count * 2, 2, order=order)
+        __unknown__ = self.bToInt(4 + bone_count * 2 + 4, 2, order=order)
+        
+        ofset = 4 + (bone_count * 2) + 6 + (4 * __unknown__)
+        
+        for i in range(bone_count):
+            bone_type = self.bToInt(4 + i * 2, 2, order=order)
+            if bone_type - 4 < 4:
+                ofset += 6 # 3 shorts
+            else:
+                ofset += 0xc # 3 floats
+                    
+        uVar6 = (anim_length + 0xe) >> 4
+        if uVar6 != 0: #if anim_length + 14 > 128
+            ofset += 2
+            ofset += 4 * uVar6
+                    
+        return ofset
+        
     def getOffset(self):
         if self.type == 0xC8:
             return self.bone_count * 0x4 + 0x8
         else:
-            return 0
+            return self.get0x64HeaderSize()
         
     def getFramesize(self):
         if self.type  == 0xC8:
@@ -288,8 +312,6 @@ class Animation:
         self.length += count
         self.writeInt(self.length, 4)
         self.recalculateSize()
-        
-        
         
         for frame in range(self.length - 1, position + count - 1, -1): # Shift values to the right if needed
             for fieldId in range(self.field_count):
