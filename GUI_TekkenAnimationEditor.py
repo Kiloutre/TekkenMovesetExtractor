@@ -236,11 +236,12 @@ class Animation:
         for i in range(bone_count):
             bone_type = self.bToInt(4 + i * 2, 2, order=order)
             if bone_type - 4 < 4:
-                ofset += 6 # 3 shorts
+                ofset += 6 # 3 signed shorts
             else:
-                ofset += 0xc # 3 floats
+                ofset += 0xC # 3 floats
                     
-        uVar6 = (anim_length + 0xe) >> 4
+        # most likely keyframe related, iirc there's 16 frames between each keyframe
+        uVar6 = (anim_length + 0xE) // 16
         if uVar6 != 0: #if anim_length + 14 > 128
             ofset += 2
             ofset += 4 * uVar6
