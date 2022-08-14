@@ -73,6 +73,9 @@ t5_requirements = {
     184: {'t7_id': 352, 'desc': 'Check value (prop 0x80a6)'},
     280: {'t7_id': 614, 'desc': 'Opponent airborne'},
     321: {'t7_id': 881, 'desc': 'Requirements end'},
+}
+
+t5_extra_move_properties = {
     0x8001: {'t7_id': 0x8001, 'desc': 'Minimum Camera Shake'},
     0x8002: {'t7_id': 0x8003, 'desc': 'Heavy Camera Shake'},
     0x8003: {'t7_id': 0x8004, 'desc': 'Heaviest Camera Shake'},
@@ -112,10 +115,6 @@ t5_requirements = {
     # For T5: 0x0F00
     0x8152: {'t7_id': 0x84CB, 'desc': 'Play Attached Audio'},
     0x8153: {'t7_id': 0x84CC, 'desc': 'Preset Camera Zoom'},
-}
-
-t5_extra_move_properties = {
-    0x0: {'t7_id': 0x0, 'desc': 'Property list ends'},
 }
 
 # List still WIP
