@@ -96,16 +96,16 @@ player_collision_code_addr   = +0x6D4725
 wall_collision_code_addr     = +0x792D14                 #writes negative values on [player + 1308] to induce reverse movement
 
 # -- Camera animator --
-game_speed_address         = +0x34DBF1C                  #where we write our game speed
-game_speed_injection       = +0x6FDBE0                   #prevent game speed from being overwritten; find game speed and look at what writes on it
+game_speed_address         = +0x34DBF1C    #              #where we write our game speed
+game_speed_injection       = +0x6FDBE0     #              #prevent game speed from being overwritten; find game speed and look at what writes on it
 game_frame_counter         = +0x34CA460                  #related to game timer: pausing the game pauses it
-global_frame_counter       = +0x3446F34                  #detached from game timer
+global_frame_counter       = +0x3446F34    #              #detached from game timer
 using_global_frame_counter = 1                           #0 = more reliable; 1 = animation is not paused by game and camera can move even if the in-game time is frozen
-freeze_code_addr           = +0x262004                   #jne +2633CA; used to freeze players
-freeze_environment         = +0x15747F1                  #used to freeze particles in the environment when the game speed reaches 0. gotta find this one using unreal unlocker and not game pause. searching of hex 00 75 08 32 also work
+freeze_code_addr           = +0x262004     #              #jne +2633CA; used to freeze players #?"
+freeze_environment         = +0x1573CF1                  #used to freeze particles in the environment when the game speed reaches 0. gotta find this one using unreal unlocker and not game pause. searching of hex 00 75 08 32 also work
 input_buffer               = +0x34CB490, 0x1F4           #used to read player input during camera control. (read only address)
-input_code_injection       = +0x2E2B57                   #prevent player movement during manual camera control (not related to above pointer)
-camera_ptr                 = +0x3781E70, 0x30, 0x418, 0  #used to find camera; best pointer path is 0x30 0x418, 0x0
-camera_code_injection      = +0x16A5C50                  #prevent writing of certain camera offsets (x in nepafu's table)
-camera_code_injection2     = +0x16BD0E0                  #prevent writing of fov
+input_code_injection       = +0x2E2797                   #prevent player movement during manual camera control (not related to above pointer)
+camera_ptr                 = +0x3781EF0, 0x30, 0x418, 0 # #used to find camera; best pointer path is 0x30 0x418, 0x0
+camera_code_injection      = +0x16a4ce0                  #prevent writing of certain camera offsets (x in nepafu's table)
+camera_code_injection2     = +0x16bc530                  #prevent writing of fov
 nop_inputs                 = 1                           # 1 = disable player control during live control; 0 = don't disable
