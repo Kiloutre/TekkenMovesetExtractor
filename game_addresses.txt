@@ -103,7 +103,7 @@ global_frame_counter       = +0x3446F54                  #detached from game tim
 using_global_frame_counter = 1                           #0 = more reliable; 1 = animation is not paused by game and camera can move even if the in-game time is frozen
 freeze_code_addr           = +0x2617A4                   #jne +262B9A; used to freeze players #?"
 freeze_code                = "E9 F1 13 00 00"            #jmp +262B9A
-freeze_code_orig           = "0F 85 F0 01 00 00"         #jne +262B9A
+freeze_code_orig           = "0F 85 F0 13 00 00"         #jne +262B9A
 freeze_environment         = +0x1573CF1                  #used to freeze particles in the environment when the game speed reaches 0. gotta find this one using unreal unlocker and not game pause. searching of hex 00 75 08 32 also work
 input_buffer               = +0x34CB490, 0x1F4           #used to read player input during camera control. (read only address, read by 41 8B 9C 10 94 00 00 00)
 input_code_injection       = +0x2E2797                   #prevent player movement during manual camera control (not related to above pointer)
