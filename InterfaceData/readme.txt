@@ -1,6 +1,5 @@
-1.0.32.35:
-- [EXTRACTOR] Properly import camera animations
-- [EXTRACTOR] T7 only: Properly import camera animations
+1.0.32.36:
+- Update for new patch addresses
 
 If you find a bug, let me know on github.
 - by kilo ( youtube.com/c/kiloutre - @kiloutre ) -

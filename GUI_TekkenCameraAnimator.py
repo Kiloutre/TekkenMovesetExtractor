@@ -1904,7 +1904,8 @@ class LiveEditor:
             return self.loadProcess()
         try:
             self.getCameraAddr()
-        except:
+        except Exception as e:
+            print(e)
             self.stop()
             return False
         return True
@@ -1917,7 +1918,8 @@ class LiveEditor:
             
             self.running = True
             self.getCameraAddr()
-        except Exception as err:
+        except Exception as e:
+            print(e)
             self.stop()
         return self.running
         
@@ -1942,12 +1944,15 @@ class LiveEditor:
     def setCharFrozen(self, frozen, environments=True):
         if not self.startIfNeeded(): return False
         self.charFrozen = frozen
+        
         if self.charFrozen:
-            self.T.writeBytes(game_addresses['freeze_code_addr'], [0xE9, 0x81, 0x13, 0x0, 0x0, 0x90]) #jmp +26338A, freeze chars
+            freeze_code = [int(b, 16) for b in game_addresses['freeze_code'].replace('"', '').split(" ")]
+            self.T.writeBytes(game_addresses['freeze_code_addr'], freeze_code)
             if environments:
                 self.T.writeBytes(game_addresses['freeze_environment'], [0x0, 0x75, 0x08, 0xB0, 0x01, 0x48, 0x83, 0xC4]) #freeze environment & particles
         else:
-            self.T.writeBytes(game_addresses['freeze_code_addr'], [0x0F, 0x85, 0x80, 0x13, 0x0, 0x0]) #jne +26338A
+            freeze_code = [int(b, 16) for b in game_addresses['freeze_code_orig'].replace('"', '').split(" ")]
+            self.T.writeBytes(game_addresses['freeze_code_addr'], freeze_code)
             if environments:
                 self.T.writeBytes(game_addresses['freeze_environment'], [0x0, 0x75, 0x08, 0x32, 0xC0, 0x48, 0x83, 0xC4]) #unfreeze environment & particles
         return self.charFrozen
@@ -2332,7 +2337,7 @@ class LiveEditor:
         'D': 2,
         'B': 4,
         'F': 8,
-        'MENU': 32,
+        'MENU': 32, # MIGHT BE 16 instead
         'ASSIST': 256,
         'RA': 512,
         '3': 4096,
