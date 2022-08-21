@@ -513,13 +513,7 @@ class MassChangeCancelsByMoveIdWindow:
 
         movelistSelect.config(yscrollcommand=scrollbar.set)
 
-        makeChangesButton = Button(
-            rightFrame, text="Implement mass changes", state="disabled")
-        makeChangesButton['command'] = self.massChangeCancelsByMoveId
-        makeChangesButton.pack()
-
         self.movelistSelect = movelistSelect
-        self.makeChangesButton = makeChangesButton
 
         rightColumn = createGrid(self.mainFrame, None)
         rightColumn.grid(row=0, column=1, sticky="nsew")
