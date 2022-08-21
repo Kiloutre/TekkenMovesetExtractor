@@ -599,9 +599,6 @@ class MassChangeCancelsByMoveIdWindow:
             if moveColor != None:
                 self.movelistSelect.itemconfig(moveId, {'bg': moveColor})
 
-    def massChangeCancelsByMoveId(self):
-        print()
-
     def on_close(self):
         self.root.MassChangeCancelsByMoveIdWindow = None
         self.window.destroy()
