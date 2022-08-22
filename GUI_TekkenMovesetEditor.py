@@ -2921,6 +2921,8 @@ Hand animations can be created in blender, using the following plugins:\ngithub.
 
     def massChangeCancelsByMoveId(self):
         if self.MassChangeCancelsByMoveIdWindow == None:
+            messagebox.showinfo(
+                'Warning', 'This feature will overwrite ALL cancels with the selected move id, save your moveset before using it!!!')
             app = MassChangeCancelsByMoveIdWindow(self)
             self.MassChangeCancelsByMoveIdWindow = app
             app.window.mainloop()
