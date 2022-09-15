@@ -74,7 +74,8 @@ def getCharacteridAlias(version, charId):
 
 def getRequirementAlias(version, req, param):
     if 'requirements' in versionAliases[version]:
-        alias = versionAliases[version]['requirements'].get(req, None)
+        key = 'extra_move_properties' if req >= 0x8000 else 'requirements'
+        alias = versionAliases[version][key].get(req, None)
         if alias != None:
             req = alias['t7_id']
             if 'param_alias' in alias:
