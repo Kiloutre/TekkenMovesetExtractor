@@ -2127,31 +2127,41 @@ class Motbin:
         emptyMota = [0x4d, 0x4f, 0x54, 0x41, 0x01, 0x0, 0x0, 0x0,
                      0x14, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
                      0x1, 0x0, 0x0]
+        skippedMotas = 0
         for i, mota in enumerate(self.mota_list):
             mota_addr, mota_size = mota
             filePath = "%s/mota_%d.bin" % (path, i)
             # not os.path.exists(filePath): #we used not to re-export mota everytime, now we do because it's starting to get used
-            if True:
-                try:
-                    if 0 <= i <= 1:  # Disable exporting of first 2 motas as they aren't used
-                        mota_data = bytearray(emptyMota)
-                    else:
-                        mota_data = self.readBytes(
-                            self.base + mota_addr, mota_size)
-                except:
-                    print("Error getting MOTA %d, file will not be created." % (i))
+            
+            try:
+                if os.path.getsize(filepath) == len(mota_size):
+                    skippedMotas += 1
                     continue
+                print("Skipping MOTA %d because it already exists" % (i))
+            except:
+                pass
 
-                try:
-                    # if 2nd byte is 256, convert this into little endian
-                    if self.readInt(self.base+mota_addr+4, 4) == 256:
-                        mota_data = SwapMotaBytes(mota_data)
-                except:
-                    print(
-                        "Error byteswapping MOTA %d, file will not be byteswapped." % (i))
-                with open(filePath, "wb") as f:
-                    f.write(mota_data)
+            try:
+                if 0 <= i <= 1:  # Disable exporting of first 2 motas as they aren't used
+                    mota_data = bytearray(emptyMota)
+                else:
+                    mota_data = self.readBytes(
+                        self.base + mota_addr, mota_size)
+            except:
+                print("Error getting MOTA %d, file will not be created." % (i))
+                continue
 
+            try:
+                # if 2nd int is 256, convert this into little endian
+                if self.readInt(self.base+mota_addr+4, 4) == 256:
+                    mota_data = SwapMotaBytes(mota_data)
+            except:
+                print(
+                    "Error byteswapping MOTA %d, file will not be byteswapped." % (i))
+            with open(filePath, "wb") as f:
+                f.write(mota_data)
+    
+        print("%d MOTA files saved, %d skipped (already present)." % (len(self.mota_list) - skippedMotas, skippedMotas))
         print("Saved at path %s.\nHash: %s" %
               (path.replace("\\", "/"), movesetData['original_hash']))
 
