@@ -1,9 +1,5 @@
 # For updating purposes
-<<<<<<< HEAD
 version     = 9 # Must be different for it to register it as an update
-=======
-version     = 8 # Must be different for it to register it as an update
->>>>>>> 716d9717cffe43725187372fce4ac1cbd7f7acf5
 repo_link   = https://raw.githubusercontent.com/Kiloutre/TekkenMovesetExtractor/master/
 
 # Tekken 7 addresses and offsets. Changes with updates
