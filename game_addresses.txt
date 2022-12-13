@@ -1,11 +1,11 @@
 # For updating purposes
-version     = 7 # Must be different for it to register it as an update
+version     = 8 # Must be different for it to register it as an update
 repo_link   = https://raw.githubusercontent.com/Kiloutre/TekkenMovesetExtractor/master/
 
 # Tekken 7 addresses and offsets. Changes with updates
 t7_process_name       = TekkenGame-Win64-Shipping.exe
 t7_base               = 0x0                # base is useless here
-t7_p1_addr            = +0x34E63F0, 0
+t7_p1_addr            = +0x34DF630, 0
 t7_playerstruct_size  = 0x3670             # Distance between 2 players addresses
 t7_motbin_offset      = 0x1520
 t7_chara_id_offset    = 0xD8
@@ -85,10 +85,10 @@ player_curr_move_addr_offset = 0x220                          # Used by Animator
 player_curr_move_offset      = 0x350                          # Used by editor to force a move to play
 next_move_offset             = 0xDA0                          # Used by editor to force sa move to play
 curr_frame_timer_offset      = 0x1D4                          # Used by editor to force a move to play
-code_injection_addr          = +0x74642F                      # Address that writes on player+motbin_offset; used for online play. 
-playerid_ptr                 = +0x3799220, 0x58, 0x388, 0x68, 0x8, 0x0, 0x470, 0x14  # Used to find whether local player is 1P or 2P; used for online play
+code_injection_addr          = +0x74ABEF                      # Address that writes on player+motbin_offset; used for online play. 
+playerid_ptr                 = +0x34CE508, 0x0                # Used to find whether local player is 1P or 2P; used for online play
 #Finding playerid_starting_ptr: Go in training mode as 2p; scan for value on 1. Change to 1P; scan for value on 0. Repeat many times to lower matches to a few hundreds. Do combo; grabs and change outfit & character to keep lowering matches.
-#Scan repeatedly value between 0 and 1 during loading to filter out the remaining garbage. Then pause the process (slow to 0.00); set all remaining variables to a fringe unique value (e.g. 216246545) and search for the following pointer path that leads to the fringe value (68 is last offset!): 0; 0; 68.
+#Scan repeatedly value between 0 and 1 during loading to filter out the remaining garbage. Then pause the process (slow to 0.00); set all remaining variables to a fringe unique value (e.g. 216246545) and search for the following pointer path that leads to the fringe value
 
 # blender tools
 player_distance_limit_addr   = +0x6E28AE
@@ -96,18 +96,18 @@ player_collision_code_addr   = +0x6D4725
 wall_collision_code_addr     = +0x792D14                 #writes negative values on [player + 1308] to induce reverse movement
 
 # -- Camera animator --
-game_speed_address         = +0x34DBF9C                  # where we write our game speed. Easy to find by doing move that slow down time like heaven's gate, jin ZEN 2
-game_speed_injection       = +0x6FD650                   # prevent game speed from being overwritten; find game speed and look at what writes on it
-game_frame_counter         = +0x34CA460                  # related to game timer: pausing the game pauses it
-global_frame_counter       = +0x3446F54                  # detached from game timer
+game_speed_address         = +0x34DF51C                  # where we write our game speed. Easy to find by doing move that slow down time like heaven's gate, jin ZEN 2
+game_speed_injection       = +0x701F40                   # prevent game speed from being overwritten; find game speed and look at what writes on it
+game_frame_counter         = +0x34CD4E0                  # related to game timer: pausing the game pauses it
+global_frame_counter       = +0x344A034                  # detached from game timer
 using_global_frame_counter = 1                           # 0 = more reliable; 1 = animation is not paused by game and camera can move even if the in-game time is frozen
 freeze_code_addr           = +0x261B94                   # jne +262F8A; used to freeze players #?"
 freeze_code                = "E9 F1 13 00 00"            # jmp +262B9A
 freeze_code_orig           = "0F 85 F0 13 00 00"         #
-freeze_environment         = +0x1573571                  # used to freeze particles in the environment when the game speed reaches 0. gotta find this one using unreal unlocker and not game pause. searching of hex 00 75 08 32 also work
-input_buffer               = +0x34CB490, 0x138           # used to read player input during camera control. (read only address, read by 41 8B 9C 10 94 00 00 00)
-input_code_injection       = +0x2E2C37                   # prevent player movement during manual camera control (not related to above pointer)
-camera_ptr                 = +0x3781EF0, 0x30, 0x418, 0  # used to find camera; best pointer path is 0x30 0x418, 0x0
-camera_code_injection      = +0x16A4E50                  # prevent writing of certain camera offsets (x in nepafu's table)
-camera_code_injection2     = +0x16BC6A0                  # prevent writing of fov
+freeze_environment         = +0x1575E41                  # used to freeze particles in the environment when the game speed reaches 0. gotta find this one using unreal unlocker and not game pause. searching of hex 00 75 08 32 also work
+input_buffer               = +0x34CE510, 0x1f4           # used to read player input during camera control. (read only address, read by 41 8B ?? 10 94 00 00 00)
+input_code_injection       = +0x2E2CC7                   # prevent player movement during manual camera control (not related to above pointer)
+camera_ptr                 = +0x3785470, 0x30, 0x418, 0  # used to find camera; best pointer path is 0x30 0x418, 0x0
+camera_code_injection      = +0x16A7E40                  # prevent writing of certain camera offsets (x in nepafu's table)
+camera_code_injection2     = +0x16BF430                  # prevent writing of fov
 nop_inputs                 = 1                           # 1 = disable player control during live control; 0 = don't disable
