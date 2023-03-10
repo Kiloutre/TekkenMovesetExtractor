@@ -66,12 +66,20 @@
 0x80bd,Kazuya devil flag
 0x80be,Add to devil flag
 0x80bf,Sub from devil flag
+0x80c0,AND with devil flag
+0x80c1,OR with devil flag
 0x80c2,Store Chloe points
 0x80c3,Add Chloe points
 0x80c4,Sub Chloe points
 0x80c5,Value Store (2D cancel|uses req 346)
 0x80c6,Add to 0x80c5
 0x80c7,Sub from 0x80c5
+0x80c8,Value Store (uses req 347)
+0x80c9,Add to 0x80c8
+0x80ca,Sub from 0x80c8
+0x80cb,Value Store (uses req 348)
+0x80cc,Add to 0x80cb
+0x80ce,Sub from 0x80cb
 0x80ed,Store Combo Route Value
 0x8106,Activate Player Flag
 0x8107,Add value to 0x8106
@@ -79,6 +87,14 @@
 0x8109,Activate Opponent Flag
 0x810a,Add value to 0x8109
 0x810b,Sub value from 0x8109
+0x810c,Activate Player Flag#2
+0x810d,Add value to 0x810c
+0x810e,Sub value from 0x810c
+0x810f,Activate Opponent Flag#2
+0x8110,Add value to 0x810f
+0x8111,Sub value from 0x810f
+0x8112,Add value to prop 0x80ed
+0x8113,Sub value from prop 0x80ed
 0x817c,Allow player to block
 0x817d,Give CH property
 0x8181,Stop pushback
@@ -108,6 +124,8 @@
 0x81fe,Reset upwards vector
 0x81ff,Slide player
 0x8200,Rotate player axis
+0x8202,Rotate player
+0x8203,Rotate opponent
 0x8205,Push player in z-axis
 0x8206,Push player in x-axis
 0x820b,Spawn projectile
@@ -260,8 +278,7 @@
 0x8428,Both Hands pose
 0x8429,Left hand pose
 0x842a,Right hand pose
-0x842b,Left hand Mot Related(?)
-0x842c,Right hand Mot Related(?)
+0x842c,Both Hands Mot Related(?)
 0x842d,Play both hand anim
 0x842e,Play left hand anim
 0x842f,Play right hand anim
