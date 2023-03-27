@@ -1,5 +1,5 @@
 # For updating purposes
-version     = 10 # Must be different for it to register it as an update
+version     = 11 # Must be different for it to register it as an update
 repo_link   = https://raw.githubusercontent.com/Kiloutre/TekkenMovesetExtractor/master/
 
 # Tekken 7 addresses and offsets. Changes with updates
@@ -97,7 +97,7 @@ wall_collision_code_addr     = +0x796DA4                 #writes negative values
 
 # -- Camera animator --
 game_speed_address         = +0x34DF51C                  # where we write our game speed. Easy to find by doing move that slow down time like heaven's gate, jin ZEN 2
-game_speed_injection       = +0x701F10                   # prevent game speed from being overwritten; find game speed and look at what writes on it
+game_speed_injection       = +0x701F50                   # prevent game speed from being overwritten; find game speed and look at what writes on it
 game_frame_counter         = +0x34CD4E0                  # related to game timer: pausing the game pauses it
 global_frame_counter       = +0x344A034                  # detached from game timer
 using_global_frame_counter = 1                           # 0 = more reliable; 1 = animation is not paused by game and camera can move even if the in-game time is frozen
