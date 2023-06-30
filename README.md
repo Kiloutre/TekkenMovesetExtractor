@@ -1,3 +1,17 @@
+# THIS PROJECT IS OBSOLETE #
+
+Moveset extraction, importation and edition should now be done on the new, better project :
+
+https://github.com/Kiloutre/TKMovesets
+
+https://github.com/Kiloutre/TKMovesets
+
+https://github.com/Kiloutre/TKMovesets
+
+# THIS PROJECT IS OBSOLETE #
+
+___
+
 Special thanks to: **Dantarion, Zen, Robi0990 and DennisStanistan**, who heavily helped in the reverse engineering part of this project!
 
 # Download
