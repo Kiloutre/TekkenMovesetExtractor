@@ -11,7 +11,7 @@ import re
 import string
 from zlib import crc32
 
-exportVersion = "1.0.0"
+exportVersion = "1.0.1"
 
 
 def GetBigEndianAnimEnd(data, searchStart):
@@ -243,8 +243,8 @@ t7_offsetTable = {
     'throws_size': {'offset': 0x278, 'size': 8},
 
     'mota_start': {'offset': 0x280, 'size': None},
-    # 112 aliases + 36 ??? of 2 bytes
-    'aliases': {'offset': 0x28, 'size': (148, 2)},
+    # 56x2 aliases of 2 bytes
+    'aliases': {'offset': 0x28, 'size': (112, 2)},
     # 112 aliases + 36 ??? of 2 bytes
     'aliases2': {'offset': 0x108, 'size': (36, 2)},
 
@@ -347,10 +347,41 @@ t7_offsetTable = {
 
     'unknownparryrelated:value': {'offset': 0x0, 'size': 4},
 
-    'projectile:u1': {'offset': 0x0, 'size': (48, 2)},
+    # OLD STRUCTURE
+    # 'projectile:u1': {'offset': 0x0, 'size': (48, 2)},
+    # 'projectile:hit_condition_addr': {'offset': 0x60, 'size': 8},
+    # 'projectile:cancel_addr': {'offset': 0x68, 'size': 8},
+    # 'projectile:u2': {'offset': 0x70, 'size': (28, 2)},
+
+    # NEW STRUCTURE
+    'projectile:vfx_id': {'offset': 0x0, 'size': 4},
+    'projectile:u3': {'offset': 0x4, 'size': 4},
+    'projectile:vfx_variation_id': {'offset': 0x8, 'size': 4},
+    'projectile:u4': {'offset': 0xC, 'size': 4},
+    'projectile:u5': {'offset': 0x10, 'size': 4},
+    'projectile:u6': {'offset': 0x14, 'size': 4},
+    'projectile:delay': {'offset': 0x18, 'size': 4},
+    'projectile:vertical_velocity': {'offset': 0x1C, 'size': 4},
+    'projectile:horizonal_velocity': {'offset': 0x20, 'size': 4},
+    'projectile:u7': {'offset': 0x24, 'size': 4},
+    'projectile:lifespan': {'offset': 0x28, 'size': 4},
+    'projectile:no_collision': {'offset': 0x2C, 'size': 4},
+    'projectile:size': {'offset': 0x30, 'size': 4},
+    'projectile:u8': {'offset': 0x34, 'size': 4},
+    'projectile:hit_level': {'offset': 0x38, 'size': 4},
+    'projectile:u9': {'offset': 0x3C, 'size': (6, 4)},
+    'projectile:voiceclip_on_hit': {'offset': 0x54, 'size': 4},
+    'projectile:u10': {'offset': 0x58, 'size': 4},
+    'projectile:u11': {'offset': 0x5C, 'size': 4},
     'projectile:hit_condition_addr': {'offset': 0x60, 'size': 8},
     'projectile:cancel_addr': {'offset': 0x68, 'size': 8},
-    'projectile:u2': {'offset': 0x70, 'size': (28, 2)},
+    'projectile:u12': {'offset': 0x70, 'size': 4},
+    'projectile:u13': {'offset': 0x74, 'size': 4},
+    'projectile:can_hitbox_connect': {'offset': 0x78, 'size': 8},
+    'projectile:u14': {'offset': 0x7C, 'size': 4},
+    'projectile:u15': {'offset': 0x80, 'size': 4},
+    'projectile:gravity': {'offset': 0x84, 'size': 8},
+    'projectile:u16': {'offset': 0x88, 'size': (8, 4)},
 
     'throwextra:u1': {'offset': 0x0, 'size': 4},
     'throwextra:u2': {'offset': 4, 'size': (4, 2)},
@@ -399,7 +430,7 @@ tag2_offsetTable = {
 
     'mota_start': {'offset': 0x1d8, 'size': None},
     # 112 aliases + 36 ??? of 2 bytes
-    'aliases': {'offset': 0x18, 'size': (148, 2)},
+    'aliases': {'offset': 0x18, 'size': (112, 2)},
     'aliases2': {'offset': 0xF8, 'size': (36, 2)},  # 36 ??? of 2 bytes
 
     'pushback:val1': {'offset': 0x0, 'size': 2},
@@ -551,7 +582,7 @@ t6_offsetTable = {
     'throws_size': {'offset': None, 'size': 4},  # unknown, prob 0x228
 
     'mota_start': {'offset': 0x234, 'size': None},
-    'aliases': {'offset': 0x18, 'size': (148, 2)},  # 148 aliases of 2 bytes
+    'aliases': {'offset': 0x18, 'size': (112, 2)},  # 112 aliases of 2 bytes
     'aliases2': {'offset': 0xF8, 'size': (36, 2)},  # 36 ??? of 2 bytes
 
     'pushback:val1': {'offset': 0x0, 'size': 2},
@@ -1849,11 +1880,43 @@ class Projectile:
         self.cancel_idx = -1
 
     def dict(self):
+        # Supporting old format
+        if hasattr(self, 'u1') and hasattr(self, 'u2'):
+            return {
+                'u1': self.u1,
+                'u2': self.u2,
+                'hit_condition_idx': self.hit_condition,
+                'cancel_idx': self.cancel_idx
+            }
         return {
-            'u1': self.u1,
-            'u2': self.u2,
-            'hit_condition_idx': self.hit_condition,
-            'cancel_idx': self.cancel_idx
+            'vfx_id': self.vfx_id,
+            'u3': self.u3,
+            'vfx_variation_id': self.vfx_variation_id,
+            'u4': self.u4,
+            'u5': self.u5,
+            'u6': self.u6,
+            'delay': self.delay,
+            'vertical_velocity': self.vertical_velocity,
+            'horizonal_velocity': self.horizonal_velocity,
+            'u7': self.u7,
+            'lifespan': self.lifespan,
+            'no_collision': self.no_collision,
+            'size': self.size,
+            'u8': self.u8,
+            'hit_level': self.hit_level,
+            'u9': self.u9,
+            'voiceclip_on_hit': self.voiceclip_on_hit,
+            'u10': self.u10,
+            'u11': self.u11,
+            'hit_condition_addr': self.hit_condition_addr,
+            'cancel_addr': self.cancel_addr,
+            'u12': self.u12,
+            'u13': self.u13,
+            'can_hitbox_connect': self.can_hitbox_connect,
+            'u14': self.u14,
+            'u15': self.u15,
+            'gravity': self.gravity,
+            'u16': self.u16,
         }
 
     def setHitConditionIdx(self, idx):

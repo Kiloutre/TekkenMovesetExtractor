@@ -71,8 +71,8 @@ itemNames = {
 
 fieldLabels = {
     'moves': {
-        'u8': 'moveID_val1',
-        'u8_2': 'moveID_val2',
+        'u8': 'mov_id - char_id',
+        'u8_2': 'char_id',
         'u10': 'airborne_start',
         'u11': 'airborne_end',
         'u12': 'ground_fall',
@@ -84,7 +84,7 @@ fieldLabels = {
     'pushbacks': {
         'val1': 'duration',
         'val2': 'displacement',
-        'val3': 'num of loops'
+        'val3': 'num of pushback extras'
     },
     'pushback_extras': {
         'value': 'horizontal offset'

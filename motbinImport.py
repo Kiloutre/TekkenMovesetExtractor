@@ -8,7 +8,7 @@ import os
 import sys
 from copy import deepcopy
 
-importVersion = "1.0.0"
+importVersion = "1.0.1"
 
 requirement_size = 0x8
 cancel_size = 0x28
@@ -637,7 +637,7 @@ class MotbinStruct:
     def allocateCancels(self, cancels, grouped=False):
         if grouped:
             print("Allocating grouped cancels...")
-            self.grouped_cancel_ptr = self.align()
+            # self.grouped_cancel_ptr = self.align() # This matches game's way of memory allocation
         else:
             print("Allocating cancels...")
             self.cancel_ptr = self.align()
@@ -742,8 +742,31 @@ class MotbinStruct:
             self.importer.writeBytes(
                 self.curr_ptr, bytes([0] * projectile_size))
 
-            for short in p['u1']:
-                self.writeInt(short, 2)
+            if p['u1']: # Supporting old format
+                for short in p['u1']:
+                    self.writeInt(short, 2)
+
+            if p['u3']: # New format
+                self.writeInt(p['vfx_id'], 4)
+                self.writeInt(p['u3'], 4)
+                self.writeInt(p['vfx_variation_id'], 4)
+                self.writeInt(p['u4'], 4)
+                self.writeInt(p['u5'], 4)
+                self.writeInt(p['u6'], 4)
+                self.writeInt(p['delay'], 4)
+                self.writeInt(p['vertical_velocity'], 4)
+                self.writeInt(p['horizonal_velocity'], 4)
+                self.writeInt(p['u7'], 4)
+                self.writeInt(p['lifespan'], 4)
+                self.writeInt(p['no_collision'], 4)
+                self.writeInt(p['size'], 4)
+                self.writeInt(p['u8'], 4)
+                self.writeInt(p['hit_level'], 4)
+                for v in p['u9']:
+                    self.writeInt(v, 4)
+                self.writeInt(p['voiceclip_on_hit'], 4)
+                self.writeInt(p['u10'], 4)
+                self.writeInt(p['u11'], 4)
 
             on_hit_addr = 0
             cancel_addr = 0
@@ -755,8 +778,19 @@ class MotbinStruct:
             self.writeInt(on_hit_addr, 8)
             self.writeInt(cancel_addr, 8)
 
-            for short in p['u2']:
-                self.writeInt(short, 2)
+            if p['u2']: # Supporting old format
+                for short in p['u2']:
+                    self.writeInt(short, 2)
+
+            if p['u12']: # Supporting new format
+                self.writeInt(p['u12'], 4)
+                self.writeInt(p['u13'], 4)
+                self.writeInt(p['can_hitbox_connect'], 8)
+                self.writeInt(p['u14'], 4)
+                self.writeInt(p['u15'], 4)
+                self.writeInt(p['gravity'], 8)
+                for v in p['u16']:
+                    self.writeInt(v, 4)
 
             y = self.curr_ptr - curr
             if y != 0xa8:
